@@ -11,4 +11,6 @@
 #include "binaryTreeInOrder_Recursion.h"
 #include "binaryTreeInOrder_Stack.h"
 #include "binaryTreeInOrder_Morris.h"
+
+#include "binaryTreeIsSymmetric.h"
 #endif // !binaryTree_

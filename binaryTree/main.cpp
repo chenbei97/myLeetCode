@@ -18,5 +18,6 @@ int main()
     _binaryTree_postOrder_morris();
     _binaryTree_postOrder_stack();
 
+    _binaryTree_is_symmetric();
     return 0;
 }
