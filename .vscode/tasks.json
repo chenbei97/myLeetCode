@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe 生成活动文件",
+            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${workspaceFolder}\\binaryTree\\*.cpp", // ${file},可以构建多个cpp文件而不是单个
+                "-o",
+                "${workspaceFolder}\\binaryTree\\main.exe" // ${workspaceFolder}\\myProgram.exe 可以替换为硬编码名
+                // ${fileDirname}\\${fileBasenameNoExtension}.exe
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "编译器: C:\\msys64\\mingw64\\bin\\g++.exe"
+        }
+    ]
+}
