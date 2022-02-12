@@ -11,4 +11,9 @@
 #include "binaryTreeInOrder_Recursion.h"
 #include "binaryTreeInOrder_Stack.h"
 #include "binaryTreeInOrder_Morris.h"
+
+#include "binaryTreeLevelOrder_Queue.h"
+
+#include "binaryTreeIsSymmetric_Recursion.h"
+#include "binaryTreeIsSymmetric_Array.h"
 #endif // !binaryTree_
