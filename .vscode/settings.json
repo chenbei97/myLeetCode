@@ -4,7 +4,8 @@
         "stack": "cpp",
         "xutility": "cpp",
         "vector": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "deque": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }

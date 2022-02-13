@@ -3,7 +3,7 @@ from typing import List
 from queue import Queue
 from queue import Empty
 from TreeNode import TreeNode
-class binaryTreeIsSymmetric_Array:
+class binaryTreeIsSymmetricArray:
     def levelOrderTraversalWithNone(self,height,root: Optional[TreeNode] ) -> List[List[int]]:
         ans = []
         q = Queue()
@@ -23,29 +23,26 @@ class binaryTreeIsSymmetric_Array:
     def isSymmetric(self,height,root: Optional[TreeNode]) -> bool:
         treeArray = self.levelOrderTraversalWithNone(height,root) # 层次遍历得到元素
         treeArray.insert(0,"head") # 插入1个元素是为了下标从1开始计算 此时列表为偶数2^height个
-        if len(treeArray[1:]) % 2:  # 是奇数才可能对称
-            for i in range(height):
-                j1 = pow(2, i)
-                j2 = pow(2, i + 1) - 1
-                print(j1,j2)
-                while j1 <= j2: # 小区间[2^i,2^(i+1)-1]对称进行比较,前索引小于等于后索引说明没比完继续比
-                    if (treeArray[j1] and treeArray[j2]):  # 均不为空继续判断值是不是相等
-                        if (treeArray[j1] != treeArray[j2]):
-                            return False
-                        else:
-                            j1 += 1 # 均不为空且值相等继续比较下一组
-                            j2 -= 1
-                    else:  # 可能有1个不为空也可能全为空
-                        if (treeArray[j1] or treeArray[j2]):  # 有1个为空另一个不为空
-                            return False
-                        else:  # 均为空
-                            j1 += 1 # 均为空也继续下一组
-                            j2 -= 1
-        else:
-            return False
+        for i in range(height):
+            j1 = pow(2, i)
+            j2 = pow(2, i + 1) - 1
+            print(j1,j2)
+            while j1 <= j2: # 小区间[2^i,2^(i+1)-1]对称进行比较,前索引小于等于后索引说明没比完继续比
+                if (treeArray[j1] and treeArray[j2]):  # 均不为空继续判断值是不是相等
+                    if (treeArray[j1] != treeArray[j2]):
+                        return False
+                    else:
+                        j1 += 1 # 均不为空且值相等继续比较下一组
+                        j2 -= 1
+                else:  # 可能有1个不为空也可能全为空
+                    if (treeArray[j1] or treeArray[j2]):  # 有1个为空另一个不为空
+                        return False
+                    else:  # 均为空
+                        j1 += 1 # 均为空也继续下一组
+                        j2 -= 1
         return True
 if __name__ == '__main__':
-    s = binaryTreeIsSymmetric_Array()
+    s = binaryTreeIsSymmetricArray()
     # 8,9,14,15是对称的,为了验证None是否能够检查
     # 这4个节点修改为None
     n15 = TreeNode(10)
