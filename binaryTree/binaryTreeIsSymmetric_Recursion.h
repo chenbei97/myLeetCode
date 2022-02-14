@@ -33,7 +33,7 @@ private:
 //         return dfs(root1->left, root2->right) && dfs(root1->right, root2->left);
 //     }
 };
-void _binaryTree_is_symmetric_recursion()
+void _binaryTree_isSymmetric_recursion()
 {
     binaryTreeIsSymmetricRecursion solution;
     TreeNode * root = new TreeNode [7];
