@@ -13,7 +13,10 @@
 #include "binaryTreeInOrder_Morris.h"
 
 #include "binaryTreeLevelOrder_Queue.h"
+<<<<<<< HEAD
 #include "binaryTreeLevelOrder_Deque.h"
+=======
+>>>>>>> 1298c0e932053a3e07ba5ab8516edffec18d376f
 
 #include "binaryTreeIsSymmetric_Recursion.h"
 #include "binaryTreeIsSymmetric_Array.h"

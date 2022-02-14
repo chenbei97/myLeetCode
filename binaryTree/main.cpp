@@ -22,8 +22,14 @@ int main()
     // _binaryTree_levelOrder_queue();
      _binaryTree_levelOrder_deque();
 
+<<<<<<< HEAD
     // cout <<"binaryTree is symmetric as follows\n";
     // _binaryTree_is_symmetric_recursion();
     // _binaryTree_isSymmetric_array(); 
+=======
+    cout <<"binaryTree is symmetric as follows\n";
+    _binaryTree_is_symmetric_recursion();
+    _binaryTree_isSymmetric_array(); // 暂时无法解决层次遍历有nullptr打印-1的机制
+>>>>>>> 1298c0e932053a3e07ba5ab8516edffec18d376f
     return 0;
 }
