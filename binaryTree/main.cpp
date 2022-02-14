@@ -18,9 +18,9 @@ int main()
     // _binaryTree_postOrder_morris();
     // _binaryTree_postOrder_stack();
 
-    cout <<"levelOrder as follows\n";
+    //cout <<"levelOrder as follows\n";
     // _binaryTree_levelOrder_queue();
-     _binaryTree_levelOrder_deque();
+    //_binaryTree_levelOrder_deque();
 
     // cout <<"binaryTree is symmetric as follows\n";
     // _binaryTree_is_symmetric_recursion();
