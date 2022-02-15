@@ -3,27 +3,31 @@
 using namespace std;
 int main()
 {
-    // cout <<"preOrder as follows\n";
-    // _binaryTree_preOrder_morris();
-    // _binaryTree_preOrder_recursion();
-    // _binaryTree_preOrder_stack();
+    cout <<"preOrder as follows\n";
+    _binaryTree_preOrder_morris();
+    _binaryTree_preOrder_recursion();
+    _binaryTree_preOrder_stack();
 
-    // cout <<"inOrder as follows\n";
-    // _binaryTree_inOrder_recursion();
-    // _binaryTree_inOrder_stack();
-    // _binaryTree_inOrder_morris();
+    cout <<"inOrder as follows\n";
+    _binaryTree_inOrder_recursion();
+    _binaryTree_inOrder_stack();
+    _binaryTree_inOrder_morris();
 
-    // cout <<"postOrder as follows\n";
-    // _binaryTree_postOrder_recursion();
-    // _binaryTree_postOrder_morris();
-    // _binaryTree_postOrder_stack();
+    cout <<"postOrder as follows\n";
+    _binaryTree_postOrder_recursion();
+    _binaryTree_postOrder_morris();
+    _binaryTree_postOrder_stack();
 
-    //cout <<"levelOrder as follows\n";
-    // _binaryTree_levelOrder_queue();
-    //_binaryTree_levelOrder_deque();
+    cout <<"levelOrder as follows\n";
+    _binaryTree_levelOrder_queue();
+    _binaryTree_levelOrder_deque();
 
-    // cout <<"binaryTree is symmetric as follows\n";
-    // _binaryTree_isSymmetric_recursion();
-    // _binaryTree_isSymmetric_array(); 
+    cout <<"binaryTree is symmetric as follows\n";
+    _binaryTree_isSymmetric_recursion();
+    _binaryTree_isSymmetric_array(); 
+
+    cout <<"tree2 is subStructure of tree1?\n";
+    _binaryTree_isSubStructure_recursion();
+    _binaryTree_isSubStructure_iteration();
     return 0;
 }

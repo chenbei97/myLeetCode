@@ -16,6 +16,7 @@
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe",
+            "logging":{"engineLogging":true},
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",
