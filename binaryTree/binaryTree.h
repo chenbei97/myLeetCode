@@ -17,4 +17,7 @@
 
 #include "binaryTreeIsSymmetric_Recursion.h"
 #include "binaryTreeIsSymmetric_Array.h"
+
+#include "binaryTreeisSubStructure_Recursion.h"
+#include "binaryTreeisSubStructure_Iteration.h"
 #endif // !binaryTree_

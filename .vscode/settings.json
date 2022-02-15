@@ -5,7 +5,10 @@
         "xutility": "cpp",
         "vector": "cpp",
         "queue": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "xiosbase": "cpp",
+        "utility": "cpp",
+        "ostream": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }
