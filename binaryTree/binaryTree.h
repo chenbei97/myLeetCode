@@ -20,4 +20,6 @@
 
 #include "binaryTreeisSubStructure_Recursion.h"
 #include "binaryTreeisSubStructure_Iteration.h"
+
+#include "binaryTreeMergeMaxHblt.h"
 #endif // !binaryTree_

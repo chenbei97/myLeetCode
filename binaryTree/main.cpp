@@ -29,5 +29,8 @@ int main()
     cout <<"tree2 is subStructure of tree1?\n";
     _binaryTree_isSubStructure_recursion();
     _binaryTree_isSubStructure_iteration();
+
+    cout <<"tree2 is merged to tree1,tree1 is ?\n";
+    _binaryTree_merge_maxHblt();
     return 0;
 }
