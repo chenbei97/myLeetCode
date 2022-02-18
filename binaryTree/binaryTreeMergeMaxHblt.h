@@ -19,7 +19,7 @@ class binaryTreeMergeHblt{
 
             merge(root1->right,root2); // 递归交换基准树的右子树和非基准树
 
-            // 递归到树的最后1层时,root2不需要再看,root1可能有2种情况,此时root1的左节点可能是空节点
+            // 递归到树的最后1层时,root2不需要再看,基准树root1的节点可能有2种情况
             // 最大左高树不允许左节点为空节点但右节点非空,可以左右都非空或者右节点为空
             // 均为空的话不会执行到这,第1个if判断就已经返回
             if (root1->left == nullptr){
@@ -29,6 +29,9 @@ class binaryTreeMergeHblt{
             }
             else { // 都是非空节点,此时的root1还要满足左节点值大于右节点值
                 // 必要的话交换2个节点
+                cout<<"here:"<<root1->node.second
+                    <<" "<<root1->left->node.second
+                    <<" "<<root1->right->node.second<<"\n";
                 if (root1->left->node.second < root1->right->node.second){
                     swap(root1->left,root1->right);
                 }
@@ -61,33 +64,33 @@ void _binaryTree_merge_maxHblt(){
     tree1:         tree2:             merge:
            9                 15               15
           / \               /              /      \
-         8   7             14             14       9
+         8   7             7              9        7
         / \ / \           /  \           / \      / \
-       6    5  4         13  12         13  12   8   7
-           / \              /              /    /   / \
-          3   2            11             11   6   5   4
-         /                                        / \
-        1                                        3   2
-                                                /
-                                               1
+       6    5  4         3    1         8  7     3   1
+           / \              /          /  / \       / 
+          3   2            0          6  5   4     0
+         /                              / \
+        1                              3   2        
+                                      /
+                                     1
     编号值:  
     tree1:         tree2:             merge:
            2                 1                3
           / \               /               /   \
          1   2             2               2     2
         / \ / \           /  \            / \   / \
-       1    2  1         1    1          1   1 1   2
-           / \               /              / /   / \
-          1   1             1              1 1   2   1
-         /                                      / \
-        1                                      1   1
-                                              /
-                                             1
+       1    2  1         1    1          1   2 1   1
+           / \               /          /   / \   / 
+          1   1             1          1   2   1 1   
+         /                                / \   
+        1                                1   1    
+                                        /
+                                       1
     */                                    
-   HbltNode n1(1,1);             HbltNode n11(1,11);
-   HbltNode n2(1,2);             HbltNode n12(1,12,&n11,nullptr);
-   HbltNode n3(1,3,&n1,nullptr); HbltNode n13(1,13);
-   HbltNode n4(1,4);             HbltNode n14(2,14,&n13,&n12);
+   HbltNode n1(1,1);             HbltNode n11(1,0);
+   HbltNode n2(1,2);             HbltNode n12(1,1,&n11,nullptr);
+   HbltNode n3(1,3,&n1,nullptr); HbltNode n13(1,3);
+   HbltNode n4(1,4);             HbltNode n14(2,7,&n13,&n12);
    HbltNode n5(2,5,&n3,&n2);     HbltNode n15(1,15,&n14,nullptr);
    HbltNode n6(1,6);
    HbltNode n7(2,7,&n5,&n4);
