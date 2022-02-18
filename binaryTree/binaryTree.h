@@ -22,4 +22,6 @@
 #include "binaryTreeisSubStructure_Iteration.h"
 
 #include "binaryTreeMergeMaxHblt.h"
+
+#include "binaryTreeIsComplete.h"
 #endif // !binaryTree_

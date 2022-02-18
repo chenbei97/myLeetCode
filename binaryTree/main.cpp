@@ -32,5 +32,8 @@ int main()
 
     cout <<"tree2 is merged to tree1,tree1 is ?\n";
     _binaryTree_merge_maxHblt();
+
+    cout << "tree is complete?\n";
+    _binaryTree_isComplete();
     return 0;
 }
