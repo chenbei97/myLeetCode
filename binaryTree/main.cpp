@@ -35,5 +35,10 @@ int main()
 
     cout << "tree is complete?\n";
     _binaryTree_isComplete();
+
+    cout<<" invert tree as follows\n";
+    _binaryTree_invert_queue();
+    _binaryTree_invert_stack();
+    _binaryTree_invert_recursion();
     return 0;
 }

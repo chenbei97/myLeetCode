@@ -24,4 +24,8 @@
 #include "binaryTreeMergeMaxHblt.h"
 
 #include "binaryTreeIsComplete.h"
+
+#include "binaryTreeInvert_Queue.h"
+#include "binaryTreeInvert_Stack.h"
+#include "binaryTreeInvert_Recursion.h"
 #endif // !binaryTree_
