@@ -32,5 +32,5 @@
 #include "binaryTreeInvert_Stack.h"
 #include "binaryTreeInvert_Recursion.h"
 
-
+#include "binaryTreeRightView_Queue.h"
 #endif // !binaryTree_

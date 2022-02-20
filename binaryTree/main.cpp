@@ -45,5 +45,8 @@ int main()
     _binaryTree_invert_queue();
     _binaryTree_invert_stack();
     _binaryTree_invert_recursion();
+
+    cout<<"tree's right view as follows\n";
+    _binaryTree_rightView();
     return 0;
 }
