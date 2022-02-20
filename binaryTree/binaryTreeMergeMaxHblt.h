@@ -6,7 +6,7 @@
 using namespace std;
 class binaryTreeMergeHblt{
     public:
-        void merge(HbltNode*& root1 , HbltNode*& root2){
+        void mergeHblt(HbltNode*& root1 , HbltNode*& root2){
             // 注:规定总会把root2合并到root1上
             if (root2 == nullptr) return;
             if (root1 == nullptr) {
@@ -17,7 +17,7 @@ class binaryTreeMergeHblt{
             // 保证基准树总是为root1
             if (root1->node.second < root2->node.second) swap(root1,root2);
 
-            merge(root1->right,root2); // 递归交换基准树的右子树和非基准树
+            mergeHblt(root1->right,root2); // 递归交换基准树的右子树和非基准树
 
             // 递归到树的最后1层时,root2不需要再看,基准树root1的节点可能有2种情况
             // 最大左高树不允许左节点为空节点但右节点非空,可以左右都非空或者右节点为空
@@ -104,7 +104,7 @@ void _binaryTree_merge_maxHblt(){
    solution.levelOrder(root1);
    cout<<"root2's rank and data is\n";
    solution.levelOrder(root2);
-   solution.merge(root1,root2);
+   solution.mergeHblt(root1,root2);
    cout<<"after merge,root1's rank and data is\n";
    solution.levelOrder(root1);
 }

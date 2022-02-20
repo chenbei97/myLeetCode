@@ -1,5 +1,5 @@
-#ifndef binaryTreeInvert_Recursion_
-#define binaryTreeInvert_Recursion_
+#ifndef binaryTreeInvertRecursion_
+#define binaryTreeInvertRecursion_
 #include "TreeNode.h"
 #include <queue>
 #include <iostream>
@@ -61,4 +61,4 @@ void _binaryTree_invert_recursion(){
     solution.levelOrder(root);
 
 }
-#endif // !binaryTreeInvert_Recursion_
+#endif // !binaryTreeInvertRecursion_

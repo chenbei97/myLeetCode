@@ -1,5 +1,5 @@
-#ifndef binaryTreeInvert_Stack_
-#define binaryTreeInvert_Stack_
+#ifndef binaryTreeInvertStack_
+#define binaryTreeInvertStack_
 #include "TreeNode.h"
 #include <queue>
 #include <stack>
@@ -73,4 +73,4 @@ void _binaryTree_invert_stack(){
     solution.levelOrder(root);
 
 }
-#endif //!binaryTreeInvert_Stack_
+#endif //!binaryTreeInvertStack_

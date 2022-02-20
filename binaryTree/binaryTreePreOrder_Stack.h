@@ -1,5 +1,5 @@
-#ifndef binaryTreePreOrder_Stack_
-#define binaryTreePreOrder_Stack_
+#ifndef binaryTreePreOrderStack_
+#define binaryTreePreOrderStack_
 #include <vector>
 #include <stack>
 #include <algorithm>
@@ -52,4 +52,4 @@ void _binaryTree_preOrder_stack()
     }
     cout<<"\n"; 
 }
-#endif // !binaryTreePreOrder_Stack_
+#endif // !binaryTreePreOrderStack_

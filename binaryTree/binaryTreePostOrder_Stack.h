@@ -1,5 +1,5 @@
-#ifndef binaryTreePostOrder_Stack_
-#define binaryTreePostOrder_Stack_
+#ifndef binaryTreePostOrderStack_
+#define binaryTreePostOrderStack_
 #include <vector>
 #include <stack>
 #include <algorithm>
@@ -61,4 +61,4 @@ void _binaryTree_postOrder_stack()
     }
     cout<<"\n"; // [4,5,2,6,7,3,1]
 }
-#endif // !binaryTreePostOrder_Stack_
+#endif // !binaryTreePostOrderStack_
