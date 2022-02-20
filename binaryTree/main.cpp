@@ -36,7 +36,6 @@ int main()
     _binaryTree_mergeCommonTree_queue();
     cout <<"hblt2 is merged to hblt1,tree1 is ?\n";
     _binaryTree_merge_maxHblt();
-    
 
     cout << "tree is complete?\n";
     _binaryTree_isComplete();
@@ -48,5 +47,8 @@ int main()
 
     cout<<"tree's right view as follows\n";
     _binaryTree_rightView();
+
+    cout <<"tree's all path as follows\n";
+    _binaryTree_allPaths_recursion();
     return 0;
 }

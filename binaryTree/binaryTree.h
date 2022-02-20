@@ -33,4 +33,6 @@
 #include "binaryTreeInvert_Recursion.h"
 
 #include "binaryTreeRightView_Queue.h"
+
+#include "binaryTreeAllPaths_Recursion.h"
 #endif // !binaryTree_
