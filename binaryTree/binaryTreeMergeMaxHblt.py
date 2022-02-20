@@ -2,95 +2,29 @@ from psutil import swap_memory
 from HbltNode import HbltNode
 from queue import Queue
 class binaryTreeMergeMaxHblt:
-    def __init__(self) -> None:
-        self.count = 0
-    # def merge(self,root1:HbltNode,root2:HbltNode)->None or HbltNode
-        # def loop(r1,r2):
-        #     print("111111111")
-        #     if not r2: 
-        #         print("222222222")
-        #         return 
-        #     if not r1:  
-        #         r1 = r2 # root1是基准
-        #         print("33333333333")
-        #         print("r1:")
-        #         self.levelOrder(r1)
-        #         print("r2:")
-        #         self.levelOrder(r2)
-        #         return r1,r2
-        #     if r1.val < r2.val:
-        #         print("4444444444444444")
-        #         print("r1:")
-        #         self.levelOrder(r1)
-        #         print("r2:")
-        #         self.levelOrder(r2)
-        #         r1,r2 = r2,r1 # 必要的话交换基准树的右子树和非基准树
-        #         print("swap success")
-        #         print("r1:")
-        #         self.levelOrder(r1)
-        #         print("r2:")
-        #         self.levelOrder(r2)
-        #         return r1,r2
-        # r1,r2 = loop(r1,r2)
-        # root1,root2=r1,r2
-        
-        # print("555555555")
-        # # root1.right = 
-        # print("root1:")
-        # self.levelOrder(root1)
-        # print("root2:")
-        # self.levelOrder(root2)
-        # print("-------------------------------")
-        # r1,r2 = loop(root1.right,root2)
-        # print("666666666666")
-        # print("r1:")
-        # self.levelOrder(r1)
-        # print("r2:")
-        # self.levelOrder(r2)
-        # print("-------------------------------")
-        # root1.right=r1
-        # print("root1:")
-        # self.levelOrder(root1)
-        # print("-------------------------------")
-        # r1,r2 = loop(root1.right,root2)
-        # print("root1:",self.levelOrder(root1))
-        # print("root2:",self.levelOrder(root2))
-        # self.levelOrder(root1.right)
-        # self.levelOrder(root2)
-        # if not root1.left : # 基准树的左节点为空,就把右节点交换过来
-        #     print("777777777777777")
-        #     root1.left = root1.right
-        #     root1.right = None
-        #     root1.number = 1 # 有1个子节点是None的父节点必然编号为1
-        # if not root1.right:
-        #     print("888888888888")
-        #     root1.right = None
-        #     root1.number = 1
-        # elif (root1.left.val < root1.right.val) :# 必要的话交换基准树的左右节点
-        #     print("9999999999")
-        #     root1.left,root1.right = root1.right,root1.left
-        #     root1.number = root1.right.number + 1 # 两个非空节点的父节点编号是右节点编号+1
-    def merge(self,root1:HbltNode,root2:HbltNode)->None or HbltNode:
+    def mergeHblt(self,root1:HbltNode,root2:HbltNode)->None or HbltNode:
+        # 由于不同于C++的机制,交换递归中的root.right和root2并不能改变原来root1的right
+        # 且每次返回的root1,root2是不一样的,是1个层的2个节点
+        # 所以应当在第3个if判断中用root1.right,root2去接收返回值来更新实际的root1和root2
+        # 而不是在第3个if结束后再进行递归,递归结束才会看看root1的左右子树是否为None的问题
         if not root2 :
-            return 
+            return root1,root2 # 第1个改动 要返回值
         if not root1:
             root1 = root2
-            return 
+            return root1,root2 # 第2个改动 要返回值
         if root1.val < root2.val:
             root1,root2 = root2,root1
-        self.merge(root1.right,root2)
+            root1.right,root2 = self.mergeHblt(root1.right,root2) # 第3个改动,在内部更新递归且要更新全局的root1和root2
+            
         if not root1.left : # 基准树的左节点为空,就把右节点交换过来
             root1.left = root1.right
             root1.right = None
             root1.number = 1 # 有1个子节点是None的父节点必然编号为1
         else :
-            if not root1.right:
-                root1.number = 1
-            elif root1.left.val < root1.right.val :# 必要的话交换基准树的左右节点
+            if root1.left.val < root1.right.val :# 必要的话交换基准树的左右节点
                 root1.left,root1.right = root1.right,root1.left
                 root1.number = root1.right.number + 1 # 两个非空节点的父节点编号是右节点编号+1
-        return root1
-
+        return root1,root2 # 第4个改动 要返回值,也可只返回root1
 
     def levelOrder(self,root:HbltNode)->None:
         q = Queue()
@@ -165,6 +99,8 @@ if __name__ == '__main__':
     # print("after swap,root2's rank and data is")
     # n15.left.left,n15.left.right = n15.left.right,n15.left.left
     # solution.levelOrder(n15)
-    root1 = solution.merge(n9,n15)
+    root1,root2 = solution.mergeHblt(n9,n15)
     print("after merge,root1's rank and data is")
     solution.levelOrder(root1)
+    print("after merge,root2's rank and data is")
+    solution.levelOrder(root2) # root2本身没有被改变过
