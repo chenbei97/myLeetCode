@@ -50,5 +50,6 @@ int main()
 
     cout <<"tree's all path as follows\n";
     _binaryTree_allPaths_recursion();
+    _binaryTree_allPaths_stack();
     return 0;
 }

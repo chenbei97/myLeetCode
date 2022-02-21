@@ -35,4 +35,5 @@
 #include "binaryTreeRightView_Queue.h"
 
 #include "binaryTreeAllPaths_Recursion.h"
+#include "binaryTreeAllPaths_Stack.h"
 #endif // !binaryTree_
