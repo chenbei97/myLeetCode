@@ -52,8 +52,12 @@ int main()
     _binaryTree_allPaths_recursion();
     _binaryTree_allPaths_stack();
 
-    cout <<"tree's depth as follows\n";
-    _binaryTree_depth_recursion();
-    _binaryTree_depth_stack();
+    cout <<"tree's max depth as follows\n";
+    _binaryTree_maxDepth_recursion();
+    _binaryTree_maxDepth_stack();
+
+    cout <<"tree's min depth as follows\n";
+    _binaryTree_minDepth_recursion();
+    _binaryTree_minDeth_stack();
     return 0;
 }

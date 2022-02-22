@@ -37,6 +37,8 @@
 #include "binaryTreeAllPaths_Recursion.h"
 #include "binaryTreeAllPaths_Stack.h"
 
-#include "binaryTreeDepth_Recursion.h"
-#include "binaryTreeDepth_Stack.h"
+#include "binaryTreeMaxDepth_Recursion.h"
+#include "binaryTreeMaxDepth_Stack.h"
+#include "binaryTreeMinDepth_Recursion.h"
+#include "binaryTreeMinDepth_Stack.h"
 #endif // !binaryTree_

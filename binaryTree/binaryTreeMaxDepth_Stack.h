@@ -1,13 +1,13 @@
-#ifndef binaryTreeDepthStack_
-#define binaryTreeDepthStack_
+#ifndef binaryTreeMaxDepthStack_
+#define binaryTreeMaxDepthStack_
 #include "TreeNode.h"
 #include <utility>
 #include <iostream>
 #include <stack>
 using namespace std;
-class binaryTreeDepthStack{
+class binaryTreeMaxDepthStack{
     public:
-        int getDepth(TreeNode* root){
+        int getMaxDepth(TreeNode* root){
             int depth = 0;
             if (!root) return depth;
             // 本方法的思路来源于打印二叉树的所有路径
@@ -32,8 +32,8 @@ class binaryTreeDepthStack{
             return depth;
         }
 };
-void _binaryTree_depth_stack(){
-    binaryTreeDepthStack solution;
+void _binaryTree_maxDepth_stack(){
+    binaryTreeMaxDepthStack solution;
     TreeNode * root = new TreeNode (1);
     root->left = new TreeNode(3);
     root->right = new TreeNode(2);
@@ -41,8 +41,8 @@ void _binaryTree_depth_stack(){
     root->right->right->right = new TreeNode(6);
     root->right->right->right->left = new TreeNode(5);
     root->right->right->right->left->right = new TreeNode(7);
-    int depth = solution.getDepth(root);
-    cout<<"method3: tree depth is "<<depth<<endl;
+    int depth = solution.getMaxDepth(root);
+    cout<<"method3: tree max depth is "<<depth<<endl;
 
     TreeNode * root1 = new TreeNode(1);
     TreeNode * t = root1;
@@ -50,8 +50,8 @@ void _binaryTree_depth_stack(){
         t->left = new TreeNode(i);
         t = t->left;
     }
-    depth = solution.getDepth(root1);
-    cout<<"method3: tree depth is "<<depth<<endl;
+    depth = solution.getMaxDepth(root1);
+    cout<<"method3: tree max depth is "<<depth<<endl;
 
     root1->right = new TreeNode(1);
     root1->right->left = new TreeNode(1);
@@ -59,7 +59,7 @@ void _binaryTree_depth_stack(){
     root1->right->left->right->left = new TreeNode(1);
     root1->right->left->right->left->right = new TreeNode(1);
     root1->right->left->right->left->right->left = new TreeNode(1);
-    depth = solution.getDepth(root1);
-    cout<<"method3: tree depth is "<<depth<<endl;
+    depth = solution.getMaxDepth(root1);
+    cout<<"method3: tree max depth is "<<depth<<endl;
 }
 #endif // !binaryTreeDepthStack_

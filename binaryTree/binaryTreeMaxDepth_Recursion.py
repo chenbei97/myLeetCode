@@ -1,6 +1,6 @@
 from TreeNode import TreeNode
-class binaryTreeDepthRecursion:
-    def getDepth(self,root:TreeNode)->int:
+class binaryTreeMaxDepthRecursion:
+    def getMaxDepth(self,root:TreeNode)->int:
         depth = 0
         if not root : return depth
         depth = 1
@@ -16,11 +16,11 @@ class binaryTreeDepthRecursion:
             if root.left : loop(root.left,d)
         loop(root,depth)
         return depth
-    def treeDepth(self,root:TreeNode): # 第2种递归方法
+    def treeMaxDepth(self,root:TreeNode)->int: # 第2种递归方法
         l,r = 0,0
         if not root : return 0
-        l = self.treeDepth(root.left)
-        r = self.treeDepth(root.right)
+        l = self.treeMaxDepth(root.left)
+        r = self.treeMaxDepth(root.right)
         print(f"({l},{r})",end=" ")
         return  l+1 if l>r else r+1
 
@@ -45,9 +45,9 @@ if __name__ == '__main__':
     root1.left.left.right = TreeNode(10)
     root1.right.left.left = TreeNode(11) 
     root1.right.left.left.right = TreeNode(12) 
-    solution = binaryTreeDepthRecursion()
-    ans = solution.getDepth(root1)
-    print("method1: tree depth is ",ans)
-    ans = solution.treeDepth(root1)
-    print("method2: tree depth is ",ans)
+    solution = binaryTreeMaxDepthRecursion()
+    ans = solution.getMaxDepth(root1)
+    print("method1: tree max depth is ",ans)
+    ans = solution.treeMaxDepth(root1)
+    print("method2: tree max depth is ",ans)
 

@@ -1,6 +1,6 @@
 from TreeNode import TreeNode
-class binaryTreeDepthStack:
-    def getDepth(self,root:TreeNode)->int:
+class binaryTreeMaxDepthStack:
+    def getMaxDepth(self,root:TreeNode)->int:
         depth = 0
         if not root :return depth
         stk = []
@@ -41,6 +41,6 @@ if __name__ == '__main__':
     root1.left.left.right = TreeNode(10)
     root1.right.left.left = TreeNode(11) 
     root1.right.left.left.right = TreeNode(12) 
-    solution = binaryTreeDepthStack()
-    ans = solution.getDepth(root1)
-    print("method3: tree depth is ",ans)
+    solution = binaryTreeMaxDepthStack()
+    ans = solution.getMaxDepth(root1)
+    print("method3: tree max depth is ",ans)
