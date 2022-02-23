@@ -1,7 +1,9 @@
+#include "linearArray.h"
 #include <iostream>
 using namespace std;
 int main()
 {
-    printf("%d",1);
+    cout <<"the array's min&max index as follows\n";
+    _linearArray_findMinMaxIndex_iteration();
     return 0;
 }
