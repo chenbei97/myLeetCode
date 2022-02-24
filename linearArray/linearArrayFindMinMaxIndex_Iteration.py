@@ -1,4 +1,3 @@
-from importlib.abc import SourceLoader
 from typing import List,Tuple
 class linearArrayFindMinMaxIndexIteration:
     def findMinMaxIndex(self,theArray : List) -> Tuple or None:
@@ -35,6 +34,7 @@ class linearArrayFindMinMaxIndexIteration:
         return (minIdx,maxIdx) # min&max tuple
 if __name__ == '__main__':
     import numpy as np
+    from  time import  time
     a = []
     for i in range (100):
         a.append(np.random.randint(0,100))
@@ -43,4 +43,8 @@ if __name__ == '__main__':
     ans = solution.findMinMaxIndex(a)
     print("index is ",ans)
     print(f"the maxest element is {a[ans[1]]}, and the minest element is {a[ans[0]]}")
+    q = np.random.randint(0,1000000,10000000)
+    t1 = time()
+    ans = solution.findMinMaxIndex(q)
+    print(f"maxVal = {q[ans[0]]}, minVal = {q[ans[1]]} cost_time = {time()-t1}") # cost_time = 3.7687370777130127 s
                 

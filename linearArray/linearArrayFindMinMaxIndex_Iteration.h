@@ -48,7 +48,7 @@ void _linearArray_findMinMaxIndex_iteration(){
 	int a[n] = { 10,9,7,-1,5,3,2,4,1,13 };
     linearArrayFindMinMaxIndexIteration solution;
     auto ans = solution.findMinMaxIndex(a,n);
-    cout << " the maxest element is " << a[ans.second] << endl;
-	cout << " the minest element is " << a[ans.first] << endl;
+    cout << "the maxest element is " << a[ans.second] << endl;
+	cout << "the minest element is " << a[ans.first] << endl;
 }
 #endif // !linearArrayFindMinMaxIndexIteration_
