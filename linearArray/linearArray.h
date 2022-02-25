@@ -8,4 +8,7 @@
 
 #include "linearArrayThreeSum_Iteration.h"
 #include "linearArrayThreeSum_DoublePointers.h"
+
+#include "linearArrayThreeSumClosest_DoublePointers.h"
+#include "linearArrayThreeSumClosest_Iteration.h"
 #endif // !linearArray_

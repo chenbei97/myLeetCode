@@ -14,5 +14,9 @@ int main()
     _linearArray_threeSum_iteration();
     cout <<"the three sums doublePointers as follows\n";
     _linearArray_threeSum_doublePointers();
+    cout <<"the cloest three sums iteration as follows\n";
+    _linearArray_threeSumClosest_iteration();
+    cout <<"the cloest three sums doublePointers as follows\n";
+    _linearArray_threeSumClosest_doublePointers();
     return 0;
 }
