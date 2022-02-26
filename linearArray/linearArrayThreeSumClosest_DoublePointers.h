@@ -6,7 +6,8 @@ using namespace std;
 class linearArrayThreeSumClosestDoublePointers{
     public : 
         int threeSumClosest(vector<int>& nums, int target){
-
+            int ans;
+            return ans;
         }
 };
 void _linearArray_threeSumClosest_doublePointers(){
