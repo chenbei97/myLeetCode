@@ -11,4 +11,7 @@
 
 #include "linearArrayThreeSumClosest_DoublePointers.h"
 #include "linearArrayThreeSumClosest_Iteration.h"
+
+#include "linearArrayRemoveDuplicates_DoublePointers.h"
+#include "linearArrayRemoveElement_DoublePointers.h"
 #endif // !linearArray_
