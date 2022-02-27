@@ -472,3 +472,212 @@ const int vec[3] = { 1,2,3 };// 允许
 
 ## 三、泛型编程风格
 
+标准库STL由两部分组成，一个是容器container，包括顺序性容器vector和list和关联性容器set、map等，一个是算法，包括find、sort、replace和merge等通用算法。
+
+map是key/value组合，也可以叫字典、哈希表等；set是只有关键字，且不重复，也可以用于查询。
+
+### 指针的算术运算
+
+ 问题：给定vector或者array，查找指定的元素值并返回它的地址。
+
+#### 容器元素泛型
+
+如果vector是一个整型的，那么这样的代码很容易实现。
+
+```c++
+int * find(const vector<int>&vec, int val){
+    for(int i =0;i<vec.size();i++){
+        if (vec[i] == val)
+            return &vec[i];
+    }
+    return 0;
+}
+```
+
+现在为了这个算法的通用性，引人容器的元素泛型，这样可以查找任何数据类型的元素，前提是重载过这样的数据类型操作运算符"=="。代码如下，使之更通用。
+
+```c++
+template<typename T>
+T * find(const vector<T>&vec, const T& val){
+    for(int i =0;i<vec.size();i++){
+        if (vec[i] == val)
+            return &vec[i];
+    }
+    return 0;
+}
+```
+
+#### 连续容器类型泛型
+
+上边的问题解决了容器元素可以是任何类型的，但是不同的容器可就需要重载函数。因为find函数的参数列表要求是vector类型，如果是arrray类型就得重载。
+
+这就要求find函数的参数能够剥离array和vector的限制，参数不要写死类型，它本身也是个泛型。
+
+所以可以引入T类型的容器指针，同时还需要告诉传入的数组大小，改写函数如下。声明为const指针是要求指针操作不能改变原有数组的元素。
+
+```c++
+template<typename T>
+T * find(const T*array,int size, const T& val){
+    if (!arrray || size < 1)
+        return 0;
+    for(int i =0;i<size;i++){
+        if (array[i] == val)
+            return &array[i];
+    }
+    return 0;
+}
+```
+
+也可以不指定size和array，完全剥离出array的属性，而是传入2个指针first和last分别指向array首元素和尾元素的后1位，只要不对指针进行读写操作就是安全的，所以也用const限定。
+
+```c++
+template<typename T>
+T * find(const T*first,const T * last, const T& val){
+    if (!first || ！last)
+        return 0;
+    for(; first!=last; first++){
+        if (*first == val)
+            return first;
+    }
+    return 0;
+}
+```
+
+#### 连续容器首尾指针泛型
+
+上述find函数还有个问题如果find函数传入的first指针可能是空的，对用户来说操作的是vector或array的实体而不是地址，所以用户定义一个指向实体的指针后总是需要自己先判断不为空，所以为了能够抽离出这部分代码逻辑，引入begin和end函数。这2个函数可以返回实体的首尾指针。
+
+```c++
+template<typename T>
+inline T * begin(const vector<T> &vec){
+    return vec.empty() ? 0 : &vec[0];
+}
+template<typename T>
+inline T * end(const vector<T> &vec){
+    return vec.empty() ? 0 : &vec[0]+vec.size();
+}
+```
+
+#### 非连续容器类型泛型
+
+线性容器很容易找到首尾指针，是因为内存是一段连续的地址，如果是链表，例如list容器，又该如何更改find函数呢？链表是不连续的，还有关联容器map和set，不仅非连续也不是线性的。这就需要引入泛型指针iterator的概念，也就是迭代器。
+
+### 泛型指针Iterator
+
+要知道，在获取首尾元素指针这点上，list和vector、array没有区别，只是对指针的操作有所不同，所以可以再加一层抽象，begin和end函数不直接对指针操作，而是再加一个抽象层，这个抽象层包含了底层指针的操作，而begin和end只是调用抽象层得到即可。                                                                                                                                                                                                                                                                                                                                                                                                                                
+
+那么begin和end 的共性是什么？它两都可以看作是一种指针，只是指向首尾元素，对上边的函数来说是指向vector的一种指针，那么如果泛型，不就可以让这种指针也是指向list类型的指针了？而且这种指针泛型不仅可以指向首尾元素，且可以指向任意位置的元素。
+
+即Iterator的目标是实现一个可以指向任意数据类型的指针，这个指针的内部要实现对运算符的重载，如++、--，!=和==，解引用 * ，告诉指针这样操作怎么实现。
+
+iterator需要知道的信息是，它在迭代哪个容器？vector还是list？它迭代的容器类型是谁？int、float还是string？
+
+一个可能的解法是，定义使用模板指定2个类型，也就是
+
+```c++
+template<T1,T2>
+class iterator{
+    
+};
+
+// 实例化
+iterator<string,int> iter;
+```
+
+  但是STL不是这样做的，它是在某个容器类内部再定义iterator类型，这样做比较高校，可以直接利用到容器类的T类型以及相关的属性。是的，每个容器类都是这么做的，内部会定义iterator类，实例化方法类似于
+
+```c++
+vector<string>::iterator iter=svec.begin();
+```
+
+  现在find函数可以改为如下。
+
+```c++
+template<typename T1, typename T2>
+T1 find(T1 first,T2 last, const T2 & val){
+    for(; first!=last;first++){
+        if (val == *first)
+            return first;
+    }
+    return last; // 没找到就返回尾指针
+}
+```
+
+   现在无论是list还是vector、array都可以使用find函数。
+
+```c++
+const int size = 5;
+int a[size] ={1,2,3,4,5} ;
+vector<int> b(a,a+size); // 1种构造
+list<int> c(a,a+size); // 1种构造
+
+int * pa = find(a,a+size,3); // T1是int类型,T2也是int类型
+if (pa != a+size){
+    // 找到该元素
+}
+
+vector<int>::iterator pb; // T1是vector<int>类型,T2是int类型
+pb = find(b.begin(),b.end(),3);
+if (pb != b.end()){
+    // 找到该元素
+}
+
+list<int>::iterator pc; // T1是list<int>类型,T2是int类型
+pc = find(c.begin(),c.end(),3);
+if (pc != c.end()){
+    // 找到该元素
+}
+```
+
+ #### 泛型指针的运算符操作泛型
+
+现在有了泛型指针，find函数的通用性非常高。还需要考虑指针的运算符重载操作，运算符重载可以默认使用STL内部给出的方式，也可以让用户传入自己定义的运算方式，所以这个问题如果能解决泛型的问题，find函数通用性会大大增加，这将在第四章说明。STL提供的find_if函数能够接收函数指针或者函数对象来取代底部元素的==/!=运算符。
+
+### 容器的共通操作
+
+先介绍容器的共通操作，再介绍各个容器自己独有的操作，第四章再回过头讲泛型。
+
+通用操作，实际上定义在抽象类，也就是empty、size、clear，insert、erase等函数，赋值运算符=，关系运算符!=和==，同时每个容器类都提供begin()和end()迭代器。
+
+不过insert和erase在顺序性和关联性容器的实现上略有不同。
+
+### 使用顺序性容器
+
+#### vector容器
+
+删除和插入操作效率低，因为需要覆盖操作，尾删和尾插效率尚可。随机访问元素效率很高，因为只需要做一次指针运算即可。
+
+#### list容器
+
+双端链表，删除和插入的效率高，因为每个元素都有三个字段，front、back和value，即指向前后元素的指针以及真正的数据value。插入和删除操作只需要衔接好或者断开节点的指针和前后节点的指针即可。
+
+#### queue容器
+
+单端队列，先进先出的数据结构，可以删除和获取队首元素，插入到队尾元素。但是获取中间的元素效率比较低，需要迭代器。
+
+#### deque容器
+
+双端队列，可以头插，也可以尾删，那么deque的效率很高。
+
+#### 常用构造函数
+
+
+
+### 使用泛型算法
+
+
+
+### 使用关联性容器
+
+
+
+
+
+​                                                                                                                                                                                                                                                 
+
+
+
+
+
+
+
