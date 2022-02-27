@@ -661,11 +661,75 @@ if (pc != c.end()){
 
 #### 常用构造函数
 
+产生特定大小的容器，指定size
 
+```c++
+vector<int> a(32);
+```
+
+产生特定大小的容器，指定size和初值
+
+```c++
+vector<string> b(32,"123");
+```
+
+通过一对指针产生容器
+
+```c++
+int a[4]={1,2,3,4};
+vector<int> vec(a,a+4);
+```
+
+通过某个容器产生容器(复制构造)
+
+```c++
+list<string> s1;
+list<string> s2(s1);
+```
+
+#### 常用函数
+
+vector有push_back和pop_back函数，用于尾插和尾删。
+
+list和deque还有头插和头删，push_front和pop_front函数。
+
+读取首尾元素可以使用front()和back()
+
+insert函数有以下几个重载。
+
+```c++
+iterator insert(iterator position); // 指定位置前插入默认值
+iterator insert(iterator position,elemType val); // 指定位置插入val
+void insert(iterator position,int count,elemType val);//在指定位置之前插入n个val
+void insert(iterator position,iterator first,iterator last);//在指定位置之前插入[first,last)的各个元素
+```
+
+erase函数有以下几个重载。
+
+```c++
+iterator erase(iterator position); // 删除指定位置元素
+void erase(iterator first,iterator last);// 删除[first,last)范围的元素                 
+```
 
 ### 使用泛型算法
 
+find函数，搜索无序集合是否存在指定元素，找到目标返回指向目标的迭代器，否则返回end()；
 
+binary_search函数，用于有序集合搜索，找到目标返回true否则false，比find更有效率；
+
+count函数，返回指定元素的数目；
+
+search函数，比对某个容器是否存在某个子序列，找到则会返回一个指向子序列首位的迭代器，否则返回end()；
+
+max_element函数，将容器的begin和end传入，会返回最大值的指针，解引用即可得到最大值；
+
+copy函数：指定容器的begin和end，另一个容器的begin，就可以复制过去；
+
+sort函数：传入begin和end，就可以进行排序(升序)。
+
+### 设计一个泛型算法
+
+​                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 ### 使用关联性容器
 
