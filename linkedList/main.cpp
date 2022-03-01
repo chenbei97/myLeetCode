@@ -9,5 +9,10 @@ int main()
     cout<<"get intersection node of two linked lists as follows\n";
     _linkedList_intersectionNode_doublePointers();
     _linkedList_intersectionNode_hashSet();
+    cout<<"remove duplicates of sorted linked list as follows\n";
+    _linkedList_removeDuplicates_doublePointers(); 
+    _linkedList_removeDuplicates_iteration();  
+    cout<<"delete duplicates of sorted linked list as follows\n"; 
+    _linkedList_deleteDuplicates_iteration();
     return 0;
 }

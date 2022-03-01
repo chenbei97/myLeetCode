@@ -5,4 +5,8 @@
 
 #include "linkedListIntersectionNode_DoublePointers.h"
 #include "linkedListIntersectionNode_HashSet.h"
+
+#include "linkedListRemoveDuplicates_DoublePointers.h"
+#include "linkedListRemoveDuplicates_Iteration.h"
+#include "linkedListDeleteDuplicates_Iteration.h"
 #endif // !linkedList
