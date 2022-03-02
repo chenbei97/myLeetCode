@@ -62,7 +62,7 @@ void _linearArray_findMinMaxVal_recursion(){
 	int a[n] = { 10,9,7,-1,5,3,2,4,1,13 };
     linearArrayFindMinMaxValRecursion solution;
     auto ans = solution.findMinMaxVal(a,n);
-    cout << "the maxest element is " << ans.second << endl;
-	cout << "the minest element is " << ans.first << endl;
+    cout << "recursion=> the maxest element is " << ans.second << endl;
+	cout << "recursion=> the minest element is " << ans.first << endl;
 }
 #endif // !linearArrayFindMinMaxValRecursion_

@@ -2,6 +2,7 @@
 #define linearArray_
 #include "linearArrayFindMinMaxIndex_Iteration.h"
 #include "linearArrayFindMinMaxVal_Recursion.h"
+#include "linearArrayFindMinMaxVal_Stack.h"
 
 #include "linearArrayTwoSum_Iteration.h"
 #include "linearArrayTwoSum_HashTable.h"
