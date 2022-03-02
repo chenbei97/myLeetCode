@@ -9,4 +9,8 @@
 #include "linkedListRemoveDuplicates_DoublePointers.h"
 #include "linkedListRemoveDuplicates_Iteration.h"
 #include "linkedListDeleteDuplicates_Iteration.h"
+
+#include "linkedListRemoveTheNodeFromEnd_Iteration.h"
+#include "linkedListRemoveTheNodeFromEnd_DoublePointers.h"
+#include "linkedListRemoveTheNodeFromEnd_Stack.h"
 #endif // !linkedList

@@ -14,5 +14,9 @@ int main()
     _linkedList_removeDuplicates_iteration();  
     cout<<"delete duplicates of sorted linked list as follows\n"; 
     _linkedList_deleteDuplicates_iteration();
+    cout<<"remove the n node from end of linked list as follows\n"; 
+    _linkedList_removeTheNodeFromEnd_stack();
+    _linkedList_removeTheNodeFromEnd_iteration();
+    _linkedList_removeTheNodeFromEnd_doublePointers();
     return 0;
 }
