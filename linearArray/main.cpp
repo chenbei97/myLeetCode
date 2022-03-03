@@ -21,7 +21,10 @@ int main()
     _linearArray_threeSumClosest_doublePointers();
     cout <<"remove sorted array duplicates as follows\n";
     _linearArray_removeDuplicates_doublePointers();
-     cout <<"remove array specified element as follows\n";
+    cout <<"remove array specified element as follows\n";
     _linearArray_removeElement_doublePointers();
+    cout <<"merge two sorted arrays as follows\n";
+    _linearArray_mergeSortedArray_iteration();
+    _linearArray_mergeSortedArray_doublePointers();
     return 0;
 }

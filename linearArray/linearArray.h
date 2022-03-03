@@ -15,4 +15,7 @@
 
 #include "linearArrayRemoveDuplicates_DoublePointers.h"
 #include "linearArrayRemoveElement_DoublePointers.h"
+
+#include "linearArrayMergeSortedArray_Iteration.h"
+#include "linearArrayMergeSortedArray_DoublePointers.h"
 #endif // !linearArray_
