@@ -431,10 +431,119 @@ void func(const int & val);
 ```c++
 class TextBlock{
 	public:
+    	TextBlock(string s) { text = s; }
     	const char& operator[](size_t position) const{return text[position];}
     	char& operator[](size_t position) {return text[position];}
+    	//const char& operator[](size_t position) {return text[position];}
     private:
     	string text;
 };
 ```
+
+注意，const的位置可以导致4种写法，但是有一种写法是不能写的，限定成员函数为const，但是返回值不加const，这可能导致外部可以修改这个引用的值，与成员函数的const限定违背。
+
+```c++
+char& operator[](size_t position) const{return text[position];}
+```
+
+所以，如果成员函数加了const限定，则返回值如果是引用或者指针之类的也必须加const限定。
+
+还有一种成员函数不是const，那么返回值可以是const也可以是不const的，但是这两个不能同时存在，因为重载不以返回类型进行区分。所以常量性不同是指成员函数的const限定。
+
+对这三种情况分别进行测试。
+
+① 成员函数和返回类型均不限定。
+
+```c++
+char& operator[](size_t position) {return text[position];}
+```
+
+实例对象不是const类型。
+
+```c++
+TextBlock t("123");
+t[1]='4'; // 可以写入
+char *p = &t[1]; // 可以定义指针
+*p = '5'; // 指针写入操作也可以,也会改变原有值
+p++; // *p是t[2]的值
+```
+
+实例对象是const类型。
+
+```c++
+const TextBlock t("123");
+t[1]='4'; // 非法,提示没有匹配的操作符
+char *p = &t[1]; // 非法,提示没有匹配的操作符
+const char *p = &t[1]; // 仍然非法,也就是不能用指针指向const实例的内部成员
+*p = '5'; // 不能使用指针指向,后2个也非法
+p++; // 非法
+```
+
+② 成员函数不限定，返回类型限定。
+
+```c++
+const char& operator[](size_t position) {return text[position];}
+```
+
+实例对象不是const类型。
+
+```c++
+TextBlock t("123");
+t[1] = '4'; // 非法,提示必须是可修改的左值,t[1]是const char&类型的
+char *p = &t[1];//非法
+const char* p = &t[1]; // 合法
+*p = 5; //非法
+p++; // *p是t[2]的值 合法
+```
+
+实例对象是const类型。
+
+```c++
+const TextBlock t("123");
+t[1] = '4'; // 非法,提示没有匹配的操作符
+char *p = &t[1]; // 非法,提示没有匹配的操作符
+const char *p = &t[1]; // 仍然非法,也就是不能用指针指向const实例的内部成员
+*p = 5; //不能使用指针指向,后2个也非法
+p++; // 非法
+```
+
+③ 成员函数限定，返回类型也是限定的。
+
+```c++
+const char& operator[](size_t position) const{return text[position];}
+```
+
+实例对象不是const类型。
+
+```c++
+TextBlock t("123");
+t[1] = '4'; // 非法,提示必须是可修改的左值,t[1]是const char&类型的
+char *p = &t[1];//非法
+const char* p = &t[1]; // 合法
+*p = 5; //非法
+p++; // *p是t[2]的值 合法
+```
+
+实例对象是const类型。
+
+```c++
+const TextBlock t("123");
+t[1] = '4'; // 非法,提示必须是可修改的左值,t[1]是const char&类型的,而不是没有匹配的操作符
+char *p = &t[1];//非法
+const char* p = &t[1]; // 合法
+*p = 5; //非法
+p++; // *p是t[2]的值 合法
+```
+
+以上总结如下。
+
+返回和成员函数都没有const限定：非const实例，可读可写；const实例，可读不可写，没有匹配的操作符。
+
+返回限定，成员函数没有限定：非const实例，可读不可写，左值不可修改；const实例，可读不可写，没有匹配的操作符。
+
+返回、成员函数均限定：非const实例和const实例都是可读不可写，且原因是左值不可修改，原因相同。
+
+可以看出，对成员函数加const限定，才能在const实例中不报没有匹配的操作符这个错误。
+
+
 
