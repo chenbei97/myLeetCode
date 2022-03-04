@@ -9,5 +9,14 @@ int main()
     _characterString_backspaceCompare_doublePointers();
     cout<<"the parentheses's validity as follows\n";
     _characterStringValidParenthesesStack();
+    cout<<"calculate expression as follows\n";
+    _characterStrng_calculateExpression_stack();
+    cout<<"string is palindrome? as follows\n";
+    _characterString_palindrome_greedy();
+    _characterString_palindrome_enum();
+    cout<<"excel title to number as follows\n";
+    _characterString_excelTitleToNumber();
+    cout<<"excel number to title as follows\n";
+    _characterString_excelNumberToTitle();
     return 0;
 }
