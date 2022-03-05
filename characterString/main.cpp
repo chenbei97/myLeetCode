@@ -18,5 +18,9 @@ int main()
     _characterString_excelTitleToNumber();
     cout<<"excel number to title as follows\n";
     _characterString_excelNumberToTitle();
+    cout<<"the decode string as follows\n";
+    _characterString_decodeString_iteration();
+    _characterString_decodeString_stack();
+    _characterString_decodeString_recursion();
     return 0;
 }

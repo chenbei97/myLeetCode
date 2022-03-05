@@ -13,4 +13,8 @@
 
 #include "characterStringExcelTitleToNumber.h"
 #include "characterStringExcelNumberToTitle.h"
+
+#include "characterStringDecodeString_Iteration.h"
+#include "characterStringDecodeString_Stack.h"
+#include "characterStringDecodeString_Recursion.h"
 #endif // !characterString_
