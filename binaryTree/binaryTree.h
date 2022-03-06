@@ -41,4 +41,7 @@
 #include "binaryTreeMaxDepth_Stack.h"
 #include "binaryTreeMinDepth_Recursion.h"
 #include "binaryTreeMinDepth_Stack.h"
+
+#include "binaryTreePathSum_Recursion.h"
+#include "binaryTreePathSum_Stack.h"
 #endif // !binaryTree_

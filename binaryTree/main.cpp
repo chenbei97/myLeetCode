@@ -59,5 +59,9 @@ int main()
     cout <<"tree's min depth as follows\n";
     _binaryTree_minDepth_recursion();
     _binaryTree_minDeth_stack();
+
+    cout <<"tree's path sum as follows\n";
+    _binaryTree_pathSum_recursion();
+    _binaryTree_pathSum_stack();
     return 0;
 }
