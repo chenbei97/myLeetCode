@@ -443,7 +443,7 @@ class TextBlock{
 注意，const的位置可以导致4种写法，但是有一种写法是不能写的，限定成员函数为const，但是返回值不加const，这可能导致外部可以修改这个引用的值，与成员函数的const限定违背。
 
 ```c++
-char& operator[](size_t position) const{return text[position];}
+char& operator[](size_t position) const{return text[position];} // 这种写法编译不通过
 ```
 
 所以，如果成员函数加了const限定，则返回值如果是引用或者指针之类的也必须加const限定。
@@ -537,13 +537,121 @@ p++; // *p是t[2]的值 合法
 
 以上总结如下。
 
-返回和成员函数都没有const限定：非const实例，可读可写；const实例，可读不可写，没有匹配的操作符。
+① 返回和成员函数都没有const限定：非const实例，可读可写；const实例，可读不可写，没有匹配的操作符。
 
-返回限定，成员函数没有限定：非const实例，可读不可写，左值不可修改；const实例，可读不可写，没有匹配的操作符。
+② 返回限定，成员函数没有限定：非const实例，可读不可写，左值不可修改；const实例，可读不可写，没有匹配的操作符。
 
-返回、成员函数均限定：非const实例和const实例都是可读不可写，且原因是左值不可修改，原因相同。
+③ 返回、成员函数均限定：非const实例和const实例都是可读不可写，且原因是左值不可修改，原因相同。
 
 可以看出，对成员函数加const限定，才能在const实例中不报没有匹配的操作符这个错误。
 
+#### 使用mutable的原因
 
+现在再来看看，为何成员函数加了限定，返回类型不加限定会导致编译错误？这起源于早期对于const的理解问题，有2种流派。
+
+第一种流派认为，const的含义是bitwise constness，认为成员函数不更改实例对象的任何成员变量时才可以说是const，也就是不更改对象内的任何一个bit，编译器只需要禁止成员变量的赋值动作即可。对于返回引用类型的成员函数
+
+```c++
+char& operator[](size_t position) const{return text[position];}//其实不能通过编译
+```
+
+这个函数确实没有改变实例的成员变量text，但是显然它暴露的是原有成员变量的引用，可以在外部进行改变，这其实违反const的直觉。再如，如果不使用引用，而是指针，也是限定了成员函数const，但是不限定返回了const。
+
+```c++
+class CTextBlock{
+	public:
+    	TextBlock(char *s) { pText = s; }
+    	char& operator[](size_t position) const {return text[position];}
+    private:
+    	char* pText; // 改string为char*
+};
+```
+
+那么外部也可以定义一个指针，改变原有成员变量，即使成员函数没有改变这个值。
+
+```c++
+const CTextBlock ctb("hello");
+char * pc = &ctb[0];
+*pc = 'J';
+```
+
+由于第1种流派违反直觉，所以有第2种流派，也就是logical constness，一个成员函数可以修改成员变量的某些bit。
+
+例如，增加2个成员变量，文字的长度和长度是否有效，显然在length()函数中，这2个函数是可以改变的，这与const违背。
+
+```c++
+class CTextBlock{
+	public:
+		size_t length() const;
+    private:
+    char* pText;
+    size_t textLength;
+    bool lengthIsValid;
+}
+size_t CTextBlock::length()const{
+    if (!lengthIsValid){
+        textLength = strlen(pText);
+        lengthIsValid = true;
+    }
+    return textLength;
+}
+```
+
+但是编译器还是会要求不能修改这2个变量，那就可以声明这2个变量是可变的，关键字mutable可以释放掉const的约束。
+
+```c++
+class CTextBlock{
+	public:
+		size_t length() const;
+    private:
+    	char* pText;
+    mutable size_t textLength;
+    mutable bool lengthIsValid;
+}
+size_t CTextBlock::length()const{
+    if (!lengthIsValid){
+        textLength = strlen(pText);
+        lengthIsValid = true;
+    }
+    return textLength;
+}
+```
+
+#### 非const实例调用const版本函数避免代码重复
+
+实际上2个成员函数返回的代码完全一样，为了避免代码重复，可以让其中一个调用另一个。由于非const实例是可以改变的，所以应当在非const成员函数中调用const成员函数，而不是反过来，因为const成员函数本来就要求不能改变实例对象。
+
+```c++
+class TextBlock{
+	public:
+    	TextBlock(string s) { text = s; }
+    	const char& operator[](size_t position) const{
+            ...各种函数判断
+            return text[position];}
+    	char& operator[](size_t position) {
+            ...各种函数判断
+            return text[position];}
+    private:
+    	string text;
+};
+```
+
+第2个函数调用第1个函数有两个条件，必须是const实例才能调用const函数，所以第一步可以用static_cast来改变非const实例的常量性，也就是将自身(* this)TextBlock类型转化为const TextBlock&类型。然后调用的是const函数，返回是const类型，所以还需要const_cast来将返回值从const char&转为char &类型，于是这个类可以写为如下。
+
+```c++
+class TextBlock{
+	public:
+    	TextBlock(string s) { text = s; }
+    	const char& operator[](size_t position) const{
+            ...各种函数判断
+            return text[position];}
+    	char& operator[](size_t position) {
+            return const_cast<char&> (static_cast<const TextBlock&>(*this)[position]);
+            }
+    private:
+    	string text;
+};
+```
+
+### 条款04：确定对象被使用前已被初始化
 
