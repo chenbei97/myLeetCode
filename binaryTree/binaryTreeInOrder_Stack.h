@@ -24,10 +24,10 @@ public:
                 root = root->left; // 一路更新到最左节点
             }
             else{ // 左节点是空的,root是空
-                root = stk.top(); // 取出栈顶元素给root
-                stk.pop(); // 记得要出栈
+                root = stk.top(); // 退回到之前非空的左节点,也就是现在空的左节点的父节点
+                stk.pop(); // 路径栈先删除这个非空左节点
                 ans.push_back(root->val); // 保存好值
-                root = root->right; // 更新为右节点
+                root = root->right; // 之前的子左节点为空,所以再试试添加右节点
             }    
         }
         return ans;

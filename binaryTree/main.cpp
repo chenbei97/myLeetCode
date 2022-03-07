@@ -63,5 +63,13 @@ int main()
     cout <<"tree's path sum as follows\n";
     _binaryTree_pathSum_recursion();
     _binaryTree_pathSum_stack();
+
+    cout<<"trees's inOrder search iterator as follows\n";
+    _binaryTree_inOrderSearchIterator_recursion();
+    _binaryTree_inOrderSearchIterator_stack();
+
+    cout<<"tree's search the k minest as follows\n";
+    _binaryTreeSearchKthSmallest_InOrder();
+    _binaryTree_searchKthSmallest_iteration();
     return 0;
 }

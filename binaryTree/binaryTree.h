@@ -44,4 +44,10 @@
 
 #include "binaryTreePathSum_Recursion.h"
 #include "binaryTreePathSum_Stack.h"
+
+#include "binaryTreeInOrderSearchIterator_Recursion.h"
+#include "binaryTreeInOrderSearchIterator_Stack.h"
+
+#include "binaryTreeSearchKthSmallest_InOrder.h"
+#include "binaryTreeSearchKthSmallest_Iteration.h"
 #endif // !binaryTree_
