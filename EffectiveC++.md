@@ -655,3 +655,142 @@ class TextBlock{
 
 ### 条款04：确定对象被使用前已被初始化
 
+#### 内置数据对象要手动初始化
+
+C++不保证对无初值对象进行初始化。
+
+```c++
+int x,y;
+```
+
+#### 初始化不等于赋值操作
+
+除了内置类型，任何数据类型的初始化应当由构造函数完成，然而构造函数可以有2种方式进行初始化。
+
+1种是赋值初始化，这是一种伪初始化，本质上是先调用了默认构造函数，再用新的值来覆盖原来的值。
+
+```c++
+class PhoneNumber{
+	...
+}
+class Person{
+public:
+    Person(const string& name,const int&age,const PhoneNumber& pn){
+        this->name = name;
+        this->age = age;
+        this->pn = pn;
+        if (this->age>18) this->isAdult = true;
+        else this->isAdult = false;
+    }
+private:
+    string name;
+    int age;
+    PhoneNumber pn;
+    bool isAdult;
+}
+```
+
+另1种是成员列表初始化，本质上只调用了一次复制构造，直接初始化，而不是覆盖旧值，效率很高。
+
+```c++
+class PhoneNumber{
+	...
+}
+class Person{
+public:
+    Person(const string& name,const int&age,const PhoneNumber& pn)
+        :name(name),age(age),pn(pn),isAdult(age>18?1:0){}
+private:
+    string name;
+    int age;
+    PhoneNumber pn;
+    bool isAdult;
+}
+```
+
+对于内置类型来说，2种初始化方法的消耗成本相同，但是为了一致性，将内置类型和自定义数据类型同等对待，也就是isAdult也使用成员列表初始化，注意string并不是内置数据类型，是C++基于char实现的新数据类型。
+
+当然上述还可以定义无参构造，内置数据类型记得要手动初始化，因为它没有构造函数。
+
+```c++
+class PhoneNumber{
+	...
+}
+class Person{
+public:
+    Person():name(),age(),pn(),isAdult(age>18?1:0){} // 除了isAdult其它都是调用了默认构造函数
+private:
+    string name;
+    int age;
+    PhoneNumber pn;
+    bool isAdult;
+}
+```
+
+#### 成员列表初始化可能重复
+
+类的成员可能很多，构造函数也有很多，每个构造函数可能会初始化某些成员变量，这样就可能导致初始化被重复，这种情况可以让内置数据类型(因为初始化和赋值的成本相同)的成员移入一个函数内使用赋值初始化，这个函数可以被所有构造函数进行调用。而非内置数据类型，使用成员列表初始化更加有效。
+
+#### 成员列表初始化的次序性问题
+
+上述成员列表初始化的构造函数按照name、age、pn和isAdult顺序写的，实际上也可以不按照次序写，例如age先写。因为真正的初始化次序由被声明的顺序决定，显然name先于age被声明，age也先于isAdult被声明，所以它们也相对的先被初始化。为了保证一致性，虽然成员列表初始化的次序不影响，但是也要按照顺序去写。
+
+还有一个问题在于，有的变量初始化依赖于另一个变量的初始化，例如isAdult依赖于age是否大于18，这时候初始化次序的重要性出来了，成员列表初始化时age必须写在isAdult之前。
+
+#### 跨编译单元的初始化次序问题
+
+上边提到的问题还比较简单，是一个类内，自然也在同一个文件中，也可以说是同一个编译单元内初始化次序的问题。有时候2个文件内，分别声明了2个类，第1个文件声明了一个外部对象给第2个类使用，但是这个外部对象没被初始化就被调用就会出问题，例如这样的写法。
+
+```c++
+// 文件1
+class PhoneNumber{
+    int length() const;
+}
+extern PhoneNumber PN; // 声明外部使用,但未被初始化
+// 文件2
+class Person{
+    ...
+    Person(params){
+        ...
+        int length = PN.length();  
+    }  
+}
+```
+
+实际上，Person内部调用PN时，PN没被初始化，调用length()函数获取长度是错的。除非PN先于Person进行初始化，但是2个文件是在不同时间被不同的人创建，因为C++对不同编译单元内非局部静态对象的初始化相对次序没有明确定义，事实上也无法定义，现实逻辑太复杂，那么避免这个出现，只需要一个小小的设计。
+
+可以不直接操作非局部静态对象，而是将这个对象1个函数内定义，并将其声明为static变量，然后返回其引用。可以这样做，**<u>是因为C++规定函数内的局部静态对象在该函数首次被调用时被初始化，所以一旦调用就先于调用者被初始化，不会引发问题。</u>**
+
+```c++
+// 文件1
+class PhoneNumber{
+    int length() const;
+}
+PhoneNumber& PN(){
+    static PhoneNumber PN;
+    return PN; // 静态对象是可以返回的
+}
+// 文件2
+class Person{
+    ...
+    Person(params){
+        ...
+        int length = PN().length(); // 可以保证PN()先被初始化 
+    }  
+}
+Person& person(){
+    static Person person;
+    return person; //Person也可以这样做,给第3个文件使用
+}
+```
+
+总结，在跨编译单元初始化次序的问题中，使用局部静态对象替换非局部静态对象，可以避免次序错误出现的问题。
+
+
+
+
+
+
+
+
+
