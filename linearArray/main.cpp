@@ -28,5 +28,9 @@ int main()
     _linearArray_mergeSortedArray_doublePointers();
     cout<<"search rotated sorted array element's idx as follows\n";
     _linearArray_searchRotateSorted_binary();
+    cout<<"the two of power as follows\n";
+    _linearArray_twoOfPower();
+    _linearArray_findSingleNumber_bit();
+    _linearArray_findSingleNumber_hashTable();
     return 0;
 }

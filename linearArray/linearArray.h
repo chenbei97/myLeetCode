@@ -20,4 +20,9 @@
 #include "linearArrayMergeSortedArray_DoublePointers.h"
 
 #include "linearArraySearchRotateSorted_Binary.h"
+
+#include "linearArrayTwoOfPower.h"
+
+#include "linearArrayFindSingleNumber_HashTable.h"
+#include "linearArrayFindSingleNumber_Bit.h"
 #endif // !linearArray_
