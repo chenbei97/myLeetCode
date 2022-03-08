@@ -18,4 +18,6 @@
 
 #include "linearArrayMergeSortedArray_Iteration.h"
 #include "linearArrayMergeSortedArray_DoublePointers.h"
+
+#include "linearArraySearchRotateSorted_Binary.h"
 #endif // !linearArray_

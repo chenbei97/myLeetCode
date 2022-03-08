@@ -26,5 +26,7 @@ int main()
     cout <<"merge two sorted arrays as follows\n";
     _linearArray_mergeSortedArray_iteration();
     _linearArray_mergeSortedArray_doublePointers();
+    cout<<"search rotated sorted array element's idx as follows\n";
+    _linearArray_searchRotateSorted_binary();
     return 0;
 }
