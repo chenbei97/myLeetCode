@@ -1,7 +1,15 @@
 from ListNode import ListNode
 class linkedListCircularExistDoublePointers:
     def circularIsExist(self,root:ListNode):
-        pass
+        if not root or not root.next:
+            return False
+        slow,fast = root,root.next
+        while slow!= fast:
+            if not slow or not fast.next:
+                return False
+            slow = slow.next
+            fast = fast.next.next
+        return True
 if __name__ == '__main__':
     root = ListNode(3)
     root.next = ListNode(2)

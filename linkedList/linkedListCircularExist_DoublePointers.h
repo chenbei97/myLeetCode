@@ -6,7 +6,19 @@ using namespace std;
 class linkedListCircularExistDoublePointers{
 public:
     bool circularIsExist(ListNode * root){
-
+        if (root == nullptr || root->next == nullptr) {
+            return false; // 使用root->next之前事先比较一下
+        }
+        ListNode* slow = root;
+        ListNode* fast = root->next;
+        while (slow != fast) {
+            if (fast == nullptr || fast->next == nullptr) {
+                return false; // 有一个到达nullptr就返回false没有环
+            }
+            slow = slow->next; // 走1步
+            fast = fast->next->next; // 走2步
+        }
+        return true;
     }
 };
 void _linkedList_circularExist_doublePointers(){
