@@ -13,4 +13,7 @@
 #include "linkedListRemoveTheNodeFromEnd_Iteration.h"
 #include "linkedListRemoveTheNodeFromEnd_DoublePointers.h"
 #include "linkedListRemoveTheNodeFromEnd_Stack.h"
+
+#include "linkedListCircularExist_DoublePointers.h"
+#include "linkedListCircularExist_HashTable.h"
 #endif // !linkedList

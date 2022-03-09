@@ -18,5 +18,8 @@ int main()
     _linkedList_removeTheNodeFromEnd_stack();
     _linkedList_removeTheNodeFromEnd_iteration();
     _linkedList_removeTheNodeFromEnd_doublePointers();
+    cout<<"the list have circular? as follows\n"; 
+    //_linkedList_circularExist_doublePointers();
+    _linkedList_circularExist_hashTable();
     return 0;
 }
