@@ -25,4 +25,7 @@
 
 #include "linearArrayFindSingleNumber_HashTable.h"
 #include "linearArrayFindSingleNumber_Bit.h"
+
+#include "linearArrayNonRepeatingSubset_Iteration.h"
+#include "linearArrayNonRepeatingSubset_Recursion.h"
 #endif // !linearArray_

@@ -30,7 +30,11 @@ int main()
     _linearArray_searchRotateSorted_binary();
     cout<<"the two of power as follows\n";
     _linearArray_twoOfPower();
+    cout<<"find the single number as follows\n";
     _linearArray_findSingleNumber_bit();
     _linearArray_findSingleNumber_hashTable();
+    cout<<"find all non repeating subset as follows\n";
+    _linearArray_nonRepeatingSubset_iteration();
+    _linearArray_nonRepeatingSubset_recursion();
     return 0;
 }
