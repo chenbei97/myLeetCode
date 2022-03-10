@@ -41,5 +41,6 @@ int main()
     _linearArray_sortedSquare_doublePointers();
     cout<<"the relative order array as follows\n";
     _linearArray_relativeOrder_hashTable();
+    _linearArray_relativeOrder_iteration();
     return 0;
 }

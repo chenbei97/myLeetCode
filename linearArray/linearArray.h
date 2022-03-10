@@ -33,4 +33,5 @@
 #include "linearArraySortedSquare_DoublePointers.h"
 
 #include "linearArrayRelativeOrder_HashTable.h"
+#include "linearArrayRelativeOrder_Iteration.h"
 #endif // !linearArray_
