@@ -36,5 +36,10 @@ int main()
     cout<<"find all non repeating subset as follows\n";
     _linearArray_nonRepeatingSubset_iteration();
     _linearArray_nonRepeatingSubset_recursion();
+    cout<<"the array sorted squares as follows\n";
+    _linearArray_sortedSquare_iteration();
+    _linearArray_sortedSquare_doublePointers();
+    cout<<"the relative order array as follows\n";
+    _linearArray_relativeOrder_hashTable();
     return 0;
 }

@@ -28,4 +28,9 @@
 
 #include "linearArrayNonRepeatingSubset_Iteration.h"
 #include "linearArrayNonRepeatingSubset_Recursion.h"
+
+#include "linearArraySortedSquare_Iteration.h"
+#include "linearArraySortedSquare_DoublePointers.h"
+
+#include "linearArrayRelativeOrder_HashTable.h"
 #endif // !linearArray_
