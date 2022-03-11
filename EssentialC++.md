@@ -727,9 +727,244 @@ copy函数：指定容器的begin和end，另一个容器的begin，就可以复
 
 sort函数：传入begin和end，就可以进行排序(升序)。
 
+transform函数：传递5个参数，2个迭代器指明想要转换的元素范围，指定要转换的元素迭代器，指定要存放转换后元素存放位置的迭代器，以及想要执行的转换操作，例如使用后面的function object的函数。
+
+使用find函数找到数组内指定元素的个数，以下程序可以不查看同一个元素两次以上找到指定元素的个数。
+
+find如果能找到这个值val，就会返回指向val的迭代器，它肯定不是end()，所以会继续寻找。直到再也找不到，就会返回end()，此时while也就退出，记录的c就是val出现的次数。
+
+```c++
+int count(const vector<int> &nums, int val){
+    vector<int>::const_iterator iter = vec.begin(); //常量指针,指针所指物不可更改
+    int c = 0;
+    while ((iter = find(iter,nums.end(),val)) != nums.end()){
+        ++c;
+        ++iter;//指针指向的地址可以移动
+    }
+    return c;
+}
+```
+
 ### 设计一个泛型算法
 
-​                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+  假如想要实现一个数组中找到所有小于10的数，一个快速但是缺乏弹性的写法如下。
+
+```c++
+vector<int> less_than_10(const vector<int> &nums){
+    vector<int> ans;
+    for (auto num:nums){
+        if(num<10)
+            ans.push_back(num);
+    }
+    return ans;
+}
+```
+
+  更好的版本是，可以指定小于的值，所以可增加1个参数val，如下。
+
+```c++
+vector<int> less_than(const vector<int> &nums,int val){
+    vector<int> ans;
+    for (auto num:nums){
+        if(num<val)
+            ans.push_back(num);
+    }
+    return ans;
+}
+```
+
+ 现在还希望不止能够实现小于val，也能实现其他比较操作，例如大于，等等于，可以引入函数指针参数。函数指针指向的函数具有2个参数，都是int型，返回类型为bool，相应的函数名改为filter。现在就可以根据num和val的关系来决定添加什么样的num。op指向的2个函数可以单写，如less_than和greater_than函数。
+
+```c++
+vector<int> filter(const vector<int> &nums,int val,bool (*op)(int,int)){
+    vector<int> ans;
+    for (auto num:nums){
+        if(op(num,val))
+            ans.push_back(num);
+    }
+    return ans;
+}
+bool less_than(int x, int y){return x<y?true:false;}
+bool greater_than(int x, int y){return x>y?true:false;}
+// 调用
+auto ans = filter(vec,val,less_than);
+```
+
+ 这个函数还可以继续泛型，例如支持的op函数能够不受参数限制，而是使用自定义的函数规则来实现，把这样一组行为函数来传递给filter函数作为参数。这就需要先引入函数对象的概念，函数对象比函数指针更有效率。
+
+#### Function Object
+
+函数对象，标准库在< functional> 中预定义了许多函数对象，它们是某种class的实例，因为这些类对操作运算符()进行了重载，所以使得实例具有函数的性质，可以被调用。这些函数可以被一些算法所使用，例如sort或者find_if，当然函数对象也可以自定义实现。
+
+函数对象主要为三大类，算术运算、关系运算和逻辑运算。
+
+6个算术运算：除了加减乘除，modules是取模运算，negate是取相反数运算。
+
+```c++
+plus<type>;
+minus<type>;
+negate<type>;
+multiplies<type>;
+divides<type>;
+modules<type>;
+```
+
+  6个关系运算：
+
+```c++
+less<type>;
+less_equal<type>;
+greater<type>;
+greater_equal<type>;
+equal_to<type>;
+not_equal_to<type>;
+```
+
+  3个逻辑运算：
+
+```c++
+logical_and<type>;
+logical_or<type>;
+logical_not<type>;
+```
+
+举例，sort函数默认是升序操作，如果希望降序操作，就可以使用greater< type >，记得要加括号，因为是函数对象，加括号才表示调用。
+
+```c++
+sort(vec.begin(),vec.end(),greater(int)());
+```
+
+如果自定义升序，也可以实现。
+
+```c++
+template<typename T>
+class greater{
+	public:
+		bool operator()(T v1,T v2){
+            return v1>v2;
+        }
+};
+sort(vec.begin(),vec.end(),greater());//升序
+```
+
+再如使用find_if函数，定义一个找到<10元素的函数怎么写呢？
+
+首先定义一个类，重载()运算符。
+
+```c++
+template<class T>
+class lessthan_ten{
+    public:
+    	bool operator()(T val){
+            return val<10;
+        }
+};
+```
+
+那么就可以把这个类的实例作为函数对象传递给find_if函数。
+
+```c++
+auto iter = find_if(vec.begin(),vec.end(),lessthan_ten());
+```
+
+最后1个例子，使用transform函数对数组的某个元素进行操作，例如该元素和自身相加或者相乘。这里相当于是把容器vec的第2个元素和自己相加转换到ans.begin()上。
+
+```c++
+transform<vec.begin(),vec.end(),vec.begin()+1,ans.begin(),plus<int>()>;
+```
+
+#### Function Object Adapter
+
+##### bind1st and bind2nd
+
+上述find_if的例子，find_if要求传入的是个一元运算符，所以重载的函数对象可以带入找到小于10的元素。现在如果希望利用标准库已有的操作，例如less，它显然是个二元操作符，如何将其转为一元运算符可以为find_if函数使用呢？答案是STL标准库的函数对象适配器，主要是2个函数，一个是bind1st，另一个是bind2nd，分别可以把指定值绑定到函数对象的第1或者第2操作数。
+
+例如less，原本是如果前1个元素小于后1个元素就返回true，现在将指定值val绑定到less的第2个参数，就可以实现如果元素小于val就返回true。
+
+```c++
+bind2nd(less<int>,val);
+```
+
+现在回过头来看filter函数，将其重写如下。改动在于不是返回计数，而是返回满足条件的元素，存放在一个数组。将less第2操作数绑定后，就可以实现当nums的元素小于val就返回不是end的迭代器，那么就把这个元素加入答案，while继续运行，如果找不到了就会返回end，终止运行。
+
+```c++
+vector<int> filter(const vector<int>&nums,int val, less<int> &op){
+    vector<int> ans;
+    vector<int> :: const_iterator iter = nums.begin();
+    while ((iter = find_if(iter,nums.end(),
+                          bind2nd(op,val))) != nums.end()){
+        ans.push_back(*iter);
+        iter++;
+    }
+    return ans;
+}
+```
+
+ 现在的函数，还受限于val只能是int类型，同时也受限于数组是vector类型，返回也是vector类型 。
+
+将其继续泛型化，可以引入函数模板，声明4个类型，输入迭代器、输出迭代器、元素类型，函数对象类型。
+
+```c++
+template <typename InputIterator,typename OutputIterator,
+		typename ElemType,typename Comp>
+OutputIterator filter(InputIterator first, InputIterator last,
+                     OutputIterator at, const ElemType &val, Comp op)
+{
+   while ((first = find_if(first,last,bind2nd(op,val))) != last){
+       *at++ = *first++;
+   }
+   return at;
+}
+// 现在可以进行的调用
+const int size=8;
+int a[size]={44,22,3,13,8,2,91,-2};
+vector<int>b(a,a+size);
+int ra[size];
+vector<int> rb(size);
+filter(a,a+size,ra,size,less<int>());
+filter(b.begin(),b.end(),rb.end(),size,less<int>());
+```
+
+  输出迭代器的at参数指定的是要存放的位置at存放符合条件的first，然后2个指针都前进。     
+
+ ##### not1 and not2
+
+这2个适配器函数是另一种适配器。 not1是针对一元运算符的，unary function object，也就是比较运算、逻辑非运算和算术运算的取反，not2是针对二进制函数对象进行取反，也就是binary function object。
+
+例如，要找到所有大于等于10的元素，可以将函数对象less< int >()的结果取反，
+
+```c++
+while ((iter = find_if(iter,vec.end(),not1(bind2nd(less<int>,10))))!= vec.end())
+```
+
+ bind2nd绑定后返回的对象也是函数对象，也可以作为not1函数的参数。  
+
+当然，解决问题的方法有很多，不一定这样使用find_if，也可以使用vec的副本排好序后，找到第1个大于指定值的元素位置，再删除该位置后的所有元素，返回该副本即可。
+
+```c++
+vector<int> sub_vec(const vector<int> &vec, int val){
+    vector<int> ans(vec);
+    sort(ans.begin(),ans.end());//升序
+    vector<int>::iterator iter = 
+        find_if(ans.begin(),ans.end(),bind2nd(greater<int>(),val));//找到大于val第1个值
+    ans.erase(iter,ans.end()); // 返回的迭代器到end之间被删除
+    return ans;
+}
+```
+
+设计泛型算法的思路如下：
+
+首先写了一个函数，找出vector内小于10的所有元素，不过函数比较死板，没有弹性；
+
+然后给函数加了一个参数，这个参数可以和vector的元素作比较，以此可以返回大于10，等于10之类的元素；
+
+继续泛型，加入新参数op，也就是函数指针，可以让用户自定义一些函数来指定比较的方式；
+
+紧接着引入function object的概念，它比函数指针更有效率，可以将一组行为用类对函数调用符号()进行重载，使之具有函数的性质，可以替代函数指针作为函数的参数；
+
+最后，这样的函数再以函数模板的方式实现，为了支持多种容器，将输入和输出使用泛型指针代替，为了支持容器元素的不同类型，也对指定的元素类型使用模板，最后函数对象也可参数化，可以同时支持函数指针和函数对象。
+
+现在这个函数于元素类型、依赖的容器类型、函数指针/函数对象类型都无关，是一个真正的泛型算法。                                                                                                                                                                                                                         
 
 ### 使用关联性容器
 
