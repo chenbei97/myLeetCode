@@ -42,5 +42,11 @@ int main()
     cout<<"the relative order array as follows\n";
     _linearArray_relativeOrder_hashTable();
     _linearArray_relativeOrder_iteration();
+    cout <<"the majority element as follows\n";
+    _linearArray_majorityElement_hashTable();
+    _linearArray_majorityElement_sort();
+    cout <<"the max subArray sum as follows\n";
+    _linearArray_maxSubArray_dynamicProgramming();
+    _linearArray_maxSubArray_iteration();
     return 0;
 }

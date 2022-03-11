@@ -34,4 +34,10 @@
 
 #include "linearArrayRelativeOrder_HashTable.h"
 #include "linearArrayRelativeOrder_Iteration.h"
+
+#include "linearArrayMajorityElement_HashTable.h"
+#include "linearArrayMajorityElement_Sort.h"
+
+#include "linearArrayMaxSubArray_DynamicProgramming.h"
+#include "linearArrayMaxSubArray_Iteration.h"
 #endif // !linearArray_
