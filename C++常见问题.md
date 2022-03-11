@@ -138,3 +138,67 @@ inline T MAX(const T&x, const T&y){
 }
 ```
 
+## inline的作用
+
+inline函数是指，函数体可以在调用点直接展开，而无需调用，省去调用的开销。如果函数体比较小，这种声明为inline是值得的，但是如果函数体很长，例如存在循环或者递归等，就不要使用inline，这会带来代码的膨胀和较高的空间开销。
+
+因为inline函数必须再调用点处执行，所以与普通函数不同，在每个调用点处都需要定义，也就是a.cpp和b.cpp使用inline函数时，都要定义，如果2个定义不同程序就会出现未定义的行为。所以为了避免这种事，常常把inline函数声明在头文件中，这样它对每个调用都是相同的定义。
+
+另外inline是用于实现的关键字而非声明的关键字，所以inline要与函数定义体连在一起才起作用。声明不加inline这样做的原因是，用户无需通过阅读声明了解到这个函数是否需要内联。
+
+```C++
+inline void swap(int &x, int &y);// 与函数声明连接不起作用
+void swap(int &x, int &y){ // 函数体
+    int t = x;
+    x = y;
+    y = t;
+}
+
+void swap(int &x, int &y); // 函数声明
+inline void swap(int &x, int &y){ // 与函数体在一起才起作用
+    int t = x;
+    x = y;
+    y = t;
+}
+```
+
+对于成员函数，一般是类的声明和实现放在2个文件中，这样做的原因是因为如果函数实现放在类的声明中，就会自动成为inline函数。这样类的每个实例生成都会复制一份代码，而默认构造、复制构造和析构函数等常常有较大的函数体，这样的空间开销是不必要的，调用的开销远远小于inline。
+
+```c++
+class A{
+	public:
+		void swap(int &x, int &y){ // 函数体在声明中实现会自动成为inline函数
+            int t = x;
+            x = y;
+            y = t;
+        }
+}
+```
+
+如果swap不想作为inline函数，应该类外声明或者包含类A头文件的cpp文件定义。
+
+```c++
+// 写在包含类A头文件的cpp文件或者写在类A的头文件外部
+void A::swap(int &x, int &y){ // 每个A的实例去调用这个函数,定义只有1分避免复制代码造成空间开销
+    int t = x;
+    x = y;
+    y = t;
+}
+```
+
+如果swap一定要声明为inline，为了良好的编程风格，也应当在类外声明为inline。
+
+```c++
+class A{
+	public:
+		void swap(int &x, int &y);
+}
+inline void A::swap(int &x, int &y){ //类外声明为inline函数
+    int t = x;
+    x = y;
+    y = t;
+}
+```
+
+inline函数常常用于替代宏函数，是真正的函数，有私有化的定义，可以限制作用域。
+
