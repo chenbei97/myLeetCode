@@ -48,5 +48,8 @@ int main()
     cout <<"the max subArray sum as follows\n";
     _linearArray_maxSubArray_dynamicProgramming();
     _linearArray_maxSubArray_iteration();
+    cout<<"the nearby duplicates as follows\n";
+    _linearArray_nearbyDuplicates_hashTable();
+    _linearArray_nearbyDuplicates_hashSet();
     return 0;
 }

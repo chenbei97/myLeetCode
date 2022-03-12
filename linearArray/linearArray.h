@@ -40,4 +40,7 @@
 
 #include "linearArrayMaxSubArray_DynamicProgramming.h"
 #include "linearArrayMaxSubArray_Iteration.h"
+
+#include "linearArrayNearbyDuplicates_HashTable.h"
+#include "linearArrayNearbyDuplicates_HashSet.h"
 #endif // !linearArray_
