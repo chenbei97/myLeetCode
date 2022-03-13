@@ -22,5 +22,8 @@ int main()
     _characterString_decodeString_iteration();
     _characterString_decodeString_stack();
     _characterString_decodeString_recursion();
+    cout<<"jewels and stones as follows\n";
+    _charaterString_jewelsStones_hashSet();
+    _charaterString_jewelsStones_iteration();
     return 0;
 }

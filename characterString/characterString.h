@@ -17,4 +17,7 @@
 #include "characterStringDecodeString_Iteration.h"
 #include "characterStringDecodeString_Stack.h"
 #include "characterStringDecodeString_Recursion.h"
+
+#include "charaterStringJewelsStones_HashSet.h"
+#include "charaterStringJewelsStones_Iteration.h"
 #endif // !characterString_
