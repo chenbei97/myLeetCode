@@ -968,11 +968,93 @@ vector<int> sub_vec(const vector<int> &vec, int val){
 
 ### 使用关联性容器
 
+ #### 使用map
 
+map被定义为一对pair数值，输入key时，如果它不存在于map就会自动加入并给定默认初值0。
 
+```c++
+map<string,int> words;
+words["chenbei"] = 1;
+```
 
+遍历map的方法，使用迭代器。
 
-​                                                                                                                                                                                                                                                 
+```c++
+map<string,int> ::iterator it = words.begin();
+for(; it!= words.end();it++){
+    cout<<"key = "<<it->first<<" val = "<<it->second<<endl;
+}
+```
+
+  查询key有3种方法。
+
+第一种是把key当成索引使用，查询即可。
+
+```c++
+if ((!words["chenbei"] = 0)){ // 说明chenbei不存在于map
+    ... // 这种写法的缺点是查询完,wordds就把这个key加进去了
+}    
+```
+
+第二种可以利用map的find函数，如果找到会返回这个key和val的迭代器，没找到就会返回end。
+
+```c++
+map<string,int> ::iterator it = words.find("chenbei");
+if (it != words.end()){
+    cout<<it->second<<endl;
+}
+```
+
+第三种利用count函数，不过key的val至多1份，所以count只是返回0或1，返回0说明不存在。
+
+```c++
+if (words.count("chenbei"))
+	cout<<words["chenbei"]<<endl;
+```
+
+  如果需要key存储多份值，需要使用multimap。
+
+#### 使用set
+
+ set只有key，且key只能存储1份，需要存储多份就使用multiset。 set也有count函数，可以用于判断key是否存在于集合，同样返回0或1。
+
+集合可以用来去重，默认集合内部元素的排列是升序，可以借助容器vector数组来构造。
+
+```c++
+int a[6]={2,1,2,3,6,4};
+vector<int> v(a,a+6);
+set<int> s(v.begin(),v.end());
+```
+
+ 遍历的方式也是使用迭代器，输出的结果是1、2、3、4、6。
+
+```c++
+set<int> :: iterator it = s.begin();
+for(; it!=s.end();it++){
+	cout<<*it<<endl;
+}
+```
+
+ 集合插入元素，可以插入单元素，也可以插入批量元素。
+
+```c++
+s.insert(10);
+vector<int> vv={9,10};
+s.insert(vv.begin(),vv.end());
+```
+
+ 其它和set有关的算法有：
+
+```c++
+set_intersection();
+set_union();
+set_difference();
+set_symmetric_difference();
+```
+
+ ### 使用Iterator Inserter
+
+​                                                                                                                                                                                                                             
 
 
 
