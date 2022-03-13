@@ -922,7 +922,7 @@ vector<int>b(a,a+size);
 int ra[size];
 vector<int> rb(size);
 filter(a,a+size,ra,size,less<int>());
-filter(b.begin(),b.end(),rb.end(),size,less<int>());
+filter(b.begin(),b.end(),rb.begin(),size,less<int>());
 ```
 
   输出迭代器的at参数指定的是要存放的位置at存放符合条件的first，然后2个指针都前进。     
@@ -1054,9 +1054,113 @@ set_symmetric_difference();
 
  ### 使用Iterator Inserter
 
-​                                                                                                                                                                                                                             
+回过头看之前的filter函数以及测试程序。
 
+```c++
+template <typename InputIterator,typename OutputIterator,
+		typename ElemType,typename Comp>
+OutputIterator filter(InputIterator first, InputIterator last,
+                     OutputIterator at, const ElemType &val, Comp op)
+{
+   while ((first = find_if(first,last,bind2nd(op,val))) != last){
+       *at++ = *first++;
+   }
+   return at;
+}
+// 现在可以进行的调用
+const int size=8;
+int a[size]={44,22,3,13,8,2,91,-2};
+vector<int>b(a,a+size);
+int ra[size];
+vector<int> rb(size);//目标容器必须指定容器大小
+filter(a,a+size,ra,size,less<int>());
+filter(b.begin(),b.end(),rb.begin(),size,less<int>());
+```
 
+注意到，目标容器要实现指定容器的大小，因为filter函数无法知道at++之后的位置是否有效，因为这调用的是assign(赋值)运算符。
+
+现在在头文件< iterator >中定义了插入适应器，也就是Iterator adapter。
+
+有3个函数。
+
+第1个是back_inserter函数，传入的参数就是容器，可以以push_back的形式来给目标容器插入元素，自适应拓展容量而无需事先指定容器大小，具有更好的灵活性，此函数适用于尾插，效率较高。
+
+```c++
+vector<int> res; // 未指定容器大小
+unique_copy(b.begin(),b.end(),back_inserter(res));//赋值操作可以自动尾插
+```
+
+第2个函数是inserter()会以容器的insert函数代替assign运算符，接收2个参数，一个是目标容器，一个是迭代器，执行容器内插入操作起点，例如可以指定end()，表示在这之前插入，也就是相当于尾插   。
+
+```c++
+vector<int> res; // 未指定容器大小
+unique_copy(b.begin(),b.end(),inserter(res,res.end()));//赋值操作可以自动插入指定位置之前
+```
+
+第3个函数是front_inserter()，只适用于list或者deque，也就是头插，会使用容器的push_frnt函数来代替assign函数。
+
+```c++
+list<int> res; // 未指定容器大小
+copy(b.begin(),b.end(),front_inserter(res);//自动头插
+```
+
+不过这些函数要注意只适合特定容器，而纯粹的array不支持任何插入操作，所以使用filter函数时有所区别。
+
+```c++
+const int size=8;
+int a[size]={44,22,3,13,8,2,91,-2};
+vector<int>b(a,a+size);
+int ra[size]; // array类型必须指定大小
+vector<int> rb;//目标容器无需指定容器大小
+filter(a,a+size,ra,size,less<int>());// array类型依然只能如此
+filter(b.begin(),b.end(),
+       back_inserter(rb),size,less<int>());//现在可以借助Inserter adapter
+```
+
+### 使用iostream Iterator
+
+ 输入输出流迭代器就是依据插入迭代器实现的。如果需要终端读取一些字符串和输出一些字符串，可能需要先指定容器，然后反复push_back输入的字符串，最后遍历输出字符串。
+
+```c++
+string word;
+vector<string> text; 
+while(cin>>word){
+    text.push_back(word);
+}
+for(int i=0;i<text.size();i++)
+    cout<<text[i]<<" ";
+cout<<"\n";
+```
+
+ 这样的方法略显笨拙，可以借助  iostream Iterator，包含在头文件 < iteratorr>中。有2个迭代器类，一个是istream_iterator，另一个是ostream_iterator ，可以将其分别绑定到cin和cout，就可以输出。
+
+```c++
+istream_iterator<string> st(cin);
+istream_iterator<string> eof;//默认指向要读取的最后一个元素的下一个位置
+
+vector<string> text;//可不指定size
+copy(st,eof,back_inserter(text)); // 把终端的输入以尾插形式存入text
+
+ostream_iterator<string> os(cout," ");//绑定到输出流对象cout,第2个参数是分隔符,默认不分隔
+copy(text.begin(),text.end(),os);// 输出到终端
+```
+
+如果希望是读取文件，存入文件 ，可以把cin和cout替换成输入输出流对象。                                                                                                   
+
+```c++
+ifstream in_file("1.txt");
+ofstream out_file("2.txt");
+istream_iterator<string> st(in_file); // 把cin替换
+istream_iterator<string> eof;//默认指向要读取的最后一个元素的下一个位置
+
+vector<string> text;//可不指定size
+copy(st,eof,back_inserter(text)); // 把终端的输入以尾插形式存入text
+
+ostream_iterator<string> os(out_file," ");//把cout替换
+copy(text.begin(),text.end(),os);// 输出到终端
+```
+
+## 四、基于对象的编程风格
 
 
 
