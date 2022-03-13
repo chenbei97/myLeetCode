@@ -1,11 +1,11 @@
-#ifndef characterStrngCalculateExpressionStack_
-#define characterStrngCalculateExpressionStack_
+#ifndef characterStringCalculateExpressionStack_
+#define characterStringCalculateExpressionStack_
 #include <string>
 #include <vector>
 #include <iostream>
 #include <numeric>
 using namespace std;
-class characterStrngCalculateExpressionStack{
+class characterStringCalculateExpressionStack{
     public:
         int calculate(string s){
             vector<int> stk;//为了方便使用vector作为栈,这样获取元素不必删除才能获取
@@ -51,10 +51,10 @@ class characterStrngCalculateExpressionStack{
             return accumulate(stk.begin(), stk.end(), 0); // 初始值为0
         }
 };
-void _characterStrng_calculateExpression_stack(){
-    characterStrngCalculateExpressionStack solution;
+void _characterString_calculateExpression_stack(){
+    characterStringCalculateExpressionStack solution;
     string s("3 * 17 + 100 / 3 - 5 * 3");//3 * 17 + 100 / 3 - 5 * 3 
     int ans = solution.calculate(s);
     cout<<"the string expression is calculated,ans is "<<ans<<endl;
 }
-#endif // !characterStrngCalculateExpressionStack_
+#endif // !characterStringCalculateExpressionStack_

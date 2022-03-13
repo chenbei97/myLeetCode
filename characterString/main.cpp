@@ -10,7 +10,7 @@ int main()
     cout<<"the parentheses's validity as follows\n";
     _characterStringValidParenthesesStack();
     cout<<"calculate expression as follows\n";
-    _characterStrng_calculateExpression_stack();
+    _characterString_calculateExpression_stack();
     cout<<"string is palindrome? as follows\n";
     _characterString_palindrome_greedy();
     _characterString_palindrome_enum();

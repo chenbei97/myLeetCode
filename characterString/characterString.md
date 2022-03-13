@@ -173,3 +173,11 @@ a2 = (number-1)%26+1
 ### hashSet解法
 
 对于字符串 stones 中的每个字符，都需要遍历一次字符串 jewels，导致时间复杂度较高。如果使用哈希集合存储字符串 jewels 中的宝石，则可以降低判断的时间复杂度。如果字符在集合里就表示算1个宝石。
+
+## 子域名计数
+
+给定字符串，"9001 discuss.leetcode.com"，顶级域名为"com" ，二级域名为"leetcode.com"，最低一级为"discuss.leetcode.com"。当访问域名 "discuss.leetcode.com"时，同时也会隐式访问其父域名 "leetcode.com"以及"com" 。给你一个 计数配对域名 组成的数组，解析得到输入中每个子域名对应的计数配对域名 ，并以数组形式返回。这里的输出应当["9001leetcode.com","9001discuss.leetcode.com","9001 com"]。
+
+### hashTable解法
+
+这个解法C++不好实现，没有给出。java和python有字符串的spilit函数，所以好处理。
