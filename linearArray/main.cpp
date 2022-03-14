@@ -53,5 +53,9 @@ int main()
     _linearArray_nearbyDuplicates_hashSet();
     cout<<"the sudoku is valid? as follows\n";
     _linearArray_validSudoku_iteration();
+    cout<<"the best time to sell stocks as follows\n";
+    _linearArray_bestTimeToSellStocks_iteration();
+    _linearArray_bestTimeToSellStocks_dynamicProgramming();
+    _linearArray_bestTimeToSellStocks_greedy();
     return 0;
 }

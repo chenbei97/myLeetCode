@@ -45,4 +45,8 @@
 #include "linearArrayNearbyDuplicates_HashSet.h"
 
 #include "linearArrayValidSudoku_Iteration.h"
+
+#include "linearArrayBestTimeToSellStocks_Iteration.h"
+#include "linearArrayBestTimeToSellStocks_DynamicProgramming.h"
+#include "linearArrayBestTimeToSellStocks_Greedy.h"
 #endif // !linearArray_
