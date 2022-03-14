@@ -43,4 +43,6 @@
 
 #include "linearArrayNearbyDuplicates_HashTable.h"
 #include "linearArrayNearbyDuplicates_HashSet.h"
+
+#include "linearArrayValidSudoku_Iteration.h"
 #endif // !linearArray_

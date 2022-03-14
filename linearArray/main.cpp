@@ -51,5 +51,7 @@ int main()
     cout<<"the nearby duplicates as follows\n";
     _linearArray_nearbyDuplicates_hashTable();
     _linearArray_nearbyDuplicates_hashSet();
+    cout<<"the sudoku is valid? as follows\n";
+    _linearArray_validSudoku_iteration();
     return 0;
 }
