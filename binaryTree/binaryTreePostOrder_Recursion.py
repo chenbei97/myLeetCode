@@ -1,6 +1,13 @@
+'''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:19:05
+Description: tree's postOrder by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreePostOrder_Recursion.py
+A boy without dreams
+'''
 from typing import List
 from typing import Optional
-from pip import main
 from TreeNode import TreeNode
 class binaryTreePostOrderRecursion:
     '''

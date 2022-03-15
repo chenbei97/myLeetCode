@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-14 15:49:31
+ * @LastEditTime: 2022-03-15 11:11:32
+ * @Description: judge an tree is subStructure of other tree by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeisSubStructure_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeisSubStructureRecursion_
 #define binaryTreeisSubStructureRecursion_
 #include "TreeNode.h"

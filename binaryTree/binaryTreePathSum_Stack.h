@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-06 10:52:12
+ * @LastEditTime: 2022-03-15 11:18:14
+ * @Description: calculate tree's pathsum by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreePathSum_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreePathSumStack_
 #define binaryTreePathSumStack_
 #include <stack>

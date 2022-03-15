@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-17 15:01:32
+LastEditTime: 2022-03-15 11:16:46
+Description: merge two maxhblts by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeMergeMaxHblt.py
+A boy without dreams
+'''
 from HbltNode import HbltNode
 from queue import Queue
 class binaryTreeMergeMaxHblt:

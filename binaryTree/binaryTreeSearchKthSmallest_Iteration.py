@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-07 11:25:43
+LastEditTime: 2022-03-15 11:21:59
+Description: search the k smallest element in searchTree by iteration
+FilePath: \myLeetCode\binaryTree\binaryTreeSearchKthSmallest_Iteration.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeSearchKthSmallestIteration:
     def __init__(self,root) -> None:

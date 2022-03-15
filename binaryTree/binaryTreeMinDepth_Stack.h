@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-22 14:54:07
+ * @LastEditTime: 2022-03-15 11:17:39
+ * @Description: calculate tree's mindepth by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMinDepth_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMinDepthStack_
 #define binaryTreeMinDepthStack_
 #include <stack>

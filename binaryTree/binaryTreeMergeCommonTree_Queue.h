@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-20 11:08:34
+ * @LastEditTime: 2022-03-15 11:14:46
+ * @Description: merge two trees by queue
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMergeCommonTree_Queue.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMergeCommonTreeQueue_
 #define binaryTreeMergeCommonTreeQueue_
 #include <iostream>

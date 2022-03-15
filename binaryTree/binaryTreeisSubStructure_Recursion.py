@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-14 15:48:59
+LastEditTime: 2022-03-15 11:11:39
+Description: judge an tree is subStructure of other tree by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeisSubStructure_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeisSubStructureRecursion:
     def isSubStructure(self,tree1: TreeNode,tree2:TreeNode) -> bool :

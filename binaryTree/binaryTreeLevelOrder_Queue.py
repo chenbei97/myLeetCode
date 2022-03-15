@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:13:33
+Description: binaryTree levelOrder by queue
+FilePath: \myLeetCode\binaryTree\binaryTreeLevelOrder_Queue.py
+A boy without dreams
+'''
 from queue import Queue # 单端FIFO队列,deque是双端队列,priority_queue是优先级队列,都继承于queue
 from typing import List
 from typing import Optional

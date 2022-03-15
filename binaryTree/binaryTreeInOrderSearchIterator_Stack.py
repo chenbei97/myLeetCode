@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-07 09:23:06
+LastEditTime: 2022-03-15 11:07:56
+Description: design an iterator of binarySearchTree by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeInOrderSearchIterator_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeInOrderSearchIteratorStack:
     def __init__(self,root) -> None:

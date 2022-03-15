@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-20 09:43:51
+ * @LastEditTime: 2022-03-15 11:15:29
+ * @Description: merge two trees by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMergeCommonTree_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMergeCommonTreeRecursion_
 #define binaryTreeMergeCommonTreeRecursion_
 #include <iostream>

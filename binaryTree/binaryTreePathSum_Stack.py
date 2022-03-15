@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-06 10:52:17
+LastEditTime: 2022-03-15 11:18:23
+Description: calculate tree's pathsum by stack
+FilePath: \myLeetCode\binaryTree\binaryTreePathSum_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from typing import Optional
 class binaryTreePathSumStack:

@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-20 15:35:30
+LastEditTime: 2022-03-15 11:21:09
+Description: find tree's rightView by queue
+FilePath: \myLeetCode\binaryTree\binaryTreeRightView_Queue.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from typing import List
 class binaryTreeRightViewQueue:

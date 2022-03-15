@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-15 08:58:31
+LastEditTime: 2022-03-15 11:11:27
+Description: judge an tree is subStructure of other tree by iteration
+FilePath: \myLeetCode\binaryTree\binaryTreeisSubStructure_Iteration.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from typing import Optional,List
 from queue import Queue

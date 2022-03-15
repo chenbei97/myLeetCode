@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:12:31
+Description: judge an tree is symmetric by array
+FilePath: \myLeetCode\binaryTree\binaryTreeIsSymmetric_Array.py
+A boy without dreams
+'''
 from typing import Optional
 from typing import List
 from queue import Queue

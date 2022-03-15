@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-20 10:59:17
+LastEditTime: 2022-03-15 11:16:03
+Description: merge two trees by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeMergeCommonTree_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeMergeCommonTreeStack:

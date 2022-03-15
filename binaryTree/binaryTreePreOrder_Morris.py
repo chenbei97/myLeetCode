@@ -1,4 +1,12 @@
 '''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:19:56
+Description: tree's preOrder by morris
+FilePath: \myLeetCode\binaryTree\binaryTreePreOrder_Morris.py
+A boy without dreams
+'''
+'''
 morrisq前序遍历的实现原则:
 1.最开始cur=root,如果cur无左孩子,cur向右移动(cur=cur.right)
 2.如果cur有左孩子,找到cur左子树上最右的节点,记为mostright

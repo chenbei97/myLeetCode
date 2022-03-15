@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-21 13:11:50
+LastEditTime: 2022-03-15 11:05:26
+Description: find binaryTree all paths by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeAllPaths_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from typing import List
 class binaryTreeAllPathsStack:

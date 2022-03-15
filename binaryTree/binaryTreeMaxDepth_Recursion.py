@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-22 08:22:23
+LastEditTime: 2022-03-15 11:17:09
+Description: calculate tree's maxdepth by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeMaxDepth_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeMaxDepthRecursion:
     def getMaxDepth(self,root:TreeNode)->int:

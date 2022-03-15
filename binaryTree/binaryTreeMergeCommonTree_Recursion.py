@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-20 10:11:01
+LastEditTime: 2022-03-15 11:15:49
+Description: merge two trees by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeMergeCommonTree_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeMergeCommonTreeRecursion:

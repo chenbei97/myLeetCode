@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-06 10:06:46
+ * @LastEditTime: 2022-03-15 11:17:53
+ * @Description: calculate tree's pathsum by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreePathSum_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreePathSumRecursion_
 #define binaryTreePathSumRecursion_
 #include <stack>

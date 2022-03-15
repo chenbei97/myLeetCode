@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-07 10:54:04
+ * @LastEditTime: 2022-03-15 11:21:15
+ * @Description: search the k smallest element in searchTree by inOrder
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeSearchKthSmallest_InOrder.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeSearchKthSmallestInOrder_
 #define binaryTreeSearchKthSmallestInOrder_
 #include <iostream>

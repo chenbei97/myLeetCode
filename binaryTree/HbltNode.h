@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-17 13:17:11
+ * @LastEditTime: 2022-03-15 11:22:26
+ * @Description: HbltNode.h
+ * @FilePath: \myLeetCode\binaryTree\HbltNode.h
+ * @A boy without dreams
+ */
 #ifndef HbltNode_
 #define HbltNode_
 #include <utility>

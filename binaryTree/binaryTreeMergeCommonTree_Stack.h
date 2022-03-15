@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-20 10:36:38
+ * @LastEditTime: 2022-03-15 11:15:53
+ * @Description: merge two trees by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMergeCommonTree_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMergeCommonTreeStack_
 #define binaryTreeMergeCommonTreeStack_
 #include <iostream>

@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-07 10:54:14
+LastEditTime: 2022-03-15 11:21:48
+Description: search the k smallest element in searchTree by inOrder
+FilePath: \myLeetCode\binaryTree\binaryTreeSearchKthSmallest_InOrder.py
+A boy without dreams
+'''
 from typing import Optional
 from TreeNode import TreeNode
 class binaryTreeSearchKthSmallestInOrder:

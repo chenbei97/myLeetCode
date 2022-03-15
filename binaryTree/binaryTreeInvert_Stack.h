@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-19 09:23:41
+ * @LastEditTime: 2022-03-15 11:09:11
+ * @Description: invert binaryTree by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeInvert_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeInvertStack_
 #define binaryTreeInvertStack_
 #include "TreeNode.h"

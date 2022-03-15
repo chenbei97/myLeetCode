@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:20:10
+Description: tree's preOrder by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreePreOrder_Recursion.py
+A boy without dreams
+'''
 from typing import List
 from typing import Optional
 from TreeNode import TreeNode

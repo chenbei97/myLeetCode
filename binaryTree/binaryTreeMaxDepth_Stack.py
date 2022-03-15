@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-22 11:44:03
+LastEditTime: 2022-03-15 11:17:21
+Description: calculate tree's maxdepth by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeMaxDepth_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeMaxDepthStack:
     def getMaxDepth(self,root:TreeNode)->int:

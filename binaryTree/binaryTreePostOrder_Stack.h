@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-14 07:58:04
+ * @LastEditTime: 2022-03-15 11:19:22
+ * @Description: tree's postOrder by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreePostOrder_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreePostOrderStack_
 #define binaryTreePostOrderStack_
 #include <vector>

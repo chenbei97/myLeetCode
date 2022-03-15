@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-14 07:58:04
+ * @LastEditTime: 2022-03-15 11:12:36
+ * @Description: judge an tree is symmetric by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeIsSymmetric_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeIsSymmetricRecursion_
 #define binaryTreeIsSymmetricRecursion_
 #include "TreeNode.h"

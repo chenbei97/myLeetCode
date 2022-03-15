@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-15 08:58:25
+ * @LastEditTime: 2022-03-15 11:10:37
+ * @Description: judge an tree is subStructure of other tree by iteration
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeisSubStructure_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeisSubStructureIteration_
 #define binaryTreeisSubStructureIteration_
 #include "TreeNode.h"

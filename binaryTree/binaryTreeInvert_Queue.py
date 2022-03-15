@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-19 09:56:34
+LastEditTime: 2022-03-15 11:08:13
+Description: invert binaryTree by queue
+FilePath: \myLeetCode\binaryTree\binaryTreeInvert_Queue.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeInvertQueue:

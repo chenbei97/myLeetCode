@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-22 09:33:42
+ * @LastEditTime: 2022-03-15 11:17:13
+ * @Description: calculate tree's maxdepth by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMaxDepth_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMaxDepthStack_
 #define binaryTreeMaxDepthStack_
 #include "TreeNode.h"

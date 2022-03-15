@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-22 14:10:06
+LastEditTime: 2022-03-15 11:17:36
+Description: calculate tree's mindepth by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeMinDepth_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeMinDepthRecursion:
     count = 0

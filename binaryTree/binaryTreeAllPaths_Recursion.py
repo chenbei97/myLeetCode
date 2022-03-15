@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-20 19:04:09
+LastEditTime: 2022-03-15 11:04:46
+Description: find binaryTree all paths by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeAllPaths_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from typing import List
 class binaryTreeAllPathsRecursion:

@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-14 07:58:04
+ * @LastEditTime: 2022-03-15 11:05:41
+ * @Description: binaryTree inOrder by morris
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeInOrder_Morris.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeInOrderMorris_
 #define binaryTreeInOrderMorris_
 #include <vector>

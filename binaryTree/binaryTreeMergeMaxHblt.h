@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-17 13:14:46
+ * @LastEditTime: 2022-03-15 11:16:08
+ * @Description: merge two maxhblts by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMergeMaxHblt.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMergeHblt_
 #define binaryTreeMergeHblt_
 #include "HbltNode.h"

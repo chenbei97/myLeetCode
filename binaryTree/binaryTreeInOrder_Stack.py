@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:06:40
+Description: binaryTree inOrder by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeInOrder_Stack.py
+A boy without dreams
+'''
 from typing import List
 from typing import Optional
 from TreeNode import TreeNode

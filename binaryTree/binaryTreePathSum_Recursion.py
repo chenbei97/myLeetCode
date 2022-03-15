@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-06 10:06:29
+LastEditTime: 2022-03-15 11:18:10
+Description: calculate tree's pathsum by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreePathSum_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from typing import Optional
 class binaryTreePathSumRecursion:

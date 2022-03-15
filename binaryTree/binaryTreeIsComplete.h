@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-18 15:19:29
+ * @LastEditTime: 2022-03-15 11:09:35
+ * @Description: judge binaryTree is complete by queue
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeIsComplete.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeIsComplete_
 #define binaryTreeIsComplete_
 #include "TreeNode.h"

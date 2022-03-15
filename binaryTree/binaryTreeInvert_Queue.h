@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-19 09:02:40
+ * @LastEditTime: 2022-03-15 11:08:04
+ * @Description: invert binaryTree by queue
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeInvert_Queue.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeInvertQueue_
 #define binaryTreeInvertQueue_
 #include "TreeNode.h"

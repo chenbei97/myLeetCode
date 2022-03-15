@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-20 11:08:43
+LastEditTime: 2022-03-15 11:15:13
+Description: merge two trees by queue
+FilePath: \myLeetCode\binaryTree\binaryTreeMergeCommonTree_Queue.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeMergeCommonTreeQueue:

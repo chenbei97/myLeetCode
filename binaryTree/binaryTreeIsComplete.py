@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-18 15:45:32
+LastEditTime: 2022-03-15 11:10:27
+Description: judge binaryTree is complete by queue
+FilePath: \myLeetCode\binaryTree\binaryTreeIsComplete.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeIsComplete:

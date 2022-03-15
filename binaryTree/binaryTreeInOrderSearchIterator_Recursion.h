@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-07 09:21:34
+ * @LastEditTime: 2022-03-15 11:06:52
+ * @Description: design an iterator of binarySearchTree by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeInOrderSearchIterator_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeInOrderSearchIteratorRecursion_
 #define binaryTreeInOrderSearchIteratorRecursion_
 #include "TreeNode.h"

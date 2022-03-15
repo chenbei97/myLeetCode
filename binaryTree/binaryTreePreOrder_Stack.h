@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-14 07:58:04
+ * @LastEditTime: 2022-03-15 11:20:17
+ * @Description: tree's preOrder by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreePreOrder_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreePreOrderStack_
 #define binaryTreePreOrderStack_
 #include <vector>

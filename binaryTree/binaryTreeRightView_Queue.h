@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-20 14:51:50
+ * @LastEditTime: 2022-03-15 11:20:40
+ * @Description: find tree's rightView by queue
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeRightView_Queue.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeRightViewQueue_
 #define binaryTreeRightViewQueue_
 #include <queue>

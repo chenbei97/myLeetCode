@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-14 07:58:04
+LastEditTime: 2022-03-15 11:18:54
+Description: tree's postOrder by morris
+FilePath: \myLeetCode\binaryTree\binaryTreePostOrder_Morris.py
+A boy without dreams
+'''
 from typing import List
 from typing import Optional
 from TreeNode import TreeNode

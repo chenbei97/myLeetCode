@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-07 09:22:51
+LastEditTime: 2022-03-15 11:07:42
+Description: design an iterator of binarySearchTree by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeInOrderSearchIterator_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeInOrderSearchIteratorRecursion:
     def __init__(self,root) -> None:

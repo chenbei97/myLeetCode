@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-21 10:05:06
+ * @LastEditTime: 2022-03-15 11:05:09
+ * @Description: find binaryTree all paths by stack
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeAllPaths_Stack.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeAllPathsStack_
 #define binaryTreeAllPathsStack_
 #include <iostream>

@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-22 14:10:16
+ * @LastEditTime: 2022-03-15 11:16:51
+ * @Description: calculate tree's mindepth by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMinDepth_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMinDepthRecursion_
 #define binaryTreeMinDepthRecursion_
 #include <iostream>

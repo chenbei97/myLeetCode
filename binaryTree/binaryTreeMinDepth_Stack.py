@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-22 14:54:11
+LastEditTime: 2022-03-15 11:17:46
+Description: calculate tree's mindepth by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeMinDepth_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 class binaryTreeMinDepthStack:
     def getMinDepth(self,root:TreeNode)->int:

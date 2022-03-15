@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-19 10:02:57
+LastEditTime: 2022-03-15 11:09:22
+Description: invert binaryTree by stack
+FilePath: \myLeetCode\binaryTree\binaryTreeInvert_Stack.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeInvertStack:

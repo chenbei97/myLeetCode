@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-22 08:02:17
+ * @LastEditTime: 2022-03-15 11:17:05
+ * @Description: calculate tree's maxdepth by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeMaxDepth_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeMaxDepthRecursion_
 #define binaryTreeMaxDepthRecursion_
 #include "TreeNode.h"

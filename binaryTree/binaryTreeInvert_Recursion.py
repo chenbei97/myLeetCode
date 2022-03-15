@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-19 09:49:03
+LastEditTime: 2022-03-15 11:08:53
+Description: invert binaryTree by recursion
+FilePath: \myLeetCode\binaryTree\binaryTreeInvert_Recursion.py
+A boy without dreams
+'''
 from TreeNode import TreeNode
 from queue import Queue
 class binaryTreeInvertRecursion :

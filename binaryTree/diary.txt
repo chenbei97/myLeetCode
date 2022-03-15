@@ -1,3 +1,11 @@
+/*
+ * @Author: chenbei
+ * @Date: 2022-02-16 17:07:15
+ * @LastEditTime: 2022-03-15 11:22:14
+ * @Description: binaryTree's diary
+ * @FilePath: \myLeetCode\binaryTree\diary.txt
+ * A boy without dreams
+ */
 -------------2022-2-13-------------
 今天开始刷leetcode
 -------------2022-2-14-------------

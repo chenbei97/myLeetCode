@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-07 11:25:39
+ * @LastEditTime: 2022-03-15 11:21:51
+ * @Description: search the k smallest element in searchTree by iteration
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeSearchKthSmallest_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeSearchKthSmallestIteration_
 #define binaryTreeSearchKthSmallestIteration_
 #include <vector>
