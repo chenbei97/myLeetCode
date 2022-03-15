@@ -104,7 +104,30 @@ class bubbleSort:
         return arr
 ```
 
+## 选择排序
 
+​		与冒泡排序的第1种方法的循环条件类似，冒泡排序总是拿未排序的第1个元素和后面的每一个元素进行比较，如果后面的大于未排序的第1个元素就进行交换，这种方法是可能很多元素都需要被交换。
+
+​		选择排序的思想是，未排序的第1个元素后面，不需要所有元素都去和它比较，只需要找到比它小的那个元素即可，找到了在进行交换，如果没找到也无需交换，说明未排序的第1个元素就是最小的了。这种方式省去了很多可能的交换操作，尤其在逆序时效率要高于冒泡排序。
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator> // include ostream_iterator
+using namespace std;
+template<typename T>
+void selectSort(vector<T> &nums,bool reverse=false){
+    for(int i=0;i<nums.size()-1; i++){
+        int idx = i ; // 此时未排序的第1个元素索引
+        for(int j=i+1;j<nums.size();j++){
+            if (reverse?nums[i] < nums[j]:nums[i] > nums[j]) 
+                idx = j; // 升序:后边大就交换,降序:后边小交换
+        }
+        if (idx!=i) // 如果后面找到的值比未排序的第1个元素更大或者更小
+            swap(nums[i],nums[idx]);
+    }
+}
+```
 
 
 

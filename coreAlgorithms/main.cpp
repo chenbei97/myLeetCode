@@ -9,10 +9,12 @@
 #include <iostream>
 #include "binarySearch.h"
 #include "bubbleSort.h"
+#include "selectSort.h"
 using namespace std;
 int main()
 {
     _binarySearch_testCode();
     _bubbleSort_testCode();
+    _selectSort_testCode();
     return 0;
 }

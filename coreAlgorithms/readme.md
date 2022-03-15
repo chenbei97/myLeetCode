@@ -1,7 +1,7 @@
 <!--
  * @Author: chenbei
  * @Date: 2022-03-15 08:58:59
- * @LastEditTime: 2022-03-15 10:29:43
+ * @LastEditTime: 2022-03-15 11:34:50
  * @Description: some basic and core algorithms
  * @FilePath: \myLeetCode\coreAlgorithms\readme.md
 -->
@@ -11,6 +11,10 @@
 ## 二分查找
 
 ## 冒泡排序
+
+## 选择排序
+
+## 插入排序
 
 ## 
 

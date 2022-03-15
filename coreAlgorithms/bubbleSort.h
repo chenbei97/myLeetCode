@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-15 10:30:56
- * @LastEditTime: 2022-03-15 10:47:12
+ * @LastEditTime: 2022-03-15 11:48:33
  * @Description: bubbleSort.h
  * @FilePath: \myLeetCode\coreAlgorithms\bubbleSort.h
  * @A boy without dreams
@@ -25,6 +25,8 @@ void _bubbleSort_testCode(){
     vector<int> nums={5,4,3,2,1,0,9};
     bubbleSort(nums,true);
     ostream_iterator<int> os(cout," "); 
+    cout<<"bubbleSort => \n";
     copy(nums.begin(),nums.end(),os);
+    cout<<"\n";
 }
 #endif //!bubbleSort_
