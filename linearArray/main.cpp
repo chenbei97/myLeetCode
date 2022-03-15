@@ -1,3 +1,11 @@
+/*
+ * @Author: chenbei
+ * @Date: 2022-02-14 07:58:04
+ * @LastEditTime: 2022-03-15 08:45:59
+ * @LastEditors: chenbei
+ * @Description: linearArray's leetcode main.cpp
+ * @FilePath: \myLeetCode\linearArray\main.cpp
+ */
 #include "linearArray.h"
 #include <iostream>
 using namespace std;
@@ -57,5 +65,6 @@ int main()
     _linearArray_bestTimeToSellStocks_iteration();
     _linearArray_bestTimeToSellStocks_dynamicProgramming();
     _linearArray_bestTimeToSellStocks_greedy();
+    
     return 0;
 }

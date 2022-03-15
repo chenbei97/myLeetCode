@@ -1,3 +1,11 @@
+/*
+ * @Author: chenbei
+ * @Date: 2022-02-28 08:19:09
+ * @LastEditTime: 2022-03-15 09:16:10
+ * @Description: my diary about linkedList
+ * @FilePath: \myLeetCode\linkedList\diary.txt
+ * A boy without dreams
+ */
 -------------2022-2-28-------------
 今天新建了链表的文件夹，开始做阿里天池的链表题
 做了2道题，合并2个有序链表和找到2个链表的交叉节点(如果有的话)

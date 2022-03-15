@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-20 19:04:04
+ * @LastEditTime: 2022-03-15 09:15:40
+ * @Description: find binaryTree all paths by recursion
+ * @FilePath: \myLeetCode\binaryTree\binaryTreeAllPaths_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef binaryTreeAllPathsRecursion_
 #define binaryTreeAllPathsRecursion_
 #include <iostream>
