@@ -86,14 +86,14 @@ void bubbleSort(vector<T> &nums,bool reverse=false){
 ```python
 from typing import Any, List
 class bubbleSort:
-    def __init__(self,nums:List[int or float],reverse:False) -> Any:
+    def __init__(self,nums:List[int or float],reverse=False) -> Any:
         self.nums = nums
         self.n = len(self.nums)
         self.reverse = reverse
     def bubble_sort(self)->List[int or float]: # 依次比较后n,n-1,n-2,..2个元素,总是把小的放在前边
         for i in range(self.n-1):
             for j in range(i+1,self.n):
-                if self.nums[i]<self.nums[j] if self.reverse else self.nums[j]>self.nums[i]:
+                if self.nums[i]<self.nums[j] if self.reverse else self.nums[i]>self.nums[j]:
                     self.nums[i],self.nums[j]=self.nums[j],self.nums[i]
         return self.nums
     def _bubble_sort(self, arr): # 另一种写法
@@ -109,6 +109,8 @@ class bubbleSort:
 ​		与冒泡排序的第1种方法的循环条件类似，冒泡排序总是拿未排序的第1个元素和后面的每一个元素进行比较，如果后面的大于未排序的第1个元素就进行交换，这种方法是可能很多元素都需要被交换。
 
 ​		选择排序的思想是，未排序的第1个元素后面，不需要所有元素都去和它比较，只需要找到比它小的那个元素即可，找到了在进行交换，如果没找到也无需交换，说明未排序的第1个元素就是最小的了。这种方式省去了很多可能的交换操作，尤其在逆序时效率要高于冒泡排序。
+
+​		对于交换操作，最好的情况顺序数组，交换0次，最坏的情况逆序数组需要交换3(n-1)次。对于比较操作，与数组本身无关，固定比较n(n-1)/2次，时间复杂度O(n^2)。同时，选择排序因为交换的2个元素可能不相邻，所以相同元素的位置可能会改变，是不稳定的排序方法。
 
 ```c++
 #include <vector>
@@ -128,6 +130,80 @@ void selectSort(vector<T> &nums,bool reverse=false){
     }
 }
 ```
+
+```python
+from typing import List,Any
+class selectSort:
+    def __init__(self,nums:List[int or float],reverse=False) -> Any:
+        self.nums = nums
+        self.n = len(self.nums)
+        self.reverse = reverse
+    def select_sort(self)->List[int or float]:
+        for i in range(self.n-1):
+            idx = i # 记录当前未分类的第1个元素
+            for j in range(i+1,self.n):
+                if self.nums[i]<self.nums[j] if self.reverse \
+                    else self.nums[i]>self.nums[j]:# reverse=False是有更小的元素交换
+                    idx = j
+            if idx != i:
+                self.nums[idx],self.nums[i]=self.nums[i],self.nums[idx]
+        return self.nums
+```
+
+## 插入排序
+
+​		把数组看成两段，有序序列和无序序列，初始的有序序列为第1个元素，从第2个元素总是插入有序序列的合适位置，使之仍然有序，元素遍历结束，整个数组都有序。
+
+​		关键的操作是，未排序的第1个元素从后向前开始，总是让前一个元素去替换后一个元素，这是覆盖操作，所以未排序的第1个元素所在位置会被前一个覆盖，所以才需要临时变量t先记录好这个位置的元素。覆盖操作直到位置idx，idx由这样的规则确定：如果是降序，未排序的元素依次从后向前和它之前已排序的每个元素比较，当未排序的元素比某个元素小，说明未排序元素应当插入在这个元素的前边，否则更合适的插入位置只能在更前边(未排序元素更大,大的元素在前)；升序同理，也是从后往前和前边已排序的每个元素作比较，所以未排序的元素比某个元素大时，插入位置就在该元素之后，否则说明更合适的插入位置在前边(未排序元素更小,小的在前)
+
+​		由于第0个元素也要被比较到，所以注意idx取值范围是[0,i-1]，所以while结束idx变为[-1,i]，所以腾出来的真实位置idx应当是idx+1。最好的情况，数组已经有序，此时只需要比较n-1次，并无需移动元素，直接尾插；最坏的情况，是每次都需要头插，总的比较次数是n(n-1)/2；取平均大约需要比较次数n^2/4，时间复杂度O(n^2)。
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator> // include ostream_iterator
+using namespace std;
+template<typename T>
+void insertSort(vector<T> &nums,bool reverse=false){
+    for(int i=1;i<nums.size(); ++i){
+        int t = nums[i]; // 记录未排序元素的第1个,这个位置可能会被前1个元素覆盖所以需要临时记录
+        int idx = i - 1; // ∈[0,i-1]
+        while (idx+1>0 &&(reverse? nums[idx]<t : nums[idx]>t)){ // reverse=true时,前<后交换说明按降序排列
+            nums[idx+1] = nums[idx]; // idx能取到0
+            --idx;
+        } // while结束后idx多减了1次,需要补回来
+        nums[idx+1] = t ; //腾出来的idx位置给未排序的第1个元素,用idx+1
+    }
+}
+```
+
+```python
+from typing import List,Any
+class insertSort:
+    def __init__(self,nums:List[int or float],reverse=False) -> Any:
+        self.nums = nums
+        self.n = len(self.nums)
+        self.reverse = reverse
+    def insert_sort(self)->List[int or float]:
+        for i in range(1,self.n):
+            idx = i-1 # 当前未排序的第1个元素的前1个
+            t = self.nums[i] # 事先未排序的第1个元素,因为这个位置可能会被前1个元素替换
+            # 让idx+1>0是为了让idx能取到0不退出while
+            # 这样可以继续比较第0个元素和t,来决定t放在0前还是0后
+            # while后边要加小括号,注意and优先级高
+            while idx+1 > 0 and (self.nums[idx]<t \
+                if self.reverse else self.nums[idx]>t):# reverse=True:前边的小交换说明是降序
+                    self.nums[idx+1]=self.nums[idx] # 从未排序的第1个元素开始向前,总是让前1个元素替换后1个元素
+                    idx -= 1 # idx∈[0,i-1],i-1替换i,i-2替换i-1,直到idx替换idx+1,idx的位置就空出来被t替换
+            self.nums[idx+1] = t # idx的位置就空出来被t替换,因为while结束idx多减了1,所以用idx+1
+        return self.nums
+```
+
+
+
+
+
+
 
 
 
