@@ -1,2 +1,10 @@
+/*
+ * @Author: chenbei
+ * @Date: 2022-03-15 08:57:35
+ * @LastEditTime: 2022-03-15 10:30:24
+ * @Description: coreAlgorithms's diary
+ * @FilePath: \myLeetCode\coreAlgorithms\diary.txt
+ * A boy without dreams
+ */
 -------------2022-3-15-------------
 今天创建了coreAlgorithms文件夹,这边主要是涉及基本的算法、二分查找等算法
