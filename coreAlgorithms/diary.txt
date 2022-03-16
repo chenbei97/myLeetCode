@@ -1,7 +1,7 @@
 /*
  * @Author: chenbei
  * @Date: 2022-03-15 08:57:35
- * @LastEditTime: 2022-03-15 15:39:44
+ * @LastEditTime: 2022-03-16 15:51:39
  * @Description: coreAlgorithms's diary
  * @FilePath: \myLeetCode\coreAlgorithms\diary.txt
  * A boy without dreams
@@ -9,3 +9,5 @@
 -------------2022-3-15-------------
 今天创建了coreAlgorithms文件夹,这边主要是覆盖一些基本的排序算法、二分查找等算法方便以后使用
 今天完成了二分查找、冒泡、选择和插入排序的实现，准备看书了，先拉个屎 15.39..
+-------------2022-3-16-------------
+完成了希尔、归并排序算法的实现
