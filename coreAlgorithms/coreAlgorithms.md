@@ -259,6 +259,110 @@ class shellSort:
 
 ## 归并排序
 
+​		使用递归的分治策略，总是将序列分为2半，初始时递归到最深处，也就是每个元素都看成1个有序子序列，序列的元素个数是1。
+
+​		每个子序列都处于上次分为2半的左部分或者右部分，初始时就是2个元素的序列左部分1个元素和右部分1个元素进行比较。
+
+​		从完整的原序列的左右部分开始开始，每层递归都是先递归左部分，再递归右部分。所以从**递归最深处开始程序退栈时，执行的程序总是上一层递归的左递归**。例如2个元素比较程序结束后退回递归上一层，这个程序实际是具有2个元素子序列的左递归和右递归，它本身执行的程序是更上一层递归的左递归->也就是4个元素子序列的左递归。所以4个元素的子序列执行完左递归，应该执行右递归，也就是另外具有2个元素的子序列，那么它也会继续左递归和右递归，只不过元素只有1个了，已达到递归最深处无法再递归。
+
+​		最后1层递归，就是原序列的左递归结束后，再执行原序列的右递归，会得到2个有序的子序列，这2个子序列再进行归并操作，就可以得到完整的有序子序列。归并算法的时间复杂度是O(n)，归并操作数是log2n，所以总的时间复杂度是O(nlog2n)，算法空间复杂度是O(n)。
+
+​		最后归并排序是稳定性排序算法，相同元素情况下总是左递归先执行，所以不会改变相同元素的相对次序。
+
+​		归并函数的实现由2个函数组成，第1个函数实现递归过程，并拆分2个区间，然后把左右区间带入下次递归，这是确定归并次数。真正的归并操作由第2个函数决定，这个函数其实就是合并2个有序数组的思路，可以使用双指针法和迭代法，这里使用双指针。这个函数如果单独拿出来使用合并2个数组，要求数组必须是有序的，否则不能合并为整体有序的数组。为什么每次归并的一定是有序数组呢，这就是因为递归分治的问题，从递归最深处的2个元素开始，就是有序的了，每次归并结束回到上一层递归依然是有序的
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator>
+using namespace std;
+template<typename T>
+vector<T> merge(const vector<T>&left,const vector<T>&right,bool reverse=false);
+template<typename T>
+vector<T> mergeSort(const vector<T>&nums,bool reverse = false){ // 归并排序
+    int n = nums.size();
+    if (n < 2) return nums; // 至少有2个元素
+    int mid = n / 2; // 中间位置
+    vector<T> left(nums.begin(),nums.begin()+mid);
+    vector<T> right(nums.begin()+mid,nums.end());
+    return merge(mergeSort(left,reverse),mergeSort(right,reverse),reverse);
+}
+template<typename T>
+vector<T> merge(const vector<T>&left,const vector<T>&right,bool reverse) { // 归并操作
+    // 用于归并下层递归退出后已得到的2个有序子序列
+    // 最初的2个有序子序列各自只有1个元素
+    vector<T> res;
+    int n1=left.size()-1,n2=right.size()-1;
+    int i=0,j=0;
+    while (i<=n1 || j<=n2)
+    {
+        if (reverse?left[i]>right[j]:left[i]<=right[j]) // 如果是降序,就大的被添加否则小的被添加
+        {
+            res.push_back(left[i]);
+            ++i;
+        }
+        else
+        {
+            res.push_back(right[j]);
+            ++j;
+        }
+        // 结束后i,j可能会超出范围,需要进行考虑
+        // 参考双指针法实现2个有序数组合并
+        if (i>n1&& j<=n2) // 可能i先超范围
+        {   
+            for(int k=j;k<=n2;++k)
+            { // 把right剩余的直接加进去
+                res.push_back(right[k]);
+            }
+            break;
+        }
+        if (i<=n1 && j>n2)
+        { // 可能j先超范围
+            for(int k=i;k<=n1;++k)
+            { // 把left剩余的直接加进去
+                res.push_back(left[k]);
+            }
+            break;
+        }
+    }
+    return res;
+}   
+```
+
+```python
+from typing import List,Any
+class mergeSort:
+    def __init__(self,reverse=False) -> Any:
+        self.reverse = reverse
+    def merge_sort(self,arr:List[int or float])->List[int or float]:
+        if len(arr) < 2: return arr
+        mid = len(arr) // 2
+        left,right = arr[0:mid],arr[mid:]
+        return self.merge(self.merge_sort(left),self.merge_sort(right))
+    def merge(self,left:List[int or float],right:List[int or float]):
+        n1,n2 = len(left)-1,len(right)-1
+        i,j=0,0
+        ans = []
+        while i<=n1 or j <=n2:
+            if left[i]>right[j] if self.reverse else left[i]<=right[j]:
+                ans.append(left[i])
+                i += 1
+            else :
+                ans.append(right[j])
+                j += 1
+            if i>n1 and j <=n2:
+                for k in range(j,n2+1):
+                    ans.append(right[k])
+                break
+            if j>n2 and i<=n1:
+                for k in range(i,n1+1):
+                    ans.append(left[k])
+                break
+        return ans
+    def setReverse(self,reverse:bool)->None:
+        self.reverse = reverse
+```
+
 
 
 ## 快速排序

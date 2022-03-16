@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-16 10:08:31
- * @LastEditTime: 2022-03-16 15:18:14
+ * @LastEditTime: 2022-03-16 15:47:39
  * @Description: mergeSort.h
  * @FilePath: \myLeetCode\coreAlgorithms\mergeSort.h
  * @A boy without dreams
@@ -69,6 +69,10 @@ void _mergeSort_testCode(){
     cout<<"mergeSort => \n";
     ostream_iterator<int> os(cout," ");
     copy(ans.begin(),ans.end(),os);
+    cout<<"\n";
+    vector<int> t1={9,7,5},t2={10,6,2};
+    auto res = merge(t1,t2,true); // 单独使用merge必须传入与reverse对应的有序数组
+    copy(res.begin(),res.end(),os);
     cout<<"\n";
 }
 #endif // !mergeSort_
