@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-03 11:25:17
+LastEditTime: 2022-03-16 14:23:14
+Description: merge two sortOrdered array by iteration
+FilePath: \myLeetCode\linearArray\linearArrayMergeSortedArray_Iteration.py
+A boy without dreams
+'''
 from typing import List
 class linearArrayMergeSortedArrayIteration:
     def mergeSortedArray(self,v1:List,v2:List):

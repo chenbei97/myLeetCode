@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 11:40:15
+ * @LastEditTime: 2022-03-16 14:17:12
+ * @Description: merge two sortOrdered array by double pointers
+ * @FilePath: \myLeetCode\linearArray\linearArrayMergeSortedArray_DoublePointers.h
+ * @A boy without dreams
+ */
 #ifndef linearArrayMergeSortedArrayDoublePointers_
 #define linearArrayMergeSortedArrayDoublePointers_
 class linearArrayMergeSortedArrayDoublePointers{

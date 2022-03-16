@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 11:25:02
+ * @LastEditTime: 2022-03-16 14:23:03
+ * @Description: merge two sortOrdered array by iteration
+ * @FilePath: \myLeetCode\linearArray\linearArrayMergeSortedArray_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef linearArrayMergeSortedArrayIteration_
 #define linearArrayMergeSortedArrayIteration_
 #include <algorithm>

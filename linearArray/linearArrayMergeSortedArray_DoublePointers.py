@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-03 11:42:21
+LastEditTime: 2022-03-16 14:22:59
+Description: merge two sortOrdered array by double pointers
+FilePath: \myLeetCode\linearArray\linearArrayMergeSortedArray_DoublePointers.py
+A boy without dreams
+'''
 from typing import List
 class linearArrayMergeSortedArrayDoublePointers:
     def mergeSortedArray(self,v1:List,v2:List):
