@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 10:15:18
+ * @LastEditTime: 2022-03-16 08:04:47
+ * @Description: string backspace by double pointers
+ * @FilePath: \myLeetCode\characterString\characterStringBackspaceCompare_DoublePointers.h
+ * @A boy without dreams
+ */
 #ifndef characterStringBackspaceCompareDoublePointers_
 #define characterStringBackspaceCompareDoublePointers_
 #include <iostream>

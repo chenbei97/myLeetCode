@@ -1,3 +1,11 @@
+/*
+ * @Author: chenbei
+ * @Date: 2022-03-03 08:06:27
+ * @LastEditTime: 2022-03-16 08:14:16
+ * @Description: characterString's diary
+ * @FilePath: \myLeetCode\characterString\diary.txt
+ * A boy without dreams
+ */
 -------------2022-3-3-------------
 完成退格字符串的问题，使用双指针、栈和string自带容器的方法实现。
 还完成了字符串括号匹配问题

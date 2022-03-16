@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 08:12:05
+ * @LastEditTime: 2022-03-16 08:05:05
+ * @Description: string backspace by double stack
+ * @FilePath: \myLeetCode\characterString\characterStringBackspaceCompare_Stack.h
+ * @A boy without dreams
+ */
 #ifndef characterStringBackspaceCompareStack_
 #define characterStringBackspaceCompareStack_
 #include <iostream>

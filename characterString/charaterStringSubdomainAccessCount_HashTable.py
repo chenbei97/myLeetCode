@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-14 07:52:14
+LastEditTime: 2022-03-16 08:14:10
+Description: subdomain access count by hashTable
+FilePath: \myLeetCode\characterString\charaterStringSubdomainAccessCount_HashTable.py
+A boy without dreams
+'''
 import collections
 from typing import List
 class charaterStringSubdomainAccessCountHashTable:

@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 08:08:39
+ * @LastEditTime: 2022-03-16 08:01:58
+ * @Description: characterString.h
+ * @FilePath: \myLeetCode\characterString\characterString.h
+ * @A boy without dreams
+ */
 #ifndef characterString_
 #define characterString_
 #include "characterStringBackspaceCompare_Stack.h"

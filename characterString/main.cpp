@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 08:08:11
+ * @LastEditTime: 2022-03-16 08:14:37
+ * @Description: characterString's main.cpp
+ * @FilePath: \myLeetCode\characterString\main.cpp
+ * @A boy without dreams
+ */
 #include "characterString.h"
 #include <iostream>
 using namespace std;

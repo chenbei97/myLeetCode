@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-04 13:12:50
+LastEditTime: 2022-03-16 08:11:55
+Description: check string is palindrome by greedy
+FilePath: \myLeetCode\characterString\characterStringPalindrome_Greedy.py
+A boy without dreams
+'''
 class characterStringPalindromeGreedy:
     def validPalindrome(self,s:str)->bool:
         head,tail = 0,len(s)-1

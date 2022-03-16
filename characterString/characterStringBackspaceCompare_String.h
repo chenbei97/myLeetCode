@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 09:14:43
+ * @LastEditTime: 2022-03-16 08:05:23
+ * @Description: string backspace by string
+ * @FilePath: \myLeetCode\characterString\characterStringBackspaceCompare_String.h
+ * @A boy without dreams
+ */
 #ifndef characterStringBackspaceCompareString_
 #define characterStringBackspaceCompareString_
 #include <string>

@@ -1,3 +1,11 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-03-03 08:06:47
+ * @LastEditTime: 2022-03-16 08:02:19
+ * @Description: charaterString's leetcode analysis
+ * @FilePath: \myLeetCode\characterString\characterString.md
+ * A boy without dreams
+-->
 ## 字符串退格问题
 
 ### stack解法

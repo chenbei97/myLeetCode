@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-05 15:03:17
+LastEditTime: 2022-03-16 08:07:50
+Description: string decode by recursion
+FilePath: \myLeetCode\characterString\characterStringDecodeString_Recursion.py
+A boy without dreams
+'''
 class characterStringDecodeStringRecursion:
     def __init__(self) -> None:
         self.src = None or str

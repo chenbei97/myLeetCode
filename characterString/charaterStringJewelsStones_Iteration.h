@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-14 07:52:14
+ * @LastEditTime: 2022-03-16 08:13:27
+ * @Description: judge stone is jewel by iteration
+ * @FilePath: \myLeetCode\characterString\charaterStringJewelsStones_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef charaterStringJewelsStonesIteration_
 #define charaterStringJewelsStonesIteration_
 #include  <string>

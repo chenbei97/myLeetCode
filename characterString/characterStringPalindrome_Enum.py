@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-04 13:25:10
+LastEditTime: 2022-03-16 08:11:36
+Description: check string is palindrome by enum
+FilePath: \myLeetCode\characterString\characterStringPalindrome_Enum.py
+A boy without dreams
+'''
 class characterStringPalindromeEnum:
     def validPalindrome(self,s:str)->bool:
         defaultLoc = -1 # 缺省位置,从-1开始

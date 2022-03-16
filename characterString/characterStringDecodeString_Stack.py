@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-05 13:30:46
+LastEditTime: 2022-03-16 08:08:05
+Description: string decode by stack
+FilePath: \myLeetCode\characterString\characterStringDecodeString_Stack.py
+A boy without dreams
+'''
 from typing import List
 class characterStringDecodeStringStack:
     def __init__(self) -> None:

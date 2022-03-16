@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-03 08:12:09
+LastEditTime: 2022-03-16 08:05:16
+Description: string backspace by double stack
+FilePath: \myLeetCode\characterString\characterStringBackspaceCompare_Stack.py
+A boy without dreams
+'''
 class characterStringBackspaceCompareStack:
     def backspaceCompare(self, s: str, t: str) -> bool:
         stk1,stk2 = [],[]

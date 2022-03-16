@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-14 07:52:14
+ * @LastEditTime: 2022-03-16 08:13:46
+ * @Description: subdomain access count by hashTable
+ * @FilePath: \myLeetCode\characterString\charaterStringSubdomainAccessCount_HashTable.h
+ * @A boy without dreams
+ */
 #ifndef charaterStringSubdomainAccessCountHashTable_
 #define charaterStringSubdomainAccessCountHashTable_
 #include  <string>

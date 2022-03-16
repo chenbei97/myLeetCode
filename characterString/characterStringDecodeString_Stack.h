@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-05 13:30:19
+ * @LastEditTime: 2022-03-16 08:07:55
+ * @Description: string decode by stack
+ * @FilePath: \myLeetCode\characterString\characterStringDecodeString_Stack.h
+ * @A boy without dreams
+ */
 #ifndef characterStringDecodeStringStack_
 #define characterStringDecodeStringStack_
 #include <string>

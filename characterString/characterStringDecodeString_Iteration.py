@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-05 11:27:58
+LastEditTime: 2022-03-16 08:07:24
+Description: string decode by iteration
+FilePath: \myLeetCode\characterString\characterStringDecodeString_Iteration.py
+A boy without dreams
+'''
 class characterStringDecodeStringIteration:
     def decodeString(self,s:str)->str:
         headIdx,tailIdx=[],[]

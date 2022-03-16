@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-04 13:12:18
+ * @LastEditTime: 2022-03-16 08:11:41
+ * @Description: check string is palindrome by greedy
+ * @FilePath: \myLeetCode\characterString\characterStringPalindrome_Greedy.h
+ * @A boy without dreams
+ */
 #ifndef characterStringPalindromeGreedy_
 #define characterStringPalindromeGreedy_
 #include <string>

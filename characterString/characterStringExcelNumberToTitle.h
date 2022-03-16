@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-04 15:42:21
+ * @LastEditTime: 2022-03-16 08:08:11
+ * @Description: excel number to str 
+ * @FilePath: \myLeetCode\characterString\characterStringExcelNumberToTitle.h
+ * @A boy without dreams
+ */
 #ifndef characterStringExcelNumberToTitle_
 #define characterStringExcelNumberToTitle_
 #include <string>

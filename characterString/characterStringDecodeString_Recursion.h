@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-05 15:03:13
+ * @LastEditTime: 2022-03-16 08:07:40
+ * @Description: string decode by recursion
+ * @FilePath: \myLeetCode\characterString\characterStringDecodeString_Recursion.h
+ * @A boy without dreams
+ */
 #ifndef characterStringDecodeStringRecursion_
 #define characterStringDecodeStringRecursion_
 #include <string>

@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-05 11:27:50
+ * @LastEditTime: 2022-03-16 08:07:06
+ * @Description: string decode by iteration
+ * @FilePath: \myLeetCode\characterString\characterStringDecodeString_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef characterStringDecodeStringIteration_
 #define characterStringDecodeStringIteration_
 #include <string>

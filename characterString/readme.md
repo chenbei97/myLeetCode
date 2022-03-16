@@ -1,3 +1,11 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-03-03 08:06:16
+ * @LastEditTime: 2022-03-16 08:14:54
+ * @Description: characterString's readme.md
+ * @FilePath: \myLeetCode\characterString\readme.md
+ * A boy without dreams
+-->
 # 这是关于字符串相关的题目
 # 目前已经更新的题目
 

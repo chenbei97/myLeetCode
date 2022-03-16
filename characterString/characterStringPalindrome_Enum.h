@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-04 13:18:58
+ * @LastEditTime: 2022-03-16 08:10:58
+ * @Description: check string is palindrome by enum
+ * @FilePath: \myLeetCode\characterString\characterStringPalindrome_Enum.h
+ * @A boy without dreams
+ */
 #ifndef characterStringPalindromeEnum_
 #define characterStringPalindromeEnum_
 #include <string>

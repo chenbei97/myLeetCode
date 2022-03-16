@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-14 07:52:14
+ * @LastEditTime: 2022-03-16 08:12:46
+ * @Description: judge stone is jewel by hashSet
+ * @FilePath: \myLeetCode\characterString\charaterStringJewelsStones_HashSet.h
+ * @A boy without dreams
+ */
 #ifndef charaterStringJewelsStonesHashSet_
 #define charaterStringJewelsStonesHashSet_
 #include  <string>

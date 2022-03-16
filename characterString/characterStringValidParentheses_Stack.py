@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-03 14:32:08
+LastEditTime: 2022-03-16 08:12:32
+Description: check string is parentheses by stack
+FilePath: \myLeetCode\characterString\characterStringValidParentheses_Stack.py
+A boy without dreams
+'''
 class characterStringValidParenthesesStack:
     def isValid(self,s:str)->bool:
         if len(s)%2 == 1: return False

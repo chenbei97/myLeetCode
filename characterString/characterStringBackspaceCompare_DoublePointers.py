@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-03 11:12:58
+LastEditTime: 2022-03-16 08:04:49
+Description: string backspace by double pointers
+FilePath: \myLeetCode\characterString\characterStringBackspaceCompare_DoublePointers.py
+A boy without dreams
+'''
 class characterStringBackspaceCompareDoublePointers:
     def backspaceCompare(self, s: str, t: str) -> bool:
         s1,s2 = len(s)-1,len(t)-1

@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-14 07:52:14
+LastEditTime: 2022-03-16 08:13:17
+Description: judge stone is jewel by hashSet
+FilePath: \myLeetCode\characterString\charaterStringJewelsStones_HashSet.py
+A boy without dreams
+'''
 class charaterStringJewelsStonesHashSet:
     def numJewelsInStones(self,jewels:str, stones:str)->int:
         s = set()

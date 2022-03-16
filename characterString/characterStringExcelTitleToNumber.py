@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-04 14:56:08
+LastEditTime: 2022-03-16 08:08:47
+Description: excel str to number
+FilePath: \myLeetCode\characterString\characterStringExcelTitleToNumber.py
+A boy without dreams
+'''
 class characterStringExcelTitleToNumber:
     def titleToNumber(self,s:str)->int:
         ans = 0

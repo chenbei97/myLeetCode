@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-03 14:32:00
+ * @LastEditTime: 2022-03-16 08:12:00
+ * @Description: check string is parentheses by stack
+ * @FilePath: \myLeetCode\characterString\characterStringValidParentheses_Stack.h
+ * @A boy without dreams
+ */
 #ifndef characterStringValidParenthesesStack_
 #define characterStringValidParenthesesStack_
 #include <string>

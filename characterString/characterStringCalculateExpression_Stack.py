@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-14 07:52:14
+LastEditTime: 2022-03-16 08:06:54
+Description: string calculate expression by stack
+FilePath: \myLeetCode\characterString\characterStringCalculateExpression_Stack.py
+A boy without dreams
+'''
 class characterStrngCalculateExpressionStack:
     def calculate(self,s:str)->int:
         stack = []
