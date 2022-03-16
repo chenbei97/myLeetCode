@@ -1,12 +1,11 @@
 <!--
  * @Author: chenbei
  * @Date: 2022-03-15 09:01:11
- * @LastEditTime: 2022-03-15 10:09:13
- * @LastEditors: chenbei
- * @Description: some basic and core algorithms
+ * @LastEditTime: 2022-03-16 10:01:21
+ * @Description: some basic and core algorithms(based vector)
  * @FilePath: \myLeetCode\coreAlgorithms\coreAlgorithms.md
+ * A boy without dreams
 -->
-
 ## 二分查找
 
 ​		查找一个数组的指定元素，如果存在该元素就返回下标，如果不存在就返回-1
@@ -63,9 +62,9 @@ class binarySearch:
 
 ​		思想：对n个元素的相邻2个元素进行比较，后边大于前边就进行交换，一直到最后，就可以让最大的元素放在n-1的位置。同样的方法对前n-1个元素两两比较，就可以让最大的元素放在位置n-2。以此类推，就可以实现数组升序。也可以依次比较后n,n-1,n-2..,2个元素，总是把最小的元素放在第1,2,..个位置。
 
-​		冒泡排序最好情况：顺序数组，只需遍历一次，时间复杂度O(n)；最差时逆序数组，时间复杂度O(n(n-1)/2)，平均时间复杂度O(n^2)。
+​		**冒泡排序最好情况：顺序数组，只需遍历一次，时间复杂度O(n)；最差时逆序数组，时间复杂度O(n(n-1)/2)，平均时间复杂度O(n^2)**。
 
-​		一般情况，冒牌排序只适合数据量小、基本顺序的数组排序，是排序时间效率最低的一种方法。不过冒泡排序不会改变相同元素的位置，是一种稳定性排序算法。
+​		一般情况，冒牌排序只适合数据量小、基本顺序的数组排序，是排序时间效率最低的一种方法。不过冒泡排序不会改变相同元素的位置，是一种**稳定性排序算法**。
 
 ```c++
 #include <vector>
@@ -110,7 +109,7 @@ class bubbleSort:
 
 ​		选择排序的思想是，未排序的第1个元素后面，不需要所有元素都去和它比较，只需要找到比它小的那个元素即可，找到了在进行交换，如果没找到也无需交换，说明未排序的第1个元素就是最小的了。这种方式省去了很多可能的交换操作，尤其在逆序时效率要高于冒泡排序。
 
-​		对于交换操作，最好的情况顺序数组，交换0次，最坏的情况逆序数组需要交换3(n-1)次。对于比较操作，与数组本身无关，固定比较n(n-1)/2次，时间复杂度O(n^2)。同时，选择排序因为交换的2个元素可能不相邻，所以相同元素的位置可能会改变，是不稳定的排序方法。
+​		对于交换操作，**最好的情况顺序数组，交换0次，最坏的情况逆序数组需要交换3(n-1)次**。对于**比较操作，与数组本身无关，固定比较n(n-1)/2次，时间复杂度O(n^2)**。同时，选择排序因为交换的2个元素可能不相邻，所以相同元素的位置可能会改变，是**不稳定的排序方法**。
 
 ```c++
 #include <vector>
@@ -156,7 +155,9 @@ class selectSort:
 
 ​		关键的操作是，未排序的第1个元素从后向前开始，总是让前一个元素去替换后一个元素，这是覆盖操作，所以未排序的第1个元素所在位置会被前一个覆盖，所以才需要临时变量t先记录好这个位置的元素。覆盖操作直到位置idx，idx由这样的规则确定：如果是降序，未排序的元素依次从后向前和它之前已排序的每个元素比较，当未排序的元素比某个元素小，说明未排序元素应当插入在这个元素的前边，否则更合适的插入位置只能在更前边(未排序元素更大,大的元素在前)；升序同理，也是从后往前和前边已排序的每个元素作比较，所以未排序的元素比某个元素大时，插入位置就在该元素之后，否则说明更合适的插入位置在前边(未排序元素更小,小的在前)
 
-​		由于第0个元素也要被比较到，所以注意idx取值范围是[0,i-1]，所以while结束idx变为[-1,i]，所以腾出来的真实位置idx应当是idx+1。最好的情况，数组已经有序，此时只需要比较n-1次，并无需移动元素，直接尾插；最坏的情况，是每次都需要头插，总的比较次数是n(n-1)/2；取平均大约需要比较次数n^2/4，时间复杂度O(n^2)。
+​		由于第0个元素也要被比较到，所以注意idx取值范围是[0,i-1]，所以while结束idx变为[-1,i]，所以腾出来的真实位置idx应当是idx+1。**最好的情况，数组已经有序，此时只需要比较n-1次，并无需移动元素**，直接尾插；**最坏的情况，是每次都需要头插，总的比较次数是n(n-1)/2；取平均大约需要比较次数n^2/4，时间复杂度O(n^2)**。
+
+​		插入排序是一种**稳定的排序方法**。
 
 ```c++
 #include <vector>
@@ -166,7 +167,7 @@ using namespace std;
 template<typename T>
 void insertSort(vector<T> &nums,bool reverse=false){
     for(int i=1;i<nums.size(); ++i){
-        int t = nums[i]; // 记录未排序元素的第1个,这个位置可能会被前1个元素覆盖所以需要临时记录
+        T t = nums[i]; // 记录未排序元素的第1个,这个位置可能会被前1个元素覆盖所以需要临时记录
         int idx = i - 1; // ∈[0,i-1]
         while (idx+1>0 &&(reverse? nums[idx]<t : nums[idx]>t)){ // reverse=true时,前<后交换说明按降序排列
             nums[idx+1] = nums[idx]; // idx能取到0
@@ -199,11 +200,74 @@ class insertSort:
         return self.nums
 ```
 
+## 希尔排序
+
+​		希尔排序的原理：序列间隔为gap的那些元素都看成同1个子序列，然后对每个子序列进行插入排序，之后让gap减半，同理对新生成的子序列仍然分别进行插入排序。一般的gap从原序列长度的一半开始，直到gap<1为止，gap=1是最后1次插入排序。
+
+​		很明显，在gap=1时，希尔排序就是插入排序。之所以要事先对gap>1的情况先进行插入排序，是为了降低总体的时间复杂度，随着gap的降低原序列会更加有序，所以可能gap=1时只需要比较1次而无需移动元素。
+
+​		结论，**希尔排序的时间复杂度介于O(nlog2n)到O(n^2)之间，另外希尔排序是一种不稳定的排序算法**。
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator>
+using namespace std;
+template<typename T>
+void shellSort(vector<T>&nums,bool reverse =false){
+    int n = nums.size();
+    int gap = n / 2;
+    while (gap>0){ //gap=1时是最后1次排序
+        /***********code below similar to insertSort***********/
+        for(int i=gap;i<n;i++){ // 前gap个元素∈[0,gap-1]对应gap个子序列的有序部分(第1个元素)
+            T t = nums[i]; // 每个子序列未排序的第1个元素,i∈[gap,n-1]
+            int idx = i - gap; // 确保对各个子序列来说idx能取到第1个元素∈[0,gap-1]
+            while (idx+gap>0 &&(reverse?nums[idx]<t:nums[idx]>t)){ // nums[idx]是前1个元素,小于t交换说明是降序
+                nums[idx+gap] = nums[idx]; // 后1个元素被前1个相隔gap的元素依次覆盖
+                idx -= gap;
+            }
+            nums[idx+gap] = t; // 腾出来的位置,while结束idx多减了1次gap,gap要加回来
+        }
+        /***********code above similar to insertSort***********/
+        gap /= 2; // 直到1是最后1次插入排序
+    }
+}
+```
+
+```python
+from typing import List,Any
+class shellSort:
+    def __init__(self,nums:List[int or float],reverse=False) -> Any:
+        self.nums = nums
+        self.n = len(self.nums)
+        self.reverse = reverse
+    def shell_sort(self)->List[int or float]:
+        gap = self.n // 2
+        while gap>0:
+            '''************code below similar to insertSort************'''
+            for i in range(gap,self.n): # [0,gap-1]对应gap个子序列的有序部分,[gap,n-1]是无序部分的第1个元素
+                t = self.nums[i]
+                idx = i - gap # ∈[0,gap-1],确保子序列能取到有序部分的第1个元素
+                while idx+gap>0 and (self.nums[idx]<t if self.reverse else self.nums[idx]>t):
+                    self.nums[idx+gap] = self.nums[idx] # 后1个元素被前1个相隔gap的元素依次覆盖
+                    idx -= gap
+                self.nums[idx+gap] = t # 腾出来的位置,但是idx多减了1次gap要加回来
+            '''************code above similar to insertSort************'''       
+            gap //= 2
+        return self.nums
+```
+
+## 归并排序
 
 
 
+## 快速排序
 
+## 堆排序
 
+## 计数排序
 
+## 桶排序
 
+## 基数排序
 
