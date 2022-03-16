@@ -1,3 +1,11 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-02-28 07:54:12
+ * @LastEditTime: 2022-03-16 08:32:03
+ * @Description: learning the essence and origin of C + + based on essential C + +
+ * @FilePath: \myLeetCode\EssentialC++.md
+ * A boy without dreams
+-->
 ## 一、C++编程基础
 
 ### 什么是命名空间？

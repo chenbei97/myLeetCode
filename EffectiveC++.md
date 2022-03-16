@@ -1,3 +1,11 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-03-01 11:46:37
+ * @LastEditTime: 2022-03-16 08:30:57
+ * @Description: 55 programming suggestions based on Effective C + + Learning
+ * @FilePath: \myLeetCode\EffectiveC++.md
+ * A boy without dreams
+-->
 ## 0.导读
 
 ​		EffectiveC++的55个建议主要分成两类，第一类是一般性的设计策略，第二类是带有具体细节的特定语言特性。

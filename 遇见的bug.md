@@ -1,3 +1,12 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-02-28 07:54:12
+ * @LastEditTime: 2022-03-16 08:33:23
+ * @Description: based on past learning experience, 
+                important bugs encountered and Solutions
+ * @FilePath: \myLeetCode\遇见的bug.md
+ * A boy without dreams
+-->
 ## 1.结构体字符串数组赋值
 
 结构体内部定义的char s[]={} 数组是不能直接进行等号赋值的，代码如下

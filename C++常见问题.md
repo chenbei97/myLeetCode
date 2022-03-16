@@ -1,3 +1,11 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-02-28 07:54:12
+ * @LastEditTime: 2022-03-16 08:26:46
+ * @Description: frequently asked questions for C + + interview
+ * @FilePath: \myLeetCode\C++常见问题.md
+ * A boy without dreams
+-->
 ## 什么是命名空间
 
 命名空间是一种将库名称封装起来的办法，通过这种方法可以避免和应用程序发生命名冲突的问题。例如想使用cin和cout对象需要包含头文件< string >和< iostream>的同时，必须使用标准命名空间std。

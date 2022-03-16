@@ -1,3 +1,11 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-02-28 07:54:12
+ * @LastEditTime: 2022-03-16 08:30:18
+ * @Description: basic knowledge of C + + based on cprimer learning
+ * @FilePath: \myLeetCode\C++Primer.md
+ * A boy without dreams
+-->
 1.数组
 
 ### 1.1数值数组
