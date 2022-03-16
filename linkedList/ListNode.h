@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-28 08:14:33
+ * @LastEditTime: 2022-03-16 08:24:31
+ * @Description: ListNode.h
+ * @FilePath: \myLeetCode\linkedList\ListNode.h
+ * @A boy without dreams
+ */
 #ifndef ListNode_
 #define  ListNode_
 struct ListNode

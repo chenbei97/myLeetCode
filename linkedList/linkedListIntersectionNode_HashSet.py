@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-28 16:16:46
+LastEditTime: 2022-03-16 08:21:58
+Description: search the intersection node by hashSet
+FilePath: \myLeetCode\linkedList\linkedListIntersectionNode_HashSet.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListIntersectionNodeHashSet:
         def getIntersectionNodeSet(self, headA: ListNode, headB: ListNode) -> ListNode:

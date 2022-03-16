@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-28 15:10:19
+LastEditTime: 2022-03-16 08:21:41
+Description: search the intersection node by double pointers
+FilePath: \myLeetCode\linkedList\linkedListIntersectionNode_DoublePointers.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListIntersectionNodeDoublePointers:
         def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> ListNode:

@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-09 11:20:22
+LastEditTime: 2022-03-16 08:19:50
+Description: judge linkedList has circular by hashTable
+FilePath: \myLeetCode\linkedList\linkedListCircularExist_HashTable.py
+A boy without dreams
+'''
 from ListNode import ListNode
 from collections import defaultdict
 class linkedListCircularExistHashTable:

@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-28 16:52:13
+ * @LastEditTime: 2022-03-16 08:22:56
+ * @Description: remove duplicates by double pointers
+ * @FilePath: \myLeetCode\linkedList\linkedListRemoveDuplicates_DoublePointers.h
+ * @A boy without dreams
+ */
 #ifndef linkedListRemoveDuplicatesDoublePointers_
 #define linkedListRemoveDuplicatesDoublePointers_
 #include "ListNode.h"

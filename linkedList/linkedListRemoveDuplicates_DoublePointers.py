@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-02-28 16:53:14
+LastEditTime: 2022-03-16 08:23:15
+Description: remove duplicates by double pointers
+FilePath: \myLeetCode\linkedList\linkedListRemoveDuplicates_DoublePointers.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListRemoveDuplicatesDoublePointers:
     def removeDuplicates(self,root:ListNode)->ListNode:

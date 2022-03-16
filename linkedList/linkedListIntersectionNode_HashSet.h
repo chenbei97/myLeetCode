@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-28 15:23:34
+ * @LastEditTime: 2022-03-16 08:21:46
+ * @Description: search the intersection node by hashSet
+ * @FilePath: \myLeetCode\linkedList\linkedListIntersectionNode_HashSet.h
+ * @A boy without dreams
+ */
 #ifndef linkedListIntersectionNodeHashSet_
 #define linkedListIntersectionNodeHashSet_
 #include "ListNode.h"

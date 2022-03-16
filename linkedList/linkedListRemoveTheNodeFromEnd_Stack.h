@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-02 08:23:16
+ * @LastEditTime: 2022-03-16 08:24:17
+ * @Description: remove the node from end by stack
+ * @FilePath: \myLeetCode\linkedList\linkedListRemoveTheNodeFromEnd_Stack.h
+ * @A boy without dreams
+ */
 #ifndef linkedListRemoveTheNodeFromEndStack_
 #define linkedListRemoveTheNodeFromEndStack_
 #include "ListNode.h"

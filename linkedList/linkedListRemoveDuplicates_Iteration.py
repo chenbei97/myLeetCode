@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-01 09:14:59
+LastEditTime: 2022-03-16 08:23:31
+Description: remove duplicates by iteration
+FilePath: \myLeetCode\linkedList\linkedListRemoveDuplicates_Iteration.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListRemoveDuplicatesIteration:
     def removeDuplicates(self,root:ListNode)->ListNode:

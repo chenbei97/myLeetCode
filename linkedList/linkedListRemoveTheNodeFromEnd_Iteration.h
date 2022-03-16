@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-02 08:23:16
+ * @LastEditTime: 2022-03-16 08:24:03
+ * @Description: remove the node from end by iteration
+ * @FilePath: \myLeetCode\linkedList\linkedListRemoveTheNodeFromEnd_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef linkedListRemoveTheNodeFromEndIteration_
 #define linkedListRemoveTheNodeFromEndIteration_
 #include "ListNode.h"

@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-01 11:20:58
+ * @LastEditTime: 2022-03-16 08:19:55
+ * @Description: delete duplicates by iteration
+ * @FilePath: \myLeetCode\linkedList\linkedListDeleteDuplicates_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef linkedListDeleteDuplicatesIteration_
 #define linkedListDeleteDuplicatesIteration_
 #include "ListNode.h"

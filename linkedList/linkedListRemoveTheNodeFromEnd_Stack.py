@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-02 08:30:41
+LastEditTime: 2022-03-16 08:24:26
+Description: remove the node from end by stack
+FilePath: \myLeetCode\linkedList\linkedListRemoveTheNodeFromEnd_Stack.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListRemoveTheNodeFromEndStack:
     def removeNthFromEnd(self, head: ListNode, n: int) -> ListNode:

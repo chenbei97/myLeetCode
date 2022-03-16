@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-28 11:31:57
+ * @LastEditTime: 2022-03-16 08:22:05
+ * @Description: merge two ordered linkedList by iteration
+ * @FilePath: \myLeetCode\linkedList\linkedListMergeTwoOrdered_Iteration.h
+ * @A boy without dreams
+ */
 #ifndef linkedListMergeTwoOrderedIteration_
 #define linkedListMergeTwoOrderedIteration_
 #include "ListNode.h"

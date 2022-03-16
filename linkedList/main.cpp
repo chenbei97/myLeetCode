@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-28 08:20:38
+ * @LastEditTime: 2022-03-16 08:24:52
+ * @Description: linkedList's leetcode analysis
+ * @FilePath: \myLeetCode\linkedList\main.cpp
+ * @A boy without dreams
+ */
 #include <iostream>
 #include "linkedList.h"
 using namespace std;

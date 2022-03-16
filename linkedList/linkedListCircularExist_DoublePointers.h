@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-09 11:20:33
+ * @LastEditTime: 2022-03-16 08:19:00
+ * @Description: judge linkedList has circular by double pointers
+ * @FilePath: \myLeetCode\linkedList\linkedListCircularExist_DoublePointers.h
+ * @A boy without dreams
+ */
 #ifndef linkedListCircularExistDoublePointers_
 #define linkedListCircularExistDoublePointers_
 #include <iostream>

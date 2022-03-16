@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-02-28 14:45:42
+ * @LastEditTime: 2022-03-16 08:21:00
+ * @Description: search the intersection node by double pointers
+ * @FilePath: \myLeetCode\linkedList\linkedListIntersectionNode_DoublePointers.h
+ * @A boy without dreams
+ */
 #ifndef linkedListIntersectionNodeDoublePointers_
 #define linkedListIntersectionNodeDoublePointers_
 #include "ListNode.h"

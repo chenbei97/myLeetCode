@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-10 08:44:09
+LastEditTime: 2022-03-16 08:20:51
+Description: insertSort by iteration
+FilePath: \myLeetCode\linkedList\linkedListInsertSort_Iteration.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListInsertSortIteration:
     def insertSort(self,root:ListNode)->ListNode:

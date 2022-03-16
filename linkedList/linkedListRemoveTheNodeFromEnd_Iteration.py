@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-02 08:30:29
+LastEditTime: 2022-03-16 08:24:14
+Description: remove the node from end by iteration
+FilePath: \myLeetCode\linkedList\linkedListRemoveTheNodeFromEnd_Iteration.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListRemoveTheNodeFromEndIteration:
         def removeNthFromEnd(self, head: ListNode, n: int) -> ListNode:

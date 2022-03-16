@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-02 13:46:17
+LastEditTime: 2022-03-16 08:24:00
+Description: remove the node from end by double pointers
+FilePath: \myLeetCode\linkedList\linkedListRemoveTheNodeFromEnd_DoublePointers.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListRemoveTheNodeFromEndDoublePointers:
     def removeNthFromEnd(self, head: ListNode, n: int) -> ListNode:

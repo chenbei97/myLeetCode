@@ -1,3 +1,11 @@
+'''
+Author: chenbei
+Date: 2022-03-09 11:20:37
+LastEditTime: 2022-03-16 08:19:35
+Description: judge linkedList has circular by double pointers
+FilePath: \myLeetCode\linkedList\linkedListCircularExist_DoublePointers.py
+A boy without dreams
+'''
 from ListNode import ListNode
 class linkedListCircularExistDoublePointers:
     def circularIsExist(self,root:ListNode):

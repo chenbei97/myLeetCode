@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-09 11:20:16
+ * @LastEditTime: 2022-03-16 08:19:40
+ * @Description: judge linkedList has circular by hashTable
+ * @FilePath: \myLeetCode\linkedList\linkedListCircularExist_HashTable.h
+ * @A boy without dreams
+ */
 #ifndef linkedListCircularExistHashTable_
 #define linkedListCircularExistHashTable_
 #include <iostream>

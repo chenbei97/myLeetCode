@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-03-02 13:13:57
+ * @LastEditTime: 2022-03-16 08:23:36
+ * @Description: remove the node from end by double pointers
+ * @FilePath: \myLeetCode\linkedList\linkedListRemoveTheNodeFromEnd_DoublePointers.h
+ * @A boy without dreams
+ */
 #ifndef linkedListRemoveTheNodeFromEndDoublePointers_
 #define linkedListRemoveTheNodeFromEndDoublePointers_
 #include "ListNode.h"
