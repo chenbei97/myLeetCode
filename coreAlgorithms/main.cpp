@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-15 09:31:04
- * @LastEditTime: 2022-03-17 10:32:40
+ * @LastEditTime: 2022-03-17 15:48:59
  * @Description: core algorithms main.cpp
  * @FilePath: \myLeetCode\coreAlgorithms\main.cpp
  * @A boy without dreams
@@ -14,6 +14,7 @@
 #include "shellSort.h"
 #include "mergeSort.h"
 #include "quickSort.h"
+#include "heapSort.h"
 using namespace std;
 int main()
 {
@@ -24,5 +25,6 @@ int main()
     _shellSort_testCode();
     _mergeSort_testCode();
     _quickSort_testCode();
+    _heapSort_testCode();
     return 0;
 }
