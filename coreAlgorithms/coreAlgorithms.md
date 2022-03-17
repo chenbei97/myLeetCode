@@ -363,9 +363,94 @@ class mergeSort:
         self.reverse = reverse
 ```
 
-
-
 ## 快速排序
+
+​		快速排序本质上是一种冒泡排序基础上的分而治之的递归算法。
+
+​		算法是**先找到1个基准(总是取排序区间内的首个元素)，然后将比基准小的元素都放在基准左边，比基准大的元素放在基准右边，相同的数可以放在任一边**。这里要注意的是**基准值在这一轮排序中是不会变的，但是基准值的位置是可以变的**，只要最后满足基准值是数组的分界线即可。数组这轮排序完毕以后，应当返回分区的位置，也就是基准值的新位置，可能还是一开始的位置，这说明基准值选取的恰好是本轮区间排序的最小值(如果是降序排列，就是最大值)，那么下一轮递归时就没有左递归了。
+
+​		递归之前，会带入要递归区间的边界，左递归区间边界是[low,pivot-1]，右区间边界是[pivot+1,high]。pivot是上一轮递归的排序区间[low,high]所得到的基准值新位置，所以并不保证pivot-1＞low和pivot+1<high。所以这也是递归终止的条件，在排序之前，要判断区间边界的问题。
+
+​		之所以排序区间[low,high]能够进行排序并得到新基准的位置用于下一轮，是因为满足先决条件low<high。所以2个递归子区间进入排序之前，也会先判断low和pivot-1，以及pivot+1和high的大小关系。
+
+​		具体的排序程序，有不同的写法，下方的程序给出了2种partition函数的写法。
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator>
+using namespace std;
+template<typename T>
+int partition(vector<T>&nums,int low,int high,bool reverse=false);
+template<typename T>
+int partition_new(vector<T>&nums,int low,int high,bool reverse);
+template<typename T>
+void quickSort(vector<T>&nums,int low,int high,bool reverse = false){
+    if (low < high){ // 递归的终止条件
+        int piovtIdx = partition_new(nums,low,high,reverse);//真正的排序过程,用partition_new函数也可以
+        // 得到的pivotIdx是排序区间[low,high]内基准值的位置
+        // 开始基准值总是取递归的排序区间首元素,即pivot=nums[low],pivotIdx=low
+        // 一轮排序中pivot是不会变的,但是pivotIdx可能会变
+        // 最终目的是pivotIdx之前的元素都比nums[pivotIdx]小,之后的元素都比nums[pivotIdx]大
+        // pivotIdx=low不变说明pivot是[low,high]区间内最小的元素(或者降序排列时最大的元素)
+        // 这样下次的递归区间没有左区间,只有右区间,因为low>piovtIdx-1
+        // 其实就等于递归区别从[low,high]变成了[low+1,high],首元素已经确定无需再排
+        quickSort(nums,low,piovtIdx-1,reverse); 
+        quickSort(nums,piovtIdx+1,high,reverse);
+    }   
+}
+template<typename T>
+int partition(vector<T>&nums,int low,int high,bool reverse){
+    // 真正的排序函数,能够进入此函数说明low<high
+    T pivot = nums[low]; // 总是取排序区间首元素为基准值,目前的pivotIdx=low
+    while (low<high)
+    {
+        // 第1个while目的是把基准值位置右边的所有比基准值大的元素挪到基准值左边
+        while (low<high &&  // reverse=true要求降序,后边比前边的小无需交换,让high向前移动
+                ( reverse?nums[high]<=pivot:nums[high]>=pivot))
+        {
+            --high; // 如果是降序,后者要比前者小才无需交换
+            // 如果是升序,后者要比前者大才无需交换
+        }
+        // while结束,high最多到low(如果到low说明后边的每一个元素都比基准值大(小))
+        nums[low] = nums[high]; // 如果后边有比基准值更小(大)的就把它挪到基准值位置左边
+        // 第2个while目的是把基准值位置左边的所有比基准值小的元素挪到基准值右边
+        while (low<high && 
+                (reverse?nums[low]>=pivot:nums[low]<=pivot))
+        {
+            ++low;//升序,前者小于后者才无需交换,降序反过来
+        }
+        // while结束,low最多到high(如果到high说明前边的每一个元素都比基准值小(大))
+       nums[high] = nums[low]; // 前边有比基准值更大(小)的就把它挪到基准值位置右边
+    }
+    nums[low] = pivot; // 现在的low值可能变化也可能没变,low是基准值的新位置
+    return low;
+}
+template<typename T>
+int partition_new(vector<T>&nums,int low,int high,bool reverse){
+    // 另1种排序和分区的写法
+    T pivot = nums[low];// 总是取排序区间首元素为基准值
+    int behindPivotIdx = low+1; // 初始为基准值位置的后1个
+    int i = low+1;
+    while (i<=high){ // [low+1,high]
+        if (reverse?nums[i]>=pivot:nums[i]<=pivot) // 以降序为例,如果元素≥基准值就交换到基准值位置的后面
+        {
+            swap(nums[i],nums[behindPivotIdx]); // 交换到基准值的后面位置,基准值本身不动
+            behindPivotIdx++; // 相当于轮流把大于基准值的元素依次放到基准值位置后面
+        }
+        // 小于基准值的元素就无需再移动,在原位置即可
+        i++; // 查看下1个元素
+    }
+    // while结束后,在behindPivotIdx之前的元素都满足比基准值大,之后的元素都比基准值小
+    // 此时把基准值和behindPivotIdx-1位置元素交换
+    // 那么新基准值位置之前的所有元素就满足了都比基准值大,且之后的所有元素都比基准值小
+    // 例如[1,5,3,2,6,0]->[6,5,3,2,1,0],0和1元素就是low=0和behindPivotIdx=5
+    swap(nums[low],nums[behindPivotIdx-1]);
+    return behindPivotIdx-1; // 基准值1的新位置是4
+}
+```
+
+
 
 ## 堆排序
 
