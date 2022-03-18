@@ -1170,6 +1170,120 @@ copy(text.begin(),text.end(),os);// 输出到终端
 
 ## 四、基于对象的编程风格
 
+### 实现一个Class
+
+由于内容简单，不再给出原书的一些代码，只强调成员函数的inline性质。
+
+对于成员函数来说，如果在类内完成其定义，就会自动视为inline函数，这样类的每个实例对象都包含了这样一份代码，在调用点处可以直接执行代码，所以inline函数只有代码体量小才有意义，这样才会比通过调用函数带来的花销更值得。
+
+如果在类外声明，也想声明为类的inline函数，加上关键字即可。类的声明和inline函数的定义应当包含在头文件中，这样才能保证每处调用inline函数都是相同的。
+
+非inline成员函数一般在程序代码文件cpp中定义。
+
+### 何为构造函数和析构函数
+
+构造函数分为默认构造函数和copy构造函数。
+
+关于默认构造函数只说明成员列表初始化的问题，类的成员变量可以直接这样的方式初始化。
+
+```C++
+class A
+{
+  public:
+    A(int age,string name):_age(age),_name(name){}
+  private:
+    int _age;
+    string _name;
+};
+```
+
+也可使用在函数括号内，逐一赋值初始化，不过前者更好，未进入构造时就先于初始化。
+
+逐一初始化的方式如下。
+
+```c++
+A::A(int age,string name){
+    this->_age = age;
+    this->_name = name;
+}
+```
+
+再来看看copy构造函数，默认情况下如果不提供该函数的实现，编译器也会默认提供一个版本，它的实现就是采用逐一初始化这样的方式。
+
+```c++
+A::A(const A &rhs)
+{
+    this->_age = rhs._age;
+    this->_name = rhs._name;
+}
+```
+
+这样的方式对于一般的成员变量没有什么问题，但是如果默认构造函数使用过动态分配内存，例如
+
+```c++
+class A
+{
+  public:
+    A(int age,string name)
+    {
+        this->_age = age;
+    	this->_name = name;
+        this->_p = new double [this->_age];
+    }
+    ~A()
+    {
+        delete [] this->_p; //借助析构函数自动管理/释放堆申请的内存
+    }
+  private:
+    int _age;
+    string _name;
+    double* _p;
+};
+```
+
+如果仍然使用编译器提供的copy构造函数，它其实是这么复制的。
+
+```c++
+A::A(const A &rhs)
+{
+    this->_age = rhs._age;
+    this->_name = rhs._name;
+    this->_p = rhs._p; // 浅拷贝,只是简单的把2个指针指向同一份内存
+}
+```
+
+在用户的使用视觉来看，因为a1内部的_p指针已经被释放，a2指向的是同1个内存再次释放就会出错。
+
+```c++
+A a1(8,"b");
+A a2(a1); // 调用编译器提供的copy构造
+// a1被释放
+// a2被释放就会出现问题
+```
+
+对于堆申请内存给指针类型的成员变量，copy的构造函数不能再使用默认的成员逐一初始化，而是应当手动提供深拷贝的操作，将函数实现改写如下。
+
+```c++
+A::A(const A &rhs)
+{
+    this->_age = rhs._age;
+    this->_name = rhs._name;
+    this->_p = new double [this->_age];//深拷贝
+    for (int i=0;i<this->_age;i++)
+        this->_p[i]=rhs._p[i]; // 这样去复制每个元素
+}
+```
+
+### 何谓mutable(可变)和const(不变)
+
+
+
+
+
+
+
+
+
 
 
 
