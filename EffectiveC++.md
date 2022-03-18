@@ -833,7 +833,7 @@ s1 = s2 ;// 编译器拒绝
 
 另一个结论，带多态性质的base classes应该声明一个virtual析构函数。如果class带有任何virtual函数，它就应该拥有一个virtual析构函数。但是如果Classes的设计目的如果不是作为base classes 使用，或不是为了具备多态性，就不该声明virtual析构函数。
 
-### 条款08：别让异常逃离析构函数
+### 条款08：析构函数尽量不要设置异常处理
 
 先说结论。
 
@@ -1190,6 +1190,156 @@ newA& newA::operator=(const newA &rhs)
 总的来说，copy函数是从无到有构造1个对象，而copy assignment更像是把1个已存在的对象从未初始化状态变为初始化对象。
 
 ## 3.资源管理
+
+### 条款13：以对象管理资源
+
+假如存在某个模型被一个类所描述，例如投资模型，工厂函数用于返回一个模型给调用者使用。
+
+```c++
+class Investment
+{
+	...
+};
+Investment* createInvestment();// 工厂函数
+void f()
+{
+    Investment* pInv = createInvestment();
+    ...
+    delete pInv;//有义务删除这个指针
+}
+```
+
+但是f()函数很可能因为前边语句过早的return或者某些异常而导致执行不到最后1行，亦或者delete处于某个循环，而continue、goto、break之类的过早结束循环导致pInv没有释放。总是依仗f函数一定会执行delete语句是不现实的，一个想法是把从工厂函数获得的资源绑定在对象上，就可以借助C++的析构函数自动调用机制来确保资源被释放。
+
+以对象管理资源的2个关键想法：
+
+① 获得资源后立刻放进管理对象(资源取得时机便是初始化时机)；
+
+② 管理对象运用析构函数确保资源释放。
+
+#### 引入auto_ptr
+
+标准程序库提供了一个智能指针auto_ptr，它是个类指针对象，用于管理资源。
+
+在f函数可以这样使用：使用了auto_ptr的模板机制<>和构造函数机制，对返回的资源进行绑定智能指针，那么就无需手动delete就可以在pInv离开作用域后被释放。
+
+```c++
+void f()
+{
+	std::auto_ptr<Investment> pInv(createInvestment());
+    ...
+    // 无需手动delete
+}
+```
+
+但是不应当让多个auto_ptr指向同一个资源，否则会被释放2次。为了预防这个问题，auto_ptr被设计时带有一个性质，它的copy构造函数和copy assignment函数被调用时，那么复制所得到的指针会获得对资源的唯一拥有全权，而被复制的指针会置为nullptr。
+
+```c++
+std::auto_ptr<Investment> pInv1(createInvestment());
+std::auto_ptr<Investment> pInv2（pInv1);// pInv1会置为nullptr,pInv2取得资源的唯一控制权
+pInv1 = pInv2; //pInv1再次取得资源的控制权,pInv2置为nullptr
+```
+
+如果希望发挥正常的复制行为，不应当使用auto_ptr，替代方案是使用引用计数型智慧指针RCSP，它可以追踪共有多少对象指向某个资源，并在无人指向它时自动删除该资源。RCSP提供的行为类似于垃圾回收，但RCSP无法打破环状引用，例如2个其实没被使用的对象彼此互指，它们就好像还在被使用状态，RCSP是无法删除这2个对象的。
+
+#### 引入shared_ptr
+
+shared_ptr就是一种RCSP指针，它的使用方式和auto_ptr别无二致，不过要注意它是在tr1的命名空间下的。只有PInv2和pInv1都被销毁时资源才会被销毁。
+
+```c++
+std::tr1::shared_ptr<Investment> pInv1(createInvestment());
+std::tr1::shared_ptr<Investment> pInv2（pInv1); // PInv2和pInv1指向同1个对象
+pInv1 = pInv2; // PInv2和pInv1指向同1个对象
+```
+
+不过本条款不是针对这2个指针，如果希望了解更多shared_ptr的信息，可以看条款14、18和54。
+
+这2个智能指针类内部的析构函数调用的都是delete，而不是delete []，所以也就是说无法将动态分配的数组类型资源绑定到这2个指针上。虽然不应该这样做，但是如果这样做编译器不会提示任何问题。
+
+```c++
+std::auto_prt<int> ap_arr(new int[10]);
+std::tr1::shared_ptr<string> sp_arr(new string[10]);
+```
+
+不过c++中并没有提供类似于这2个智能指针的去释放数组类型的资源的类，这是因为vector、string等总是可以取到动态分配的数组。如果一定要针对数组涉及的智能指针，可以在Boost中寻找，它提供的函数boost::scoped_array和boost::shared_array 就可以提供类似的行为。
+
+但是这2个指针类也不能处理所有情况的资源管理，因为不是所有资源都是heap_based，这时这两类指针不适用于作为资源掌控者，这时候就必须手动释放资源，也就是自定义资源管理类。
+
+最后总结：为了防止资源泄露，应当使用RAII对象，常用的就是上述2个指针，一般而言shared_ptr更常被使用，因为它的copy行为更直观。
+
+### 条款14：自定义资源管理类小心copying行为
+
+假设有2个函数用于管理Mutex的互斥器对象，为了不忘记将一个被锁住的mutex对象解锁，可能希望建立一个类来管理mutex对象。
+
+```c++
+void lock(Mutex*pm);//锁定pm指向的互斥器
+void unlock(Mutex*pm);// 将pm指向的互斥器解锁
+```
+
+建立的互斥器资源管理类Lock。
+
+```c++
+class Lock
+{
+    public:
+    	explicit Lock(Mutex*pm) : mutexPtr(pm) // 拒绝隐式转换,列表参数初始化私有变量mutexPtr
+        {
+            lock(mutexPtr); // 构造时自动给互斥器对象上锁
+        }
+   ~Lock(){unlock(mutexPtr);} // 析构时自动给互斥器对象去锁
+    private:
+    	Mutex * mutexPtr;
+}
+```
+
+客户可能的使用方式。
+
+```c++
+Mutex m; //定义了互斥器对象
+...
+// 在某个区域内{},可能是一段函数
+{
+  Lock m1(&m); // 锁定了m
+  ... //一些操作
+};//这里结束后,m会被自动解锁,无需手动解锁
+```
+
+现在再来看看关心的问题，如果Lock的对象被复制应当发生什么？
+
+```c++
+Lock m11(&m);
+Lock m12(m11);//应当发生什么？
+```
+
+一种做法是禁止copy操作，条款6给出了禁止自动copy构造函数的创建方式，使用一个类将copy设为private，然后Lock类继承于它即可。之所以禁止，可能是这样的操作并不合理。
+
+还有一种做法是增加引用计数法来管理资源，可以借助shared_ptr将私有变量mutexPtr从使用Mutex * 来定义转为间接的使用tr1::shared_ptr< Mutex >来定义，那么mutexPtr就是一个智能指针。但是这存在一个问题，如果引用次数为0时就删除所指物，而私有变量mutexPtr的目的是锁定对象而非删除对象。
+
+但是可以借助tr1::shared_ptr的第2参数，也就是删除器deleter，这是一个函数或者函数对象，引用次数为0时就自动调用这个函数。
+
+```c++
+class Lock{
+    public:
+    	explicit Lock(Mutex*pm):mutexPtr(pm,unlock)
+        {
+            lock(mutexPtr.get());// get函数会在下个条款说明
+        }
+    private:
+    	std::tr1::shared_ptr<Mutex> mutexPtr;
+}
+```
+
+所以资源管理器对象计数为0时会自动调用unlock函数，也就给互斥器对象去锁了。
+
+再来总结一下，自定义资源管理器类对copy的处理方式：
+
+① 可以禁止copy构造哈函数；
+
+② 复制资源器管理对象时也要复制底部资源，也就是深拷贝；
+
+③ 如果希望只保留一个智能指针指向1个资源类似于auto_ptr，就应当转移底部资源的拥有权。
+
+### 条款15：在资源管理类提供对原始资源的访问
 
 
 
