@@ -1045,6 +1045,162 @@ a[i]=a[j]; // i=j时
 void doSomething(const base& rb,const derived & rd)
 ```
 
+所以如果函数需要处理多个对象，需要思考如果对象是同一个时是否能够保证安全性。
+
+假设现在有2个类A和B，B中的私有成员指针指向了A，B提供了运算符=的重载函数，但是这个函数是不安全的。如果rhs和this是同一个对象，删除pa指针的时候就把rhs的pa也删除了，然后pa指向一个并不存在的A指针指向的内存，就会出错。
+
+```c++
+class A{...};
+class B{
+    ...
+    private:
+    	A * pa;
+};
+B& B::operator=(const B& rhs)
+{
+    delete pa;
+    pa = new A(*rhs.pa);
+    return *this;
+}
+```
+
+有3个解决方案，改写这个运算符重载函数。
+
+第1个方案加证同测试，这样能够保证自我赋值安全性，但是对异常安全性还有所欠缺。
+
+```c++
+B& B::operator=(const B& rhs)
+{
+    if (this == &rhs) return *this;//可以保证自我赋值安全性
+    delete pa;
+    pa = new A(*rhs.pa); // 但是不保证异常安全性,可能A的构造函数会有异常抛出,pa依然指向不存在的内存
+    return *this;
+}
+```
+
+第2个方案，只关注异常安全性，一般解决了异常安全性，也就具备了自我赋值安全性。解决方法是晚些删除指针pa。
+
+```c++
+B& B::operator=(const B& rhs)
+{
+    A* t = pa; // 1个指针记住原来的pa
+    pa = new A(*rhs.pa);//尝试让A指向新地址,A的构造可能异常也不异常
+    delete t; //ab新指向如果没问题,多余的指针t被删除毫无问题;若pa指向失败,pa尚未删除不会影响*this
+    return *this;
+}
+```
+
+方案1和方案2可以一起结合，这样同时具备异常安全性和自我赋值安全性。不过这样的代码会变大，降低执行速度，更好的解决方案是第3个，也就是copy and swap技术。
+
+第3个方案，之所以不安全无非是赋值过程可能导致指针指向的内容二次被删除，所以安全的方法是创建副本，也就是copy，创建副本借助复制构造函数完成。然后在swap函数中实现副本和this的互换。
+
+```c++
+B& B::operator=(const B& rhs)
+{
+	B temp(rhs);// 复制构造
+    swap(temp);
+    return *this;
+}
+void swap(B& rhs){
+    ...//交换rhs和*this的数据
+}
+```
+
+还有一种写法，可以无需借助复制构造函数，只需要让操作运算符的参数以值传递的方式传递即可，那么它自动会创建副本。
+
+```c++
+B& B::operator=(B rhs)
+{
+    swap(rhs); // 交换的是值传递的副本
+    return *this;
+}
+```
+
+第2种写法没有第1种写法清晰，但是第2种写法比较高效。
+
+### 条款12：复制对象时勿忘每一个成分
+
+定义一个类以后，在copy函数和copy assignment函数中都必须将所有的成员变量进行复制，否则会面临未初始化变量被使用的风险。像下方这样的写法，编译器不会提出警告。
+
+```c++
+class A{...};
+class B{
+    public:
+    	...
+    private:
+    	string name;
+    	A myA;
+};
+B::B(const B& rhs):name(rhs.name)
+{
+    // this->myA = rhs.myA; //如果不调用A的copy assignment函数
+}
+B& B::operator=(const B& rhs)
+{
+    this->name = rhs.name;
+    // this->myA = rhs.myA; //如果不调用A的copy assignment函数
+    return *this;
+}
+```
+
+如果类是派生类，还需要注意调用基类的构造函数，来初始化派生类对象的基类成分。
+
+```c++
+class newA:public A
+{
+    newA(const newA& rhs);// copy
+    newA& operator=(const newA &rhs); // copy assignment
+    ...
+    private:
+    	int age;
+};
+newA::newA(const newA& rhs):age(rhs.age),A(rhs)//还应当调用基类的构造函数来初始化rhs的基类成分
+{
+    ...
+}
+newA& newA::operator=(const newA &rhs)
+{
+    this->age = age;
+    A::operator=(rhs); // 调用基类的构造函数来初始化rhs的基类成分
+    return *this;
+}
+```
+
+最后1个问题，虽然copy和copy assignment函数很相似，但是不要为了减少重复代码而尝试让其中一个调用另一个，应当使用的方法是，把共同的代码写在一个函数里，设为private函数，这个函数常命名为init函数。理由如下。
+
+如果copy函数调用copy assignment函数：可能的写法如下，this尚不存在，用rhs来构造不存在的对象这没有意义
+
+```c++
+newA :: newA(const newA& rhs)
+{
+	*this = rhs;	
+}
+```
+
+如果copy assignment函数调用copy函数：因为copy是来初始化新对象，而this已经存在不需要构造函数来借助rhs构造出this。
+
+```c++
+newA& newA::operator=(const newA &rhs)
+{
+    newA *this(rhs);
+    return *this;
+}
+```
+
+总的来说，copy函数是从无到有构造1个对象，而copy assignment更像是把1个已存在的对象从未初始化状态变为初始化对象。
+
+## 3.资源管理
+
+
+
+
+
+
+
+
+
+
+
 
 
 
