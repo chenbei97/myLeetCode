@@ -8,11 +8,11 @@
 -->
 ## 一、C++编程基础
 
-### 什么是命名空间？
+### 1.1 什么是命名空间？
 
 命名空间是一种将库名称封装起来的办法，通过这种方法可以避免和应用程序发生命名冲突的问题。例如想使用cin和cout对象需要包含头文件< string >和< iostream>的同时，必须使用标准命名空间std。
 
-### 为何要允许构造函数语法？
+### 1.2 为何要允许构造函数语法？
 
 例如，下方的2种变量初始化方式都是正确的。
 
@@ -28,7 +28,7 @@ int b(0);
 complex<double> a(3,4); // 3+4j
 ```
 
-### 运算符的优先级
+### 1.3 运算符的优先级
 
 只列举常见的运算符，最高的优先级是非，也就是!；
 
@@ -44,11 +44,11 @@ complex<double> a(3,4); // 3+4j
 [!] => [*,/] => [+,-] => []>,<,>=,<=] => [==,!=] => [&&] => [||] => [=] 
 ```
 
-  ### switch语句加break的原因?
+  ### 1.4 switch语句加break的原因?
 
 因为不加break，case语句和小括号内的表达式值匹配后 ，在这条case语句后面的所有case语句都会执行，所以为了只执行1条语句，即多选一的逻辑需要加break语句。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 
-### for循环的三个组成部分
+### 1.5 for循环的三个组成部分
 
 其中condition部分是循环开始之前被计算出来，如果不满足条件，1次也不会执行。
 
@@ -59,7 +59,7 @@ for( init_statement ; condition ; expression)
     statement;
 ```
 
-### ++i和i++的区别
+### 1.6 ++i和i++的区别
 
 如果是单独的语句，并没有区别。得到的结果是一样的。在for循环中i++和--i作为expression也是没有区别的，因为expression是循环结束后计算出来，最后结果不会改变。
 
@@ -78,7 +78,7 @@ int n = i++;
 int m = ++j;
 ```
 
-### srand与rand
+### 1.7 srand与rand
 
 srand是随机数种子，可以传入整数代表1个种子生成伪随机数，也可以传入随时间变化的随机种子为真随机数。srand包含于 <stdlib.h>头文件中。
 
@@ -96,11 +96,11 @@ rand会生成0和int所能到达的最大整数之间的1个整数，如果需�
 int n = rand() % 6 ; // 生成0-5的随机数 
 ```
 
-### 输入输出流 fstream
+### 1.8 输入输出流 fstream
 
 需要包含头文件，fstream，其内部包含输入流和输出流的类。
 
-#### 输出流ofstream
+#### 1.8.1 输出流ofstream
 
 输出流的对象，是指把文件打开后，把用户想要写入的数据输出到文件中，即用户是主动，文件是被动，被输出的，所以叫输出流对象。
 
@@ -116,7 +116,7 @@ else {
 }
 ```
 
-#### 输入流ifstream
+#### 1.8.2 输入流ifstream
 
 输入流的对象，是指文件打开以后，把文件的数据输入到用户(的终端)，即用户是被动，文件是主动输入对的，故叫输入流对象。
 
@@ -147,19 +147,19 @@ else {
 }
 ```
 
-### cerr和cout的区别？
+### 1.9 cerr和cout的区别？
 
 cerr代表标准错误设备(standard error)，和cout一样可以将输出结果定向到用户终端。唯一i的差别是cerr对的输出结果没有缓冲情形，会立即显示于用户终端。
 
 ## 二、面向过程的编程风格
 
-### 如何编写函数？
+### 2.1 如何编写函数？
 
 函数需要4个部分，返回类型、函数名、参数列表和函数体。其中返回类型、函数名、参数列表又构成了函数原型，它可以在编译阶段让机器明白这个函数有多少参数，输入和返回类型是否正确等。
 
 一个函数可能因为输入的数字返回错误的结果，例如某些数列不存在第0个位置，这样需要对参数设置一些控制。当参数不满足条件时可以抛出异常，也可以使用exit()函数终止，必须传1个值给exit，这个值是程序结束时的状态值，exit()函数在< stdlib.h>库中。
 
-### 某个数据类型的最小最大值
+### 2.2 某个数据类型的最小最大值
 
 一个函数的参数很可能超过该数据类型的限制，可以引入头文件< limits>查找。
 
@@ -169,11 +169,11 @@ int max_int = numeric_limits<int>::max();
 double min_dbl = numeric_limits<double>::min();
 ```
 
- ### 调用函数程序的行为?
+ ### 2.3 调用函数程序的行为?
 
 调用1个函数时弧在内存中建立起一块特殊区域，称为"程序堆栈"，这块区域提供了每个函数参数需要的储存空间，它也提供了函数内部所定义的每个对象的内存空间，这些对象称为局部对象，一旦函数完成这个内存会被释放掉，即从程序堆栈中被pop出来。
 
-### 引用传递
+### 2.4 引用传递
 
 引用传递的定义如下。
 
@@ -209,7 +209,7 @@ void display(const vector<int> &vec){
 }
 ```
 
-### 地址传递
+### 2.5 地址传递
 
 效率和引用传递是一样的，区别在于传入的是变量的地址。但是地址可能不指向某个实际对象，所以一定要确定其地址是否为0，至于引用必定是1个对象。
 
@@ -228,7 +228,7 @@ void display(const vector<int> *vec){
 }
 ```
 
-### 动态内存管理
+### 2.6 动态内存管理
 
 使用new和delete动态分配内存，new的对象是从内存空闲区或者说堆内存分配来的，这样分配来的默认是没有经过初始化的。
 
@@ -245,7 +245,7 @@ delete pa;
 delete [] pb;
 ```
 
- ### 提供默认参数值
+ ### 2.7 提供默认参数值
 
 默认参数值只能提供1次，可以在函数原型也可以在函数的实现处。 
 
@@ -341,7 +341,7 @@ for (int i = 0; i < ans2->size(); i++) {
 cout << "ans2 addr is " << ans2 << endl; // 地址没变
 ```
 
-### 使用inline函数
+### 2.8 使用inline函数
 
 一个函数可以拆成多个独立的小函数，这样可以增加函数的可读性和复用性。但是想实现一个功能从调用1个函数变成调用3个函数才能实现，这成了一个缺点。
 
@@ -349,11 +349,11 @@ cout << "ans2 addr is " << ans2 << endl; // 地址没变
 
 另外inline只是像编译器申请而不是强制性的，inline函数的定义一般放在头文件中，且定义必须是有效的，因为编译器必须在函数被调用的时候加以展开。
 
-### 使用重载函数       
+### 2.9 使用重载函数       
 
 只需要知道，同名函数可以以参数列表的个数或者参数类型不同来重载，但不能以返回类型重载。
 
-### 使用模板函数
+### 2.10 使用模板函数
 
 如果重载函数的参数个数、名称和参数相对位置没有变化，且函数主体的代码没有变化，只有参数的类型不同时就可以使用模板来替代重载，关键字为class或者typename。模板函数还可以进一步重载，如vector改为list也是可以的。                                                                                                                    
 
@@ -369,7 +369,7 @@ void print_message(const string &msg, list<T> &vec);
 
 如果那些调用它的函数具备的参数形式相似，这个输出信息的函数可能只需要函数模板就可以解决。例如函数A、B、C的参数只有1个且分别为int、double和string，那么输出函数为模板函数就可以同时为A、B、C函数使用，减少代码的重复性。
 
-### 函数指针的妙用
+### 2.11 函数指针的妙用
 
 函数指针出现的目的正好与模板函数不同：可能一个函数需要多次调用，内部每次调用不同的函数，其它的代码都是相同的，那么可以把这个函数增加一个函数指针类型的参数，这样可以根据不同的函数来执行本函数。
 
@@ -442,7 +442,7 @@ enum PrintMessageMethod{hello,world,hello_world};
 print_message("chenbei", funcs[hello_world]);
 ```
 
-### 设定头文件
+### 2.12 设定头文件
 
 调用1个函数需要先声明它，如果很多文件都需要调用这个函数，那么就要需要多次声明，虽然说声明可以很多次，但是为了提高可维护性，将所有函数的声明放在一个头文件即可，这样只需要维护一份声明。
 
@@ -468,7 +468,7 @@ const int vec[3] = { 1,2,3 };// 允许
 
 头文件可以使用双引号和尖括号，区别是如果头文件包含的函数定义与函数的实现在同一目录下就使用双引号，否则可能是在其它磁盘目录下，一般是IDE的安装目录下会包含编译器必要的头文件，如标准库文件。
 
-### extern变量的使用
+### 2.13 extern变量的使用
 
 分3个情况来说明：
 
@@ -484,11 +484,11 @@ const int vec[3] = { 1,2,3 };// 允许
 
 map是key/value组合，也可以叫字典、哈希表等；set是只有关键字，且不重复，也可以用于查询。
 
-### 指针的算术运算
+### 3.1 指针的算术运算
 
  问题：给定vector或者array，查找指定的元素值并返回它的地址。
 
-#### 容器元素泛型
+#### 3.1.1 容器元素泛型
 
 如果vector是一个整型的，那么这样的代码很容易实现。
 
@@ -515,7 +515,7 @@ T * find(const vector<T>&vec, const T& val){
 }
 ```
 
-#### 连续容器类型泛型
+#### 3.1.2 连续容器类型泛型
 
 上边的问题解决了容器元素可以是任何类型的，但是不同的容器可就需要重载函数。因为find函数的参数列表要求是vector类型，如果是arrray类型就得重载。
 
@@ -551,7 +551,7 @@ T * find(const T*first,const T * last, const T& val){
 }
 ```
 
-#### 连续容器首尾指针泛型
+#### 3.1.3 连续容器首尾指针泛型
 
 上述find函数还有个问题如果find函数传入的first指针可能是空的，对用户来说操作的是vector或array的实体而不是地址，所以用户定义一个指向实体的指针后总是需要自己先判断不为空，所以为了能够抽离出这部分代码逻辑，引入begin和end函数。这2个函数可以返回实体的首尾指针。
 
@@ -566,11 +566,11 @@ inline T * end(const vector<T> &vec){
 }
 ```
 
-#### 非连续容器类型泛型
+#### 3.1.4 非连续容器类型泛型
 
 线性容器很容易找到首尾指针，是因为内存是一段连续的地址，如果是链表，例如list容器，又该如何更改find函数呢？链表是不连续的，还有关联容器map和set，不仅非连续也不是线性的。这就需要引入泛型指针iterator的概念，也就是迭代器。
 
-### 泛型指针Iterator
+### 3.2 泛型指针Iterator
 
 要知道，在获取首尾元素指针这点上，list和vector、array没有区别，只是对指针的操作有所不同，所以可以再加一层抽象，begin和end函数不直接对指针操作，而是再加一个抽象层，这个抽象层包含了底层指针的操作，而begin和end只是调用抽象层得到即可。                                                                                                                                                                                                                                                                                                                                                                                                                                
 
@@ -637,11 +637,11 @@ if (pc != c.end()){
 }
 ```
 
- #### 泛型指针的运算符操作泛型
+ #### 3.2.1 泛型指针的运算符操作泛型
 
 现在有了泛型指针，find函数的通用性非常高。还需要考虑指针的运算符重载操作，运算符重载可以默认使用STL内部给出的方式，也可以让用户传入自己定义的运算方式，所以这个问题如果能解决泛型的问题，find函数通用性会大大增加，这将在第四章说明。STL提供的find_if函数能够接收函数指针或者函数对象来取代底部元素的==/!=运算符。
 
-### 容器的共通操作
+### 3.3 容器的共通操作
 
 先介绍容器的共通操作，再介绍各个容器自己独有的操作，第四章再回过头讲泛型。
 
@@ -649,25 +649,25 @@ if (pc != c.end()){
 
 不过insert和erase在顺序性和关联性容器的实现上略有不同。
 
-### 使用顺序性容器
+### 3.4 使用顺序性容器
 
-#### vector容器
+#### 3.4.1 vector容器
 
 删除和插入操作效率低，因为需要覆盖操作，尾删和尾插效率尚可。随机访问元素效率很高，因为只需要做一次指针运算即可。
 
-#### list容器
+#### 3.4.2 list容器
 
 双端链表，删除和插入的效率高，因为每个元素都有三个字段，front、back和value，即指向前后元素的指针以及真正的数据value。插入和删除操作只需要衔接好或者断开节点的指针和前后节点的指针即可。
 
-#### queue容器
+#### 3.4.3 queue容器
 
 单端队列，先进先出的数据结构，可以删除和获取队首元素，插入到队尾元素。但是获取中间的元素效率比较低，需要迭代器。
 
-#### deque容器
+#### 3.4.4 deque容器
 
 双端队列，可以头插，也可以尾删，那么deque的效率很高。
 
-#### 常用构造函数
+#### 3.4.5 常用构造函数
 
 产生特定大小的容器，指定size
 
@@ -695,7 +695,7 @@ list<string> s1;
 list<string> s2(s1);
 ```
 
-#### 常用函数
+#### 3.4.6 常用函数
 
 vector有push_back和pop_back函数，用于尾插和尾删。
 
@@ -719,7 +719,7 @@ iterator erase(iterator position); // 删除指定位置元素
 void erase(iterator first,iterator last);// 删除[first,last)范围的元素                 
 ```
 
-### 使用泛型算法
+### 3.5 使用泛型算法
 
 find函数，搜索无序集合是否存在指定元素，找到目标返回指向目标的迭代器，否则返回end()；
 
@@ -753,7 +753,7 @@ int count(const vector<int> &nums, int val){
 }
 ```
 
-### 设计一个泛型算法
+### 3.6 设计一个泛型算法
 
   假如想要实现一个数组中找到所有小于10的数，一个快速但是缺乏弹性的写法如下。
 
@@ -800,7 +800,7 @@ auto ans = filter(vec,val,less_than);
 
  这个函数还可以继续泛型，例如支持的op函数能够不受参数限制，而是使用自定义的函数规则来实现，把这样一组行为函数来传递给filter函数作为参数。这就需要先引入函数对象的概念，函数对象比函数指针更有效率。
 
-#### Function Object
+#### 3.6.1 Function Object
 
 函数对象，标准库在< functional> 中预定义了许多函数对象，它们是某种class的实例，因为这些类对操作运算符()进行了重载，所以使得实例具有函数的性质，可以被调用。这些函数可以被一些算法所使用，例如sort或者find_if，当然函数对象也可以自定义实现。
 
@@ -881,9 +881,9 @@ auto iter = find_if(vec.begin(),vec.end(),lessthan_ten());
 transform<vec.begin(),vec.end(),vec.begin()+1,ans.begin(),plus<int>()>;
 ```
 
-#### Function Object Adapter
+#### 3.6.2 Function Object Adapter
 
-##### bind1st and bind2nd
+##### 3.6.2.1 bind1st and bind2nd
 
 上述find_if的例子，find_if要求传入的是个一元运算符，所以重载的函数对象可以带入找到小于10的元素。现在如果希望利用标准库已有的操作，例如less，它显然是个二元操作符，如何将其转为一元运算符可以为find_if函数使用呢？答案是STL标准库的函数对象适配器，主要是2个函数，一个是bind1st，另一个是bind2nd，分别可以把指定值绑定到函数对象的第1或者第2操作数。
 
@@ -935,7 +935,7 @@ filter(b.begin(),b.end(),rb.begin(),size,less<int>());
 
   输出迭代器的at参数指定的是要存放的位置at存放符合条件的first，然后2个指针都前进。     
 
- ##### not1 and not2
+ ##### 3.6.2.2 not1 and not2
 
 这2个适配器函数是另一种适配器。 not1是针对一元运算符的，unary function object，也就是比较运算、逻辑非运算和算术运算的取反，not2是针对二进制函数对象进行取反，也就是binary function object。
 
@@ -974,9 +974,9 @@ vector<int> sub_vec(const vector<int> &vec, int val){
 
 现在这个函数于元素类型、依赖的容器类型、函数指针/函数对象类型都无关，是一个真正的泛型算法。                                                                                                                                                                                                                         
 
-### 使用关联性容器
+### 3.7 使用关联性容器
 
- #### 使用map
+ #### 3.7.1 使用map
 
 map被定义为一对pair数值，输入key时，如果它不存在于map就会自动加入并给定默认初值0。
 
@@ -1022,7 +1022,7 @@ if (words.count("chenbei"))
 
   如果需要key存储多份值，需要使用multimap。
 
-#### 使用set
+#### 3.7.2 使用set
 
  set只有key，且key只能存储1份，需要存储多份就使用multiset。 set也有count函数，可以用于判断key是否存在于集合，同样返回0或1。
 
@@ -1060,7 +1060,7 @@ set_difference();
 set_symmetric_difference();
 ```
 
- ### 使用Iterator Inserter
+ ### 3.8 使用Iterator Inserter
 
 回过头看之前的filter函数以及测试程序。
 
@@ -1125,7 +1125,7 @@ filter(b.begin(),b.end(),
        back_inserter(rb),size,less<int>());//现在可以借助Inserter adapter
 ```
 
-### 使用iostream Iterator
+### 3.9 使用iostream Iterator
 
  输入输出流迭代器就是依据插入迭代器实现的。如果需要终端读取一些字符串和输出一些字符串，可能需要先指定容器，然后反复push_back输入的字符串，最后遍历输出字符串。
 
@@ -1170,7 +1170,7 @@ copy(text.begin(),text.end(),os);// 输出到终端
 
 ## 四、基于对象的编程风格
 
-### 实现一个Class
+### 4.1 实现一个Class
 
 由于内容简单，不再给出原书的一些代码，只强调成员函数的inline性质。
 
@@ -1180,7 +1180,7 @@ copy(text.begin(),text.end(),os);// 输出到终端
 
 非inline成员函数一般在程序代码文件cpp中定义。
 
-### 何为构造函数和析构函数
+### 4.2 何为构造函数和析构函数
 
 构造函数分为默认构造函数和copy构造函数。
 
@@ -1274,17 +1274,238 @@ A::A(const A &rhs)
 }
 ```
 
-### 何谓mutable(可变)和const(不变)
+### 4.3 何谓mutable(可变)和const(不变)
 
+关于const的作用其实在EffectiveC++的条款03说明过，在这里就再简要叙述一下结论。
 
+第一，如果成员函数声明为const类型，返回的是指针或者引用类型时也必须加const，否则如果返回私有变量的引用，这意味着它可以在类的外部修改，也是不满足const的含义。
 
+第二，成员函数可以由于const常量性不同而发生重载，所以可以声明一个非const对的同名函数，返回值可以是const对的也可以不const，但是不能同时存在，因为重载不能只以返回类型区分；
 
+第三、如果有因const重载的成员函数，调用何种版本取决于类的实例的常量性，const类对象调用const版本的成员函数，non-const的类对象调用non-const成员函数；
 
+第四条，其实就和mutable有关系。如果成员函数被声明为const，它不能改变类的任何成员变量，但是有时候希望成员变量能够被改变，且能在该成员函数内使用，那怎么办呢？可以对成员变量使用mutable修饰，它可以释放掉const对它的约束，这样const成员函数是可以修改mutable成员变量的。
 
+### 4.4 什么是this指针
 
+this指针是用于指向调用者自身的指针，常用于copy操作和copy assignment操作被体现。
 
+this指针可以访问调用者对的一切，如果调用者既是调用者也是接收者，那么应当返回一个this指针。
 
+```c++
+class A
+{
+	public:
+    	A& copy(const A& rhs)
+        {
+            age = rhs.age;// 隐式使用this指针
+            name = rhs.name;
+            return *this;// 既是调用者也是接收者
+        }
+    private:
+    	int age;
+    	string name;
+};
+```
 
+其实上述代码等价于
 
+```c++
+class A
+{
+	public:
+    	A& copy(const A& rhs)
+        {
+            if (this == &rhs) // 判断是否为自我赋值是个好习惯
+                retun *this;
+            this->age = rhs.age; // 显式使用this指针
+            this->name = rhs.name;
+            return *this;// 既是调用者也是接收者
+        }
+    private:
+    	int age;
+    	string name;
+};
+```
 
+### 4.5 静态类成员
+
+#### 4.5.1 静态成员变量
+
+静态类成员分为静态成员变量和静态成员函数。
+
+静态成员变量是同一类的所有对象唯一的、可以共享的成员，类内声明了这个成员变量后，就必须在程序代码cpp文件中给出明确的定义，有点像全局变量的声明，别的cpp文件也想使用这个变量时先是从本文件找，找不到再去别的文件找，无论如何，定义只有一份。
+
+非静态成员函数可以访问静态成员变量，静态成员变量如果是const类型的，还可以在声明时明确指定初值，而且是必须给定初值。
+
+#### 4.5.2 静态成员函数
+
+静态成员函数不能访问非静态成员变量，这样这个函数与任何类的实例对象都毫无瓜葛。
+
+普通成员函数的调用是依赖于this指针的，this指针又绑定在具体的类实例，所以每个类的实例想要调用普通成员函数，其实都是调用它自己携带的普通成员函数成分。
+
+静态成员函数因为不与任何非静态成员变量有瓜葛，也就不和任何类的实例对象有瓜葛，因为静态成员变量是与任何对象无瓜葛的，所以如果使用类的静态成员函数，就可以以作用域的形式来调用。
+
+```c++
+class A
+{
+    ...
+    static void printNames();
+    private:
+    	int age;
+    	string name;
+    	static vector<int> elems;
+};
+void A::printNames()// 只要声明给出了static,类外定义不声明static也可以
+{
+	// cout<<"age = "<<age<<" name = "<<name<<endl; 不可以访问任何非静态成员
+    ostream_iterator<int> os(cout," ");
+    copy(elems.begin(),elems.end(),os);
+    cout<<"\n";
+}
+// 外部程序使用静态成员函数
+A::printName();//无需绑定任何对象可以直接使用
+```
+
+### 4.6 类内部打造一个迭代器类
+
+迭代器类要完成的操作主要是：提供==，!=，++(前+后+2个版本)，--(类似2个版本)，以及解引用操作符 * 的运算符重载函数。而被嵌套的类，需要提供指向begin()和end()函数，方便用户使用。++和--的后置版本也就是i++和i--必须跟上int参数，返回值因为是旧的this指针，所以返回的不是引用，前置版本返回的是引用。
+
+迭代器类的大致写法如下，它被定义在类A的内部，用于访问A的静态成员变量elems，A是一个描述数列的类，从数列的指定位置开始访问，位置必须正整数(≥1)，但是内部是用elems存储的，所以它的访问必须是位置-1，也就是实际位置，这里用nextPos描述。A对迭代器的取名可以使用别名，外部用户可以直接使用iterator作为迭代器名称使用。
+
+```c++
+class A
+{
+    public:
+    	typedef A_iterator iterator;//起别名,用户无需知道真实名字
+    	A(int len,int loc){
+            // length 和 pos都必须>=1
+            length = len>0?len:1;// 从起始位置开始想要访问数列的长度
+            pos = loc>0?loc:1;
+            nextPos = pos - 1;//下一个操作元素的真正位置
+        }
+        A_iterator begin() const // 类A要提供begin和end函数
+        {
+            return A_iterator(pos); //注意是绑定到数列的位置,所以解引用*重载时要记得-1
+        }
+    	A_iterator end() const
+        {
+            return A_iterator(pos+length);
+        }
+    	//其它A的函数,自动inline
+    	int length()const {return length;}//返回数列长度
+    	int pos() const {return pos}; // 返回数列要开始访问的位置(从数列的该位置进行访问)
+    	int elem(int pos) {return elems[pos-1]}//用户是从pos=1开始使用的
+    	void next_reset() const (nextPos = pos-1;)//可以修改mutable变量,重置nextPos
+    	bool next(int &val)const{
+            //每调用1次next,nextPos要++,通过引用传递将val改变为数列的下1个元
+            // 使用next函数之前nextPos要借助next_reset重置为pos-1,nextPos可能已被使用过
+            if (nextPos < pos + length -1){ // 指定访问[pos,pos+length-1]的数列元素
+                // 对应elems的[pos-1,pos+length-2]
+                val = elems[nextPos++];//因为是引用传递,外部传入的val可以改变
+                return true; // 能访问下1元素返回true
+            }
+            return false;//不能返回false
+        }
+    	int sum(const A& series){ //定义next_reset,next的原因,求数列指定段的元素之和
+            if (!series.length()) // series在外部已经给好要求的长度length和起始位置pos
+                return 0;
+            int val=0,sum=0;
+            series.next_reset()
+            while (series.next(val)) // 引用传递val依次等于elems[pos-1],..elems[pos]
+                sum += val;
+            // while结束后nextPos的位置改变了,所以下次还要正确使用sum必须使用next_reset重置
+            return sum;
+        }
+        class A_iterator
+    	{
+        public:
+            A_iterator(int pos):idx(pos-1){};//访问从[0]开始,begin,end给的pos不是实际位置
+            bool operator==(const A_iterator&) const; // 重载==
+            bool operator!=(const A_iterator&) const; // 重载!=
+            A_iterator& operator++(); // ++it版本(前置),it是调用者也是接收者,需返回this指针
+            A_iterator operator++(int); //it++版本(后置),返回的只是以前的this版本
+            A_iterator& operator++(); // --it
+            A_iterator operator++(int);// it--
+            // 后置版本必须跟上int参数,这是编译器自动配置的,且值必为0,记住即可
+            int operator*() const;// 解引用操作,这里迭代器指向的是int类型
+        private:
+            void check_integrity() const;//检查迭代器指向是否为int类型
+            int idx;//迭代器的指向位置,也就是pos-1,这是elems的实际位置
+    	}
+        inline bool A_iterator:: operator==(const A_iterator&rhs)const
+        {
+            return idx == rhs.idx;//指向的元素位置相等就认为迭代相等
+        }
+    	inline bool A_iterator:: operator!=(const A_iterator&rhs)const
+        {
+            //return idx != rhs.idx; 一般不这么写了,因为很可能指向的数据类型不同,这也是不同
+            return !(*this == rhs); // 比较的是所指内容,用到了*运算符重载
+            // 也就是比较elems[idx] != rhs.elems[rhs.idx]
+        }
+    	inline A_iterator:: int operator*() const // 带作用域A_iterator:: 
+        {
+            check_integrity(); // this隐式的指针
+            return A::elems[idx]; // 静态成员变量可以直接用作用域使用该函数
+        }
+        inline int operator*(const A_iterator&rhs) const//不带A_iterator::
+        {
+            // 此函数是重载版本且不作为类的成员函数
+            rhs.check_integrity(); // this在rhs内
+            return A::elems[idx]; // 共享1份内存
+        }
+    	inline void A_iterator::check_integrity()const
+        {
+            if (idx >= A::max_elems)
+                throw iterator_overflow(); // 抛出异常
+            if (idx >= A::max_elems.size()) // 如果elems暂时没存到这个上界的元素
+                A::generate_elements(idx+1);// 就增加elems存储的元素
+            // 这2个函数实现不写,知道要做什么就可
+        }
+    	inline A_iterator& A_iterator::operator++(){
+            // ++it版本
+            ++idx;//状态先更新
+            check_integrity();
+            return *this;//返回更新的this
+        }
+    	inline A_iterator A_iterator::operator++(int)
+        {
+            // it++版本,表达式还没更新
+            A_iterator old = *this;//先记录旧的this
+            ++idx;
+            check_integrity();
+            return old; // 这也是为何返回的不是引用的原因
+        }
+        inline A_iterator& A_iterator::operator--(){
+            // --it版本
+            --idx;//状态先更新
+            check_integrity();
+            return *this;//返回更新的this
+        }
+    	inline A_iterator A_iterator::operator--(int)
+        {
+            // it--版本,表达式还没更新
+            A_iterator old = *this;//先记录旧的this
+            --idx;
+            check_integrity();
+            return old;// 这也是为何返回的不是引用的原因
+        }
+    
+    private:
+    	int pos;//用于访问数列的起始位置(从数列的该位置进行访问),必须>0,数列索引是正整数1开始的
+    	mutable int nextPos; // //下一个操作元素的真正位置,可在const成员函数使用
+        int length; // 从起始位置开始想要访问数列的长度
+    	static const int max_elems = 1024;//数列如果递增的话,elems[max_elems]存储的数可能会超过INT_MAX,1024还在int可以表示的最大范围内
+    	static vector<int> elems; // 存储数列是从下标0开始的
+}
+```
+
+外部用户的使用方式，和容器类对的iterator如出一辙。
+
+```c++
+A m(10,3);//length=10,pos=3
+A::iterator it = m.begin();
+```
+
+### 4.7 合作关系要建立在友谊基础上
 

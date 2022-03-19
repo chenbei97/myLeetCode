@@ -586,7 +586,7 @@ char * pc = &ctb[0];
 
 由于第1种流派违反直觉，所以有第2种流派，也就是logical constness，一个成员函数可以修改成员变量的某些bit。
 
-例如，增加2个成员变量，文字的长度和长度是否有效，显然在length()函数中，这2个函数是可以改变的，这与const违背。
+例如，增加2个成员变量，文字的长度和长度是否有效，显然在length()函数中，这2个成员变量是可以改变的，这与const违背。
 
 ```c++
 class CTextBlock{
@@ -599,7 +599,7 @@ class CTextBlock{
 }
 size_t CTextBlock::length()const{
     if (!lengthIsValid){
-        textLength = strlen(pText);
+        textLength = strlen(pText);//私有成员被改变了,这其实不允许
         lengthIsValid = true;
     }
     return textLength;
