@@ -1417,9 +1417,19 @@ class A
             // while结束后nextPos的位置改变了,所以下次还要正确使用sum必须使用next_reset重置
             return sum;
         }
+       	// A的友元类和函数
+    	friend class A_iterator;//最省事的写法
+    
+    	friend int operator*(const A_iterator&); // ②让非成员函数版本能访问A的elems
+    
+    	friend int A_iterator::operator*();//③让A_iterator的成员函数版本能够访问A的elems
+    	friend void A_iterator::check_integrity();//④让A_iterator的成员函数版本能够访问A的max_elems
+    
         class A_iterator
     	{
         public:
+            friend int operator*(const A_iterator &);//①让非成员函数版本能访问 A_iterator的check_integrity()函数
+            
             A_iterator(int pos):idx(pos-1){};//访问从[0]开始,begin,end给的pos不是实际位置
             bool operator==(const A_iterator&) const; // 重载==
             bool operator!=(const A_iterator&) const; // 重载!=
@@ -1443,22 +1453,28 @@ class A
             return !(*this == rhs); // 比较的是所指内容,用到了*运算符重载
             // 也就是比较elems[idx] != rhs.elems[rhs.idx]
         }
+    
+    	// ①成员函数的写法
     	inline A_iterator:: int operator*() const // 带作用域A_iterator:: 
         {
             check_integrity(); // this隐式的指针
             return A::elems[idx]; // 静态成员变量可以直接用作用域使用该函数
         }
-        inline int operator*(const A_iterator&rhs) const//不带A_iterator::
+    	// ②非成员函数的写法
+    	inline int operator*(const A_iterator&rhs) //不带作用域A_iterator::
         {
-            // 此函数是重载版本且不作为类的成员函数
-            rhs.check_integrity(); // this在rhs内
-            return A::elems[idx]; // 共享1份内存
+            // 此函数是重载版本且不作为类的成员函数,它是友元函数
+            rhs.check_integrity(); // check_integrity()是A_iterator的私有函数
+            return A::elems[idx]; // elems是A的私有成员
+            // 所以为了本非成员函数能访问2类私有成员
+            // 必须声明本函数为A_iterator的friend且也是A的friend函数
         }
+    	
     	inline void A_iterator::check_integrity()const
         {
             if (idx >= A::max_elems)
                 throw iterator_overflow(); // 抛出异常
-            if (idx >= A::max_elems.size()) // 如果elems暂时没存到这个上界的元素
+            if (idx >= A::elems.size()) // 如果elems暂时没存到这个上界的元素
                 A::generate_elements(idx+1);// 就增加elems存储的元素
             // 这2个函数实现不写,知道要做什么就可
         }
@@ -1508,4 +1524,121 @@ A::iterator it = m.begin();
 ```
 
 ### 4.7 合作关系要建立在友谊基础上
+
+现在回过头来看看，解引用运算符的2个函数有何区别。
+
+第1个是迭代器类的成员函数，它可以访问迭代器类的私有成员，但是不能访问A类的私有成员。operator * 函数和check_integrity函数都访问了A的私有成员，为了能通过编译，必须让这2个函数作为A的friend函数。
+
+```c++
+inline A_iterator:: int operator*() const // 带作用域A_iterator:: 
+{
+    check_integrity(); // this隐式的指针
+    return A::elems[idx]; // 静态成员变量可以直接用作用域使用该函数
+}
+```
+
+在A的任何地方都可以，给出这2个声明即可。
+
+```c++
+class A
+{
+	public:
+        friend int A_iterator::operator*();//③让A_iterator的成员函数版本能够访问A的elems
+    	friend void A_iterator::check_integrity();//④让A_iterator的成员函数版本能够访问A的max_elems
+    	...
+};
+```
+
+第2个写法是写成迭代器类的非成员函数，那么它要同时声明为迭代器类和A类的友元函数。
+
+```c++
+inline int operator*(const A_iterator&rhs) //不带作用域A_iterator::
+{
+    // 此函数是重载版本且不作为类的成员函数,它是友元函数
+    rhs.check_integrity(); // this在rhs内
+    return A::elems[idx]; // 共享1份内存
+}
+```
+
+因为这个函数既要访问A_iterator的check_integrity()，也要访问A的elems，所以在两个类内都要声明为友元函数才能通过编译，声明如下。
+
+```c++
+class A_iterator
+{
+    public:
+    	friend int operator*(const A_iterator &);// ①让非成员函数版本能访问 A_iterator的check_integrity()函数
+    	...
+};
+class A
+{
+	public:
+    	friend int operator*(const A_iterator&); // ②让非成员函数版本能访问A的elems
+    	...
+};
+```
+
+以上第1个个写法是指定迭代器类的特定函数来作为A类的友元函数，第2个写法是纯粹的非成员函数都声明为2个类的友元函数。如果希望迭代器类的所有函数都是A类的友元函数，可以这样写，直接声明迭代器类为A的友元类，就省事的多。
+
+```c++
+class A
+{
+	public:
+    	friend class A_iterator;//最省事的写法
+    	...
+};
+```
+
+如果不借助friend函数也不是不能实现，以check_integrity()函数来说明，之所以需要friend无非是因为函数内部访问了私有静态成员max_elems和elems，那么可以在A类的公有方法增加2个用于返回max_elems和elems.size()，而generate_elements是公有方法可以正常调用，通过使用2个公有方法来代替直接放有私有变量elems是个好主意。
+
+```c++
+inline void A_iterator::check_integrity()const
+{
+    if (idx >= A::max_elems)
+    throw iterator_overflow(); // 抛出异常
+    if (idx >= A::elems.size()) // 如果elems暂时没存到这个上界的元素
+    A::generate_elements(idx+1);// 就增加elems存储的元素
+    // 这2个函数实现不写,知道要做什么就可
+}
+```
+
+A类增加2个方法。
+
+```c++
+class A
+{
+	public:
+    	static int elems_size(){return elems.size();}//提供读方法
+    	static int elems_max(){return max_elems;}//提供读方法
+    	// friend void A_iterator::check_integrity();//此友元函数声明不再必要
+    	...
+};
+```
+
+那么check_integrity()函数可以改写如下。
+
+```c++
+inline void A_iterator::check_integrity()const
+{
+    if (idx >= A::elems_max()) // 使用公有方法elems_max()
+    throw iterator_overflow();
+    if (idx >= A::elems_size()) // 使用公有方法elems_size()
+    A::generate_elements(idx+1);// 使用公有方法generate_elements()
+}
+```
+
+### 4.8 实现一个copy assignment operator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
