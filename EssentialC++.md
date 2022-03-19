@@ -1628,17 +1628,405 @@ inline void A_iterator::check_integrity()const
 
 ### 4.8 实现一个copy assignment operator
 
+这里其实讨论过，如果不给定copy assignment的实现，默认会成员逐一复制操作。但是注意，如果构造函数申请了堆的内存，析构时要给定相应的回收处理，同时复制要实现深拷贝而不是浅拷贝。深拷贝是也申请一段内存，而不是简单对的复制2个指向同一块内存的指针，免于析构函数重复释放同一份内存。
+
+### 4.9 实现一个function object
+
+在[3.6.1 Function Object](#3.6.1 Function Object)章节已经介绍过函数对象，那些可以传递给泛型算法作为参数，例如less_than等，标准库实现的函数对象都在< functional >中，本节是来告诉如何实现自己的函数对象。
+
+在[3.6.1 Function Object](#3.6.1 Function Object)章节，其实给出了一个简单的例子。
+
+```c++
+template<typename T>
+class greater{
+	public:
+		bool operator()(T v1,T v2){
+            return v1>v2;
+        }
+};
+sort(vec.begin(),vec.end(),greater());//升序
+```
+
+所谓函数对象，就是实现了对函数调用符号()重载的类。
+
+如果实现一个小于某个数的函数对象，可以这样写。
+
+```c++
+class LessThan
+{
+    public:
+    	LessThan(int val):reVal(val){}
+		int getReVal(){return reVal;}
+    	void resetReval(int val){reVal=val;}
+    	bool operator()(int val)const;
+    private:
+    	int reVal;
+};
+inline bool LessThan::operator()(int val)const
+{
+    return val<reVal;//返回的是bool值
+}
+```
+
+单独使用这个类可以这样使用，定义一个可以找到一个容器内小于指定数的的元素个数的函数。
+
+```c++
+int count_lessThan_(const vector<int>& vec, int comp)//comp是要比较的基准数
+{
+    LessThan LT(comp);//()是构造
+    int count = 0;
+    for(int x=0;x<vec.size();++x)
+    {
+        if (LT(vec[x])) //()是调用重载函数,如果返回true就++count
+            ++count;
+    }
+    return count;
+}
+```
+
+如果希望返回满足条件的元素集合，而不是元素个数可以这样写。
+
+```c++
+vector<int> get_lessThan_(const vector<int>& vec, int comp)
+{
+    vector<int> ans;
+    LessThan LT(comp);//()是构造
+    vector<int>::const_iterator it = vec.begin();
+    vector<int>::const_iterator it_end = vec.end();
+    while ((it = find_if(it,it_end,LT)) != it_end){
+        ans.push_back(*it);//不断缩小区间寻找符合条件的数
+        ++it;
+    }
+    return ans;   
+}
+```
+
+### 4.10 重载iostream运算符
+
+如果希望输出class object的信息，需要借助ostream，但是因为输出流对象必须在左边，即<<是二元运算符，如果想要作为类的成员函数，就必须声明为友元函数。因为成员函数左操作数必须是this自身，但是ostream对象必须在左边。
+
+```c++
+class A
+{
+    public:
+    	friend ostream&<<(ostream&o ut,const A& rhs);
+};
+ostream& <<(ostream&out,const A& rhs)
+{
+    cout<<..<<endl;//打印一些信息
+}
+```
+
+### 4.11 指向成员函数的函数指针
+
+指向成员函数和指向非成员函数的函数指针并没有太大区别，后者在[2.11 函数指针的妙用](#2.11 函数指针的妙用)已经详细叙述过。前者只是还需要声明作用域，这样能够知道是引用哪个类的成员函数。
+
+pm表明它是一个函数指针，指向的是num_sequence类里的函数，返回值是void，且只接收单参数，是个int类型，初始值为0表示不指向任何成员函数。
+
+```c++
+void(num_sequence::*pm)(int) = 0;
+```
+
+可以使用别名，这样没有麻烦。
+
+```c++
+typedef void(num_sequence::*PtrType)(int);
+PtrType pm = 0;
+```
+
+现在使用一个通用数列类来描述各种数列，它们除了计算方式不同，其它没有任何区别。
+
+```c++
+class num_sequence // 通用数列类
+{
+    public:
+    	typedef void(num_sequence::*PtrType)(int);
+    	
+    	// PtrType可以指向任何一个下边的函数
+    	void fibonacci(int);
+    	void pell(int);
+        void lucas(int);
+        void triangular(int);
+        void sequare(int);
+        void pentagonal(int);
+    	...
+    private:
+    	PtrType pmf;
+};
+// 外部使用函数指针应当取函数地址
+PtrType pm = &num_sequence::pell;
+```
+
+为了避免重复计算每个数列元素，也是声明一个 静态的容器，不过由于要计算6个容器，每个数列都需要一个容器存储元素，所以定义一个容器的容器，但是大小为7，第0个容器为空。因为函数指针可以不指向任何容器。然后定义一个存放函数指针的数组，这样方便调用，改变pm的值。还需要一个临时容器，指向当前正在使用的数列容器。
+
+```c++
+class num_sequence
+{
+    public:
+    	typedef void(num_sequence::*PtrType)(int);
+    	...
+    private:
+    	PtrType pmf; //当前指向的函数指针
+    	vector<int>* whichVec;//当前指向的数列容器地址
+    	static const int num_seq = 7;
+    	static const vector<vector<int> > seq; //真正存放数列元素的静态容器
+    	static PtrType func_seq[num_seq]; // 函数指针的数组,方便pmf取用
+};
+```
+
+这里需要说明的，类内如何使用pmf这样的函数指针。因为pmf是指针，真正要使用的是具体的函数，也就是 * pmf，对于num_sequence的实例或者指针应当这样使用函数指针指向的函数。
+
+```c++
+num_sequence ns;
+(ns.*pm)(pos);//(ns.*pm)就是某个具体的函数,例如pell,那么这句等价于ns.pell(pos);
+```
+
+如果是指向num_sequence的指针使用pmf也是一样。
+
+```c++
+num_sequence * pns = &ns;
+(pns->*pm)(pos);//和pns->pell(pos)等价
+```
+
+之后还需要给出静态成员函数/变量的定义，可以在头文件中定义也可以在代码文件定义。
+
+```c++
+const int num_sequence::num_seq;//定义,但是无需再次初始化
+vector<vector<int> > num_sequence::seq(num_seq);//可以看出定义是类型+作用域+变量名构成
+
+// 同理函数指针数组也是如此,它是个num_sequence::PtrType类型
+num_sequence::PtrType num_sequence::func_seq[num_seq]=
+{
+    0,
+    &num_sequence::fibonacci,
+    &num_sequence::pell,
+    &num_sequence::lucas,
+    &num_sequence::triangular,
+    &num_sequence::square,
+    &num_sequence::pentagonal
+}
+```
+
+设想的外部通过整型编号0到6记为x来传递给func_seq，让pmf=func_seq[x]，那么pmf指向了一个计算数列的函数，数列函数内部会依据要计算的数列位置pos决定是否更新静态变量seq。这些操作事先定义在函数set_sequence中，该函数接收1个参数，因为要知道改变的是哪个数列，但是这里不用x去区分，而是一个函数将x转为一个类型ns_type，它比整型x更好区分是哪个数列类型(其实利用的是枚举,ns_type定义了枚举类型)，可以直接用在set_sequence函数上，在第五章会具体说明，这个函数名为ns_type()，是静态类型。至于返回指定位置的数列元素由elem函数实现，elem函数内部其实就是访问了seq[x] [pos-1]。类内还会定义一个静态成员函数，返回可用数列计算类型，这里给定是6个，但是可以更多，这个函数为num_of_sequence()。
+
+设想的外部程序。
+
+```c++
+int main
+{
+    num_sequence ns;//通用类的实例
+    const int pos = 8;//想要访问的数列元素位置
+    for(int x=1;x<ns.num_of_sequence();++x){ // 找出所有数列位置8上的元素
+        ns.set_sequence(num_sequence::ns_type(x)); // x->ns_type[x]->set_sequence
+        int val = ns.elem(pos);//ns内部此时指向某个数列类型的容器,打印pos位置的元素
+        display(cout,ns,pos,val);// 展示函数   
+    }
+    return 0;
+}
+```
+
+由于elem函数比较简单，这里给出其实现，其他函数在下一章给出实现。
+
+```c++
+int num_sequence::elem(int pos)
+{
+    if (!check_integrity(pos)) // 检查要计算的pos位置是否合理,它不能≤0也不能≥max_elem
+        return 0;
+    if (pos > this->whichVec->size() ) // which是当前指向的容器地址
+        (this->*pmf)(pos); // 如果pos位置的元素暂时未被计算过,就调用pmf指向的函数来更新seq的对应容器
+    return (*whichVec)[pos-1];// <=> seq[x] [pos-1]
+}
+```
+
+## 五、面向对象编程风格
+
+### 5.1 面向对象编程概念
+
+#### 5.1.1 继承和多态
+
+面向对象编程概念的最主要两项特质是：继承和多态。
+
+第四章的内容虽然可以提供一个类来描述一类东西，例如一本书Book，但是很可能有不同类型的书，它们有共同点也有不同点，可能存在依赖关系。
+
+继承可以将一群相关的类组织起来，可以分享其间的共通数据和操作行为，多态可以在这些类上编程时如同操纵单一个体，而非相互独立的类，赋予更多弹性来加入或移除任何特定类。其实上一章提到的num_sequence类就是多态行为，它可以变成任何一个数列之一，不过这种多态是因为编程技巧获得的，而不是程序语言先天赋予。
+
+继承和多态最重要的是抽象基类的定义，它定义的越好越抽象，随着继承的复杂，它可应付的也越好。由此引出动态绑定和静态绑定的概念。
+
+#### 5.1.2 静态和动态绑定
+
+写下这样一句代码，mat是某个具体的类对象。编译器在编译时就会依据mat所属的类来决定执行哪一个check_in函数，由于程序执行前就知道调用哪个，这叫静态绑定。
+
+```c++
+mat.check_in();
+```
+
+面向对象的编程方法中，编译器无法预知是哪一份check_in函数被调用，仅在执行时依据mat所指的实际对象来调用哪一个，这叫的动态绑定。mat其实就是抽象基类的指针或引用，而且只能是指针或引用才能发挥动态绑定的作用。
+
+### 5.2 面向对象编程思维
+
+假设图书的抽象基类LibMat如下。
+
+```c++
+class LibMat
+{
+    public:
+    	LibMat(){cout<<"LibMat is constructor\n";}
+    	virtual ~LibMat(){cout<<"LibMat is destructor\n";}
+    	virtual print()const{cout<<"LibMat's print is call\n";}
+    
+};
+void print(const LibMat& mat)//抽象基类的引用/指针
+{
+    mat.print();//调用何种版本?
+}
+```
+
+主程序这样。
+
+```c++
+LibMat libmat;
+print(libmat);//调用的是LibMat的print版本
+// 跟踪结果
+LibMat is constructor;
+LibMat's print is call;
+LibMat is destructor;    
+```
+
+假若Book是LibMat的衍生类，基类和派生类的构造和析构的都会被执行。
+
+```c++
+Book book;
+print(book);//调用的是Book的print版本
+// 跟踪结果
+LibMat is constructor;
+Book is constructor;
+Book's print is call;
+Book is destructor; 
+LibMat is destructor; 
+```
+
+如果Book还有子类AudoBook，也是如此。
+
+```c++
+AudoBook audobook;
+print(audobook);//调用的是AudoBook的print版本
+// 跟踪结果
+LibMat is constructor;
+Book is constructor;
+AudoBook is constructor;
+Book's print is call;
+Book is destructor; 
+AudoBook is destructor; 
+LibMat is destructor; 
+```
+
+### 5.3 不带继承的多态
+
+再想想[4.11 指向成员函数的函数指针](#4.11 指向成员函数的函数指针)关于num_sequence的实现，num_sequence类就是多态行为，它可以变成任何一个数列之一，不过这种多态是因为编程技巧获得的，而不是程序语言先天赋予。
+
+现在把这个类补充完整，如下。
+
+```c++
+class num_sequence
+{
+    public:
+    	typedef void(num_sequence::*PtrType)(int);
+    	void fibonacci(int);
+    	void pell(int);
+        void lucas(int);
+        void triangular(int);
+        void square(int);
+        void pentagonal(int);
+    	
+    	enum ns_type {ns_unset,ns_fibonacci,ns_pell,ns_lucas,ns_triangular,
+                     ns_square,ns_pentagonal};//定义的枚举类型
+    	static ns_type nstype(int num){ //一个提升整型记号num为枚举类型的强制转换
+            // 内部调用了static_cast强制转换 num∈[1,6]有效,否则为0
+            return num<=0 || num>= num_seq ? ns_unset:static_cast<ns_type>(num);
+        }
+    	int elem(int pos);
+    	void set_sequence(ns_type nst);
+    	const char* what_am_i()const;
+
+    private:
+    	PtrType pmf; //当前指向的函数指针
+    	vector<int>* whichVec;//当前指向的数列容器地址
+    	static const int num_seq = 7;
+    	static const vector<vector<int> > seq; //真正存放数列元素的静态容器
+    	static PtrType func_seq[num_seq]; // 函数指针的数组,方便pmf取用
+    	
+    	ns_type whichFunc;// 当前指向的数列枚举类型
+    	
+};
+const int num_sequence::num_seq;//定义,但是无需再次初始化
+vector<vector<int> > num_sequence::seq(num_seq);//可以看出定义是类型+作用域+变量名构成
+
+// 同理函数指针数组也是如此,它是个num_sequence::PtrType类型
+num_sequence::PtrType num_sequence::func_seq[num_seq]=
+{
+    0,
+    &num_sequence::fibonacci,
+    &num_sequence::pell,
+    &num_sequence::lucas,
+    &num_sequence::triangular,
+    &num_sequence::square,
+    &num_sequence::pentagonal
+}
+// elem访问函数
+int num_sequence::elem(int pos)
+{
+    if (!check_integrity(pos)) // 检查要计算的pos位置是否合理,它不能≤0也不能≥max_elem
+        return 0;
+    if (pos > this->whichVec->size() ) // which是当前指向的容器地址
+        (this->*pmf)(pos); // 如果pos位置的元素暂时未被计算过,就调用pmf指向的函数来更新seq的对应容器
+    return (*whichVec)[pos-1];// <=> seq[x] [pos-1]
+}
+
+// 调整序列的函数
+void num_sequence:: set_sequence(ns_type nst)
+{
+    switch(nst)
+    {
+        default:
+            cerr<<"invalid type: setting to 0\n";
+            //刻意让他执行下去,不作break
+        case ns_unset:
+            pmf = 0; //不指向任何函数
+            whichVec = 0; // 不指向任何容器
+            whichFunc = ns_unset; // 数列枚举类型是ns_unset
+            break;
+        case ns_fibonacci: case pell: case lucas: 
+        case triangular: case square: case pentagonal:
+            pmf = func_seq[nst]; //通用的操作,nst是这些枚举类型时
+            whichVec = &seq[nst];
+            whichFunc = nst;
+            break;
+    }
+}
+
+// 还提供的display函数,这是非成员函数
+inline void display(ostream&os,const num_sequence & ns, int pos)
+{
+    os << "The element at position "<<pos
+        <<" for the "<<ns.what_am_i()<<" sequence is "
+        <<ns.elem(pos)<<endl;
+}
+
+const char* num_sequence:: what_am_i()const //返回字符串数组
+{
+    static char*names[num_seq]={
+        "notSet",
+        "fibonacci","pell",
+        "lucas","triangular",
+        "square","pentagonal"
+    };
+    return names[whichFunc];//会自动降为整型
+}
+```
+
+### 5.4 定义一个抽象基类
 
 
 
-
-
-
-
-
-
-
-
-
-
+### 5.5 定义一个派生类
 
