@@ -2026,7 +2026,203 @@ const char* num_sequence:: what_am_i()const //返回字符串数组
 
 ### 5.4 定义一个抽象基类
 
+第一步：找出所有子类共通的行为；
 
+第二步：让操作行为与类型相关的函数声明为虚函数；
+
+第三步：确定每个操作行为的访问层级。
+
+对于num_sequence目前抽象出来的共同函数有6个。
+
+```c++
+class num_sequence
+{
+    public:
+    	int elem(int pos);//返回pos位置上的元素
+    	void generate_elems(int pos);//产生直到pos位置的所有元素
+    	const char* what_am_i() const;//返回数列类型的字符串
+    	ostream& print(ostream&os = cout)const;//打印类的信息
+    	bool check_integrity(int pos); //检查pos的合理性
+    	static int max_elems();//返回支持的最大位置值
+    	...
+};
+```
+
+其中check_integrity和max_elems函数不会因为类型不同而不同，而其它函数可能会因为具体对的派生类导致实现有所不同，这些函数应当声明为虚函数。但是要注意，静态成员函数无法声明为虚函数。
+
+然后还要确定函数的访问层级，显而易见elem、max_elems和what_am_i函数的都应该能够被类外进行使用，它们要声明为public。而check_integrity和generate_elems应当声明为protected成员，因为它们还要被继承的派生类所使用。故上述抽象类的设计应当更改为如下。
+
+```c++
+class num_sequence
+{
+    public:
+    	virtual ~num_sequence(){}//不建议设为纯虚函数
+    	
+    	virtual int elem(int pos)const = 0;
+    	virtual const char* what_am_i() const = 0;
+    	virtual ostream& print(ostream&os = cout)const=0;
+    	static int max_elems(){return elems_max};//静态成员不能声明为virtual
+    protected:
+    	bool check_integrity(int pos); //完全相同的操作不必声明为虚的
+    	virtual void generate_elems(int pos);
+    	const static int elems_max = 1024;
+};
+bool num_sequence::check_integrity(int pos) const
+{
+    if (pos<=0 || pos> elems_max){
+        cerr<<"!! invalid position: "<<pos <<" cannot honor request\n";
+        return false;
+    }
+    return true;
+}
+ostream& operator<<(ostream&os,const num_sequence &ns)
+{
+    return ns.print(os);
+}
+```
+
+上述const=0表明这些函数是纯虚函数，没有给出定义，那么它们的派生类必须提供给所有虚函数确切对的定义，否则程序不能为它产生任何对象。
+
+这个抽象类并没有声明任何成员变量，因为成员变量相比一组行为没有那么抽象，派生类负责定义自己的成员变量。因为没有成员变量需要被初始化，所以构造函数也没有价值，使用默认的即可。析构函数，根据规则"如果基类定义了一个或多个虚函数，析构函数也应当定义为virtual"。
+
+析构函数声明为virtual的具体原因见EffectiveC++的条款07，这里再重复一遍原因。
+
+一般而言基类的对象由基类的析构函数销毁，子类的对象由子类的析构函数销毁。但是因为基类的指针可以指向子类，根据规则"要根据实际对象的类型来选择调用哪一个析构函数"，所以如果删除此时的基类指针，应当调用子类的析构函数，但是如果基类的析构函数没有声明为virtual就会调用基类的析构函数，这样子类的成分并没有被销毁造成内存泄漏。。
 
 ### 5.5 定义一个派生类
+
+定义一个斐波那契数列的类，它必须为基类继承来的每个纯虚函数提供对应的实现，还必须声明它自己专属的成员变量。因为是公有继承，基类的public和protected对象在派生类依然是public和protected，但是基类的private不能被派生类使用。保护继承和私有继承的方式另说。
+
+```c++
+class Fibonacci:public num_sequence
+{
+    public:
+        Fibonacci(int len=1,int pos =1):len(len),pos(pos){}
+        virtual int elem(int pos) const;
+        virtual const char* what_am_i const{return "Fibonacci";}
+        virtual ostream& print(ostream&os = cout) const;
+        int length() const{return len;};
+        int position()const{return pos;}
+   	protected:
+    	virtual void generate_elems(int pos) const;
+    	int len;
+    	int pos;
+    	static vector<int> elems;   
+}
+int Fibonacci::elem(int pos) const
+{
+    if (!check_integrity(pos)) // 调用派生类的，但是它存在一个大问题！
+        return 0;
+    if (pos > elems.size())
+        Fibonacci::generate_elems(pos);//这里必须明确作用域,这样可以编译阶段就知道调用哪个版本而不是运行时解析,这样继承发生的虚拟机制可以被掩盖
+    return elems[pos-1];
+}
+void Fibonacci::generate_elems(int pos) const
+{
+    if (elems.empty())
+    {elems.push_back(1);elems.push_back(1);} 
+    if (elems.size()<=pos)
+    {
+        int ix = elems.size();
+        int n_2 = elems[ix-2];
+        int n_1 = elems[ix-1];
+        for(:ix<=pos;++ix)
+        {
+            int e = n_2 + n_1;
+            elems.push_back(e);
+            n_2 = n_1;
+            n_1 = e;
+        }
+    }
+}
+ostream& Fibonacci:: print(ostream& os) const
+{
+    int elem_pos = pos - 1;
+    int end_pos = eelem_pos + len;
+    if (end_pos > elems.size())
+        Fibonacci::generate_elems(end_pos);
+    while (elem_pos < end_pos)
+        os << elems[elem_pos++]<<" ";
+    return os;
+}
+```
+
+派生类新增加的2个成员，length和position函数不能被基类指针访问，其它的可以。
+
+generate_elems和prrint函数都可以检查elems的元素是否足够。
+
+现在再来看看check_integrity函数，基类中没有声明为虚函数，它直接被派生类继承。
+
+如果派生类给出了check_integrity的定义，毫无疑问，如果不加作用域，check_integrity函数调用的是Fibonacci下的check_integrity函数而不是num_sequence下的check_integrity函数，这相当于递归的调用自己，因为同名函数子类会覆盖基类。
+
+```c++
+//基类的版本
+bool num_sequence::check_integrity(int pos) const
+{
+    if (pos<=0 || pos> elems_max){
+        cerr<<"!! invalid position: "<<pos <<" cannot honor request\n";
+        return false;
+    }
+    return true;
+}
+// 派生类的版本
+inline bool Fibonacci::check_integrity(int pos)const
+{
+    if (!num::sequence::check_integrity(pos))//必须加作用域否则成递归的调用自身
+        return false;
+    if (pos > elems.size()) // 派生类版本独有的检查
+        Fibonacci::generate_elems(pos);
+    return true;
+}
+```
+
+现在存在一个问题，如果基类指针指向子类，调用的还是基类的函数，而没有遵从"要根据实际对象的类型来选择调用哪一个函数"，这是因为这个函数不是虚函数，不遵从这个机制。那么即使基类指针指向子类，但是调用的依然是基类的函数。
+
+```c++
+num_sequence *ns = new Fibonacci(12,8);
+ns->elem(1024);//elem是虚函数,会遵从规则,解析为调用Fibonacci的elem函数
+ns->check_integrity(pos);//check_integrity不是虚函数,不遵从动态绑定,调用的是num_sequence的check_integrity函数
+```
+
+这样看起来，似乎把check_integrity函数也声明为virtual才能解决问题，也就是基类所有的函数都应该声明为virtual，其实不一定正确。好的设计是一步步演进的，基类的check_integrity函数可以改写。
+
+```c++
+//基类的版本
+bool num_sequence::check_integrity(int pos,int size) const
+{
+    if (pos<=0 || pos> elems_max){
+        cerr<<"!! invalid position: "<<pos <<" cannot honor request\n";
+        return false;
+    }
+    if (pos>size)
+        generate_elems(pos); // 借助generate_elems是个虚函数
+    return true;
+}
+```
+
+这其实利用了一个技巧，如果不想把函数声明为虚的，但是又希望拥有虚函数的机制，可以让函数定义妥当的参数，使之能够调用其它的虚函数，那么该函数就不会因为基类指向子类但是不执行子类的函数版本。因为这个函数无论是基类版本还是子类版本，内部都使用了虚函数机制，依然可以保证调用的是指向对象的版本。
+
+如果check_integrity函数被Fibonacci的对象调用，前边是一样的，内部调用的是Fibonacci的generate_elems函数，因为它是虚函数遵从规则，不声明作用域也可以。如果是num_sequence调用check_integrity函数，同样，内部会调用num_sequence版本的generate_elems函数。
+
+### 5.6 运用继承体系
+
+
+
+### 5.7 基类的抽象程度
+
+
+
+### 5.8 初始化、析构和复制
+
+
+
+### 5.9 派生类中定义一个虚函数
+
+
+
+### 5.10 运行时的类型鉴定机制
+
+
+
+## 六、以template进行编程
 
