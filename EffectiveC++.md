@@ -7,7 +7,7 @@
  * @FilePath: \myLeetCode\EffectiveC++.md
  * A boy without dreams
 -->
-## 0.导读
+## 〇、导读
 
 ​		EffectiveC++的55个建议主要分成两类，第一类是一般性的设计策略，第二类是带有具体细节的特定语言特性。
 
@@ -173,7 +173,7 @@ person p7 = 3.4;
 
 ​		Boost是一个组织，或者网站[Boost C++ Libraries](https://www.boost.org/)，提供了源码开放的c++程序库，以前的TR1大多以Boost的工作为基础。
 
-## 1.让自己习惯C++
+## 一、让自己习惯C++
 
 ### 条款01：视C++为一个语言联邦
 
@@ -190,6 +190,8 @@ person p7 = 3.4;
 ​		STL：包括容器(vector、list等)、迭代器(iterator)、算法(algorithm)和函数对象(指针)(functional objects)。
 
 ​		记住：内置数据类型，值传递更好；类数据类型，由于构造函数的存在，引用传递更好。
+
+结论：C++高效编程守则视状况而变化，取决于使用C++的哪一部分。
 
 ### 条款02：尽量以const,enum,inline替换#define
 
@@ -357,6 +359,12 @@ inline T MAX(const T&x, const T&y){
     return x+y;
 }
 ```
+
+结论：
+
+单纯的常量最好以const对象或enums替换#define
+
+对于形似函数的宏(macros)，最好改用inline函数替换#define
 
 ### 条款03：尽可能使用const
 
@@ -662,6 +670,14 @@ class TextBlock{
 };
 ```
 
+结论：
+
+声明为const可以帮助编译器侦测出错误语法，const可以用于任何作用域内的对象、函数参数、函数返回类型和成员函数本体；
+
+编译器强制实施bitwise constness，但你编写程序时应使用概念上的常量性conceptual constness；
+
+const和non-const成员函数有着实质等价的实现时，令non-const版本调用const版本可避免代码重复。
+
 ### 条款04：确定对象被使用前已被初始化
 
 #### 内置数据对象要手动初始化
@@ -795,7 +811,15 @@ Person& person(){
 
 总结，在跨编译单元初始化次序的问题中，使用局部静态对象替换非局部静态对象，可以避免次序错误出现的问题。
 
-## 2.构造/析构/赋值运算
+结论：
+
+内置型对象进行手工初始化，C++不保证初始化它们；
+
+构造函数最好使用成员初值列而不要在构造函数本体内使用赋值操作。初值列列出的成员变量其排列次序应和class内声明的次序相同；
+
+为免除"跨编译单元之初始化次序"问题，以local static对象替换non-local static对象。
+
+## 二、构造/析构/赋值运算
 
 ### 条款05：C++会默认编写并调用哪些函数
 
@@ -823,9 +847,13 @@ s1 = s2 ;// 编译器拒绝
 
 因为这样的操作意味着可以改变s2中nameVal的引用从y指向x，这违背了C++中不允许引用改指向不同对象。同样const对象也不允许重新赋值，所以如果是这样的类，编译器可以拒绝这样的赋值运算符重载。
 
+结论：编译器可以为class创建default构造函数、copy构造函数、copy assignment操作符以及析构函数。
+
 ### 条款06：不想使用编译器自动生成的函数就应明确拒绝
 
 由于条款05，编译器会自动创建默认构造、复制构造和析构函数。如果希望阻止复制或默认构造函数的自动创建，可以将这2个函数以private形式给出声明，但不实现，就可以阻止外部使用这2个函数。不过这样的阻止只发生在动态实例生成时才会提示，如果希望能够在编译阶段就提示，可以创建1个父类，使复制和默认构造声明为私有，然后让这个类私有继承这个父类，父类的所有public和protected成员都降级为private，父类的private无法访问，所以子类无法使用父类的这2个函数。
+
+结论：为驳回编译器暗自提供的功能，可将相应的成员函数声明为private且不予实现
 
 ### 条款07：为多态基类声明virtual析构函数
 
@@ -834,6 +862,12 @@ s1 = s2 ;// 编译器拒绝
 说的再通俗易懂一些：一般而言基类的对象由基类的析构函数销毁，子类的对象由子类的析构函数销毁。但是因为基类的指针可以指向子类，根据规则"要根据实际对象的类型来选择调用哪一个析构函数"，所以如果删除此时的基类指针，应当调用子类的析构函数，但是如果基类的析构函数没有声明为virtual就会调用基类的析构函数，这样子类的成分并没有被销毁造成内存泄漏。。
 
 另一个结论，带多态性质的base classes应该声明一个virtual析构函数。如果class带有任何virtual函数，它就应该拥有一个virtual析构函数。但是如果Classes的设计目的如果不是作为base classes 使用，或不是为了具备多态性，就不该声明virtual析构函数。
+
+结论：
+
+带多态性质polymorphic的基类应声明一个virtual析构函数，如果类带有任何virtual函数，那它应该有个virtual析构函数；
+
+类的设计目的如果不是作为基类使用，或不是为了具备多态性质，就不该声明为virtual函数。
 
 ### 条款08：析构函数尽量不要设置异常处理
 
@@ -935,6 +969,12 @@ class DB{
 };
 ```
 
+结论：
+
+析构函数不要吐出异常，若析构函数调用的函数可能抛出异常，则析构函数应捕捉任何异常然后吞下它们或终止程序；
+
+客户需要对某个操作函数运行期间抛出的异常做出反应，则类应提供一个普通函数(而非在析构函数)执行该操作。
+
 ### 条款09：决不在构造和析构函数调用virtual函数
 
 直接说结论，在构造函数和析构期间不要使用virtual函数。如果基类的构造函数调用了基类的虚函数，假设派生类继承于基类，它自然也会继承基类的同名虚函数。派生类的实例生成时，基类的构造函数会先于派生类的构造函数被调用。那么此时，由于派生类的某些成分可能尚未初始化，包括非静态成员变量和非静态成员函数以及虚函数，C++是不会允许派生类成分还未初始化时就被调用，所以基类的构造函数调用时也必然调用的是基类的虚函数，而不是派生了的同名虚函数。
@@ -985,6 +1025,8 @@ class B{
 
 注意，createLogString函数声明为静态的是必要的，它可以保证在派生的构造函数尚未初始化完时，也能使用这个函数，因为这个函数内部可以保证不会指向任何派生类尚未初始化的成员。
 
+结论：构造和虚构函数不要调用virtual函数，因为这类调用不会下降至派生类。
+
 ### 条款10：让operator=的重载返回一个指向*this的引用
 
 目的是为了能够实现连锁赋值，例如这样的赋值。
@@ -1019,6 +1061,8 @@ class A{
 ```
 
 这样的条款并不是强制的，但是该条款被所有内置容器类型都遵循，所以最好遵守。
+
+结论：让赋值操作符assignment能够返回reference to * this。
 
 ### 条款11：在operator=中处理"自我赋值"
 
@@ -1120,6 +1164,12 @@ B& B::operator=(B rhs)
 
 第2种写法没有第1种写法清晰，但是第2种写法比较高效。
 
+结论：
+
+确保对象自我赋值时operator=有良好行为，技术包括比较来源对象和目标对象的地址、精心周到的语句顺序以及copy_and_swap；
+
+确定任何函数如果操作一个以上的对象，而其中多个对象是同一个对象时，其行为仍然正确。
+
 ### 条款12：复制对象时勿忘每一个成分
 
 定义一个类以后，在copy函数和copy assignment函数中都必须将所有的成员变量进行复制，否则会面临未初始化变量被使用的风险。像下方这样的写法，编译器不会提出警告。
@@ -1191,7 +1241,13 @@ newA& newA::operator=(const newA &rhs)
 
 总的来说，copy函数是从无到有构造1个对象，而copy assignment更像是把1个已存在的对象从未初始化状态变为初始化对象。
 
-## 3.资源管理
+结论：
+
+copy函数应当确保复制"对象内所有的成员变量"和"所有base class"成分；
+
+不要尝试以某个coping函数实现另1个coping函数，应将共同的操作放入第三个函数，由2个copy函数共同调用。
+
+## 三、资源管理
 
 ### 条款13：以对象管理资源
 
@@ -1215,7 +1271,7 @@ void f()
 
 以对象管理资源的2个关键想法：
 
-① 获得资源后立刻放进管理对象(资源取得时机便是初始化时机)；
+① 获得资源后立刻放进管理对象(资源取得时机便是初始化时机 resource acquisition is initialization RAII对象)；
 
 ② 管理对象运用析构函数确保资源释放。
 
@@ -1268,6 +1324,12 @@ std::tr1::shared_ptr<string> sp_arr(new string[10]);
 但是这2个指针类也不能处理所有情况的资源管理，因为不是所有资源都是heap_based，这时这两类指针不适用于作为资源掌控者，这时候就必须手动释放资源，也就是自定义资源管理类。
 
 最后总结：为了防止资源泄露，应当使用RAII对象，常用的就是上述2个指针，一般而言shared_ptr更常被使用，因为它的copy行为更直观。
+
+结论：
+
+为防止资源泄露，应使用RII对象，它们在构造函数中获得资源并在析构函数中释放资源；
+
+两个常使用的RAII classes 分别是tr1::shared_ptr和auto_ptr。前者通常是较佳选择，因为copy行为直观，而auto_ptr会使被复制的指针指向nullptr。
 
 ### 条款14：自定义资源管理类小心copying行为
 
@@ -1322,9 +1384,9 @@ Lock m12(m11);//应当发生什么？
 ```c++
 class Lock{
     public:
-    	explicit Lock(Mutex*pm):mutexPtr(pm,unlock)
+    	explicit Lock(Mutex*pm):mutexPtr(pm,unlock)//unlock作为deleter参数
         {
-            lock(mutexPtr.get());// get函数会在下个条款说明
+            lock(mutexPtr.get());// lock要求传入的是Mut指针而非ex指针而非mutexPtr,get可以隐式转换
         }
     private:
     	std::tr1::shared_ptr<Mutex> mutexPtr;
@@ -1335,25 +1397,193 @@ class Lock{
 
 再来总结一下，自定义资源管理器类对copy的处理方式：
 
-① 可以禁止copy构造哈函数；
+① 可以禁止copy构造函数；
 
 ② 复制资源器管理对象时也要复制底部资源，也就是深拷贝；
 
 ③ 如果希望只保留一个智能指针指向1个资源类似于auto_ptr，就应当转移底部资源的拥有权。
 
+结论：
+
+复制RAII对象必须一并复制它所管理的资源，所以资源的copy行为决定了RAII对象的copy行为；
+
+普遍常见的RAII class copying行为是：抑制copying、施行引用计数法(reference counting)。
+
 ### 条款15：在资源管理类提供对原始资源的访问
 
+资源管理类可以处理和资源的互动，无需手动直接处理原始资源。但是有些API函数会直接访问处理资源，而不是通过类。
+
+例如一个返回投资天数的函数，它要求传入的就是资源的一个指针，但不是智能指针。
+
+```c++
+int daysHeld(const Investment *pi);
+
+std::tr1::shared_ptr<Investment>pInv(createInnvestment());
+int days = daysHeld(pInv); // 这样使用是错误的
+```
+
+如果希望这个函数可以处理pInv的底层资源，可以借助函数将其转换为底层资源，可以使用隐式转换和显示转换。
+
+auto_ptr和shared_ptr都提供一个get函数，用来执行显示转换，也就是它可以返回智能指针内部绑定的原始指针的复件。
+
+所以上边的函数可以这样使用了。
+
+```c++
+int days = daysHeld(pInv.get());
+```
+
+因为智能指针也算是指针，所以内部也重载了解引用运算符，就像迭代器解引用就是真实的数据，智能指针也一样，可以隐式转换为底部原始指针。现在让Investment类建立一个函数，isTaxFree，演示隐式转换的使用。
+
+```c++
+class Investment
+{
+    public:
+    	bool isTaxFree()const;
+    	...
+};
+Investment* createInvestment();//工厂函数
+// 使用隐式转换
+std::tr1::shared_ptr<Investment> pi1(createInvestment);
+bool taxLabel1 = pil->isTaxFree();//operator->隐式转换
+bool taxLabel1 = (*pil).isTaxFree(); // operator* 隐式转换
+```
+
+不过一般隐式转换比显示转换更好，例如有一个字体资源类Font，处理字体的类FontHandle，然后有大量的函数需要处理FontHandle，但是其实要处理的是底层的Font，这就需要Font->FontHandle很频繁的转换。
+
+可以定义一个Font内的get函数，手动显示转换。
+
+```c++
+class Font
+{
+    public:
+    	explicit Font(FontHandle fh): fh(fh){}//Font绑定FontHandle
+    	~Font() {releaseFont(fh)};
+        FontHandle get() const{return fh} ;//显示转换
+    private:
+    	FontHandle fh;
+};
+FontHandle getFont(); //获取资源的API
+void releaseFont(FontHandle fh);//释放资源的API
+void changeFontSize(FontHandle fh, int newSize);//改变字体大小的API
+// 以上的函数都是借助操作FontHandle来间接操作底层的Font
+
+Font f(getFont);//获取资源,构造函数绑定1个管理资源的对象
+int newFontSize;
+changeFontSize(f.get(),newFontSize);//显式转换Font->FontHandle
+```
+
+不过这样的使用方式比较麻烦，一般使用隐式转换。
+
+```c++
+class Font
+{
+    public:
+    	explicit Font(FontHandle fh): f(fh){}//Font绑定FontHandle
+    	~Font() {releaseFont(fh)};
+        //FontHandle get() const{return fh} ;//显示转换
+    	operator FontHandle()const{return fh};// 把FontHandle看成一种操作如<<
+    private:
+    	FontHandle fh;
+};
+
+Font f(getFont);//获取资源,构造函数绑定1个管理资源的对象
+int newFontSize;
+changeFontSize(f,newFontSize);//隐式转换Font->FontHandle,(FontHandle f)把FontHandle看成一种操作
+```
+
+不过隐式转换可能增加错误的机会，例如客户可能想复制一个Font对象但是手误，定义时使用了FontHandle。这样f2返回的不是Font对象而是FontHandle。假如f1被销毁，由于隐式转换的原因，f2不是深拷贝，它也是返回了实际f1，但是现在f1已被销毁，f2就成了一个虚吊的东西。
+
+```c++
+Font f1(getFont());
+FontHandle f2 = f1;//手误,但是程序不会因为类型不同报错
+```
+
+结论：
+
+API往往要求直接访问原始资源，所以管理资源的类应当提供一个取得管理的资源的办法；
+
+对原始资源的访问可以通过隐式转换和显式转换。
+
+### 条款16：成对使用delete和new时要采用相同形式
+
+如下方代码。
+
+```c++
+string* s1 = new string;
+string* s2 = new string [10];
+
+delete s1;
+delete [] s2;
+```
+
+ 如果使用不相同形式的new和delete，例如
+
+```c++
+delete [] s1;//未有定义
+delete s2;//未有定义且可能有害
+```
+
+如果使用typedef，例如addressNums表示具有4个字符串的数组。
+
+```c++
+typedef string addressNums[4];
+string *p = new addressNums;//等价于new string[4];
+delete [] p;//应这样使用
+```
+
+ 不过最好不要对数组类型取别名，因为C++标准库含有string、vector等模板，可以将对数组的需求降为0。本例中更好的使用方式是
+
+```c++
+typedef vector<string> addressNums;
+vector<string> *p = new addressNums;
+delete p;//it's ok
+```
+
+### 条款17：以独立语句将new的对象置入智能指针
+
+假设存在2个函数，一个是返回处理的优先权，一个是对动态分配的资源Widget进行带优先权的处理。
+
+```c++
+int priority();
+void processWidget(std::tr1::shared_ptr<Widget>pw,int priority);
+```
+
+使用processWidget函数的方式1，这种必然不对，因为shared_ptr内部没有隐式转换，它的构造函数使用了explicit。
+
+```c++
+processWidget(new Widget,priority()); // 不能通过编译
+```
+
+使用processWidget函数的方式2，可能存在一些问题。
+
+```c++
+processWidget(std::tr1::shared_ptr<Widget>(new Widget),priority()); // 编译器执行顺序的自由度不同
+```
+
+这个方式实际上要执行3个操作，对priority函数调用，调用shared_ptr的构造函数，动态分配一个Widget。显然动态分配一个Widget必须在shared_ptr的构造函数之前调用，而priority函数可以以任何次序被调用。
+
+但是这样存在一个问题，假如priority函数在调用shared_ptr的构造函数之前，那么执行次序是这样的
+
+```c++
+动态分配一个Widget
+调用priority函数
+调用shared_ptr的构造函数
+```
+
+如果priority函数发生了异常，动态分配的Widget就遗失，这就会发生资源泄露，避免这样的问题出现，应使用第3种方式。即使用分离语句，分别写出创建Widget，置入智能指针，调用函数priority，再传入函数。
+
+```c++
+std::tr1::shared_ptr<Widget>pw(new Widget);
+int prior = priority();
+processWidget(pw,prior);
+```
+
+结论：以独立语句将new出的对象置入智能指针，若不这样做一旦异常抛出可能导致资源泄露。
+
+## 四、设计与声明
 
 
 
 
 
-
-
-
-
-
-
-
-
-
+​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
