@@ -2,7 +2,7 @@
 
  * @Author: chenbei
  * @Date: 2022-03-01 11:46:37
- * @LastEditTime: 2022-03-16 08:30:57
+ * @LastEditTime: 2022-03-21 13:46:21
  * @Description: 55 programming suggestions based on Effective C + + Learning
  * @FilePath: \myLeetCode\EffectiveC++.md
  * A boy without dreams
@@ -1582,8 +1582,253 @@ processWidget(pw,prior);
 
 ## 四、设计与声明
 
+### 条款18：让接口容易被正确使用、不易被误用
+
+开发一个类，需要**注意限制类型、限制参数范围，以及正确的资源管理**，而不是让用户去注意这些东西。
+
+例如一个简单的日期类，这样的构造函数可能会导致传入的参数次序不对、范围不对。
+
+```c++
+class Date
+{
+    public:
+    	Date(int month,int day,int year);
+};
+```
+
+更好的方式是创建Month、Day、Year的结构体限制其类型。
+
+```c++
+struct Day
+{
+    explicit Day(int d): val(d){}
+    int val;
+};
+struct Month
+{
+    explicit Month(int m): val(d){}
+    int val;
+};
+struct Year
+{
+    explicit Year(int y): val(d){}
+    int val;
+};
+class Date
+{
+    public:
+    	Date(const Month&m,const Day&d,const Year& y);
+};
+```
+
+ 而Month、Day、Year更好的是使用成熟迭代过的类来限制范围。例如对于月份类，除了限制其类型，也要限制其范围，可以使用enum表现月份，但是因为enum可以作为int使用不具备类型安全性，所以应当预先定义有效的months。
+
+这里定义有效的months使用的是static成员函数，而不是非静态成员变量。在条款03中提到了跨编译单元的初始化次序问题，所以使用函数来操作局部静态对象替代直接操作非局部静态对象更好。
+
+```c++
+class Month
+{
+	public:
+    	static Month Jan(){return Month(1);}//使用static成员函数而不是直接定义Month(1)
+    	static Month Feb(){return Month(2);}
+    	...
+        static Month Dec(){return Month(12);}
+    private:
+    	explicit Month(int m);//拒绝可能的隐式转换,例如Month m = 4;
+};
+```
+
+最后一个，资源正确管理的责任在于设计者而非客户。例如第3章提到的类Investment的工厂函数。
+
+```c++
+Investment * createInvestment();
+```
+
+这个函数就有一些错误倾向，客户可能忘记对得到的Investment指针进行销毁，所以设计者有义务将创建出来的指针直接绑定到智能指针，借助它来管理，所以工厂函数写成这样更合理，直接返回智能指针，而不是让客户自己去绑定智能指针。
+
+```c++
+std::tr1::shared_ptr<Investment> createInvestment();
+```
+
+还存在一个问题，例如互斥锁的问题，如果客户并不是想要智能指针自动销毁创建的资源对象，而是将其解锁。那么设计者不仅有责任返回一个智能指针，还应当返回一个带deleter函数作为第2参数的智能指针。deleter函数是客户自己定义的，例如它是unlock函数。那么createInvestment的写法可能如下所示。
+
+```c++
+std::tr1::shared_ptr<Investment> createInvestment()
+{
+    std::tr1::shared_ptr<Investment> investment(
+    	static<Investment*>(0),unlock);//绑定unlock函数作为删除器
+    return investment;
+}
+```
+
+shared_ptr还有个好处，它销毁对象会使用创建对象时对应的那个delete去销毁(如果deleter是默认的缺省状态)，可以避免跨动态连接程序库DLL的错误。因为可能某些对象在一个DLL被new，但是在另一个DLL被delete，这可能会导致错误。
+
+还有1个准则，就是**让定义的数据类型和内置数据类型尽可能保持一致的行为**。例如对于整型来说让 a * b = c并不合法，所以自定义的类 Month，它的实例m1 * m2 = m3也不能合法。
+
+结论：
+
+促进正确使用的方法是， 让定义的数据类型和内置数据类型尽可能保持一致的行为；
+
+阻止误用的方法是，建立新类型、限制类型的操作，束缚对象值以及消除客户的资源管理责任；
+
+使用shared_ptr，支持定制型删除器，可防范DLL问题，可被用来自动解除互斥锁。
+
+### 条款19：设计class犹如设计type
+
+设计一个type需要考虑的主题如下，设计class也可以参照其思考方式。
+
+- 新type的对象如何被创建和销毁(关键:operator new 和operator delete的重载函数,条款50-52)?
+- 对象的初始化和对象的赋值该有什么样的差别(关键:default构造函数和copy assignment的区别,条款04)?
+- 新type的对象若被值传递意味着什么(关键:copy 构造函数的实现)?
+- 什么是新type的合法值(关键:构造函数和copy assignment函数)?因为类成员变量可能处于限定范围和类型,所以错误检查工作必须要在构造函数和copy assignment等进行,并抛出合理的异常,函数异常明细也应当被列出
+- 新type是否需要配合某个继承体系(关键:继承的基类函数是否存在virtual限定,条款34和36;自身又是否需要定义virtual,条款07)?
+- 新type需要什么样的转换(关键:operator dstType()或non-explicit 构造函数,显式or隐式转换,条款15)?类型T1需要转换为类型T2.如果T1只接收explicit构造,说明只接收显式转换即单独定义一个函数来执行操作(条款15的get函数);T1接收隐式转换的话,就可以定义operator T2()隐式转换重载函数;当然也可以在T2类内写接受non-explicit的构造函数
+- 什么样的操作符和函数对此新type合理(关键:为class声明的合理函数,哪些是member函数,条款06)?也许type不希望copy,就可以参考条款06的操作来阻止默认生成的copy构造
+- 什么样的标准函数需要被驳回(就是条款06)?
+- 谁该取用新type的成员函数(关键:访问层级的定义,public,protected,private以及friend)?
+- 什么是新type的未声明接口(关键:效率,异常和资源管理是如何保证的,条款29)?
+- 新type是否具备一般化的性质(关键:可能定义的不是1个type而是整个types家族,那么应当使用template)?
+- 真的需要一个新type吗(可能在基类多定义non_member函数或者引入template就可以达到目的)?
+
+
+
+### 条款20：使用passby_reference_const代替passby_value
+
+使用常量引用的方式可以避免大量的构造析构函数被调用，效率比较高。
+
+引用传递还可以避免参数切割问题，这个问题主要发生在派生类对象被传入一个本该是基类对象的函数上。这样基类的构造函数会被默认调用，只保留了派生类中基类的成分。例如具备2个函数的窗口类，分别用于返回窗口名称和打印窗口名称。
+
+```c++
+class Windows
+{
+    public:
+    	string name() const;
+    	virtual display() const;
+};
+class WindowsWithScrollBars:public Window
+{
+    public:
+    	virtual display() const;
+};
+```
+
+现在一个函数用于打印窗口名和显示窗口。
+
+```c++
+void printWindowsNameAndDisplay(Window w)
+{
+    cout<<w.name()<<"\n";
+    w.display();
+}
+```
+
+这个函数传入的是Windows对象，则一点问题没有；但是如果传入的是派生类WindowsWithScrollBars对象，则它会退化成基类对象Windows，内部调用的永远是Windows::display()函数，而不是WindowsWithScrollBars::display()函数。
+
+解决这个问题的办法就是不使用值传递，也就不会调用构造函数，传进来的是什么类型就能展现什么类型，实现动态绑定。
+
+```c++
+void printWindowsNameAndDisplay(const Window& w)
+{
+    cout<<w.name()<<"\n";
+    w.display();
+}
+```
+
+结论：
+
+尽量以const reference代替value传递，可以避免参数切割问题；
+
+该规则不适用于内置类型，对于内置类型或者STL的迭代器和函数对象，value传递可能更好。
+
+### 条款21：必须返回对象时不要返回其reference
+
+虽然说传递参数尽可能使用引用传递，但是返回时并不是这样，考虑一个有理数类。
+
+```c++
+class Rational
+{
+	public:
+		Rational(int numerator=0,int denominator=1);//分子分母
+    private:
+    	int n,d;
+    friend const Rational operator*(const Rational&lhs,cosnt Rational &rhs);//为了实现左操作数不是this且能够访问私有属性,要声明为friend函数
+};
+```
+
+这样的定义其实是合理的，虽然它返回时调用了构造和析构函数造成一些成本，但是它造成的成本远比返回const reference对象造成的麻烦小的多。
+
+第1个麻烦是，reference要知道它其实就是某个变量的别名，这个变量以前就存在。如果operator * 的左操作数是this，返回 * this还是正确的，因为this事先已经存在。但是对于这里的双操作数，返回的一个已经存在的变量引用是啥玩意呢？
+
+创建变量，显然是在stack申请内存，也可以在heap申请内存，还可以使用静态变量static。但是显然返回一个stack申请的变量是错误的，它在函数运行结束后就被销毁。那么返回一个堆的内存呢？虽然是可以，但是引入了资源泄露的风险。static变量会造成多线程安全的问题，还会造成奇怪的逻辑问题。
+
+```c++
+const Rational& operator*(const Rational&lhs,cosnt Rational &rhs)
+{
+    Rational res(lhs.n * rhs.n,lhs.d * rhs.d); // stack创建的,一定错误
+    return res;
+}
+
+const Rational& operator*(const Rational&lhs,cosnt Rational &rhs)
+{
+    Rational *res = new Rational (lhs.n * rhs.n,lhs.d * rhs.d); // heap创建的,有资源泄露风险
+    return *res; // 返回的指针如何delete?
+}
+```
+
+有时候未必使用delete就能避免资源泄露，例如下方的代码，本意是实现连乘计算。
+
+```c++
+Rational w,x,y,x;
+w = x * y * z; // 等价于operator*(operator*(x,y),z),优先级自左向右
+```
+
+这样一条语句调用了2次new，那也需要2次delete，然而返回却是1个对象，operator * 背后的指针已经无法获取。
+
+如果使用static变量，确实可以返回引用，但是每次返回的引用地址都是一个东西。假如，存在一些逻辑运算，就会出现奇怪的bug。
+
+operator * (a,b)的调用的确会改变res的值，operator * (c,d)也会改变res的值，但是不会改变res的地址。2次返回的是一个东西，那么比较逻辑总是true，那么else语句永远不会被执行。
+
+```c++
+const Rational& operator*(const Rational&lhs,cosnt Rational &rhs)
+{
+    static Rational res; // 静态变量只有1次初始化,地址永远不会变化
+    res.n = lhs.n * rhs.n;
+    res.d = lhs.d * rhs.d; 
+    return res;
+}
+// 外部使用
+Rational a,b,c,d;
+if ((a * b) == (c * d)) // 等价于operator==(operator*(a,b),operator*(c,d))
+{
+    ...
+}
+else
+{
+    ...
+}
+```
+
+最重要的是，res变量只能被使用存储1个值，但是即使定义静态数组vector也没有意义。声明vector意味着可能要消耗存储空间，就可能需要一些限制，这些额外的成本都不如只调用1次析构和构造消耗的成本。所以回到最开始吧，那样的就是最好的。
+
+结论：
+
+不要试图返回指针或引用指向一个local stack对象、或引用指向heap对象、或指针和引用指向local static对象(而且这样的对象需要很多)。如何在单线程环境中合理返回指向local static对象的引用在条款04可见。
+
+### 条款22：将成员变量声明为private
+
+将成员变量声明为private，通过函数来访问成员变量，函数便可以提供变量的只读、只写、可读可写的区分度。
+
+另外还可提供弹性，成员变量被读被写时可以轻松通知其它对象、验证class的约束性以及和函数的前提和事后状态。
+
+对于public成员变量，如果取消它会有很多客户代码受到影响，而protected则会影响派生类，所以把public和protected都可以看作一类，也就是没有封装性，private视为有封装。
+
+结论：同标题名，另外protected不必public更有弹性。
+
+### 条款23：宁以non-member、non-friend替换member函数
 
 
 
 
-​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+
+
+
