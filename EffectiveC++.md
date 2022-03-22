@@ -2167,23 +2167,397 @@ std:: swap(pImpl,other.pImpl);//但不要写成这样,这是指定只能使用st
 
 ## 五、实现
 
+类的声明完成以后，就是类的实现。
 
+类的实现希望不要太快定义变量造成效率的拖延；希望不要过度使用转型(casts)操作导致代码变慢且难以维护；希望不要返回私有数据变量的引用、指针等导致破坏封装和导致资源泄露的问题；不考虑异常处理，也会导致资源泄露和数据败坏；不要过度使用inline造成代码膨胀；不要过度耦合，会导致冗长的建置时间。本章的这些条款都可以避免这些问题。
 
+### 条款26：尽可能延后变量定义式的出现时间
 
+如果一个变量被定义，程序的控制流到达和离开时都会造成构造和析构成本，无论变量是否被使用。
 
+虽然说很少有人会定义不使用的变量，但是有可能在未使用这个变量之前就出现了异常导致并没有使用，所以即插即用比较好。
 
+此外，定义一个变量最好直接使用copy函数得到它应该有的值。
 
+```c++
+string name = "cb"; // 不好的做法
+name = password; // 调用2次copy assignment
 
+string name; // 不好的做法
+name = "cb";//调用了默认构造+copy assignment
 
+string name(password);//最好的做法,只调用一次copy
+```
 
+再来考虑循环，有两种做法进行循环。
 
+```c++
+Widget w;
+for(int i=0;i<n;++i)
+    w = 某个i的值;
+```
 
+或
 
+```c++
+for(int i=0;i<n;++i)
+    Widget w = 某个i的值;
+```
 
+第一种做法的成本：
 
+1个构造函数+1个析构函数+n个copy assignment函数
 
+第二种做法的成本：
 
+n个构造函数+n个析构函数
 
+若赋值成本远低于构造，第1种做法高效；若n值很大或者赋值效率低，则第2种可能更好。
 
+结论：尽可能延后变量定义式的出现，可以增加程序的清晰度和改善程序效率。
 
+### 条款27：尽量少做转型动作
+
+C风格的转型相对安全，但是C++的不一定。
+
+C风格的转型动作
+
+```c++
+(T)expression
+```
+
+其他语言例如Python的转型动作
+
+```c++
+T(expression)
+```
+
+C++提供的新式转型。
+
+```c++
+const_cast<T>(expression);
+dynamic_cast<T>(expression);
+reinterpret_cast<T>(expression);
+static_cast<T>(expression);
+```
+
+const_cast用于剔除对象的常量性，也是唯一这样做的转型操作符；
+
+dynamic_cast主要用来执行安全向下转型，也就是用来决定某对象是否归属继承体系的某个类型，它也是唯一旧式语法无法执行的动作，也是唯一可能耗费重大运行成本的转型动作；
+
+reinterpret_cast意图执行低级转型，实际结果取决于编译器，也就表示它不可移植；例如把指向int的指针转为整型，这类转型在低级代码很少见；
+
+static_cast用来强迫隐式转换，例如non-const转为const对象，或者int转为double，也可以执行某些转换的反向转换，例如将void * 指针转为typed指针，将基类指针转为派生类指针，但是不能将const转为non-const，这个需要使用const_cast。
+
+一个转型的例子。
+
+```c++
+void doSomeWork(const Widget& w);
+doSomeWork(Widget(15));//C风格,调用构造函数
+doSomeWork(static_cast<Widget>(15));//C++风格
+```
+
+#### 单一对象可能拥有一个以上地址
+
+如果对象是派生类的对象，实际上它会有1个基类地址，1个派生类地址。使用基类指针指向它时，指向的是对象的基类地址，使用派生类指针指向它时，指向的是派生类地址。
+
+只有C++可能发生这种事，尤其在多重继承发生的时候。
+
+#### 不要在派生类内部转型为基类
+
+例如基类有1个virtual函数，派生类也有同名virtual函数，如为了减少代码重复的目的让派生类使用该函数时对自身this转型再调用函数，好像这样可以调用基类的函数，其实并不是！它调用的不仅不是基类的函数，也不是派生类的函数，而是派生类对象自身具有的基类成分的副本函数！
+
+```c++
+class Window
+{
+    public:
+    	virtual void reSize(){...}// non-const
+};
+class specialWindow : public Window
+{
+    public:
+    	virtual void reSize(){
+            static_cast<Window>(*this).reSize();//尝试将自身转型为Window来调用基类函数
+        }
+};
+```
+
+实际上调用的reSize函数不是当前对象身上的函数，调用的因为转型动作所建立的this对象的base class成分的副本上的reSize函数。
+
+这样的reSize函数可能会影响其内部可以操作的数据。同时即使基类更改了reSize函数，当前对象实际没有改动，改动的是转型产生的副本，这样基类成分的更改对this而言其实没有落实，也就是reSize函数没有真的执行和影响this对象。
+
+所以正确的方法，直接调用基类的reSize函数即可，拿掉转型动作，不要哄骗编译器this是个基类对象。
+
+```c++
+class specialWindow : public Window
+{
+    public:
+    	virtual void reSize(){
+            Window::reSize();//拿掉转型动作,声明作用域
+        }
+};
+```
+
+#### 尽可能避免使用dynamic_cast
+
+该转型动作的执行速度很慢，之所以用到这个转型动作可能是因为。客户手上只要基类的指针和引用，但是知道它指向的其实是派生类，现在想要执行派生类的操作函数，所以想要把基类指针能够转型为派生类指针。
+
+有2个方法可以代替使用dynamic_cast。
+
+第1个方法，使用容器存储直接指向派生类对象的指针(通常是智能指针)，就可以避免通过基类接口来处理对象的问题。
+
+不过这个方法更像是预防，也就是容器一开始存储好指向派生类的指针，自然而可以使用派生类的方法。但一开始用容器存储基类的指针不是什么好主意。
+
+```c++
+typedef vector<std::tr1::shared_ptr<Window> > VSP;
+VSP winPtrs;
+for (VSP::iterator it = winPtrs.begin();it!=winPtrs.end();++it)
+{
+    if (specialWindow * psw = dynamic_cast<specialWindow*>(it->get()))
+        psw->reSize();//将基类的底层指针用get获取然后转为派生类指针,再调用其函数
+}
+```
+
+这样的操作不好，而应当是遍历存放派生类指针的容器，这样只需要1次隐式转换解引用即可。
+
+```c++
+typedef vector<std::tr1::shared_ptr<specialWindow> > VSWP;
+VSWP winSpePtrs;
+for (VSWP::iterator it = winSpePtrs.begin();
+     it!=winSpePtrs.end();++it)
+{
+     （*it）->reSize();//隐式转换,智能指针->底层指针
+}
+```
+
+另外这种做法只能存储specialWindow这一类型派生类的指针，而不能存储各种类型的派生类指针。
+
+第2个方法可以解决这个问题，那就是在基类中提供虚函数，提供基类相对派生类做的任何事，这样就不必转型操作才能调用派生类的函数，基类同样可以调用此函数。基类只是提供个虚函数，但是可以不给出实现。不过条款34说明了如果不给出实现，缺省代码可能是个馊主意。
+
+第2个代码的解决方案示例。
+
+```c++
+class Window{
+    public:
+    	virtual void reSize(){}//缺省
+    	...
+}
+class specialWindow{
+    public:
+    	virtual void reSize(){...}//给出实现
+}
+typedef std::vector<std::tr1::shared_ptr<Window>> VPW;
+VPW winPtrs;
+...
+for(VPW::iterator it = winPtrs.begin();it!=winPtrs.end();++it)
+    (*it)->reSize();//没有dynamic_cast
+```
+
+最后，即使使用了dynamic_cast，也要避免连串的使用，像下方代码，如果继承体系发生变化，这一类代码都需要重新检查是否修改，且如果有新的派生类加入，可能这些判断还要加入新的条件分支，这样的代码应当基于virtual函数调用来代替。
+
+```c++
+class Window{...}
+class DW1{...}//派生类1
+class DW2{...}//派生类2
+class DW3{...}//派生类3
+...
+typedef std::vector<std::tr1::shared_ptr<Window>> VPW;
+VPW winPtrs;
+...
+for(VPW::iterator it = winPtrs.begin();it!=winPtrs.end();++it)
+{
+    if (DW1* pdw1 = dynamic_cast<DW1>(it->get())
+        {...}//做些事情
+    else if (DW2* pdw2 = dynamic_cast<DW2>(it->get())
+        {...}//做些事情
+    else if (DW3* pdw3 = dynamic_cast<DW3>(it->get())
+        {...}//做些事情
+    ... // 更多条件分支
+}
+```
+
+结论：
+
+如果可以，尽量避免转型，注重效率的代码避免使用dynamic_cast，如果有个设计需要转型动作，试着发展无需转型的替代设计；
+
+若转型是必要的，试着把它隐藏于某个函数背后，客户调用该函数不需要将转型放入自己的代码内；
+
+宁可使用C++新式转型，不要使用旧式转型，前者容易辨识且有着分门别类的职责。
+
+### 条款28：避免返回句柄(handles)指向对象内部成分
+
+所谓句柄，是指返回对象的引用、指针或者迭代器等。
+
+看一个场景，矩形类的定义需要点类构造，但是矩形类自身又不想专门定义这样的点类成员去存储它，而是提供点类的指针，真正存放点的数据在对象外。
+
+```c++
+class Point
+{
+    public:
+    	Point(int x,int y);
+    	void setX(int val);
+    	void setY(int val);
+};
+struct RectData
+{
+    // 2点可确定矩形大小
+    Point upperLeft;//左上角坐标
+    Point lowerRight;//右下角坐标
+}
+class Rectangle
+{
+    public:
+    	Rectangle(const Point&p1,const Point& p2);
+    	Point& upperLeft() const{return pData->upperLeft;}
+    	Point& lowerRight() const{return pData->lowerRight;}
+    private:
+    	std::tr1::shared_ptr<RectData> pData;//指向存放数据的指针
+}
+```
+
+Rectangle的2个函数确实是const类型，它没有改变这样的对象内部成员，符合bitwise constness。但是我们不应该这样去看待它，因为外部调用者可以去改变对象的值，即使对象是const的类型。
+
+```c++
+Point p1(0,0);
+Point p2(100,100);
+const Rectangle rec(p1,p2); // const类型
+rec.upperLeft().setX(50);//外部却可以改变const对象的内部数据
+```
+
+实际上这不符合真正的const逻辑，避免这样的事情发生，可以将2个函数的返回类型声明为const。
+
+```c++
+const Point& upperLeft() const{return pData->upperLeft;}
+const Point& lowerRight() const{return pData->lowerRight;}
+```
+
+即使返回的const解决了这样的问题，但是2个函数确实还是返回了handles，它们可能在其他场合出现问题，可能handles指向的东西并不存在，但是返回了。因为很可能某些场景，例如局部函数内部借助其它函数得到了一个局部Rectangle对象，函数执行完会被销毁，但是函数内部使用1个指针指向了Rectangle对象调用upperLeft()或lowerRight()返回的引用，并将其返回，那这样就会出现问题，因为返回的指针会因为那个局部Rectangle对象被销毁而导致虚吊。
+
+这里的重点不在于handles是引用，指针还是迭代器，也不在于返回的handles是否为const，也不在于返回handles的那个函数是否const，很简单就是在于它返回了handles是原罪。
+
+结论：不要返回指向对象内部的指针、引用和迭代器，帮助const成员函数像个const，并将发生虚吊handles的可能性降至最低。
+
+### 条款29：为异常安全而努力是值得的
+
+什么是异常安全？异常安全性要求不泄露任何资源，不允许数据败坏。
+
+下边是一个比较糟糕的函数实现，一个GUI切换背景图片的操作。
+
+```c++
+class GUI
+{
+    public:
+    	void changeBackGroundImage(std::istream& imgSrc);//一个图像所在地址
+    private:
+    	Mutex mutex;//互斥器
+    	Image* bgImage;// 指向图像的所在地址,GUI自身不存储数据
+    	int imageChanges;//图像改变次数
+}
+void GUI::changeBackGroundImage(std::istream& imgSrc)
+{
+    lock(&mutex);
+    delete bgImage;
+    ++imageChanges;
+    bgImage = new Image(imgSrc);
+    unlock(&mutex);
+}
+```
+
+显然这里主要存在4个问题。
+
+第一、lock和unlock之间可能发生异常，那么unlock不被执行的话则mutex永远被锁住发生资源泄露；
+
+第二、Image的构造函数可能会有异常；
+
+第三、删除了bgImage之后无法恢复到以前的状态，imageChanges应当成功改变图像后才+1；
+
+第四、即使一切正常，bgImage指向new出的新对象，这个对象的delete也需要手动管理；
+
+所以针对以上问题，可以引入资源管理类Lock，见条款14以及智能指针条款13解决。将代码实现更改如下。
+
+```c++
+class Lock{...}//条款14 引入资源管理类
+class GUI
+{
+    public:
+    	void changeBackGroundImage(std::istream& imgSrc);//一个图像所在地址
+    private:
+    	Mutex mutex;
+    	std::tr1::shared_ptr<Image> bgImage;// 修改为使用智能指针,条款13
+    	int imageChanges;
+}
+void GUI::changeBackGroundImage(std::istream& imgSrc)
+{
+    Lock m1(&mutex);
+    bgImage.reset(new Image(imgSrc)); // 智能智能重设底层指针的方法reset
+    ++imageChanges; // 调整语句位置
+}
+```
+
+#### copy and swap手法
+
+这段代码还有一个问题，就是Image的构造问题，也就是第2个问题没解决。解决方案可以利用copy and swap手法。也就是把要改变的东西先建立一个副本，在副本上进行改变，如果成功改变，就交换它，否则还是原样。
+
+对于GUI类的2个私有成员bgImage和imageChanges可以考虑转移，用一个结构体或一个类去存储它，这样使用copy and swap手法时比较方便，因为切换图像背景后需要改变的就是这2个私有成员，这样整体进行swap。相应的GUI只需要这样一个数据类型的指针作为私有成员即可，自身不存储任何数据。
+
+```c++
+class Lock{...}
+class GUI
+{
+    public:
+    	void changeBackGroundImage(std::istream& imgSrc);//一个图像所在地址
+    private:
+    	Mutex mutex;
+    	std::tr1::shared_ptr<PMImpl> pImpl; // 函数会改变的成员
+}
+struct PMImpl
+{
+    std::tr1::shared_ptr<Image> bgImage;
+    int imageChanges;
+}
+void GUI::changeBackGroundImage(std::istream& imgSrc)
+{
+    using std::swap;//见条款25
+    Lock m1(&mutex);
+	std::tr1::shared_ptr<PMImpl> temp(new PMImpl(*pImpl));//copy pImpl
+    temp->bgImage.reset(new Image(imgSrc));//change temp
+    swap(pImpl,temp);// swap temp and pImpl
+}
+```
+
+现在函数的异常安全性提高了很多，现在出现一个问题，异常安全性要满足什么样的要求？
+
+#### 异常安全性的三种保证
+
+第一：基本承诺，保证异常抛出时，程序的任何事物仍然保持在有效状态，没有任何对象或数据结构因此而败坏；例如如果异常抛出，图像可以还使用以前的图像或者某个缺省时用到的图像。
+
+第二、强烈保证，异常抛出后程序状态不变，也就是会恢复到原来的状态。即程序要不完全成功，要不就是失败，返回以前的状态；
+
+第三、保证不抛出任何异常，这对内置数据类型很有用。
+
+异常安全码必须保证上述三种保证之一，否则它不具备异常安全性。
+
+但是即使都保证了，不代表就具有强烈异常安全，举个例子，某个函数内部调用了2个函数f1和f2。
+
+```c++
+void f()
+{
+    f1();
+    f2();
+}
+```
+
+如果f1函数只提供基本承诺，显然f函数的下限其实是被f1拉低的，就像木桶装水只取决于那个最短的木板，那么f函数也只能最多提供基本承诺；除非写下一些代码能够记录f1的状态，f1异常时可以恢复，那么f可以强烈保证异常安全性。
+
+如果f1和f2都是强烈异常安全，f也不一定是强烈异常安全。很可能f1执行完系统发生了一些变化，系统接受了这个状态，因为f1没有异常是正常执行，紧接着f2出现了异常，这下好了，并不能恢复到f调用前的系统状态，只能恢复到f1正常运行结束的状态。
+
+结论：
+
+异常安全函数必须满足三种保证；
+
+强烈保证往往可以通过copy and swap手法实现出来，但强烈保证不是对所有函数都具备实现意义；
+
+函数提供的异常安全保证取决于内部调用的各个函数异常安全性的最弱者。
+
+### 条款30：透彻了解inlining的里里外外
 
