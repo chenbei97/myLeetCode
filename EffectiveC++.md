@@ -105,14 +105,14 @@ p3 = 30; // √
 person p5; // × 没有默认构造函数
 ```
 
-​		为什么可以使用赋值运算符构造对象呢？因为C++会默认进行隐式转换，p2=10的过程等价于先构造temp(10)，再让p2=10。但是上述一个person对象不仅可以等于const char * ，也可以等于int型，它们之间还能换算，显得不伦不类。为了避免这种情况，可以声明为explicit类型，阻止默认隐式转换。这样，只有两条语句是合法的，其它均不合法。
+​		为什么可以使用赋值运算符构造对象呢？因为C++会默认进行隐式转换，调用了类的默认构造函数，p2=10的过程等价于先构造temp(10)，再让p2=10。但是上述一个person对象不仅可以等于const char * ，也可以等于int型，它们之间还能换算，显得不伦不类。为了避免这种情况，可以声明为explicit类型，阻止默认隐式转换。这样，只有两条语句是合法的，其它均不合法。
 
 ```c++
 person p1(10);
 person p3("A");
 ```
 
-​		现在再来看，为什么要求是默认构造函数或者有参构造函数只带1个参数。因为类构造函数参数大于或等于两个时，是不会产生隐式转换的， 所以explicit关键字也就无效。
+​		现在再来看，为什么要求是默认构造函数或者有参构造函数只带1个参数。因为类构造函数参数大于或等于两个且没有默认参数时时，是不会产生隐式转换的， 所以explicit关键字也就无效，因为person p6 = (1,"A")不存在这种语法。
 
 ```c++
 class person{
@@ -130,10 +130,11 @@ class person{
 ​		构造函数大于等于2个参数的，explicit加不加都一样。
 
 ```c++
-person p6(1,"A");
+person p6 = (1,"A");//非法
+person p6(1,"A"); // 合法
 ```
 
-​		但大于等于两个参数，如果除了第一个参数以外的其他参数都有默认值的时候，explicit关键字依然有效。
+​		但大于等于两个参数，如果参数都有默认值的时候，explicit关键字依然有效。
 
 ```c++
 class person{
@@ -141,7 +142,7 @@ class person{
     explicit person(int age){_age=age;}; // 阻止隐式转换
     explicit person(string name){_name=name;}; // 阻止隐式转换
     explicit person(int age, string name){_age=age;_name=name;}; // 加不加都一样
-    explicit person(double salary,int count=0){_salary=salary;_count=count;};//阻止隐式转换
+    explicit person(double salary = 18.0,int count=0){_salary=salary;_count=count;};//阻止隐式转换
     ~person();
   protected:
     int _age ;
@@ -157,7 +158,9 @@ class person{
 person p7 = 3.4;
 ```
 
-​		具体可以参考[C++ explicit关键字详解](https://blog.csdn.net/guoyunfei123/article/details/89003369)的说明。
+​		具体可以参考[C++ explicit关键字详解](https://blog.csdn.net/guoyunfei123/article/details/89003369)的说明，不过这里有个说法不对，并不是要求第1个参数以外的参数都为默认值才可以，第1个参数也有默认值也是可以的。
+
+​	总结：① 单参数构造，默认支持隐式转换，使用explicit可阻止隐式转换； ② 双参数及以上构造，除第1个参数以外后面的参数都必须有默认值才会默认调用隐式转换，第1个参数可以带默认参数也可以不带，使用explicit可阻止隐式转换。
 
 ### 命名习惯
 
@@ -1822,9 +1825,361 @@ else
 
 对于public成员变量，如果取消它会有很多客户代码受到影响，而protected则会影响派生类，所以把public和protected都可以看作一类，也就是没有封装性，private视为有封装。
 
-结论：同标题名，另外protected不必public更有弹性。
+结论：同标题名，另外protected不比public更有弹性。
 
-### 条款23：宁以non-member、non-friend替换member函数
+### 条款23：宁以non-member&non-friend替换member函数
+
+假设有个浏览器的类需要做一些动作，它有3个函数，用于清除缓存、清除浏览历史，移除cookies等。如果用户希望一次性执行这些动作，这个函数可以声明为成员或非成员函数，哪个更好？
+
+```c++
+class webBrowser
+{
+    public:
+    	void clearCache();
+    	void clearHistory();
+    	void removeCookies();
+    	
+    	void clearEverything();//member函数,内部调用3个函数
+};
+void clearBrowser(webBrowser& wb)// non-member函数
+{
+    wb.clearCache();
+    wb.clearHistory();
+    wb.removeCookies();
+}
+```
+
+面向对象守则认为：那些数据和操作数据的函数应当捆绑在一起，所以认为member函数更好。但是它还认为数据应该尽可能的被封装，member函数带来的封装性低，而non-member函数具有更大的包裹弹性。下边说明其原因。
+
+封装性意味着东西不可见，它的改变只能影响对它可见的那些代码，代码改动的弹性很大，只会影响有限客户；
+
+条款22说明了成员变量应该是private，否则会有无限量的函数去访问它，它们也就毫无封装性，能够访问private的函数只有member函数以及friend函数。现在还要再non-member函数和member函数去选择，显然non-member封装性更好，如果它不是friend，它无法访问类的那些private成员、enum以及typedef等，但是member函数都可以访问。
+
+有两件需要注意的事情：
+
+第一件，这里的注意力是放在member和non-member&non-friend函数，不仅在于是否member，因为friend函数也可访问类的private变量。
+
+第二件，虽然函数可以为了封装性是一个class的non-member函数，但不意味着它不可以是另一个class的member函数。
+
+#### namespace的组织方式
+
+举一个例子来说明如何使用namespace组织同一个类的程序库，它可以降低编译依存度。namespace允许将某个类和及其相关的一些便利函数放在不同的文件，而class是不行的，因为class必须整体定义，不可能一部分成员函数在一个文件，另一些成员函数在其他文件。至于降低编译依存度，就是客户只取用感兴趣的那一部分即可，而不必整体都进行编译。
+
+以标准程序库为例，它不是一个庞大的、单一整体的一个文件，而且都不是写在std命名空间下，而是有数十个头文件。有的客户只对vector感兴趣，有的只对list感兴趣，所以如果不想使用list，也就不必包含list的头文件。降低编译依存度详细可见条款31。
+
+对于上述的浏览器类和那个非成员函数，一般放在一个命名空间里，命名空间在头文件中定义。
+
+```c++
+// "WebBrowser.h"头文件,包含了类自身和一些核心机能
+namespace WebBrowserStuff{
+    class WebBrowser{...};
+    void clearBrowser(WebBrowser&wb);
+    ...
+}
+```
+
+然后有大量的函数可能是用于处理WebBrowser的Cache，还有的是专门处理Cookies，那就可以在两个不同头文件下在相同的命名空间内定义这些函数。
+
+```c++
+// "WebBrowserCache.h"
+namespace WebBrowserStuff{
+    ... // 和cache有关的函数
+}
+```
+
+```c++
+// "WebBrowserCookies.h"
+namespace WebBrowserStuff{
+    ... // 和cookies有关的函数
+}//
+```
+
+结论：
+
+用non-member&non-friend函数替换member函数增加封装性、包裹弹性；
+
+善于利用namespace组织程序库，降低编译依赖度。
+
+### 条款24：若所有参数需要类型转换，使用non-member函数
+
+ 导读中曾提到，最好不支持class的隐式转换，使用关键字explicit可以阻止默认的隐式转换。
+
+所谓隐式转换是，调用默认的构造函数，将一个传入的类型自动转换为构造的类型。
+
+关于隐式转换，只复习下结论。① 单参数构造，默认支持隐式转换，使用explicit可阻止隐式转换； ② 双参数及以上构造，除第1个参数以外后面的参数都必须有默认值才会默认调用隐式转换，第1个参数可以带默认参数也可以不带，使用explicit可阻止隐式转换。
+
+具体关于explicit的内容，见[explicit关键字的作用](#explicit关键字的作用)。
+
+现在设计一个支持隐式转换的有理数类如下。
+
+```c++
+class Rational
+{
+    public:
+    	Rational(int numerator=0,int denominator=1);
+    	int numerator() const;
+    	int denominator() const;
+    private:
+    	int n, d;
+};
+```
+
+如果希望能够实现有理数的算术运算，应当采用non-member函数定义，这样左操作数可以不用是this，可以保持加法交换律乘法交换律这样的规则，使之看起来更自然。
+
+non-member函数的定义如下。为何返回const类型可见条款21。
+
+```c++
+const Rational operator*(const Rational& lhs,const Rational&rhs)
+{
+    return Rational(lhs.numerator()*rhs.numerator(),lhs.denominator()*rhs.denominator());
+}
+```
+
+如果使用member函数的定义，就像这样。这里应当返回引用。
+
+```c++
+Rational& operator*(const Rational&rhs)
+{
+    n = n * rhs.numerator();
+    d = d * rhs.denominator();
+    return *this;
+}
+```
+
+但是这样的定义不支持下边第2条这样的运算。
+
+```c++
+Rational w,x;
+w = x * 2;//成立,为什么?隐式调用了构造函数
+w = 2 * x ; // 不成立,左操作数必须是this
+```
+
+第1条的运算成立是因为隐式调用了构造函数，如果想阻止这种转换可以让构造函数声明为explicit。
+
+```c++
+const Rational temp(2); // 以2构造Rational对象
+w = x * temp; 
+```
+
+现在回到开头，显然定义最早那样的non-member函数更好，但还有个问题，这个问题是否应该成为friend函数。
+
+答案是不需要，因为内部无需访问私有变量，Rational已提供了2个只读函数，为了封装性，无需声明为friend。
+
+除了上述的一些讨论点，本条款真正想说的是：
+
+结论：如果需要为某个函数的所有参数(包括this指针所指的隐喻参数)进行类型转换，那么这个函数必须是non-member。
+
+### 条款25：考虑写出一个不抛异常的swap函数
+
+典型的swap函数实现如下，只要T类型定义了合理的copy构造函数和copy assignment函数就可以完成交换。
+
+```c++
+namespace std{
+    template<typename T>
+    void swap(T &a, T & b)
+    {
+        T temp(a);//调用T的copy函数
+        a = b ; //调用T的copy assignment函数
+        b = temp;//调用T的copy assignment函数
+    }
+}
+```
+
+但是有的类其实无需这样的copy、copy assignment去交换对象，可能只需要交换2个指针，常见于以pimpl手法实现的class。
+
+#### pimpl手法
+
+pimpl是"pointer to implementation"的简称，也就是指向实现的指针，这个实现是一个包含数据的类对象。
+
+例如，Widget类的设计之前会设计一个WidgetImpl类。
+
+```c++
+class WidgetImpl
+{
+    public:
+    	...//实现细节不重要
+    private:
+    	int a,b,c;
+    	vector<double> v;//很多的数据,意味着复制时间很长
+    	...
+};
+class Widget
+{
+    public:
+    	Widget(const Widget& rhs);
+    	Widget& operator=(const Widget& rhs)
+        {
+            ...
+            *pImpl = *(rhs.pImpl);//只需交换指针就可以交换this和rhs
+        }
+    private:
+    	WidgetImpl* pImpl; // 指向Widget对象本身的指针
+};
+```
+
+但是swap函数不知道这一点，它正常会调用Widget的构造函数3次，并复制3次pImpl变量，非常缺乏效率。
+
+如果希望swap函数能够知道只需交换pImpl指针，就可以让swap函数针对Widget进行优化。
+
+代码实现目前写成这样，但无法通过编译。
+
+```c++
+namespace std
+{
+    template<> void swap<Widget>(Widget&a,Widget&b)
+    {
+        swap(a.pImpl,b.pImpl);
+    }
+}
+```
+
+template<>表示它是一个std::swap的一个全特化版本，而函数名称swap< Widget >表示这一版本是针对T=Widget设计的。C++不允许对std命名空间内的任何东西进行改变，但是可以为标准模板template提供全特化版本，使它专属某个类的使用。
+
+无法通过编译的原因是，pImpl指针是private的，但是上述语法是存在的。所以可以把这个特异版本的函数声明为friend函数，但是一般不这样去做。
+
+#### 同时定义member&non-memeber的swap函数
+
+如果不想要使用friend(为了封装性)去修饰特异化版本的std::swap，而且还想访问特异版本的私有成员，可以同时定义member和non-member2个版本的函数，并让non-memebr调用member函数。
+
+```c++
+using namespace std // 现在是std命名空间下
+{
+    class WidgetImpl{...}
+    class Widget
+    {
+        public:
+            void swap(Widget& other)
+            {
+                using std::swap; // 此句的意思是可以使用命名空间std
+                swap(pImpl,other.pImpl); //使用特异版本swap
+            }
+        private:
+            WidgetImpl* pImpl;
+    };
+    template<> void swap<Widget>(Widget&a,Widget&b)// 特异版本swap
+    {
+        a.swap(b);// 内部调用member函数,避免声明为friend
+    }
+}
+```
+
+#### 不要给std空间添加任何重载的东西
+
+目前这样的写法完全正确，能通过编译。现在希望不仅仅是对Widget特异，还希望对Widget< T >特异，也就是对一批行为特异，还想让特异版本也有弹性，可能的写法像这样。
+
+```c++
+using namespace std
+{
+    template<typename T>
+    class WidgetImpl{...}
+    
+    template<typename T>
+    class Widget
+    {
+        public:
+            void swap(Widget<T>& other)
+            {
+                using std::swap; // 此句的意思是可以使用命名空间std
+                swap(pImpl,other.pImpl); //使用特异版本swap,它也具有弹性
+            }
+        private:
+            WidgetImpl<T>* pImpl;
+    };
+    template<typename T> 
+    void swap<Widget<T> >(Widget<T>&a,Widget<T>&b)// 特异版本下的swap还想维持弹性,也就是特异一批行为,偏特化
+    {
+        a.swap(b);
+    }
+}
+```
+
+但是上述这样的写法是不合法的，因为C++只允许对class templates进行偏特化，不允许对function templates偏特化。上边通过编译写法的是对std::swap的全特化，而不是偏特化，这里的偏是指模板T，是偏向Widget< T>，也就是swap后边跟着的。所以真正应该实现的写法是，将swap好似看成对std::swap的重载版本，只是参数类型不同。
+
+```c++
+using namespace std
+{
+	template<typename T> 
+    void swap<T>(Widget<T>&a,Widget<T>&b)// 重载版本,只有参数类型不同
+    {
+        a.swap(b);
+    }
+}
+```
+
+虽然这样写确实没问题，但是相当于给std的命名空间内添加了新的东西。标准委员会禁止人们自定义东西膨胀内部代码，即使通过编译，但是这样的函数只会导致未定义行为。
+
+#### 使用namespace来实现全/偏特化版本swap的弹性
+
+一个更好的解决方法是，使用自己的命名空间，隔离开std空间，在这里实现自己的特异版本就没什么问题。
+
+上边所有类、函数的实现都相同，使用函数重载版本的swap函数，只是命名空间换了。
+
+```c++
+using namespace WidgetStuff // 唯一的区别
+{
+    template<typename T>
+    class WidgetImpl{...}
+    
+    template<typename T>
+    class Widget
+    {
+        public:
+            void swap(Widget<T>& other)
+            {
+                using std::swap; // 这条语句的意思会说明
+                swap(pImpl,other.pImpl); 
+            }
+        private:
+            WidgetImpl<T>* pImpl;
+    };
+    template<typename T> 
+    void swap<Widget<T> >(Widget<T>&a,Widget<T>&b)
+    {
+        a.swap(b);
+    }
+}
+```
+
+C++的名称查找法则要说明一下，如果你打算使用swap函数。它首先会从标准库的swap函数寻找，然后查找标准库swap的特异化版本，也就是std::swap下的全/偏特化版本，最后会查找是否存在依附于某个命名空间下的swap函数。但是优先会使用特异化版，且优先使用std空间下的特异版本。
+
+从用户的角度来说，他肯定希望有多份保障，如果有最合适的就找最合适的，没有更合适的就使用一般化的，这也是这条语句的含义
+
+```c++
+using std::swap;
+swap(pImpl,other.pImpl); // 可以使用std或WidgetStuff的
+
+std:: swap(pImpl,other.pImpl);//但不要写成这样,这是指定只能使用std内的
+```
+
+#### member版本的swap不要抛出异常
+
+最后1个问题，成员版的swap函数不要抛出异常，因为要求swap帮助class和template class提供强烈的异常安全性保证，条款29对此进行说明。不过这个约束是针对成员版的，非成员版的是可以的，因为非成员版本正常依赖于copy和copy assignment函数实现，它们允许异常抛出，所以不加以限制。如果是内置类型，例如指针、int或者double，这种交换操作是不会抛出异常的，所以成员版本的swap函数(真正的交换操作)去直接面对内置类型，是一定不会抛出异常的，所以不要在这里抛出异常。
+
+结论：
+
+① std::swap对自定义的类执行的操作效率不高时，考虑提供一个swap成员函数，这个函数不能抛出异常；
+
+② 如果提供了member swap函数，由于std空间下的swap函数更容易被人使用，也应当提供std下swap函数的特异版本，它内部调用了memeber swap函数； 
+
+③ 声明自己命名空间下的swap函数也是可以的，但是它没有std::swap的常用，所以最好遵循第2个结论也给出std下的特异版本；
+
+④ C++支持class和function的全特化，支持class template的偏特化，但不支持function template的偏特化，只允许function template的重载，但是不要给std内添加这些东西。
+
+## 五、实现
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
