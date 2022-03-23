@@ -2561,3 +2561,258 @@ void f()
 
 ### 条款30：透彻了解inlining的里里外外
 
+inline看起来像函数，动作像函数，且比宏函数好(条款02)，调用它们也不需要蒙受函数调用所导致的额外开销。
+
+① 编译器可以针对inline函数做出最优优化，但是inline函数可能会导致目标码变大，消耗内存和效率。
+
+② class本体内实现的函数定义都隐式的使用了inline。
+
+③ inline只是对编译器的一个申请，不是强制命令。
+
+例如，带有复杂的递归或者循环逻辑的函数、virtual函数可能会拒绝为inline。因为virtual意味着动态绑定，也就是运行时才知道使用哪个函数，而inline通常是编译器期间就已经知道，因为它要在调用前把函数体代码替换为调用动作。
+
+通过函数指针间接调用的内联函数也可能不执行inline。
+
+```c++
+inline void f();
+void (*pf)() =f;//函数指针pf指向f
+f(); // inline
+pf();//不一定inline
+```
+
+④ 不要将析构函数或者构造函数声明为inline，即使代码没有任何实现。
+
+代码没有任何实现只是针对设计者而言，实际上对编译器来说，这并不是一段空白代码，它带上了很多的异常处理。
+
+例如某个继承于基类的派生类的构造函数为空白。
+
+```c++
+class Base {
+    public:
+    	...
+    private:
+    	string bm1,bm2;
+}
+class Derived
+{
+    public:
+    	Derived(){}
+    	...
+    private:
+    	string dm1,dm2,dm3;
+}
+```
+
+在编译器眼中，Derived实际上可能是这样的，实际的异常处理可能比这个还要复杂，因为编译器有责任如果基类构造出现异常应当销毁基类的成分，后面的变量构造异常时有责任销毁前边已经构造的东西，显然这一大堆代码会导致代码的无限膨胀。
+
+```c++
+class Derived
+{
+    Base::Base();//基类构造
+    try{dm1.std::string::string();}
+    catch(...){
+        Base::~Base();
+        throw;}//有异常要调用基类析构
+    try{dm2.std::string::string();}
+    catch(...){
+        dm1.std::string::~string();//构造dm2异常时就删除dm1
+        Base::~Base();
+        throw;}
+    try{dm3.std::string::string();}
+    catch(...){
+        dm1.std::string::~string();//构造dm3异常时就删除dm1,dm2
+        dm2.std::string::~string();
+        Base::~Base();
+        throw;}
+    
+    public:
+    	Derived(){}
+    	...
+    private:
+    	string dm1,dm2,dm3;
+}
+```
+
+⑤ inline函数无法随着程序库的升级而升级，改动inline函数就要重新进行编译，而普通函数可以动态链接更新。
+
+⑥ inline函数是本不存在的函数，只在调用时复制在调用点，这就意味着它不能断点调试。
+
+结论：
+
+将大多数inline限制在小型、频繁被调用的函数身上，可使后序的调试过程和二进制升级更容易，也可使潜在的代码膨胀问题更小化，使程序的速度提升机会最大化；
+
+不要因为function templates出现在头文件就将它们声明为inline。
+
+### 条款31：将文件间的编译依存关系降至最低
+
+考虑一个例子，下方由于三个私有变量其实给出了定义，所以Person在这里不仅给出了class接口，还给出了一些实现。
+
+```c++
+#include <string>
+#include "Date.h"
+#include "Address.h"
+class Person
+{
+    public:
+    	Person(const string&name,const Date& birthday,const Address &addr);
+        string name() const;
+        string birthDate() const;
+        string address() const;
+    private:
+    	// 3个实现条目
+    	string theName; // 这3个私有变量都是定义式,不是声明式
+    	Date theBirthDate;
+    	Address theAddress;
+}
+```
+
+如果倚赖的2个头文件有所改变，或者这2个头文件倚赖的头文件有所改变，亦或者是Person类的私有东西改变，就要重新进行编译。
+
+可能的方法是去掉Person的实现条目，对Person用到的类进行一些前置声明即可，这样Person的用户只需要在Person接口被修改时才需要重新编译，至于Person的具体实现不会影响接口本身。
+
+```c++
+namespace std{
+    class string; // 声明std内的string类
+}
+class Date;
+class Address;
+class Person
+{
+    public:
+    	Person(const string&name,const Date& birthday,const Address &addr);
+        string name() const;
+        string birthDate() const;
+        string address() const;
+}
+```
+
+不过上述的想法有些问题。
+
+第一，string不是个类，它其实时basic_string< char >的别名typedef，因此上述关于string的前置声明并不正确。正确的声明比较复杂，因为这里还会涉及到templates，但是也不需要这么做，本就不该声明一些标准库内的某些东西，而应当使用#include来包含你感兴趣的类。
+
+第二，编译器必须在编译器内知道对象的大小，只提供接口的Person无法知道其大小，这个问题应该由Person的定义式来给出答案。为了降低编译依存度，提供2个做法。
+
+#### 将接口定义为handle类
+
+我们要做的是声明提供1个文件，定义提供1个文件，使用Person时其实用的是Person的指针，真正的数据隐藏在指针背后，这样声明类其实可以看成是个handle，定义类是handle真正调用的类。
+
+```c++
+#include <string> // 标准组件不该前置声明而直接使用include即可
+#include <memory> // 包含shared_ptr
+class PersonImpl;//Person的实现类前置声明
+class Date; // Person接口用到的class前置声明
+class Address;// Date和Address中也和Person一样这么做
+class Person
+{
+    public:
+    	Person(const string&name,const Date& birthday,const Address &addr);
+        string name() const;
+        string birthDate() const;
+        string address() const;
+    private:
+		std::tr1::shared_ptr<PersonImpl> pImpl;//指针,指向Person真正的实现
+}
+```
+
+这样的设计下，Person的客户完全与Dates、Address以及Person的实现条目实现分离了，核心在于以class声明式代替class定义式。这启示我们，如果可以借助对象的指针或引用来完成任务，就不要使用具体的对象。
+
+如果某个函数的定义需要借助某个类，无需提供类的定义式，只需提供声明式，C++会自动查找。
+
+```c++
+class Date;
+class Address;//只需要声明式
+Date void today();
+void clearAddress(Address&addr);
+```
+
+现在把这些声明式各自放在某个头文件中，例如Person.h，然后就像这样使用Person类。
+
+```c++
+#include "Person.h" // 声明式
+#include "PersonImpl.h" // 定义式
+// 客户的cpp文件
+Person::Person(const string& name, const Date&birthday,const Address&addr)
+    :Pimpl(new PersonImpl(name,birthday,addr)){}
+string Person::name() const
+{
+    return pImpl->name();
+}
+```
+
+不同客户可以给出不同的实现，但是都是利用这个接口，所以这样的handle类不会改变要做的事，只是改变做这件事的方法。
+
+#### 将接口定义为interface类
+
+另一种方法是利用继承机制和virtual机制。
+
+将想要实现的接口类声明为基类，函数均为虚函数，像这样。
+
+```c++
+class Person
+{
+    public:
+    	virtual string name() const = 0;
+    	virtual birthDate() const = 0;
+    	virtual address() const = 0;
+        static std::tr1::shared_ptr<Person> create(const string&name,const Date&birthday,const Address& addr);//提供给用户使用的工厂函数
+    ...
+};
+```
+
+客户想要使用这种接口，必须使用它的指针或者引用来调用自己写的派生类的构造函数，也就是说那个派生类必须被定义出来，真正的构造函数必须被调用，这样除非Person的接口改变了否则不需要重新编译。
+
+现在假设有个cpp文件定义了这样的派生类。
+
+```c++
+#include "Person.h" //包含了Person基类的头文件
+class RealPerson: public Person
+{
+    public:
+        RealPerson(const string&name,const Date&birthday,const Address&adrr):
+            theName(name),theBirth(birthday),theAddress(addr){}
+        virtual ~RealPerson(){}
+        string name() const;
+        string birthDate() const;
+        string address() const;
+    private:
+    	string theName;
+    	Date theBirth;
+    	Address theAddress;
+}
+// 派生类提供了基类的工厂函数的实现
+std::tr1::shared_ptr<Person> Person::create(const string&name,const Date&birthday,const Address&adrr)
+{
+    return std::tr1::shared_ptr<Person> (new RealPerson(name,birthday,addr));
+}
+```
+
+客户的使用方式如下。
+
+```c++
+string name;
+Date birthday;
+Address address;
+// 客户创建一个接口工厂函数返回的对象,但是内部真正调用的是派生类的构造函数
+std::tr1::shared_ptr<Person> pf(Person::create(name,birthday,address));//静态函数直接使用作用域调用
+```
+
+也就是说，通过定义interface类继承接口类，然后实现出接口类需要覆盖的函数，定义interface类还有一种方法，见条款40。
+
+但是2种方式都有一定的代价。
+
+对于handle类，handle类可以定义指向实现类的指针，这个指针占据一些内存。同时指针指向一个动态分配而来的实现类对象初始化，故还要经历构造和析构的开销，并可能会遭遇bad_alloc的错误。
+
+对于interface类，每个函数都是virtual，故每次函数调用实际上需要间接跳跃，访问的是它的派生类函数，这个成本需要考虑。同时每个派生类的对象内部都含有一个vptr，也就是虚表指针，这个指针可能会增加存放对象所需的内存数量。
+
+结论：
+
+支持编译依存度最小化的思想是，依赖于声明式而非定义式，存在两个手段，即handle class和interface class；
+
+程序库头文件应该以"完全仅有声明式"的形式存在，这种做法无论是否涉及templates都存在。
+
+## 六、继承与面向对象设计
+
+主要涉及如何采用单一继承还是多重继承？继承使用public、protected还是private继承？成员函数定义为virtual、non-virtual还是pure virtual函数；缺省的参数值对virtual函数有什么影响？继承如何影响C++的名称查找原则？设计选项有哪些？class的行为需要更改时，virtual函数是最佳选择吗？
+
+### 条款32：确定你的public继承塑模出is-a关系
+
