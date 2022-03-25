@@ -2818,19 +2818,296 @@ std::tr1::shared_ptr<Person> pf(Person::create(name,birthday,address));//静态�
 
 派生类继承于基类，是在告诉编译器派生类不仅是它自己，也是一种基类对象，反之不成立。
 
+所以一个函数如果可以接收一个基类对象，它也可以接收一个派生类对象。但是这个论点只针对public继承成立，而private的含义完全不同，见条款39。至于protected继承，作者表示他也不懂，所以我也不懂了。
 
+但是我们要搞清楚对象的行为必须是基类和子类都具备的才可以由基类可以如此，派生类也可以如此(is-a)。
 
+例如，企鹅是鸟，鸟会飞，推出来企鹅会飞是不符合事实的，只是因为鸟会飞只是一般的看法，严格来讲鸟本来不一定会飞，所以企鹅也不是就会飞。所以如果鸟作为基类提供了fly函数的话，企鹅其实不应该继承它。所以fly这种函数应当下移，不是在鸟类去定义它，也就是鸟类是抽象类，鸟类分为会飞的和不会非飞的，所以企鹅应当继承不会飞的鸟类。
 
+```c++
+class Bird{...}
+class FlyingBird: public Bird
+{
+    public:
+    	virtual void fly();
+}
+class nonFlyingBird:public Bird
+{
+    public:
+    	... // 不定义fly函数
+}
+class Penguin:public nonFlyingBird
+{
+    ...
+}
+```
 
+即使如此，现在对这些鸟事也不好处理，有时候不需要区分会飞的不会飞的鸟，也许那些类只研究鸟的鸟，这样的话这些类看起来可以选择任何一个类继承。如果继承的是不会飞的鸟类，但是鸟的鸟类很可能又需要处理会飞的鸟类的某些属性，这样就很难办。
 
+所以，这反映出一个事实，没有完美的设计。
 
+类还可以基于这样的思想，给予派生类尝试某些行为的权力，但是让其在运行期间发生错误。
 
+```C++
+void error(const string&msg);
+class Penguin: public Bird
+{
+    public:
+    	virtual void fly(){error("Attempt to make a penguin fly!");}// 运行时才知道错误
+    	...
+}
+```
 
+也可以什么都不考虑，直接禁止这样的函数定义。
 
+```c++
+class bird{...}; // 未声明fly函数
+class Penguin:public Bird{...}// 未声明fly函数
+Penguin p;
+p.fly(); // 编译阶段就不允许
+```
 
+对于条款18所讲的，好的接口要尽量避免无用的代码通过编译，也就是避免误用，所以宁可选择第2种方式。
 
+还有一个例子，正方形一定是矩形，但反过来不是，所以用正方形类继承矩形类是否正确呢？如果矩形类内部定义了一个函数增加对象的面积，但是内部只改变一条边，长或者宽，例如是长，然后加一条语句判断高是否改变。矩形的对象，这个判断为真，没有过改变。正方形的对象继承以后，因为正方形的边长相等，所以应当加的判断语句为长是否等于宽，但是增加面积的函数只能改变长度，这样判断就为假，但是违背直觉。
 
+```c++
+class Rectangle
+{
+    public:
+    	virtual void setHeight(int newHeight);
+    	virtual void setWidth(int newWidth);
+    	virtual int height() const;
+    	virtual int width() const;
+    ...
+}
+void makeBigger(Rectangle & r)
+{
+    int oldHeight = r.height();
+    r.setWidth(r.width()+10);
+    assert(r.height()== oldHeight);
+}
 
+class Square: public Rectangle{...};
+Square s;
+assert(s.width() == s.height());// true
+makeBigger(s); // 调用函数后
+assert(s.width()== s.height());// false
+```
+
+is-a并非唯一存在classes之间的关系，另两个常见的关系是has-a(有1个)和is-implemented-in-terms-of(根据某物实现出)。这2个关系分别在条款38和39描述。
+
+结论：public继承意味着is-a，适用于base的每一件事情都适用于derived，因为每一个derived对象也是一个base对象。
+
+### 条款33：避免遮掩继承而来的名称
+
+内层作用域的变量会遮掩外部的同名变量。
+
+```c++
+int x;
+void func()
+{
+    double x;
+    cin>>x;//赋值的是内部x
+}
+```
+
+如果遮掩发生在单一继承关系。
+
+```c++
+class father
+{
+	public:
+		virtual void f1() = 0; // pure virtual
+        virtual void f2(); // virtual
+        void f3(); // non-virtual
+    private:
+    	int x1,x2;
+}
+class son : Public father
+{
+	public:
+		virtual void f1() = 0;// heritage
+        void f4(); // non-virtual
+    private:
+    	int x1,y1;
+}
+void son::f4()
+{
+    ...
+    f2(); // 如果查找?
+    ...
+}
+```
+
+首先在f4的作用域下查找->son类的作用域->father类的作用域(发现该函数)
+
+如果没找到，会继续从father类的命名空间下->全局作用域下查找。
+
+现在再来看看更复杂的情况，纯虚函数和非虚函数f1和f3都被重载，同时son类增加1个函数。
+
+```c++
+class father
+{
+	public:
+		virtual void f1() = 0; // pure virtual
+    	virtual void f1(int); // overload>>
+        virtual void f2(); // virtual
+        void f3(); // non-virtual
+    	void f3(double);// overload>>
+    private:
+    	int x1,x2;
+}
+class son : Public father
+{
+	public:
+		virtual void f1() = 0;// heritage
+    	void f3();
+        void f4(); // non-virtual
+    private:
+    	int x1,y1;
+}
+```
+
+如果从名称遮掩来看，son类的f1和f3函数应当覆盖了father类的f1和f3，这样好似f3和f1并没有继承father类。
+
+```c++
+son s;
+int x;
+
+d.f1();// ok,son::f1()
+d.f1(x); // error,son::f1()遮掩了father::f1()
+d.f2(); // ok,father::f2()
+d.f3();// ok,son::f3()
+d.f3(x);// error,son::f3()遮掩了father::f3()
+```
+
+从结果来看，确实如此，也就是名称遮掩的规则强于类的继承，无论函数是否为虚函数，是否重载。
+
+这样的目的是为了，可能某个类定义了一个新函数，但是这个函数本意不是为了继承父类的某个函数，但是它很可能意外的继承了某个关系比较远的父类的函数。所以为了避免对这个类的函数是重载关系，才要求名称遮掩的规则更强。
+
+#### using声明避免派生类对基类的函数遮掩
+
+但是如果一定希望继承某个函数而不发生遮掩呢？很简单，使用using声明一下就不会发生遮掩。
+
+```c++
+class father
+{
+	public:
+		virtual void f1() = 0; // pure virtual
+    	virtual void f1(int); // overload>>
+        virtual void f2(); // virtual
+        void f3(); // non-virtual
+    	void f3(double);// overload>>
+    private:
+    	int x1,x2;
+}
+class son : Public father
+{
+	public:
+    	using father::f1;
+    	using father::f3;// 让base内所有的东西都对derived可见且public继承
+		virtual void f1() = 0;// heritage
+    	void f3();
+        void f4(); // non-virtual
+    private:
+    	int x1,y1;
+}
+```
+
+那么现在这两条语句便不会再报错。
+
+```c++
+d.f1(x); // ok,son::f1()不会遮掩father::f1()
+d.f3(x);// ok,son::f3()不会遮掩father::f3()
+```
+
+现在继续，还有个需求，我们可能不希望继承所有的函数，只继承其中的1个函数。
+
+这在public继承中其实不能实现，因为它违背了is-a规则，即父类没有的基类也不会有，父类有的基类也应该有。假设使用了using，只会让所有的基类函数都为派生类可见，现在如果想达到只继承某个函数的目的可以通过转交函数(fowarding function)来实现。
+
+#### 转交函数实现继承基类的某个函数
+
+如果只想继承无参数的版本f1()，不要使用using。把父类的这个函数直接定义在子类的f1函数中，f1一方面通过函数遮掩掩盖了父类的f1有参数版本，另1方面内部的实现使用的父类的无参数版本。妙蛙，妙蛙~
+
+```c++
+class father
+{
+	public:
+		virtual void f1() = 0; // pure virtual
+    	virtual void f1(int); // overload>>
+		...// 前同
+}
+class son : Public father
+{
+	public:
+		virtual void f1() {father::f1()};// fowarding function
+    	...
+}
+```
+
+现在的有参数版本再调用就会出错。
+
+```c++
+d.f1(); // ok,使用的son::f1()
+d.f1(x);// error,有参版本被遮掩了
+```
+
+以上这些概念面对templates又是不一样的东西，条款43说明。
+
+结论：
+
+derived classes的名称会遮掩base classes的名称，在public继承下可以使用using避免遮掩；
+
+如果只想继承某个函数，可以使用inline fowarding function。
+
+### 条款34：区分接口继承和实现继承
+
+对于类的声明和实现，可能会出现3种情况。
+
+第一、类的声明希望被继承，实现希望不被继承；
+
+第二、类的声明和实现都被继承，且派生类的实现能够覆盖类的实现；
+
+第三、类的声明和实现都被继承，但是不允许类的实现被覆盖。
+
+以下方的例子来比较这3条的差别。
+
+```c++
+class Shape
+{
+    public:
+    	virtual void draw() const = 0;
+    	virtual void error(const string&msg);
+    	int objectID() const;
+    	...
+}
+class Rectangle: public Shape{...};
+class Elipse:public Shape{...};
+```
+
+#### 定义纯虚函数告诉了什么
+
+纯虚函数在基类被定义后，可以不给出实现，它是在告诉派生类：
+
+你必须继承我的接口，而且只是继承我的接口而不是实现。如果派生类想要用到基类的纯虚函数实现，就可以声明作用域；
+
+```c++
+Shape * ps = new Shape;//抽象类是不能实例化的
+Shape * ps1 = new Rectangle; // 可以,基类指向派生类
+Shape * ps2 = new Elipse; // 可以
+ps1->draw();// ok , Rectangle::draw();
+ps2->draw();// ok , Elipse::draw();
+// 如果想要调用Shape的draw,指明作用域
+ps1->Shape::draw();
+ps2->Shape::draw();
+```
+
+无论基类没有给出纯虚函数的实现，第一条：类的声明希望被继承，实现希望不被继承以及第三条：类的声明和实现都被继承，但是不允许类的实现被覆盖都实现了。所以如果有这个目的，请定义纯虚函数。
+
+#### 定义非纯虚函数告诉了什么
+
+目的是为了让派生类继承该函数的接口和缺省实现，如果派生类没有给出覆盖的实现，可以使用基类的这个缺省实现。
 
 
 
