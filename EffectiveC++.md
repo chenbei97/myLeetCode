@@ -3766,39 +3766,281 @@ virtual继承会增加大小、速度、初始化复杂度等成本，如果virt
 
 ## 七、模板与泛型编程
 
-
-
 ### 条款41：了解隐式接口和编译器多态
 
+面向对象编程总是以显式接口和运行期多态来解决问题，所谓显式接口就是由函数的签名式(函数名称、参数类型和返回类型组成)，这在头文件中可以找到其原型，而运行期多态就是提到过的virtual函数动态绑定。
 
+但是对于模板编程而言，不同的template具现化会导致调用不同的函数，但是实际上这个函数并没有显式定义在某个头文件中，这也是所谓的隐式接口，它不基于函数签名式，也就是无需显式定义，而是借助有效表达式实现，这其实是编译期间多态。
+
+例如某个模板函数如下，其实w只需要有个size函数就可以，他返回的可以不是int，也可以不返回东西，也可以返回某个类型但是不支持比较运算符操作，最终只需要保证这一段表达式的结果能够与bool兼容即可。
+
+```c++
+template<typename T>
+void func(T&w)
+{
+    if (w.size()>10 && w != someObeject){
+        ...
+    }
+}
+```
+
+结论：
+
+classes和templates都支持接口和多态；
+
+对classes而言接口是显式的，以函数签名为中心。多态则是通过virtual绑定于运行期；
+
+对template参数接口是隐式的，奠基于表达式。多态则是通过template具现化和函数重载解析发生于编译期。
 
 ### 条款42：了解typename的双重意义
 
+在类的模板声明上，class和typename没有什么区别。
 
+如果代码内存在模板的从属名称就必须加typename限定，就像这样。
 
-### 条款43：学习处理模板化基类的名称
+```c++
+template<class T>
+void func(const vector<T> & vec){
+    T value;//非从属名称
+    typename vec::const_iterator it=vec.begin();//从属名称必须加typename否则不能通过编译
+}
+```
 
+但是在继承基类列以及成员初值列不允许使用typename。
 
+```c++
+template<class T>
+class Derived: 
+	public Base<T>::Nested{//继承内嵌的某个类,不允许加typename
+    public:
+        // 成员初值列也不允许使用typename
+        explicit Derived(int x):Base<T>::Nested(x){
+            typename Base<T>::Nested temp;//嵌套从属名称要加typename
+       }
+}
+```
+
+结论：
+
+声明template参数时，class和typename可以互换；
+
+使用关键字typename标识嵌套从属类型名称，但不得在基类列和成员初值列中以它作为base class修饰符。
+
+### 条款43：学习处理模板化基类内的名称
+
+#### 模板类的派生类可能拒绝使用基类的函数
+
+假如某个类B存在clear函数，D继承了B，D试图想要使用B的clear函数。
+
+```C++
+class T1{...};//内有函数clearT()
+class T2{...};//内有函数clearT()
+template<typename T>
+class B{
+    public:
+    	void clear(){
+            ...//内部调用了T1和T2都有的函数clearT()
+        }
+}
+template<typename T>
+class D:public B<T>{
+    public:
+    	void clearMsg(){
+            ...
+            clear();//拒绝使用,不能通过编译
+        }
+}
+```
+
+不能通过编译的原因很简单，可能有的T类型并不存在clearT函数，例如T3类可以不给出这个函数，那么这个T3是不能送入D的。如果没有template，这段是可以通过编译的。
+
+即使让D类针对T3类进行了模板全特化，见条款25，[不要给std空间添加任何重载的东西](#不要给std空间添加任何重载的东西)。他也不能通过编译，这是因为全特化后参数会被锁定为T3类，再没有其他template参数可供变化，就像这样。
+
+```c++
+template<>
+class D<T3>{ // 全特化为T3
+    public:
+    	... // 删除了T3没有的clearMsg函数,其它相同
+}
+```
+
+这是因为编译器知道很可能提供了这样的全特化版本，既然都不存在此函数也就不允许通过编译。
+
+如果希望在模板实现中，派生类还是能够看到基类的函数，有三个方法。
+
+#### 在base class函数调用前加上this->
+
+```c++
+template<typename T>
+class D:public B<T>{
+    public:
+    	void clearMsg(){
+            ...
+            this->clear();//加上this->
+        }
+}
+```
+
+#### 使用using声明基类被掩盖的东西
+
+这个操作在条款33中使用过，见[using声明避免派生类对基类的函数遮掩](#using声明避免派生类对基类的函数遮掩)
+
+```c++
+template<typename T>
+class D:public B<T>{
+    public:
+    	using B<T>::clear();//告诉编译器进入基类作用域查找
+    	void clearMsg(){
+            clear();//合法
+        }
+}
+```
+
+#### 明白指出被调用函数位于base class
+
+但是这个做法在这个函数是继承下来的虚函数时是不好的，这样等于解除了本来拥有的virtual动态绑定性质，限定了只能使用基类的函数。
+
+```c++
+template<typename T>
+class D:public B<T>{
+    public:
+    	void clearMsg(){
+            B<T>::clear();//合法,但是丧失弹性
+        }
+}
+```
+
+结论：使用this->或using说明符让基类的函数作用域在派生类可见。
 
 ### 条款44：将与参数无关的代码抽离templates
 
+这个条款把，简单来说，就是vector< int >和vector< float >虽然是一个模板类的实现，但是会造成很多代码重复，因为内部的实现可能很多是相同的。
 
+template尽量不要使用非类型参数，例如
+
+```C++
+template<T,size_t n>
+class A{
+    ...
+}
+```
+
+这样A<int,10>和A<int,5>就会产生大量的重复，取代措施是使用私有成员变量去描述它。如果都是类型参数呢，类似跳表散列的实现，它们也可以造成代码膨胀。
+
+原文P217页对此描述：
+
+如果实现某些成员函数需要让它们操作强型指针(即T *)，那么应当让他们调用另一个操作无类型指针(void *)的函数来完成实际工作，这样可以让所有模板的具现类型共享一份实现码，减少代码膨胀。
+
+```c++
+template<const k, v>
+class Map{...};
+```
+
+结论：
+
+template可以生成多个class和多个函数，所以任何template代码不应和某个造成膨胀的template参数产生相依关系；
+
+因非类型模板参数造成的代码膨胀可以消除，使用函数参数或者成员变量替换template；
+
+因类型参数造成的代码膨胀可以降低，可让完全相同二进制表述的具现类型共享实现码。
 
 ### 条款45：运用成员函数接受所有兼容类型
 
+ 一个具有base-derived的模板类关系，当其各自具体化时，其实可能是完全不同的东西。如果想实现它们之间的某些转换，可以创建智能指针来实现。但是智能指针不可能写出所有需要的函数，如果需要新的需求，又要修改。
 
+```c++
+class Top{...};
+class Middle : public Top{...};
+class Bottom : public Middle{...};
+template<class T>
+clss smartPtr{
+    public:
+    	explicit smartPtr(T * realPtr);
+};
+smartPtr<Top> pt1 = smartPtr<Middle>(new Middle);// Middle->Top
+smartPtr<Top> pt2 = smartPtr<Bottom>(new Bottom);// Bottom->Top
+smartPtr<const Top> pct1 = pt1; // Top->const Top
+```
+
+新的需求。
+
+```c++
+class BelowBottom : public Bottom{...};
+smartPtr<Top> pt3 = smartPtr<BelowBottom>(new BelowBottom);//还要继续这样吗?
+```
+
+可以使用一个构造模板代替每一个个的构造函数，也就是成员函数模板。
+
+这个构造函数的意思是允许使用U类型的智能指针对象构造T类型的智能指针对象。这里要注意不声明为explicit，因为这些都是隐式转换。
+
+```c++
+template<class T>
+clss smartPtr{
+    public:
+    	template<class U>
+    	smartPtr(const smartPtr<U>& realPtr);//泛化构造函数
+};
+```
+
+这样我们就可以依据一个Bottom对象构造一个Top对象，但是我们不希望反过来又该怎么做呢？因为这对is-a继承体系是矛盾的。
+
+那么可以在智能指针类声明一个T类型的指针，定义一个get函数返回这个指针。构造函数利用这个get函数，让U类型的指针作为T类型的指针，显然如果这样允许，必须满足存在隐式转换可以让U * 指针转换为T * 指针，这样就可以限制其隐式范围。
+
+```c++
+template<class T>
+clss smartPtr{
+    public:
+    	template<class U>
+    	smartPtr(const smartPtr<U>& realPtr)
+            :helpPtr(realPtr.get()){...};//泛化构造函数
+    	T* get(){return this->helpPtr;}
+    private:
+    	T * helpPtr;
+};
+```
+
+还有一点，如果声明了泛化的构造函数，并不影响编译器会定义一份正常版本的构造函数(U=T时是正常的)，这对copy assignment函数也适用，所以如果想控制copy函数的方方面面，正常和泛化版本都要提供，类似于shared_ptr给出的实现。
+
+```c++
+template<class T>
+class shared_ptr{
+    public:
+    	shared_ptr(shared_ptr const& r);//copy构造
+    	template<class Y>
+        shared_ptr(shared_ptr<Y> const& r);//泛化copy构造
+        shared_ptr& operator=(shared_ptr const& r);//copy构造
+    	template<class Y>
+        shared_ptr& operator=(shared_ptr<Y> const& r);//泛化copy构造
+}
+```
+
+结论：
+
+使用成员函数模板生成可接受任何兼容类型的函数；
+
+如果声明成员函数模板用于泛化copy和copy assignment，还是需要声明正常的copy构造函数和copy assignment操作符函数。
 
 ### 条款46：需要类型转换时为模板定义非成员函数
 
 
 
+结论：编写一个类模板时，如果它需要提供隐式转换，请定义为非成员函数。
+
 ### 条款47：使用traits classes表现类型信息
 
+结论：
 
+Trait class使类型相关信息在编译期可用，它们以template和template特化完成实现；
+
+整合重载技术后，trait class有可能在编译器对类型执行if..else测试。
 
 ### 条款48：认识template元编程
 
+结论：
 
+模板元编程TMP可将工作由运行期转移到编译期，实现早期错误侦测和更高的执行效率；
+
+TMP可用于生成基于政策 选择组合的客户定制代码，也可用来避免生成对某些特殊类型并不适合的代码。
 
 ## 八、定制new和delete
 
