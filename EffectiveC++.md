@@ -3287,7 +3287,106 @@ class Game
 
 换句话说，实际计算健康值的函数并不是成员函数，而是类外函数。当然，如果计算健康值需要用到类的non-public信息，就需要考虑提供只读函数以及friend了。
 
+#### 借助tr1::function完成Strategy模式
 
+如果希望不是一个函数，而是一个函数对象，返回类型不是int而是任何可以转换为int的类型，tr1::function提供的方法就可以提供更大的弹性。
+
+tr1::function可以理解为一个泛化的函数指针，相比于上边的函数指针增强了泛化能力。它允许产生的对象可以持有任何与此签名式兼容的可调用物。签名式就是< int (const Game&)>，所谓兼容就是允许可调用物的参数可以被隐式转换为const Game&，返回类型可以隐式转换为int。
+
+```c++
+class Game;// 前置声明
+int defaultHealthCalc(const Game &g);//默认的计算函数
+class Game
+{
+    public:
+    	typedef std::tr1::function<int (const Game&)>  HealthCalcFunc;
+    	explicit Game(HealthCalcFunc hcf = defaultHealthFunc): healthFunc(hcf){}
+    	int healthVal() const
+        {
+            return healthFunc(*this);//healthFunc就看成函数,参数是Game
+        }
+    private:
+    	HealthCalcFunc healthFunc;
+}
+```
+
+现在，Game的对象可以使用任何函数计算健康值，可以是普通函数，也可以是函数对象，还可以是成员函数，而且这些函数允许兼容类型。所谓兼容是向下兼容，例如派生类对象可以隐式转换为基类对象，float可以转换为int，short也可以转换为int。
+
+现在假设有3个类继承了Game，就Game1、Game2和Game3。
+
+子类对象使用普通函数计算健康值：
+
+```c++
+short calcHealth(const Game&g);//接受的是基类对象,返回short
+Game1 g1(calcHealth);//构造函数接收的不是这样的函数,但可以兼容
+```
+
+子类对象使用函数对象计算健康值：
+
+```c++
+//构造函数对象关键是对()重载,可以使用类也可以使用结构体
+struct CalculatorHealth
+{
+    int operator()(const Game&) const{...}
+}
+Game2 g2(CalculatorHealth()); // 兼容使用函数对象
+```
+
+子类对象使用成员对象计算健康值：
+
+```c++
+class GameLevel
+{
+    float health(const Game&)const;
+}
+GameLevel gL;
+Game3 g3(tr1::bind(&GameLevel::health,gL,_1));
+```
+
+因为成员函数默认带有this参数，所以这个成员函数是2个参数，如果想作为计算函数使用，需要指定第几个参数被使用。因为目的是为了计算GameLevel的对象gL，所以将其绑定到第1个参数也就是this的类型。因为要求传入函数指针，所以还要对health取地址。bind指出gL的健康计算函数应该总是以gL作为GameLevel对象。
+
+#### 古典的Strategy模式
+
+设计模式是将Game作为基类，Game1、Game2等作为派生类；同时将健康计算函数HealthCalcFunc作为基类，各种健康计算方法类作为它的派生类。然后每一个Game对象都含有一个指针，在Game类的私有属性定义，它指向了一个来自HealthCalcFunc继承体系的对象。
+
+```c++
+class Game;
+class HealthCalcFunc{
+    public:
+    	virtual int calc(const Game&)const{...}//非纯虚函数,带有缺省实现
+    	...
+}
+HealthCalcFunc defaultHealthCalc; // 带有缺省实现的对象作为默认实现
+class Game
+{
+    public:
+    	explicit Game(HealthCalcFunc* hcf = &defaultHealthCalc):pHealthCalc(hcf)
+        {
+            ...//构造函数要求指定计算函数的指针
+        }
+    	int healthVal()const{//内部使用这个指针带有的计算函数
+            return pHealthCalc->calc(*this);
+        }
+    pivate:
+    	HealthCalcFunc* pHealthCalc;//指向HealthCalcFunc继承体系的指针作为私有属性
+}
+```
+
+这样设计的好处是，Game可以以HealthCalcFunc对象指针构造，也可以以HealthCalcFunc的派生类对象指针构造，也就是可以自由选定某个计算函数类，真正负责计算的是这个计算函数类的calc函数。如果有新的计算健康值的函数类，只需要作为其派生类即可。
+
+Game对象计算健康值走了3个调用过程：调用私有属性指针->调用该指针的calc方法->调用calc实现。
+
+结论：
+
+可以使用NVI手法，以公有非虚函数调用私有虚函数(反过来可以实现纯虚函数不具备的缺省实现)，不过NVI手法是一个特殊形式的template method设计模式；
+
+将虚函数替换为函数指针，可以不使用虚函数实现一定程度的泛型；
+
+以tr1::function替换虚函数，是函数指针的加强版，可以实现更强的泛型和兼容；
+
+将继承体系的虚函数替换为另一个继承体系的虚函数，可以实现史无前例的泛型，由于虚函数的性质，它可以指向任何合法的实现版本函数；
+
+以上三种方法都是Strategy设计模式的某种形式；
 
 ### 条款36：绝不重定义继承而来的non-virtual函数
 
@@ -3320,19 +3419,350 @@ D * pd =&x;
 
 ### 条款37：绝不重新定义继承而来的缺省参数值
 
- 
+ 讨论简化，只分为虚函数和非虚函数。根据条款36不允许对非虚函数重定义，自然也包括其缺省参数。那么本条款实际上缩小为不该重定义虚函数继承而来的缺省参数值。
+
+理由是虚函数本身是动态绑定，但是缺省参数是静态绑定。
+
+这样如果基类指针指向派生类对象，调用函数时依然使用基类的缺省参数。
+
+```c++
+class Base{
+    public:
+    	virtual void getAge(int age = 18) const =0;//纯虚函数
+}
+class Drived1: public Base{
+    public:
+    	virtual void getAge(int age = 21) const;//这不可取
+}
+class Drived2: public Base{
+    public:
+    	virtual void getAge(int age) const;// 如果是Drived2的对象调用必须指定参数值,指针不一定
+}
+```
+
+现在看看这些指针和对象：
+
+```c++
+Base * pb;
+Base * pd1 = new Drived1;
+Base * pd2 = new Drived2;
+Drived1 d1;
+Drived2 d2;
+```
+
+d1和d2如果调用draw函数，调用的就是自己的函数。如果是pd1和pd2，因为getAge函数是虚函数，所以由于动态绑定，调用的还是两个派生类的实现。但是问题在于，这个函数的缺省参数却是静态的，这样实际上pd1指定的默认参数并没有作用，除非指定了某个参数去覆盖默认参数。
+
+```c++
+pd1->getAge(40); // 覆盖默认参数,这没问题
+pd2->getAge(33);//覆盖默认参数,这没问题
+pd1->getAge();// 有问题,实际上默认参数不是21而是18
+pd2->getAge();//没问题可以不指定参数,默认参数是18,因为静态类型追随基类
+d1.getAge();// 对象调用,21
+d2.getAge(30);//对象调用,必须指定参数
+```
+
+还有个做法，也是错的，那就是重定义以后还是和基类的默认参数一样，这等于搁这搁这呢。不仅代码重复，还引入了相依性，也就是如果Base的缺省参数值变了，派生类的缺省值也必须改变。
+
+```c++
+class Drived1: public Base{
+    public:
+    	virtual void getAge(int age = 18) const;//还是18,但是这依然不可取
+}
+```
+
+解决方法可以使用NVI表现手法，让公有非虚函数调用私有虚函数的实现。这样就可以让getAge函数的age缺省参数值总是18。
+
+```c++
+class Base
+{
+    public:
+    	void getAge(int age = 18) const{
+            doGetAge(age);//这样根据条款36派生类不能重定义非虚函数,可以保证缺省值不被重定义
+        }
+    private:
+    	virtual void doGetAge(int age) const=0;//纯虚函数,无需指定默认参数
+}
+class Drived1:public Base{
+    public:
+    	...
+    private:
+    	virtual void doGetAge(int age) const;//非纯虚函数,无需指定默认参数
+}
+```
+
+结论：不要重新定义继承而来的缺省参数值，因为缺省参数值是静态绑定，而唯一需要覆写的东西是virtual函数，如果是pure virtual就必须覆写，如果是impure virtual，可以不覆写。
 
 ### 条款38：通过复合塑模出has-a或"根据某物实现出"
 
+对于现实世界的某些东西，如人、动物、飞机等，如果复合发生在这里，这是has-a关系。
 
+例如一个人拥有家庭住址、手机号码、年龄等，这是复合类型组成人。只会说人有家庭住址和手机号码以及年龄，但是不会反过来说。
+
+```C++
+class Age;
+class Address;
+class PhoneNumber;
+class Person{
+    public:
+    	...
+    private:
+    	Age age;
+    	Address addr;
+    	PhoneNumber pm;//复合类型
+}
+```
+
+还有些东西，是自然界没有的，这是人自己创建的东西，本质上这些东西都是服务现实存在的东西，所以它们也必然依据现实的东西来实现出来的。例如指甲刀其实自然界不存在，但是它可以依据铁来实现。
+
+这里给出一个例子，如果想实现一个类具备set的性质，当然可以通过继承STL的set，但是那个类每个元素消耗三个指针来换取插入、查找等的对数时间效率。假如这个类要求空间大于时间呢，继承STL的set不是明智的选择，恰好set其实也可以使用链表来实现，但是并不是这么做。
+
+因为is-a的关系，如果B满足为真，则D也要满足为真。但是这里继承的基类允许插入2个相同的元素，但是set是不允许的，也就是list并不适合用来塑模mySet，但是可以借助list实现。
+
+```c++
+template<typename T>
+class mySet:public std::list<T>{...}
+```
+
+正确的做法是定义一个私有属性为list对象，这样可以依据它的性质来实现set。
+
+```c++
+template<typename T>
+class mySet{
+    public:
+    	bool isMember(const T&item) const;
+    	void insert(const T&item);
+    	void remove(const T&item);
+    	std::size_t size() const;
+    private:
+    	std::list<T> rep;
+}
+template<typename T>
+bool mySet::isMember(const T&item) const{
+    return find(rep.begin(),rep.end(),item)!=rep.end();
+}
+template<typename T>
+void mySet::insert(const T&item){
+    if (!isMember(item)) rep.push_back(item);//实现相同元素只插入一次
+}
+template<typename T>
+void mySet::remove(const T&item){
+    // 带有模板的迭代器声明要加个typename强调
+    typename list<T>::iterator it = find(rep.begin(),rep.end(),item);
+    if (it!=rep.end()) rep.erase(it);
+}
+template<typename T>
+std::size_t mySet::size() const{
+    return rep.size();
+}
+```
+
+结论：
+
+复合的意义和public继承完全不同；
+
+在应用域复合意味着has-a(有一个)，在实现域复合意味着is-implemented-in-terms-of(根据某物实现)。
 
 ### 条款39：明智而审慎的使用private继承
 
+private继承不意味着has-a。
 
+```C++
+class Person{...};
+class Student:private Person{...};//private继承
+void eat(const Person&p);
+void study(const Student&s);
+Person p;
+Student s;
+eat(p);
+eat(s);//错误
+```
+
+是人就会吃饭，但是只有学生才会学习，如果是public继承，Student对象调用eat时会隐式的转换为Person，所以它也能调用eat函数，这是has-a关系。
+
+但如果是private继承，就不再是这样子。
+
+很简单，只有一个含义，基类的所有东西在派生类都是私有的，这样相当于派生类是利用了基类的这些东西，也就是implemented-in-terms-of(根据某物实现出)。
+
+似乎使用private继承和复合都可以实现implemented-in-terms-of，选择哪个呢？答案是尽可能的选择复合的实现，除非protected成员或者virtual函数被牵扯进来时才使用private继承。
+
+假如有个时间类可以每个时钟滴答一次，现在有个类希望记录成员函数被调用的次数，只需要设定某种定时器就可以记录它，所以可以让这个类继承时间类。
+
+但是这个类本身并不是时钟类的事物。所以借助Timer实现某些功能也要将其作为私有属性，如果onTick作为公有，对于客户而言是很奇怪的，条款18要求接口容易被使用且不易被误用。
+
+```c++
+class Timer{
+    public:
+    	explicit Timer(int tickFrequency);
+    	virtual void onTick()const;
+}
+class Widget:private Timer
+{
+    private:
+    	virtual onTick() const;
+}
+```
+
+不过除了private继承的设计，其实还可以使用嵌套类，而不是让Widget直接继承它。这种做法虽然引入了嵌套类和继承，但是是值得的，它比private方法好。
+
+第一个理由是因为，可能希望Widget的派生类不能继续重定义onTick函数。如果使用private继承，派生类依然可以重定义这样的虚函数，即使派生类不能调用这个函数。
+
+但是嵌套类作为Widget类的私有属性，则派生类不能再取用这个类，也就不能继承和重定义这个函数。
+
+以上两者的区别就是都作为类的私有属性时，虚函数和非虚函数都不能被派生类使用，但是虚函数可以被派生类重定义，这是要注意的。
+
+```C++
+class Widget{
+    private:
+    	class WidgetTimer:public Timer{
+            public:
+            	virtual void onTick()const;
+            	...
+        }
+    	WidgetTimer timer;
+}
+```
+
+第2个理由可以降低编译依存度，如果Widget依赖Timer，那么需要包含Timer的头文件"Timer.h"，因为Widget编译时Timer的定义必须可见。而嵌套类的做法呢，可以优化一下，不再作为嵌套类，而是移出去作为单独的类，Widget只保留一个指向该类的指针即可，所以真实的数据不必放在Widget当中。
+
+```c++
+class WidgetTimer;
+class Timer;
+class Widget{
+    private:
+    	WidgetTimer* timer;//1个指针
+}
+class WidgetTimer:public Timer{
+    public:
+    virtual void onTick()const;
+    ...
+}
+```
+
+但是也存在可能使用private继承的情况，面对不存在is-a的两个类，或者其中一个需要访问另一个protected成员，亦或者需要重定义其一或多个虚函数，再或者是EBO空白基类最优化。
+
+#### EBO空白基类最优化
+
+对于无数据的空类，c++认为其使用的内存应当为0，但是又认为独立非附属的对象内存不应为，所以像下边的设计，可能编译器会插入一些子节，可能是char大小，甚至可能为了内存对齐(条款50)而放大到多个字节。
+
+```c++
+class Empty{}
+class On{
+    private:
+    	int x;
+    	Empty e;
+}
+```
+
+可以发现，sizeof(On)其实大于sizeof(int)。
+
+但是这种情况不适用于派生类对象的基类成分，因为它们并非独立非附属。
+
+```C++
+class On: private Empty{
+    private:
+    	int x;
+}
+```
+
+此时sizeof(On)就等于了sizeof(int)。如果客户在意空间，就可以使用这种技术，另外EBO只适合单一继承而非多重继承，EBO无法作用域拥有多个基类的派生类对象。
+
+结论：
+
+private继承意味着implemented-in-terms-of(根据某物实现出)，通常它比复合的级别低。但是当派生类需要访问基类的protected成员时，或需要重定义继承而来的virtual函数时使用private继承；
+
+和复合不同，private可以造成empty base最优化，这对致力于对象尺寸最小化的程序开发者很重要。
 
 ### 条款40：明智而审慎的使用多重继承
 
+多重继承带来的第1个问题就是函数歧义，派生类继承的2个基类可能存在同名函数，即使一个public一个private(也就是实际上只有1个可以被调用)，但编译器也检查不出来，必须客户自己给定作用域。
 
+第2个问题是菱形继承，可能一个类同时继承了两个基类，这两个基类又共同继承自一个基类，这样就涉及如果顶层类存在一个数据成员，则底层类应有几份数据。C++认为缺省情况下是2份数据，但是如果希望不重复，只是1份，就应当引入虚继承。
+
+```c++
+class File{...};
+class InputFile : public File{...};
+class OutputFile : public File{...};
+class IOFile: public InputFile,public OutputFile{...};
+```
+
+虚继承改为这样。
+
+```c++
+class File{...};
+class InputFile : virtual public File{...};
+class OutputFile : virtual public File{...};
+class IOFile: public InputFile,public OutputFile{...};
+```
+
+但是虚继承存在代价，为了避免继承来的成员重复，背后其实提供了复杂的方法来实现，这样使用virtual继承的那些类的对象实际上比non-virtual继承的类对象体积大。
+
+同时因为底层类负有将虚基类初始化的责任，这样如果base比较远，可能造成运行速度很慢。
+
+所以，非必要不要使用virtual继承，如果一定使用也尽量避免在基类中放置数据防止虚继承带来的开销。
+
+不过多重继承也有适用的情况，那就是公有继承某个类的接口，私有继承某个类的实现，同时实现has-a和is-a，下方给出一个例子。
+
+类IPerson是最原始的基类，想要实现的类是CPerson类，但是有个PersonInfo类带有一些实现可以为CPerson使用。
+
+```c++
+class IPerson{
+    public:
+    	virtual ~IPerson();
+    	virtual ~string name() const=0;
+    	virtual ~string birthDate() const = 0;
+}
+class PersonInfo{
+    public:
+    	explicit PersonInfo(string name,string birthDate);
+    	virtual ~PersonInfo();
+    	virtual const char* theName() const;
+    	virtual const char* theBirthDate() const;
+    private:
+    	virtual const char* openBrackets();//用于给字串添加括号,默认使用[],派生类可以选择其它的
+    	virtual const char* closeBrackets();
+}
+const char* PersonInfo::openBrackets() const
+{
+    return "[";
+}
+const char* PersonInfo::closeBrackets() const
+{
+    return "]";
+}
+const char* PersonInfo::theName()const{
+    ...
+    strcpy(value,openBrackets());//value来自某个静态变量,调用2个函数加括号
+    strcat(value,closeBrackets());
+    return value;
+}
+```
+
+使用第一个类的接口和使用第二个类的一些实现就像这样。
+
+```c++
+class CPerson:public Iperson,private PersonInfo{
+    public:
+    	// 借助PersonInfo的构造函数
+    	explicit CPerson(string name,string birthDate):PersonInfo(name,birthDate){}
+    	virtual string name() const{
+            return PersonInfo::theName();
+        }
+    	virtual string birthDate() const {
+            return PersonInfo::theBirthDate();//借助实现
+        }
+    private:
+    	virtual const char* openBrackets(){returrn "{"};//但是不反对重载一些实现
+    	virtual const char* closeBrackets(){return "}"};
+}
+```
+
+结论：
+
+多重继承比单一继承复杂，若后者可以完成工作不要使用前者，前者会导致歧义性；
+
+virtual继承会增加大小、速度、初始化复杂度等成本，如果virtual base classes可以保证不带任何数据那么可以使用virtual继承；
+
+多重继承有正当用途，一般是public继承某个interface(接口)类，private继承某个协助的class。
 
 ## 七、模板与泛型编程
 
