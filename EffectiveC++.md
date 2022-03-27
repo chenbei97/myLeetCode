@@ -4022,11 +4022,152 @@ class shared_ptr{
 
 ### 条款46：需要类型转换时为模板定义非成员函数
 
+条款24其实说过这个问题，见[条款24：若所有参数需要类型转换，使用non-member函数](#条款24：若所有参数需要类型转换，使用non-member函数)，主要原因是为了支持二元运算符，例如加法乘法满足交换律的问题，左操作数可以不是this。这里还是同一个问题，只不过类变成模板，条款24是针对没有模板提出的。
 
+ 原来的不带模板。
 
-结论：编写一个类模板时，如果它需要提供隐式转换，请定义为非成员函数。
+```c++
+class Rational
+{
+    public:
+    	Rational(int &numerator=0,int &denominator=1);
+    	int numerator() const;
+    	int denominator() const;
+    private:
+    	int n, d;
+};
+const Rational operator*(const Rational& lhs,const Rational&rhs)
+{
+    return Rational(lhs.numerator()*rhs.numerator(),lhs.denominator()*rhs.denominator());
+}
+```
+
+这样调用是合法的，因为没有禁止explicit隐式转换，2其实被隐式转换为Rational对象。
+
+```c++
+Rational r(1,2);
+Rational result = r * 2;//合法
+```
+
+现在带有模板的写法。
+
+```c++
+template<class T>
+class Rational
+{
+    public:
+    	Rational(const T& numerator=0,const T& denominator=1);
+    	const T numerator() const;
+    	const T denominator() const;
+    private:
+    	T n, d;
+};
+template<class T>
+const Rational<T> operator*(const Rational<T>& lhs,
+                            const Rational<T>&rhs)
+{
+    return Rational(lhs.numerator()*rhs.numerator(),
+                    lhs.denominator()*rhs.denominator());
+}
+```
+
+那么这样的二元运算不合法。
+
+```c++
+Rational<int> r(1,2);
+Rational<int> result = r * 2;//不合法
+```
+
+之所以如此，是因为模板函数无法知道真正调用的是哪个operator * 函数，**function template实参推导不将隐式类型转换考虑在内，但是class template会考虑**。
+
+所以想要这种做法通过编译的方法是，将operator * 声明为友元函数，但去除了模板T。
+
+但是带T也是正确的，这在P224页书提到。      
+
+```c++
+template<class T>
+class Rational
+{
+    public:
+    	Rational(const T& numerator=0,const T& denominator=1);
+    	const T numerator() const;
+    	const T denominator() const;
+    	friend const Rational operator*(const Rational& lhs,
+                            const Rational&rhs);//声明不带T
+    private:
+    	T n, d;
+};
+template<class T> // 带T
+const Rational<T> operator*(const Rational<T>& lhs,
+                            const Rational<T>&rhs)
+{
+    return Rational(lhs.numerator()*rhs.numerator(),
+                    lhs.denominator()*rhs.denominator());
+}
+```
+
+现在，因为r已经事先具现为int类型，后边再调用operator *函数就可以调用隐式构造。
+
+```c++
+Rational<int> r(1,2);
+Rational<int> result = r * 2;//可以通过编译但是不能链接
+```
+
+可以通过编译的原因是，具现为int类型的那个operator * 函数声明被找到，这个函数声明在类内的友元函数；不能链接的原因是，虽然其声明被找到，但是定义没有被找到，这是因为类外提供的那个实现是T类型，不是int类型。
+
+所以如果希望声明时能够被找到--我们已在类内声明它，也希望定义能够被找到--就让定义式成为类的inline函数。
+
+```c++
+template<class T>
+class Rational
+{
+    public:
+    	Rational(const T& numerator=0,const T& denominator=1);
+    	const T numerator() const;
+    	const T denominator() const;
+    	friend const Rational operator*(const Rational& lhs,
+                            const Rational&rhs);//声明不带T{
+    		 return Rational(lhs.numerator()*rhs.numerator(),
+                    lhs.denominator()*rhs.denominator());
+		}
+    private:
+    	T n, d;
+};
+```
+
+这项技术对于friend的用途不同于传统用途--访问类的non-public成分，它的目的就是为了让类型转换能够自动发生在所有实参身上。
+
+当然一个更好的解法是，让这样的函数能够调用一个辅助函数来完成实际工作。
+
+```c++
+template<class T> class Rational;
+template<class T>
+const Rational<T> doMultiply(const Rational<T>& lhs,
+                            const Rational<T>&rhs){
+        return Rational(lhs.numerator()*rhs.numerator(),
+                    lhs.denominator()*rhs.denominator());
+}
+template<class T>
+class Rational
+{
+    public:
+    	Rational(const T& numerator=0,const T& denominator=1);
+    	const T numerator() const;
+    	const T denominator() const;
+    	friend const Rational operator*(const Rational& lhs,
+                            const Rational&rhs);//调用真正的实现函数
+    		 return doMultiply(lhs,rhs);
+		}
+    private:
+    	T n, d;
+};
+```
+
+结论：编写一个类模板时，如果它需要所有参数提供自动隐式转换，请定义那些函数为类内部的非成员但友元的函数。
 
 ### 条款47：使用traits classes表现类型信息
+
+
 
 结论：
 
