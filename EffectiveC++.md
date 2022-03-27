@@ -4301,7 +4301,32 @@ void advance(IterT& iter,DistT & dist){
 }
 ```
 
+不过存在一些问题，一个是可能编译不能通过，这在条款48讨论，另一个是本条款关心的问题，IterT和iterator_traits< IterT >::iterator_category都可以在编译期间就确定类型，但是if_else语句在运行期才确定，现在希望将这个过程提前到编译期。
 
+解决方法就是把这个if_else判断拿到函数参数，编译期就可以根据参数来匹配，不同参数可以给定不同重载版本，让advance函数调用这些匹配的版本即可。
+
+```c++
+template<typename IterT,typename DistT>
+void doAdvance(IterT& iter,DistT & dist,random_access_iterator_tag){
+    iter += d;
+}
+template<typename IterT,typename DistT>
+void doAdvance(IterT& iter,DistT & dist,bidirectional_iterator_tag){
+        if (d>=0) {while (d--) ++iter;}
+        else {while (d++) --iter;}//其它类型反复使用++,--
+}
+template<typename IterT,typename DistT>
+void doAdvance(IterT& iter,DistT & dist,input_iterator_tag){
+    if (d<0) throw std::out_of_range("Negative distance");
+    while (d--) ++iter;
+}
+template<typename IterT,typename DistT>
+void advance(IterT& iter,DistT & dist){
+	doAdvance(iter,d,iterator_traits<IterT>::iterator_category());
+}
+```
+
+除了iterator_traits类，还有char_traits记录字符类型信息，numeric_limits记录数组类型信息，TR1还引入了is_fundamental< T >是否为内置类型，is_array< T >是否为数组，is_base_of<T1,T2>判断是否存在继承关系。
 
 结论：
 
@@ -4310,6 +4335,66 @@ Trait class使类型相关信息在编译期可用，它们以template和templat
 整合重载技术后，trait class有可能在编译器对类型执行if..else测试。
 
 ### 条款48：认识template元编程
+
+模板元编程TMP是编写C++程序且可以执行于编译期的过程。主要的2个优点，让某些事情更容易，另一个是可将工作从运行期转移到编译期，但是相应的编译时间变长了。
+
+在条款47曾提到过advance函数可能无法通过编译。
+
+```c++
+template<typename IterT,typename DistT>
+void advance(IterT& iter,DistT & dist){
+    if (
+        // 如果IterT的类型iterator_category在traits中,且它是给定的卷标结构
+        typeid(typename iterator_traits<IterT>::iterator_category)
+    == typeid(random_access_iterator_tag)){
+        iter += d;//利用其优势
+    }
+    else{
+        if (d>=0) {while (d--) ++iter;}
+        else {while (d++) --iter;}//其它类型反复使用++,--
+    }
+}
+```
+
+例如list的迭代器 list< int >iter，使用advance(iter,10)可能会导致错误，它实际上调用的版本如下，导致的问题如注释。
+
+```c++
+template<list<int>::iterator&iter,int d>
+void advance(IterT& iter,DistT & dist){
+    if (
+        typeid(typename 		iterator_traits<list<int>::iterator>::iterator_category)
+    == typeid(random_access_iterator_tag)){
+        iter += d;//问题出现在这里,list的迭代器不支持+=
+    }
+    else{
+        if (d>=0) {while (d--) ++iter;}
+        else {while (d++) --iter;}
+    }
+}
+```
+
+模板元编程不会导致这些问题，设计层面可以做任何事情，也就是图灵完全。
+
+TMP是以递归模板具现化取代循环，每个具现体都有一个自己的value值，就像这样设计的递归模板元编程，每个具现体都是struct，都有自己的value值。
+
+```c++
+template<unsigned n>
+struct Factorical{
+    enum {value=n * Factorical<n-1>::value};
+};
+template<> struct Factorical<0>{ //特殊情况的全特化版本
+    enum{value = 1};
+};
+cout<<Factorical<5>::value<<endl;//打印结果是120
+```
+
+TMP可以达成的3个目标。
+
+第一、可确保量度单位正确。例如质量变量提供给速度变量是不对的，但是时间变量乘速度变量等于距离变量是正确的，另外公约数要约简，例如t^4/8和t^1/2的单位是一样的；
+
+第二、可优化矩阵运算。例如对于多个矩阵相乘，普通算法会造成多个副本存储计算的中间结果，但是TMP不需要；
+
+第三、可生成客户定制之设计模式。TMP已经用来实现智能指针，即编译期间就可以产生数以百计不同的智能指针。
 
 结论：
 
