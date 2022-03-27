@@ -4167,6 +4167,140 @@ class Rational
 
 ### 条款47：使用traits classes表现类型信息
 
+#### STL五种迭代器分类
+
+回顾STL迭代器分类，一共5种。
+
+第一、输入迭代器，istream_iterators是这一代表，每次只能向前移动，一次一步，客户只能读取而不能涂写所指的东西，只能读取一次；
+
+第二、输出迭代器，ostream_iterators是这一代表，每次只能向前移动，一次一步，客户只能涂写而不能读取所指的东西，只能涂写一次；
+
+以上两个是威力最小的迭代器，只适合一次性操作算法。
+
+第三、前向迭代器，它可以做第一和第二种能做的事，而且可以读写所指物一次以上；
+
+第四、双向迭代器，除了可以向前移动，也可以向后移动，例如STL的list迭代器；
+
+第五、随机存储迭代器，即random access，可以在常量时间内前后跳跃任意距离。
+
+它们之间的关系可以用卷标结构表达。
+
+```c++
+struct input_iterator_tag{};
+struct output_iterator_tag{};
+struct foward_iterator_tag:public input_iterator_tag{};
+struct bidirectional_iterator_tag:public foward_iterator_tag{};
+struct random_access_iterator_tag:public:bidirectional_iterator_tag{};
+```
+
+#### advance函数
+
+这个函数用来将某个迭代器移动某个给定距离，为了能够利用到已有的迭代器性质--对于random_access迭代器的优势要利用到，别的迭代器类型使用++,--实现。
+
+```c++
+template<typename IterT,typename DistT>
+void advance(IterT& iter,DistT & dist){
+    if (iter is random access iterator){
+        iter += d;//利用其优势
+    }
+    else{
+        if (d>=0) {while (d--) ++iter;}
+        else {while (d++) --iter;}//其它类型反复使用++,--
+    }
+}
+```
+
+所以这里关键就是要判断迭代器iter是否为random access类型，这也是**traits要做的事，它允许在编译期间获得某些类型信息**。
+
+traits是一种技术，不是一个关键字或者预定义好的构件，它必须能够施行于内置类型，例如这个函数传递的是普通指针而非迭代器时也能作用，这就意味着traits必须位于类型之外而不能作为类型内的嵌套信息，因为普通指针没有嵌套。
+
+#### traits的实现
+
+标准技术是把它放进一个template及其一个或多个特化版本，这样的templates在标准程序库有若干个，其中针对迭代器的被命名为iterator_traits。
+
+```c++
+template<typename IterT>
+struct iterator_traits;
+```
+
+这个类的使用要求用户自定义的迭代器类型必须嵌套一个typedef，且被命名为iterator_category，而且要用到给定的卷标结构，然后这个类只是在内部响应它，所以其实真正的工作还是用户完成的，不过这样的方式不适用内嵌类型。
+
+自定义的类型，例如deque的迭代器可以随机访问，故针对它的迭代器设计是这样的。
+
+```c++
+template<...>
+class deque{
+    public:
+    class iterator{
+        public:
+        typedef random_access_iterator_tag iterator_category;
+        ...
+    }
+    ...
+};
+```
+
+而list的迭代器支持双向访问，它的定义是这样的。
+
+```c++
+template<...>
+class list{
+    public:
+    class iterator{
+        public:
+        typedef bidirectional_iterator_tag iterator_category;
+        ...
+    }
+    ...
+};
+```
+
+而iterator_traits只需要这样做即可，但是这样对指针行不通。这个函数可以对传入的IterT类型的迭代器类型进行存储，它使用的时候取出来iterator_category即可。
+
+```c++
+template<typename IterT>
+struct iterator_traits{
+    typedef typename IterT::iterator_category iterator_category;
+    ...
+};
+```
+
+为了对指针也行得通，就可以让它对指针类型提供一个偏特化版本(偏特化就是说它是指针能确定，但是可能任何类型的指针)。因为指针和random access迭代器相似，所以可以这样提供一个偏特化版本。
+
+```c++
+template<typename IterT>
+struct iterator_traits<IterT*>{ //针对内置指针
+    typedef random_access_iterator_tag iterator_category;
+    ...
+};
+```
+
+现在知道如何设计一个traits的步骤了：
+
+第一、确认想要取得的类型种类，例如迭代器有5类，定义它们的卷标结构；
+
+第二、自定义的数据类型内部要提供一个typedef名称，声明使用了何种迭代器，例如iterator_category；
+
+第三、提供一个template和一组偏特化版本，内含你希望支持的类型相关信息。
+
+使用traits的方式如下，回到advance函数。
+
+```c++
+template<typename IterT,typename DistT>
+void advance(IterT& iter,DistT & dist){
+    if (
+        // 如果IterT的类型iterator_category在traits中,且它是给定的卷标结构
+        typeid(typename iterator_traits<IterT>::iterator_category)
+    == typeid(random_access_iterator_tag)){
+        iter += d;//利用其优势
+    }
+    else{
+        if (d>=0) {while (d--) ++iter;}
+        else {while (d++) --iter;}//其它类型反复使用++,--
+    }
+}
+```
+
 
 
 结论：
