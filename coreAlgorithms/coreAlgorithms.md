@@ -605,7 +605,82 @@ class heapSort:
 
 ## 计数排序
 
+计数排序的关键在于计算数字的排名，以传入的数组长度建立初始全0的名次数组rank。让数组的元素两两进行比较，每个元素和另一个元素比较的时候，如果某个更大，就让这个位置的名次增1(升序)，如果是降序的话就反过来，让更小的那个元素位置的名次增1。
+
+所以两两比较的关键就是不要重复比较，所以类似于冒泡排序的遍历方法，我称之为回头遍历法，控制变量i到达的位置，和i以前的那些数回头比较，用j表示。
+
+有了名次只需要按照名次指定的位置也就是rank[i]，把nums[i]移动到那里即可。可以使用临时数组temp，让temp[rank[i]]=nums[i]即可，那么temp就是排好序的数组。但是这里希望节省空间，不使用临时数组进行原地排序。所以如果是升序，就从左到右遍历数组元素。理想的情况也就是最后的情况，如果每个元素的位置都和排名一致，也就是位置0是排名0，位置n是排名n，就说明完成了排序。否则的话，只要存在排名不和位置一致，就反复交换当前的元素nums[i]到指定的位置nums[rank[i]]，当然nums[rank[i]]的元素也会换回来，它还要继续确定真正的名次位置，但是一旦nums完成了一次排名，rank也发生了变化，它也要对应变化，即rank[i]和rank[rank[i]]进行交换，因为每次rank[i]都会发生变化，所以还需要临时变量t=rank[i]记录它。
+
+C++版本的实现。
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator> // include ostream_iterator
+using namespace std;
+template<typename T>
+void countSort(vector<T> &nums,bool reverse=false){
+    // 计数排序第一步是找到所有数字的排名
+    vector<int> rank(nums.size());
+    int i = 0;
+    for(;i<nums.size();++i){ // 不重复的两两元素比较,只要某个位置元素比另一个位置元素大就提高1个排名
+        for(int j=0;j<i;++j)//如果是升序,nums[j]<=nums[i],让数值大的排名高
+            if(reverse?nums[j]>nums[i]:nums[j]<=nums[i]) ++rank[i];//排名高的体现就是让i这个位置排名+1
+            else ++rank[j];// 降序就让数值小的时候提高排名
+    }
+    if (reverse){ // 降序
+        for(int i=nums.size()-1;i>=0;--i){// 直到排名和索引位置一致(升序)或者反过来(降序)
+            int r = rank[i];//当前元素nums[i]的排名是rank[i]
+            swap(nums[i],nums[r]);//把当前元素交换到指定的排名位置处,那个元素交换回来,后序继续判断它的位置
+            swap(rank[i],rank[r]);//排名也发生了变化要一并进行交换
+        }
+    }
+    else{ // 升序
+        for(int i=0;i<nums.size();++i){
+            while (rank[i] != i){  
+                int r = rank[i];
+                swap(nums[i],nums[r]);
+                swap(rank[i],rank[r]);
+            }  
+        }
+    }
+}
+```
+
+Python版本的实现。
+
+```python
+from typing import Any, List
+class countSort:
+    def __init__(self,nums:List[int or float],reverse=False) -> Any:
+        self.nums = nums
+        self.n = len(self.nums)
+        self.reverse = reverse
+    def count_sort(self)->List[int or float]:
+        rank = [0 for i in range(self.n)] # zeros list
+        for i in range(1,self.n):
+            for j in range(i):#目的是两两不重复的比较元素
+                if self.nums[j]>self.nums[i] \
+                    if self.reverse else self.nums[j]<=self.nums[i]: #如果是升序,nums[j]<=nums[i],让数值大的排名高
+                        rank[i] += 1 # 排名高的体现就是让i这个位置排名+1
+                else: rank[j] += 1 # 降序就让数值小的时候提高排名
+        if self.reverse:
+            for i in reversed(range(self.n)): # 降序
+                while rank[i] != i: # 直到排名和索引位置一致(升序)或者反过来(降序)
+                    r = rank[i] # 当前nums[i]的排名rank[i]
+                    self.nums[i],self.nums[r]=self.nums[r],self.nums[i]
+                    rank[i],rank[r]=rank[r],rank[i]
+        else:
+            for i in range(self.n): # 升序
+                while rank[i] != i:
+                    r = rank[i] 
+                    self.nums[i],self.nums[r]=self.nums[r],self.nums[i]
+                    rank[i],rank[r]=rank[r],rank[i]     
+```
+
 ## 桶排序
+
+
 
 ## 基数排序
 
