@@ -2206,23 +2206,217 @@ bool num_sequence::check_integrity(int pos,int size) const
 
 ### 5.6 运用继承体系
 
+现在假设其它5个数列类都继承了num_sequence，现在如何使用呢？
 
+因为虚函数的性质，实际上，取决于指针指向的实际对象，就知道何种类的函数。
+
+```c++
+inline  void display(ostream&os,const num_sequence &ns,int pos){
+    os<<"the element at position "<<pos<<" for the"
+        << ns.what_am_i()<<" sequence is "
+        << ns.elem(pos) << endl;
+}
+```
+
+使用它们，就会动态绑定至具体的派生类对象。
+
+```c++
+const int pos =8;
+Fibonacci fib;
+Pell pell;
+Lucas lucas;
+Square square;
+...
+display(cout,fib,pos);
+display(cout,pell,pos);
+display(cout,lucas,pos);
+display(cout,square,pos);
+```
 
 ### 5.7 基类的抽象程度
 
+基类的抽象程度，决定了派生类继承基类的难度，现在把之前的基类num_sequence和之前的派生类Fibonacci共有的部分再次抽象，并定义为虚函数，所以也要定义虚析构。
 
+```c++
+class num_sequence
+{
+    public:
+    	virtual ~num_sequence(){}
+    	virtual const char* what_am_i() const = 0;//纯虚可展现多态,没有缺省实现
+    	int elem(int pos);//non-virtual要求派生类不重定义它
+    	int length() const{return len;}
+    	int position() const {return pos;}
+    	ostream& print(ostream&os = cout)const;
+    	static int max_elems(){return 64;};
+    protected:
+    	virtual void generate_elems(int pos)const = 0
+    	bool check_integrity(int pos,int size) const; 
+    	num_sequence(int len,int pos,vector<int>&vec):
+    		len(len),pos(pos),elems(vec){}//构造函数
+    	int pos;
+    	int len;
+    	vector<int>& elems;//是个引用就必须被初始化,初始化后就不能指向其它
+};
+```
+
+现在派生类Fibonacci只需要重定义个别函数即可，即2个虚函数、构造函数和析构函数。
+
+```c++
+class Fibonacci : public num_sequence{
+    public:
+    	Fibonacci(int len=1,int pos=1);//定义自己的构造函数
+    	virtual const char* what_am_i()const{
+            return "Fibonacci";//虚函数依然还是虚函数
+        }
+   	protected:
+    	virtual void generate_elems(int pos) const;//以自己数列公式定义
+    	static vector<int> elems;//自己的静态容器
+}
+```
+
+如何初始化、定义析构和构造函数见下一节。
 
 ### 5.8 初始化、析构和复制
 
+Fibonacci对象初始化会调用基类的构造，然后调用派生类自己的构造，所以派生类实际有2个成分。这里基类声明的构造函数是必须执行的，也就是必须初始化那个基类的elems，所以定义派生类的构造函数应当这样写。
 
+```c++
+inline Fibonacci::Fibonacci(int len,int pos):num_sequence(len,pos,elems){}
+```
+
+所以整体的写法是这样。
+
+```c++
+class Fibonacci : public num_sequence{
+    public:
+    	Fibonacci(int len=1,int pos=1);//定义自己的构造函数
+    	virtual const char* what_am_i()const{
+            return "Fibonacci";//虚函数依然还是虚函数
+        }
+   	protected:
+    	virtual void generate_elems(int pos) const;//以自己数列公式定义
+    	static vector<int> elems;//自己的静态容器
+}
+inline Fibonacci::Fibonacci(int len,int pos):num_sequence(len,pos,elems){}//必须调用基类构造
+```
+
+由于这里的copy、copy_assignment的默认提供已经可以达到效果(成员逐一复制)，可以不提供，如果要提供，大概也是这样子。它们都是借助了基类的实现，为何可以这样？因为派生类只定义了唯一的成员变量elems，还是静态的，所以初始化的时候不必自己逐一构造，调用基类的已经够用。
+
+```c++
+Fibonacci::Fibonacci(const FibonacciFibonacci&rhs)
+    :num_sequence(rhs)){} //rhs的成员逐一复制过去
+Fibonacci& Fibonacci::operator=(const Fibonacci&rhs){
+    if (this!=&rhs)
+        num_sequence::operator=(rhs);
+    return *this;
+}
+```
+
+还有一个做法是，基类提供public构造，同时elems不是引用，而是指针，那么它可以不需要初始化，但是每次访问这个容器时都需要判断指针是否为空。
+
+```c++
+class num_sequence
+{
+    public:
+    	num_sequence(int len=1,int pos=1,vector<int>*pe=0);//提供构造
+    	virtual ~num_sequence(){}
+    	virtual const char* what_am_i() const = 0;
+    	int elem(int pos);
+    	int length() const{return len;}
+    	int position() const {return pos;}
+    	ostream& print(ostream&os = cout)const;
+    	static int max_elems(){return 64;};
+    protected:
+    	virtual void generate_elems(int pos)const = 0
+    	bool check_integrity(int pos,int size) const; 
+    	num_sequence(int len,int pos,vector<int>&vec):
+    		len(len),pos(pos),elems(vec){}//构造函数
+    	int pos;
+    	int len;
+    	vector<int>* elems;//改为指针就不必一定初始化
+};
+inline num_sequence::num_sequence(int len,int pos,vector<int>*pe):
+	len(len),pos(pos),elems(pe){}
+```
 
 ### 5.9 派生类中定义一个虚函数
 
+派生类可以继承基类的虚函数不做任何事情，那么它还是抽象基类，但是也可以覆盖继承来的虚函数，但是切记要严格按照原型定义，否则动态绑定时只会执行基类的函数，即使const也要完全继承下来。返回类型和输入类型都要一致。
 
+```c++
+class Fibonacci:public num_sequence{
+    public:
+    	virtual const char* what_am_i(){return "Fibonacci";}//不正确
+    	virtual char* whta_am_i()const{return "Fibonacci";}//也不正确
+}
+```
+
+返回类型必须一致有个例外，那就是返回自身的指针时。
+
+```c++
+class num_sequence{
+    public:
+    	virtual num_sequence* clone()=0;//返回一个可指向任何派生类的指针
+}
+class Fibonacci:public num_sequence{
+    public:
+    	Fibonacci* clone(){return new Fibonacci(*this);}//例外,且virtual并非必要
+}
+```
+
+虚函数的动态绑定在两个情况不会出现，它们都是静态解析。
+
+第一：基类的构造函数和析构函数内；
+
+第二：使用基类的对象而不是基类的指针或引用时 。
+
+因为如果基类的构造函数调用了某个虚函数，它一定调用的是基类的那一份。因为派生类对象构造时会先调用基类构造，此时派生类的一些成员尚未初始化，此时调用虚函数的话不能调用派生类的那一份，因为很可能用到了未初始化的变量，所以才要求基类构造只调用自己的那一份，那也就是静态解析不会变。
+
+另外使用基类的对象时就已经固定了大小，即使传入派生类对象也会被切割成基类的那一份。使用基类的指针或引用时，就取决于它实际指向的对象类型了。
 
 ### 5.10 运行时的类型鉴定机制
 
+现在每个类都有自己的what_am_i函数，但是现在希望派生类不用再自己编写这个函数，也通过继承，一个方法是基类增加一个成员变量name，然后构造函数也增加一个初始化参数即可。然后派生类就可以传入这个值给基类的构造即可。
 
+```c++
+inline Fibonacci::Fibonacci(int len,int pos)
+    :num_sequence(len,pos,elems,"Fibonacci")
+```
+
+另一种实现是通过typeid，它可以给出多态化的指针或引用类型，包含于< typeinfo>头文件，typeid可以返回type_info对象，关联到实际类型。
+
+```c++
+#include <typeinfo>
+inline const char* num_sequence::what_am_i const{
+    return typeid(*this).name();
+}
+```
+
+type_info也支持相等和不等比较操作。
+
+```c++
+num_sequence * ps= &fib;
+if (typeid(*ps) == typeid(Fibonacci))//ps确实是Fibonacci对象
+    ps->Fibonacci::generate_elems(64);//编译错误！因为ps毕竟不是Fibonacci指针，需要执行强转才正确
+```
+
+强转操作如下。
+
+```c++
+if (typeid(*ps) == typeid(Fibonacci)){//这也是为何先判断为真才如此
+    Fibonacci*pf =static_cast<Fibonacci*>(ps);//无条件转换有潜在危险
+    pf->generate_elems(64);
+}    
+```
+
+或者直接使用有条件强转。
+
+```c++
+if( Fibonacci* pf = dynamic_cast<Fibonacci*>(ps))
+    pf->generate_elems(64);
+```
+
+dynamic_cast可以检验ps所指对象是否属于Fibonacci类，如果是就发生强转并执行调用函数，否则返回0，if条件不成立也就不会执行。
 
 ## 六、以template进行编程
 
