@@ -4406,31 +4406,506 @@ TMP可用于生成基于政策 选择组合的客户定制代码，也可用来�
 
 ### 条款49：了解new-handler的行为
 
+new-handler是operator new出现异常时调用的函数，它是一个函数指针，没有参数，也不返回任何东西，用于处于内存不足时使用。相应的声明于< new >头文件下有个函数叫set_new_handler，它传入一个要替换的函数指针，返回被替换的函数指针。
 
+```c++
+namespace std{
+    typedef void(*new_handler)();
+    new_handler set_new_handler(new handler p) throw();
+}
+```
+
+可以这样使用这个函数。
+
+```c++
+void func(){
+    std::cerr<<"unable to satify request for memory\n";
+    std::abort();//立即终止程序
+}
+int main(){
+    std::set_new_handler(func);
+    int *p = new int [100000000];
+    ...
+}
+```
+
+一个被反复调用的，设计良好的new_handler函数必须满足以下事情：
+
+第一、让更多内存可被使用。即程序可以一开始就分配一大堆内存，当new_handler第一次被调用时就会归还这些内存，从而可以使下一次调用时能够成功；
+
+第二、安装另一个new_handler。如果当前的new_handler函数不能取得更多内存，如果别的函数有这样能力，就使用set_new_handler替换自身，如果能够让new_handler自己能够切换，那么函数内部必须定义一个可以影响static变量、global变量或者namespace数据的行为；
+
+第三、卸除new_handler，也就是将nullptr指针传递给set_new_handler，一旦没有安装任何new_handler，operator new就会自动在内存分配不成功时抛出异常;
+
+第四、抛出bad_alloc，或者派生自bad_alloc的异常。这样的异常不会被operator new捕捉，而会传播到内存索求处；
+
+第五、不返回，通常调用abort或exit。
+
+不过这样的函数属于全局函数，也就是所有分配内存失败的情况都是这一个函数处理。可能希望不同类的对象new失败调用不同的处理函数，但是C++不支持class专属的new_handler。只需要每个类定义自己的set_new_handler和operator new函数即可，其中set_new_handler允许类指定自己的处理函数，operator new 则是确保类的new_handler替换掉全局new_handler来处理这个类的对象分配异常。这2个函数一般定义为静态类型，因为所有类的实例都是相同的处理过程。
+
+```c++
+class A{
+    public:
+    	static std::new_handler set_new_handler(std::new_handler p) throw();
+    	static void* operator new(std::size_t size) throw(std::bad_alloc);
+    private:
+    	static std::new_handler currentHandler;//静态成员,当前使用的处理函数
+}
+```
+
+注意：静态成员变量除非是const而且是整数型才能直接初始化而无需定义，否则必须在代码实现文件中初始化。因为这个类的函数尚未调用，所以代码文件中初始化为0即可。
+
+```c++
+// 在class实现文件中
+std::new_handler A::currentHandler = 0;
+std::new_handler A::set_new_handler(std:: new_handler p) throw(){
+    std::new_handler oldHandler = currentHandler;
+    currentHandler = p;
+    return oldHandler;
+}
+```
+
+至于A的operator new要做一下3件事。
+
+第一、调用标准set_new_handler(全局的那个)告知A的错误处理函数是p，也就是currentHandler，这样全局的new_handler就安装了这个currentHandler函数，但是全局的new_handler后边需要被归还恢复；
+
+第二、调用全局operator new，如果分配失败，因为现在全局的new_handler已经是类定义的那个new_handler，所以会按照类的要求处理这样的异常；处理完以后，全局的new_handler必须恢复，所以应当将global new_handler视为资源，按照条款13的方式绩效资源管理，归还它；
+
+第三、如果全局operator new分配成功，A的operator new 就会返回一个指针，即A的类型。然后A的析构函数会管理global new_handler将其归还；
+
+现在使用代码来表示如何实现这个函数。首先需要一个资源管理类，管理来自于global set_new_handler的new_handler。
+
+```c++
+class NewHandlerHolder{
+    public:
+    	explicit NewHandlerHolder(std::new_handler nh):handler(nh){}//取得目前的new_handler
+    	~NewHandlerHolder(){std::set_new_handler(handler);}// 安装回去就是释放
+    private:
+    	std::new_handler handler;//私有属性,存放目前的new_handler
+    	NewHandlerHolder (const NewHandlerHolder &);//条款14,阻止派生类继承复制构造
+    	NewHandlerHolder& operator=(const NewHandlerHolder &);//这是为了确保管理资源的只有1个对象
+}
+```
+
+这样就可以实现A的operator new对象函数。
+
+```c++
+void* A::operator new(std::size_t size) throw(std::bad_alloc)
+{
+    NewHandlerHolder h(std::set_new_handler(currentHandler));//第一条,告知全局new_handler变为类的那个指定函数
+    return std::operator new(size);// 第二条,调用全局operator new分配
+}
+// 无论分配成功还是失败,h都可以归还currentHandler之前全局的new_handler函数
+```
+
+客户可以这样使用这个类A。
+
+```c++
+void outOfMemory();//定义A专属的new_handler
+A::set_new_handler(outOfMemory);//设定A的当前operator异常处理函数
+A * p1 = new A;//调用A的operator new,内部自动管理全局在outOfMemory之前的handler_new函数,无论失败还是成功,失败会调用outOfMemory函数
+// 结束后,global new_handler已恢复
+string * ps = new string;//此时如果异常调用的是原本的global new_handler
+
+A::set_new_handler(0);//清零
+A * p2 = new A;//此时分配失败会立刻抛出异常,不是调用outOfMemory,而是全局的,因为A没有专属new_handler
+```
+
+因为类A的示例代码可以被很多其他类复用，所以可以考虑将其设计为一个基类，让派生类继承它的set_new_handler和operator new函数展现多态性质，而且禁止派生类继承copy、copy assignment函数，最后引入template可以让派生类获得实体相异的currentHandler成员变量。这个类的设计如下。
+
+```c++
+template<typename T>
+class NewHandlerSupport{
+    public:
+    	static std::new_handler set_new_handler(std::new handler p) throw();
+    	static void* operator new(std::size_t size) throw(std::bad_alloc);
+    private:
+    	static std::new_handler currentHandler;
+}
+template<typename T>
+std::new_handler NewHandlerSupport<T>::set_new_handler(std::new_handler p) throw(){
+    std::new_handler oldHandler = currentHandler;
+    currentHandler = p;
+    return oldHandler;
+}
+template<typename T>
+void * NewHandlerSupport<T>::operator new(std::size_t size)throw(std::bad_alloc){
+    NewHandlerHolder h(std::set_new_handler(currentHandler));
+    return std::operator new(size);
+}
+template<typename T>
+std::new_handler NewHandlerSupport<T>::currentHandler = 0;//初始化
+```
+
+#### 怪异的循环模板模式CRTP
+
+如何使用这个类？现在A无需自己编写2个函数的实现，只需要继承这个类即可，这个类为A提供了所有专属的new_handler操作。
+
+```c++
+class A: public NewHandlerSupport<A>{
+    ... // 和先前一样但不必声明那2个函数了
+}
+```
+
+这里要注意的是，没有继承T类型，而是继承特定类型A，所以实现了每一个继承NewHandlerSupport的类都有着实体互异的NewHandlerSupport复件，更明确的说就是static成员变量currentHandler，这就好似实现了类之专属new_handler。类型T只是用来区分派生类。
+
+这样的做法有一个名称，叫做"怪异的循环模板模式"CRTP。
+
+1993年以前，operator new被要求无法分配足够内存时发挥null，现在要求抛出bad_alloc异常。但是为了向前兼容，C++提供了一个"nothrow"形式--定义于头文件< new >中，在new的时候使用nothrow对象。
+
+```c++
+class A{...}
+A * p1 = new A; //分配失败抛出bad_alloc
+if (p1 == 0)... // 这个测试一定失败
+    
+A *p2 = new(std:;nothrow) A; // 使用老版本会返回null
+if (p2 == 0)... // 说明分配失败
+```
+
+结论：
+
+set_new_handler允许客户指定1个函数用于处理内存无法得到分配时的情况；
+
+nothrow new是颇为局限的工具，因为它只适用于内存分配，后继的构造函数调用可能还是会抛出异常。
 
 ### 条款50：了解new和delete的合理替换时机
 
+为什么要替换new和delete？可能的理由有三个。
 
+第一、用于检测运用错误。new的对象不delete会导致内存泄露，而多次delete也会导致不确定行为，检测这种错误是因为operator new可以持有一串动态分配而来的地址，operator delete可以将地址移走。但是可能有一些编程错误，导致数据没有在地址起始点写入或者结束点没有停止，这就会发生"overruns"--写入点在分配区块尾端之后，以及"underruns"--写入点在分配区块起点之前，这种错误不容易检测，所以可以定义自己的operator new来超额分配内存，以额外空间(客户所得区块前后)放置特定的byte patterns(签名)，operator delete检测到这个签名原封不动说明正确使用，否则说明发生了"overruns"或"underruns"，此时operator delete可以标记(log)这个事实和那个错误分配的指针地址。
+
+第二、为了强化效能。operator new 为了满足要求，很可能分配的内存并不是一整块连续的，而是各个分散的小区块自由内存，所以分配效率低，这是因为这个函数要处理各种各样的需求，所以它不会对特定程序更好，而是中庸之道一样好/平均好。所以如果需要对自己的程序提高效率，就可以定制自己的new和delete来强化效能。
+
+第三、收集使用上的统计数据。可以定制自己的new和delete来获取诸如这样的信息：分配区块的大小分布、寿命分布、倾向于先进先出还是后进先出次序来分配与归还、最大动态内存分配量是多少等等。
+
+现在给出一个operator的定制函数，有一些错误，后面会完善它。
+
+里边提到static_cast强转，要说明的是：static_cast 不能用于在不同类型的指针之间互相转换，也不能用于整型和指针之间的互相转换，当然也不能用于不同类型的引用之间的转换，因为这些属于风险比较高的转换。整型和浮点型、字符型、或者空指针类型都是比较自然的转换，可以使用它。
+
+但是如果是不同类型的指针之间，应使用reinterpret_cast强转。reinterpret_cast 用于进行各种不同类型的指针之间、不同类型的引用之间以及指针和能容纳指针的整数类型之间的转换。转换时，执行的是逐个比特复制的操作。这种转换提供了很强的灵活性，但转换的安全性只能由程序员的细心来保证了。例如，程序员执意要把一个 int* 指针、函数指针或其他类型的指针转换成 string* 类型的指针也是可以的，至于以后用转换后的指针调用 string 类的成员函数引发错误，程序员也只能自行承担查找错误的烦琐工作。
+
+```c++
+static const int signature = OxDEADBEEF;
+typedef unsigned char Byte;
+void* operator new(std::size_t size) throw(std::bad_alloc)
+{
+    using namespace std;
+    size_t realSize = size + 2 * sizeof(int);
+    void* pMem = malloc(realSize);
+    if (!pMem) throw bad_alloc();
+    
+    *(static_cast<int*>(pMem)) = signature;//void*强转为int*指针,且让其指向内容为签名
+    *(reinterpret_cast<int*>(static<Byte*>(pMem)+realSize-sizeOf(int))) = signature;//int*再强转为字节流,然后移动位置到区块后面,再强转回来让其内容为signature
+    return static_cast<Byte*>(pMem) + sizeof(int);//返回的是实际区块起始位置
+}
+```
+
+这样的写法存在两个问题。第一个问题是条款51所说的，因为C++要求所有的operator news应当内含一个循环来反复调用一个new_handling函数，这里没有；第二个问题是齐位问题(alignment)。
+
+许多计算机体系结构要求特定类型具有特定的内存地址，例如指针的地址必须是4倍数，以及double必须是8倍数等等。C++要求所有operator new返回的指针应当有适当的对齐，取决于数据类型。但是上述的写法实际上地址是偏移了4个字节(int)，这可能无法保证安全。本条款的目的总结如下。
+
+第一、检测运行错误(如前所述)；
+
+第二、为了收集动态分配内存的使用统计信息(如前所述)；
+
+第三、为了增加分配和归还的速度；
+
+第四、为了降低缺省内存管理器带来的空间额外开销；
+
+第五、为了弥补缺省分配器中的非最佳齐位；
+
+第六、为了将相关对象成簇集中；
+
+第七、为了获得非传统的行为。
+
+关于第三到第七的具体内容可见书P251页。
+
+结论：有许多理由需要写个自定义的new和delete，包括改善效能、对heap运用错误进行调试、收集heap使用信息。
 
 ### 条款51：编写new和delete需固守成规
 
+条款50解释了为何想要定制new和delete的理由，但是也要遵循一些规则。
 
+首先是条款50曾提到的问题，operator news应当内含一个循环来反复调用一个new_handling函数，它会在当前的new_handler分配失败时尝试使用新的new_handler函数。就像这样的operator new函数(伪码)，内部的while就是那个无穷循环。
+
+```C++
+void* operator new(std::size_t size) throw(std::bad_alloc)
+{
+    using namespace std;
+    if (size==0)
+        size == 1;//视为1-byte申请
+    while (true){
+        尝试分配size bytes;
+        if (分配成功)
+            return (1个指向分配而来的内存指针);
+        // 分配失败
+        new_handler globalHandler = set_new_handler(0); //卸下当前使用的全局new_handler
+        set_new_handler(globalHandler);//这个指针被外部更新,然后在这里被拿到,但是很明显这里没有办法能直接取得这个指针
+        
+        if (globalHandler) (*globalHandler)(); // 如果取到的不是空就尝试用它解决问题
+        else throw std::bad_alloc();// 否则就抛出异常
+    }
+}
+```
+
+第二个问题是，这个operator new可能会被派生类继承，这会导致更多的复杂度。
+
+首先记住一句话，条款50说过：定制一个内存管理器最常见得了理由是为了针对某个类的对象分配行为提供最优化，就像NewHandlerSupport的做法和A使用它的做法那样，但不是为了该类的任何派生类使用。
+
+现在假如有个类定义了operator new函数，派生类并没有声明这个函数，而是默认继承这个函数。
+
+```c++
+class Base{
+    public:
+    	static void* operator new(std::size_t size)throw(std::bad_alloc);
+    ...
+};
+class Derived:public Base{...};//假设没有声明operator new
+
+Derived*p = new Derived;//调用的其实是Base::operator new
+```
+
+这样申请的内存就会出现问题，因为申请的是Base对象的大小。所以可以引入判断，如果不是基类对象，应当还是使用标准operator new函数来处理。
+
+```c++
+void* Base::operator new(std::size_t size)throw(std::bad_alloc)
+{
+    if (size != sizeof(Base))// 如果是派生类的对象
+        return ::operator new(size); // 改用标准operator new 处理
+    ...
+}
+```
+
+对于delete的写法也是一样，需要保证删除nullptr指针永远安全，也就是事先判断是否为空指针。
+
+```c++
+void Base::operator delete(void * rawMemory,std::size_t size) throw()
+{
+    if (rawMemory == 0 ) return;
+    if (size!= sizeof(Base)){// 如果是派生类的对象
+        std::operator delete(rawMemory);// 改用标准operator new 处理
+        return;
+    }
+    现在,归还rawMemory的内存
+    return;
+}
+```
+
+第三个问题，由于继承的问题，可能传递的size_t数值不正确，例如被删除的对象是派生自某个基类，但是基类没有virtual析构函数，就可能出错，这就要求基类也必须给定虚析构函数。
+
+结论：
+
+operator new 应该包含一个无穷循环，并在其中尝试分配内存，如果不能满足要求应当调用new-handler，它应当有能力处理0 bytes申请，类的专属版本还应该处理比正确大小更大的申请(size!= sizeof(Base))；
+
+operator delete 应当在收到nullptr指针时不做任何事，类的专属版本还应该处理比正确大小更大的申请(size!= sizeof(Base))；
 
 ### 条款52：写了placement new也要写placement delete
 
+对于正常形式的operator new实际上除了调用这个函数分配内存，还调用了类的构造函数，一旦构造函数异常，正常的operator delete会被找到去释放这个已经分配的内存，这样不会导致内存泄露。
 
+但如果声明的是非正常形式的new(带有额外参数)，那么哪一个delete该去伴随这个new的问题便出现，下边的这个设计是有问题的。
+
+```c++
+class A{
+    public:
+    	static void*operator new(std::size_t size,std::ostream& logStream)throw(std::bad_alloc);
+    	//带额外参数的placement new版本
+    	static void operator delete(void * rawMemory,std::size_t size) throw();//正常形式的delete
+}
+A * p = new (std::cerr) A;//把cerr作为ostream对象,这个动作会导致A构造函数异常时内存泄露
+```
+
+非正常形式的new(带有额外参数)就是所谓的placement new，带额外参数的new有一个比较常用，它已经被纳入标准库，定义在< new>头文件当中，不过这个是题外话。
+
+```C++
+void*operator new(std::size_t size,void* rawMemory)throw();
+```
+
+默认情况下，C++会提供3种operator new的形式。
+
+```c++
+void*operator new(std::size_t)throw(std::bad_alloc;
+void*operator new(std::size_t,void*)throw();
+void*operator new(std::size_t,const std::nothrow_t&)throw();
+```
+
+与placement new对应的new版本应该是，如果不是它，那么上述的new调用后找不到对应的delete就会什么也不做导致内存泄漏。
+
+```c++
+void operator delete(void * rawMemory,std::ostream& logStream) throw();
+```
+
+即使现在A都声明了相同的placement版本的new和delete，仍然有一个问题，就是基类如果声明了它，会发现无法调用正常版本的new，也就是这样。
+
+```c++
+class A{
+    public:
+    	static void*operator new(std::size_t size,std::ostream& logStream)throw(std::bad_alloc);
+    	static void operator delete(void * rawMemory,std::ostream& logStream) throw();
+}
+A* p1 = new Base;//无法调用正常的版本
+A * p2 = new (std::cerr) A;//正确调用
+```
+
+同样派生于A类的那些类，也会有同样的问题。
+
+为了解决这样的函数名称遮掩问题，条款33给了2种技术[条款33：避免遮掩继承而来的名称](#条款33：避免遮掩继承而来的名称)，即使用using暴露基类的函数在派生类作用域或者使用转交函数实现。
+
+```c++
+class A:public StandardNewDeleteForms{
+    public:
+    	using StandardNewDeleteForms::operator new;//使用using让原有的也可见
+    	using StandardNewDeleteForms::operator delete;
+    	static void*operator new(std::size_t size,std::ostream& logStream)throw(std::bad_alloc);
+    	static void operator delete(void * rawMemory,std::ostream& logStream) throw();//再定义自己的
+}
+```
+
+结论：
+
+当你写一个placement operator new要确定也要写对应的placement operator delete，如果没有可能会出现时断时续的内存泄漏；
+
+当声明了placement operator new and delete，不要无意识的遮掩了它们的正常版本。
 
 ## 九、杂项讨论
 
-
-
 ### 条款53：不要轻易忽视编译器的警告
 
+不同的编译器有着不同的警告标准，不要随便忽略掉警告信息，除非你能够说出它的精准意义。
 
+例如，如果一个类继承了另一个类，但是修改了const属性。
 
-### 条款54：让自己熟悉tr1在内的标准库
+```c++
+class B{
+    public:
+    	virtual void f() const;
+};
+class D:public B{
+    public:
+    	virtual void f();
+}
+// 编译器可能提示的信息
+Warning：D::f() hides virtual B::f();
+```
 
+你可能认为，当然D会覆盖B的虚函数而进行了忽视，这可能会导致后续程序大量的调试行为。
 
+结论：
+
+严肃对待编译器发出的警告信息；
+
+不要过度依赖编译器的报警能力，因为不同编译器对事情的态度不同，一旦移植到另一个编译器可能倚赖的警告信息会消失。
+
+### 条款54：让自己熟悉TR1在内的标准库
+
+#### C98标准程序库
+
+在概括TR1有什么之前，先论述C++98列入的标准程序库的成分。
+
+- STL标准模板库，覆盖容器、迭代器、算法、函数对象、容器适配器和函数对象适配器等；
+- Iostreams，覆盖用户自定义缓冲功能、国际化I/O和预先定义好的对象cin、cout、cerr和clog；
+- 国际化支持，包括多区域能力、像wchar_t(通常是16 bits/char)和wstring(wchar_t组成的string)等类型对促进unicode有帮助；
+- 数值处理，包括复数模板和纯数值数组；
+- 异常阶层体系，包括base class exception和derived class logic_error和runtime_error，以及更深继承的各个classes；
+- C89标准程序库，即1989年C标准程序库内的每个东西被覆盖于C++内。
+
+TR1则T提供了14个新组件，统统放在std的命名空间下，或者说在其嵌套命名空间tr1内。
+
+#### TR1的14个组件
+
+第一、智能指针。shared_ptr可以记录有多少个共同指向一个对象，也就是引用计数，引用次数为0时会自动销毁，但是不使用环形情况，即指针互指。weak_ptr便用于处理这个情况，它不参与引用计数运算，可以看成非环形数据结构shared_ptr中的环形感生指针。当最后一个指向对象的shared_ptr被销毁时，即使还有个weak_ptr继续指向同一对象，该对象仍然会被删除，这种情况下会被自动标记为无效。其使用方式可见[引入shared_ptr](#引入shared_ptr)
+
+第二、tr1::function，可以表示任何可调用物，只要其签名符合目标，例如希望函数能够传递一个函数指针，要求传入int返回string
+
+```c++
+void f(string func(int));
+void f(string (int));//或省略参数名称
+```
+
+那么tr1::function可以让这个f()函数更有弹性的接收任何可调用物，只要可调用物是int或者任何可隐式转换为int的东西，并返回一个string或任何可转换为string的东西，所以可写成这样。具体的使用场景可见[借助tr1::function完成Strategy模式](#借助tr1::function完成Strategy模式)。
+
+```c++
+void f(std::tr1::function<string (int)>func);
+```
+
+第三、tr1::bind。它能够做STL的绑定器bind1st和bind2nd的任何事，而且更多。关于bind1st和bind2nd的使用方法在EssentialC++.md提到过，可见< 3.6.2 Function Object Adapter >章节。bind的优点在于它可以和const和non-const成员函数协作，也可以和引用传递参数协作，还可以处理函数指针，调用它不会因为ptr_fun、mem_fun之类的东西搞得很乱。
+
+第四、HashTables，用来实现sets、multisets、maps和multimaps，它们与标准库的这些东西实现是不同的，完完全全以hahs为基础，容器内元素没有任何可预期的次序。
+
+第五、正则表达式。包括以它为基础的字符串查找和替换，或是从某个匹配字符串到另一个匹配字符串的逐一迭代等等。
+
+第六、Tuples变量组，这是标准库中队pair template的替代品，pair只能持有2个对象，tr1::tuple可持有任意个数的对象；
+
+第七、tr1::array。本质上是个STL化的数组，普通数组没有begin和end，这个有，但是不完全STL化，大小固定不使用动态内存；
+
+第八、tr1::mem_fn。这个语句构造上和成员函数指针相似，它扩充了mem_fun和men_fun_ref的能力。
+
+第九、tr1::reference_wrapper。让一个references的行为更像对象，它可以造成容器犹如持有references，但容器实际上只能持有对象或者指针，这个装饰器wrapper就可以做到这点。
+
+第十、随机数生成工具。大大超越了rand，这是C++继承自C的一个标准库函数。
+
+第十一、数学特殊函数，包括Laguerre多项式、Bessel函数、完全椭圆积分以及其它数学函数。
+
+第十二、C99兼容扩充，这是一大堆函数和模板，用来把C99程序库特性加入C++。
+
+第十三、Type traits，就是一组traits classes(条款47)，可以在编译期间获取模板类型的一些信息，可指出T是否为内置类型、是否提供virtual析构函数、是否为empty class，可隐式转换为其他类型U吗，而且还可以对给定类型进行适当的齐位操作，这对定制型内存分配器很重要(条款50)。
+
+第十四、tr1::result_of，是个template，用来推导函数调用的返回类型。
+
+TR1的14个组件中有10个基于免费的Boost程序库(条款55)。习惯于使用Boost的可以这样来使用TR1。
+
+```c++
+namespace std{
+    namespace tr1 = ::boost;//srd::tr1是namespace boost的别名
+}
+```
+
+结论：
+
+C++标准程序库的主要机能由STL、iostreams、locales组成，并包含C99标准程序库；
+
+TR1添加了智能指针、一般化函数指针、hash_based容器、正则表达式以及另外10个组件的支持；
+
+TR1自身只是一份规范，为获得其规范，需要实物，一个好的实物来源是Boost。
 
 ### 条款55：让自己熟悉Boost
 
+Boost是C++委员会的成员建立的。
+
+Boost程序库可以对付的主题有很多，主要有10个类目。
+
+第一、字符串和文本处理。覆盖具备类型安全的printf_like格式化动作、正则表达式以及词汇单元切割和解析；
+
+第二、容器，覆盖接口和STL相似且大小固定的数组，大小可变的bitsets以及多维数组；
+
+第三、函数对象和高级编程。覆盖若干作为TR1机能基础的程序库，其中一个就是Lambda，也就是匿名函数对象，不过可能不知道在做什么，例如这样。
+
+```c++
+using namespace boost::lambda;
+std::vector<int> v;
+std::for_each(v.begin(),v.end(),std::cout<<_l*2+10<<"\n");//打印2x+10,_l是Lambda程序库针对当前元素的占位符号
+```
+
+第四、泛型编程，覆盖一大组trait classes。
+
+第五、模板元编程TMP。覆盖针对编译器assertion而写的程序库，以及Boost的MPL程序库；
+
+第六、数学和数值，包括有理数、八元数和四元数、常见公约数和少见的多重运算、随机数等；
+
+第七、正确性与测试，覆盖用来将隐式模板接口形式化(条款41的implicit template interfaces)的程序库，以及针对测试优先的编程形态而设计的措施；
+
+第八、数据结构，覆盖类型安全的unions以及tuple程序库；
+
+第九、语言间的支持，包括C++和Python之间的无缝互操作性；
+
+第十、内存，覆盖Pool程序库，用来定制高效率且区块大小固定的分配器(条款50)、多变化的智能指针(条款13)等；
+
+第十一、杂项，包括CRC检验、日期和时间的处理、在文件系统上来回移动等。
+
+结论：Boost是一个社群，也是一个网站，致力于免费、源码开放的C++程序库开发，它提供了许多TR1组件实现品以及其它库。
+
+
+
+2022年3月18日，下午14.39分，本书完结撒花！
+
+加油~，没有梦想的少年，后边要做的事除了把家里的EssentialC++剩下几章看完，就是看STL源码剖析了，主要是熟练STL的使用，除此之外leetcode大概中断了一个星期没有接着做题，这是因为想要集中精力把本书看完。最后还有时间的话，我会把现代C++从C11到C20的特性那本书，<现代C++语言核心特性解析>看一看，最后背一背八股文之类的复习一下，就拿户口换新工作了！！
