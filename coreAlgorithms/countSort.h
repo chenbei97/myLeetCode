@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-28 14:49:08
- * @LastEditTime: 2022-03-28 16:12:04
+ * @LastEditTime: 2022-03-28 16:43:25
  * @Description: countSort.h
  * @FilePath: \myLeetCode\coreAlgorithms\countSort.h
  * @A boy without dreams
@@ -24,9 +24,11 @@ void countSort(vector<T> &nums,bool reverse=false){
     }
     if (reverse){ // 降序
         for(int i=nums.size()-1;i>=0;--i){// 直到排名和索引位置一致(升序)或者反过来(降序)
-            int r = rank[i];//当前元素nums[i]的排名是rank[i]
-            swap(nums[i],nums[r]);//把当前元素交换到指定的排名位置处,那个元素交换回来,后序继续判断它的位置
-            swap(rank[i],rank[r]);//排名也发生了变化要一并进行交换
+            while(rank[i] !=i){
+                int r = rank[i];//当前元素nums[i]的排名是rank[i]
+                swap(nums[i],nums[r]);//把当前元素交换到指定的排名位置处,那个元素交换回来,后序继续判断它的位置
+                swap(rank[i],rank[r]);//排名也发生了变化要一并进行交换
+            }
         }
     }
     else{ // 升序
@@ -42,7 +44,7 @@ void countSort(vector<T> &nums,bool reverse=false){
 }
 void _countSort_testCode(){
     vector<int> nums={5,4,3,2,1,0,9};
-    bubbleSort(nums,true);
+    countSort(nums,true);
     ostream_iterator<int> os(cout," "); 
     cout<<"countSort => \n";
     copy(nums.begin(),nums.end(),os);

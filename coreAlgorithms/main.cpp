@@ -15,6 +15,7 @@
 #include "mergeSort.h"
 #include "quickSort.h"
 #include "heapSort.h"
+#include "countSort.h"
 using namespace std;
 int main()
 {
@@ -26,5 +27,6 @@ int main()
     _mergeSort_testCode();
     _quickSort_testCode();
     _heapSort_testCode();
+    _countSort_testCode();
     return 0;
 }
