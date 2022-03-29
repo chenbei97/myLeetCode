@@ -2420,3 +2420,367 @@ dynamic_cast可以检验ps所指对象是否属于Fibonacci类，如果是就发
 
 ## 六、以template进行编程
 
+ 以二叉树类的模板类实现，包含两个类，一个是节点类，也就是树节点，另一个是二叉树类。
+
+主要实现的功能：插入、元素、查找元素，清除所有元素、前中后序遍历二叉树。
+
+对于插入要求，一个值只能在树中出现1次，但是可以记录重复值插入的次数，同时值比根节点小就置于左子树，否则置于右子树。
+
+### 6.1 实现一个Class Template
+
+这节内容实际上把原书6.1节到6.5节包含。
+
+以树节点的类为例，令它支持模板，即可以参数化的类型T。    
+
+```c++
+template<class T>
+class binaryTree;//前置声明
+
+template<class T>
+class TreeNode{
+    public:
+    	friend class binaryTree<T>;//友元类
+    	TreeNode(const T& val) : val(val),cnt(1),left(nullptr),right(nullptr) {}
+    	void insert_value(const T&elem);
+    	void remove_value(const T&elem,TreeNode*prev);
+    	void preorder(TreeNode*rt,ostream&os) const;
+        void inorder(TreeNode*rt,ostream&os) const;
+        void postorder(TreeNode*rt,ostream&os) const;
+    private:
+        T val;
+    	int cnt;
+      	TreeNode *left;
+    	TreeNode *right;
+    	void display(TreeNode*rt,ostream&os);
+    	static void leftToLeaf(TreeNode*leaf,TreeNode*subtree);//重复且相同的操作可声明为static
+}
+template<class T>
+void TreeNode<T>::insert_value(const T&val){
+    if (val == this->val)
+    {++cnt;return;}
+    if (val < this->val)//这个操作需要在外部给出如何比较
+    {
+        if (!left)
+            left = new TreeNode(val);
+        else left->insert_value(val);//递归调用自己
+    }
+    else{
+        if (!right)
+            right = new TreeNode(val);
+        else right->insert_value(val);
+    }
+}
+template<class T>
+void TreeNode<T>::remove_value(const T&val,TreeNode*&prev){
+    // 使用引用的指针传递可以更改指针本身而不仅仅是指针指向的东西
+    if (val < this->val){
+        if (!left)
+            return;//不在此二叉树
+        else left->remove_value(val,left);//递归调用自己改变left及其left指向的东西
+    }
+    else if (val > this->val){
+        if (!right)
+            return;//不在此二叉树
+        else right->remove_value(val,right);//递归调用
+    }
+    else {
+        // 找到val后重置此树
+        if (!right){
+            prev = right;
+            if (!prev->left){
+                prev->left = left;
+            }
+            else TreeNode<T>::leafToLeft(left,prev->left);
+        }
+        else prev = left;
+        delete this;
+    }
+}
+template<class T>
+inline void TreeNode<T>::leftToLeaf(TreeNode*leaf,TreeNode*subtree){
+    while (subtree->left)
+        subtree = subtree->left;
+    subtree->left = leaf;//把节点leaf作为最左节点的子节点
+}
+template<class T>
+void TreeNode<T>::preorder(TreeNode*rt,ostream&os) const{
+    if (rt){
+        display(rt,os);
+        if (rt->left) preorder(rt->left);
+        if (rt->right) preorder(rt->right);
+    }
+}
+template<class T>
+void TreeNode<T>::inorder(TreeNode*rt,ostream&os) const{
+    if (rt){
+        if (rt->left) preorder(rt->left);
+        display(rt,os);
+        if (rt->right) preorder(rt->right);
+    }
+}
+template<class T>
+void TreeNode<T>::postorder(TreeNode*rt,ostream&os) const{
+    if (rt){
+        if (rt->left) preorder(rt->left);
+        if (rt->right) preorder(rt->right);
+        display(rt,os);
+    }
+}
+template<class T>
+void TreeNode<T>::display(TreeNode*rt,ostream&os){
+    os<<rt->val<<" ";
+}
+```
+
+但是不建议构造函数这样做，如果T是个自定义类型而不是内置类型，这样的操作实际上执行了2次操作，第一个是调用了T类型的构造函数给this->val，然后再调用copy assignment将val复制给this->val。如果采用成员初值列的方法就可以避免这2个步骤，只需要一个复制构造即可解决问题。
+
+尽量使用成员初值列去初始化变量，虽然值传递或者在构造函数内使用assignment对成员初始化也是正确的，但是缺乏效率。
+
+```c++
+template<typenmae T>
+inline TreeNode<T>::TreeNode(const TreeNode&val){
+    this->val = val;
+    left = right = 0;
+    cnt = 1;
+}
+```
+
+二叉树的类。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+
+```c++
+template<class T>
+class binaryTree{
+    public:
+    	...//
+    private:
+    	TreeNode<T> * root;
+}
+```
+
+对二叉树类的声明和部分定义进行完善。
+
+```c++
+template<class T>
+class binaryTree{
+    public:
+    	binaryTree();
+    	binaryTree(const binaryTree&);
+    	~binaryTree();
+    	binaryTree& operator=(const binaryTree<T>&);
+    	bool empty(){return root==nullptr;}//自动inline
+    	void clear(){if (root){clear(root);root=nullptr;}};
+    	void insert(const T&elem);
+		void preorder()const{root.preorder(root,cout);};
+        void inorder()const{root.inorder(root,cout);};
+        void postorder()const{root.postorder(root,cout);};
+    	friend ostream& operator<><<(ostream&,const binaryTree<T>&);
+    private:
+    	TreeNode<T> * root;
+    	void copy(TreeNode<T>*target,TreeNode<T>*source);//把src的树复制到tar上
+    	void remove_root();
+    	void clear(TreeNode<T>*);//真正用于clear的工作函数
+    	void print(ostream& os);
+}
+template<class T>
+inline binaryTree<T>::binaryTree():root(0){} // 类外定义声明为inline
+
+template<class T>
+inline binaryTree<T>::binaryTree(const binaryTree&rhs){
+    copy(this->root,rhs.root);//不clear,表示以rhs为准
+}
+
+template<class T>
+inline binaryTree<T>::~binaryTree(){clear();}
+
+template<class T>
+inline binaryTree<T>& binaryTree<T>::operator=(const binaryTree&rhs){
+    if (this != &rhs){
+        clear();// 要求相等,可能this会包含rhs
+        copy(this->root,rhs.root);
+    }
+    return *this;
+}
+
+template<class T>
+inline void binaryTree<T>::insert(const T&elem){
+    if (!root)
+        root = new TreeNode<T>(elem);//作为根节点
+    else root->insert_value(elem);//调用插入值的函数做真正的工作
+}
+
+template<class T>
+inline void binaryTree<T>::remove(const T& elem){
+    if (root){
+        if(root->val == elem)
+            remove_root();//根节点的移除以特例处理,要将左子树变为右节点的左子树
+        else 
+            root->remove_value(elem,root);//删除目前的root上要删除的elem,内部root会向下移动
+    }
+}
+
+template<class T>
+void binaryTree<T>::remove_root(){
+    if (!root) return;
+    TreeNode<T>* tem = root;//多1个临时指针指向它
+    if (root->right){//存在右节点时就继续
+        root = root->right; // root下移到右节点
+        if (tmp->left){ // 从全局root开始,存在左节点时就把左节点想办法接到下移右节点的左子树上
+            TreeNode<T> * leftchild = tmp->left;//指向这个左孩子的指针
+            TreeNode<T> * newleftchild = root->left; // 下移的右节点的左子树
+            if (!newleftchild)//下移的右节点是否有左子树,没有直接接上
+                root->left = leftchild;
+            else // 下移的右节点存在左子树,调用静态函数
+                TreeNode<T>::leafToLeft(leftchild,newleftchild);//把leftchild作为newleftchild的左叶子节点
+        }
+    }
+    else root = root->left;
+    delete tmp;
+}
+template<class T>
+void binaryTree<T>::clear(TreeNode<T>*rt){
+     if (rt){
+         clear(pt->left);//递归删除自己
+         clear(pt->right);
+         delete rt;
+     }
+}
+template<class T>
+void binaryTree<T>::print(ostream& os){
+    ...
+}
+template<class T>
+ostream& operator<><<(ostream&os,binaryTree<T>& bt){
+    os<<"tree is \n";
+    bt.print(os);
+    return os;
+}
+```
+
+对插入函数的说明：插入的实际操作是借助TreeNode类内的insert_value函数，内部借助了递归操作。
+
+对移除函数的说明：如果是移除根节点，就调用自身的remove_root函数，否则移除实际操作借助TreeNode类内的remove_value函数。但无论是哪个函数，它们存在一个共同操作就是移除左子节点到右子节点的左子树的叶子节点，这部分操作可以剥离出来成为TreeNode的静态成员函数leftToLeaf，大大提高效率。
+
+对遍历算法：这里使用递归算法。
+
+### 6.2 常量表达式与默认参数值
+
+模板参数不一定是T，还可以是表达式，现在可以重新设计num_sequence及其继承的类。
+
+```C++
+template<int len,int pos = 1> //没有T类型,像表达式
+class num_sequence{
+    public:
+    	num_sequence(int len,int pos);
+    // ...
+}
+template<int len, int pos>
+class Fibonacci: public num_sequence<len,pos>
+{
+    public:
+    	Fibonacci(int len,int pos);
+    //...
+}
+```
+
+### 6.3 以Template参数作为一种设计策略
+
+曾提过的LessThan函数可以引入模板。
+
+```c++
+template<typename T>
+class LessThan{
+    public:
+    	LessThan(const T&val):val(val){}
+    	bool operator()(const T&val)const{return val<this->val;}
+    	void setVal(const T&newVal){this->val=newVal;}
+    	T getVal()const {return this->val;}
+    private:
+    	T val;
+}
+LessThan<int> lt1(1024);
+LessThan<string> lt2("pooh");//存在问题,如果T类型不支持比较运算就有错误
+```
+
+一个方法是将比较运算符剥离出来，另定义一个模板类，成为LessThanPred，然后提供比较的函数对象，类型和值类型一致。
+
+```c++
+template<typename valType,typename compType = less<valType> >//默认基于less函数对象的比较方式
+class LessThanPred{
+   public:
+    	LessThanPred(const valType& val):val(val){}
+    	bool operator()(const valType&val) const{return compType(val,this->val)}
+    	void setVal(valType&newVal){this->val = newVal;}
+    	valType getVal() const{return this->val;}
+    private:
+    	valType val;
+}
+// 另一个提供比较功能的函数对象,就可以作为compType传入,这个对象定义了自己的比较方式
+class StringLen{
+    public:
+    	bool operator()(const string&s1,const string&s2){
+            return s1.size()<s2.size();
+        }
+};
+LessThanPred<int> lt1(1024);//使用默认的less比较
+LessThanPred<string,StringLen> lt2("pooh");//使用string类型的比较函数对象
+```
+
+也可以定义一个更加弹性的类，它可以支持任何类型的比较操作，也就不再需要对string单独的比较操作函数对象StringLen。
+
+这个类可以作为基类，只提供接口函数。任何比较类型可以基于它派生。
+
+```c++
+template<typename valType,typename compType> // 区别在于不再指定less,也无需指定以valType为基准
+class Compare{
+    public:
+    	//...一些虚函数,派生类必须继承它,可以只继承也可以覆盖
+}
+```
+
+### 6.4成员模板函数
+
+在EffectiveC++的条款45< 运用成员函数接受所有兼容类型 >曾提到过成员函数模板的使用方法。
+
+这里给出一个例子再来说明如何使用，A专门用来输出T类型数据，只要它可以被os所输出。
+
+有了这个类，就无需在各个类中定义自己的print函数，借助这个类即可实现。
+
+```C++
+class A{
+ 	public:
+    	A(ostream& os):os(os){}
+        template<typename T>
+        void print(const T&val,char sep = '\n'){
+            os << val << sep;
+        }
+    private:
+    	ostream& os; //意味着必须初始化
+}
+A out(cout);
+out.print("123"); // ok
+out.print(123); // ok
+```
+
+当然这个A类还可以进一步模板化，这意味os被模板化，可以传入各式各样的os。
+
+```c++
+template<typename Ostream>
+class A{
+ 	public:
+    	A(Ostream& os):os(os){}
+        template<typename T>
+        void print(const T&val,char sep = '\n'){
+            os << val << sep;
+        }
+    private:
+    	Ostream& os; //意味着必须初始化
+}
+A<ostream> out(cout);
+out.print("123"); // ok
+out.print(123); // ok
+```
+
+## 七、异常处理
+
+
+
