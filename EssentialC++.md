@@ -2737,7 +2737,7 @@ class Compare{
 }
 ```
 
-### 6.4成员模板函数
+### 6.4 成员模板函数
 
 在EffectiveC++的条款45< 运用成员函数接受所有兼容类型 >曾提到过成员函数模板的使用方法。
 
@@ -2782,5 +2782,517 @@ out.print(123); // ok
 
 ## 七、异常处理
 
+### 7.1 抛出异常
 
+异常是某种对象，最简单的异常可以设计为整数或者字符串。
+
+```c++
+throw 43;
+throw "panic:no buffer!";
+```
+
+也可以设计为异常类。
+
+```c++
+class iterator_overflow{
+    public:
+    	iterator_overflow(int idx,int max):idx(idx),max(max){}
+    	int index(){return idx;}
+    	int getmax(){return max;}
+    	void what_happend(ostream &os =cerr){
+            os<<...<<endl;
+        }
+    private:
+    	int idx;
+    	int max;
+}
+```
+
+### 7.2 捕获异常
+
+类似于这样的写法。
+
+```c++
+try{...}
+catch (int e){...}
+catch (const char* e){...}
+catch (iterator_overflow &iof){iof.what_happend();throw;}//可以重新抛出异常,让其他catch语句接手
+```
+
+### 7.3 提炼异常
+
+语句要被放置在合适的try块内，否则如果语句异常，而他不在try块内，很可能异常不能被捕捉到，这样C++会要求terminate()函数来处理这个异常。
+
+同时要注意局部资源管理，下面这样的写法不能保证资源被回收，可能process会出现异常。
+
+```c++
+extern Mutex m;
+void f(){
+    int *p = new int;
+    m.acquire();
+    process(p);
+    
+    m.release();
+    delete p;
+}
+```
+
+应当导入try块处理和捕捉异常再将其抛出。
+
+```c++
+void f(){
+    try{
+        int *p = new int;
+        m.acquire();
+        process(p);
+        m.release();
+        delete p;
+    }
+	catch(...){
+        m.release();
+        delete p;
+    }
+}
+```
+
+但是这样的写法会导致代码重复，同时再次抛出异常的操作会导致程序变复杂，异常处理程序搜寻时间变长。
+
+更好的做法是定义一个专属异常管理类。
+
+```c++
+#include <memory>
+extern Mutex m;
+class MutexLock{
+    public:
+    	MutexLock(Mutex m):lock(m){lock.acquire();}
+    	~MutexLock(){lock.release;}
+    private:
+    	Mutex &lock;
+}
+void f(){
+    auto_ptr<int> p(new int);//智能指针自动管理
+    MutexLock m1(m);//管理这个资源
+    process(p);
+}//程序结束后MutexLock会自动释放那些资源
+```
+
+### 7.4 标准异常
+
+如果new不能分配空间，那么会抛出bad_alloc异常，bad_alloc是个class而不是object。
+
+标准库定义了一套异常类体系，根部都是exception的抽象基类，它声明了一个what虚函数，返回一个const char *，用于被抛出异常的文字描述。bad_alloc继承自它，有自己的what函数，定义在头文件< exception>。
+
+定义自己的类最好继承exception，好处是可以被任何打算捕获抽象基类的exception的程序代码所捕获。所以捕捉异常可以这样写。
+
+```c++
+catch (const exception&e){
+	cerr<<e.what()<<endl;
+}
+```
+
+它可以捕获所有exception的派生类的异常，因为是引用，符合动态绑定的要求。
+
+## 八、泛型参考手册
+
+### accumulate元素累加
+
+默认情况会将容器内的元素累加，第三个参数作为初值。
+
+```c++
+#include <numeric>
+res = accumulate(ia,ia+8,10);
+res = accumulate(ia.begin(),ia.end(),10,plus<int>());//传入二元运算
+```
+
+### adjacent_difference相邻元素差额
+
+产生一个新数列，它的第一个元素是原来数列的元素，后面的每个元素都是原来数列对应位置元素与前一个的差值。
+
+例如{0,1,1,2,3,5,8}会得到{0,1,0,1,1,2,3}，也可传入二元运算，例如乘法，就会得到{0,0,1,2,6,15,40}。
+
+```c++
+#include <numeric>
+adjacent_difference(ia.begin(),ia.end(),res.begin());//res是目标容器
+adjacent_difference(ia.begin(),ia.end(),res.begin(),multiplies<int>());
+```
+
+### adjacent_find搜索相邻重复元素
+
+默认会返回指向第一组相邻且重复的元素的第一个的迭代器，也可以使用二元运算符。
+
+```c++
+#include <algorithm>
+class TwiceOver{
+    public:
+    	bool operator()(int val1,int val2){return val1==val2/2?true:false;}
+};
+iter = adjacent_find(ia,ia+8);
+iter = adjacent_find(vec.begin(),vec.end(),TwiceOver());//第一组倍增的元素(4,8)
+```
+
+### count计数
+
+返回容器和指定值相等的元素个数
+
+```C++
+#include <algorithm>
+int cnt = count(vec.begin(),vec.end(),value);
+```
+
+### binary_search二叉搜索
+
+假设处理对象已经以less_than运算符处理过，也就是升序序列，就可以使用该方法，否则要指定第三个参数。
+
+```C++
+#include <algorithm>
+bool it = binary_search(v.begin(),v.end(),value,greater<int>());
+```
+
+### copy复制
+
+把第1个容器的值赋值到第2个容器。
+
+```c++
+#include <algorithm>
+ostream_iterator<int> os(cout," ");
+copy(v.begin(),v.end(),os);
+vector<int> tar(v.size());
+copy(v.begin(),v.end(),tar.begin());
+```
+
+### copy_backward逆向复制
+
+行为相同，但从右边到坐标依次复制v的每个值到tar的右边。
+
+```c++
+#include <algorithm>
+vector<int> tar(v.size());
+copy_backward(v.begin(),v.end(),tar.begin());
+```
+
+### count_if特定条件下计数
+
+返回满足某个条件的元素的计数。
+
+```c++
+#include <algorithm>
+class Even{
+	public:
+    	bool operator()(int val){return !(val%2);}//偶数返回true
+}
+int cnt = count_if(ia,ia+8,bind2nd(less<int>(),10));//小于10的
+cnt = count_if(v.begin().v.end(),Even());//偶数的
+```
+
+### euqal判断是否相等
+
+若两容器元素值都相等返回true，第二列元素多的话多出来的不考虑，默认使用equality，但也可以使用其它函数对象或函数指针。
+
+```C++
+#include <algorithm>
+class other{
+    public:
+    	bool operator()(int v1,int v2){return (v1==v2)&&(v1%2);}//v1==v2且v1是奇数
+}
+int a[]={1,1,2,3,5,8,13};
+int b[]={1,1,2,3,4,8,13,21,34};
+bool res = equal(a,a+7,b);//true
+res = equal(a,a+7,b,other());//false
+```
+
+### fill填充值
+
+```c++
+#include <algorithm>
+fill(v.begin(),v.end(),value);
+```
+
+### fill_n填充n次
+
+将容器一一设为某个值，只设定n个元素。
+
+```c++
+#include <algorithm>
+fill_n(a,n,value);
+fill_n(a.begin(),n,value);
+```
+
+### find搜索
+
+和特定值比较，返回找到的第一个元素迭代器，否则返回end()
+
+```c++
+#include <algorithm>
+iter =find(a,a+8,value);
+iter = find(a.begin(),a.end().value);
+```
+
+### find_end搜索某个子序列最后一次出现地点
+
+接受两组迭代器，第一组表示搜索范围，第二组是要搜索的子序列，成功返回b，不成功返回a+7。
+
+```c++
+#include <algorithm>
+int a[] ={7,3,3,7,6,5,8,3,7,6};
+int b[] = {3,7,6};
+it = find_end(a,a+7,b,b+3);
+```
+
+### find_first_of搜索某些元素首次出现地点
+
+也是两组迭代器，找到就返回那个位置，没找到也是返回end。
+
+```c++
+#include <algorithm>
+string a[]={"Ee","eE","ee","Oo","oo","ee"};
+string b[]={"oo","gg","ee"};
+it = find_first_of(a,a+6,b,b+3);//返回&a[2]
+```
+
+### find_if特定条件搜索
+
+传递给定的二元运算符即可，没找到返回end。
+
+```c++
+#include <algorithm>
+find_if(v.begin().v.end(),greater_than(int)());
+```
+
+### for_each对范围内的第一个元素应用某个曹祖
+
+第三参数表示应用于每个元素的运算，不得更改元素值，需要更改值使用transform，指定的运算有返回值就会被忽略。
+
+```c++
+#include <algorithm>
+template<typename T>
+void print_elements(T elem){cout<<elem<<" ";}
+for_each(v.begin(),v.end(),print_elements);
+```
+
+### generate以指定操作填充元素
+
+```c++
+#include <algorithm>
+class op{
+    public:
+    	void operator()(){static int seed=-1;return seed+=2;}
+}
+vector<int> v(6);
+generate(v.begin(),v.end(),op);//[1,3,5,7,9,11]
+```
+
+### includes涵盖于
+
+若第二序列每个元素都在第一序列，返回true。两个序列都必须事先经过排序，排序可以使用less_than(默认)
+
+```c++
+#include <algorithm>
+int a[]={1,2,3,4};
+int b[]={2,3};
+bool res = includes(a,a+4,b,b+2);//true
+```
+
+### inner_product内积
+
+两个序列相乘并累加，再加上某个初始值。允许回避默认的累加和相乘行为，也可以先相加再相减。
+
+```c++
+#include <algorithm>
+int a[] = {2,3,5,8};
+int b[]={1,2,3,4};
+int res = inner_product(a,a+4,b,0);//2+6+15+32
+res = inner_product(a,a+4,b,0,minus<int>(),plus<int>());
+```
+
+### inplace_merge合并并取代
+
+接受三个迭代器，fist、middle和last，2个输入序列表示为[first,middle)和[middle,last)。这2个序列必须连续，产生的新序列会覆盖原有内容，并以first为起点开始放置，第四参数可以指定less_than以外的比较操作。
+
+```c++
+#include <algorithm>
+int a[8]={4,3,2,1,8,7,6,5};
+int *mid = a+4,*last=a+8;
+sort(ia,mid);sort(mid,last);
+inplace(ia,middle,last);
+```
+
+### iter_swap元素呼唤
+
+将两个迭代器指向的值交换。
+
+```c++
+#include <algorithm>
+typedef list<int>::iterator iter;
+iter it1=v.begin(),it2=v.begin()+4;
+iter_swap(it1,it2);
+```
+
+### lexicographical_compare以字典排列方式比较
+
+默认使用less_than进行排序，若设定第五参数，可指定其它排序方式。若第一序列小于第二序列就返回true。
+
+```c++
+#include <algorithm>
+class op{
+    public:
+    	bool operator()(const string&a,const string&b){return a.length()<=b.length();}
+};
+string a[]={"A","BB","CCC"};
+string b[]={"A","BBC","CCC"};
+res = lexicographical_compare(a,a+3,b,b+3,op);//true
+```
+
+### max&min 最值
+
+```c++
+#include <algorithm>
+int r = max(3,4);//4
+```
+
+### max_element&min_element最值所在处
+
+```c++
+#include <algorithm>
+iter = max_element(v.begin(),v.end());
+```
+
+### merge合并两个序列
+
+将已排序的2个序列合并为1个，结果已排序。
+
+```c++
+#include <algorithm>
+int a[]={3,2,1};
+int b[]={9,8,7};
+vector<int> c(3);
+merge(a,a+3,b,b+3,c.begin(),greater<int>());
+```
+
+### nth_element重排序列第n个元素左右两端
+
+小于第n个元素的都在前边，大于第n个元素的都在后边，但不保证结果有序。
+
+```c++
+#include <algorithm>
+int a[]={1,4,5,6,7,-2,9};
+nth_element(a,a+7,&a[3]);//小于6的
+```
+
+### partial_sort&partial_sort_copy局部排序(复制到它处)
+
+partial_sort有三个参数，first、mid和last，第四个指定排序方式，partial_sort_copy还会多2个参数存放排序结果
+
+```c++
+#include <algorithm>
+int a[]={4,3,2,1,0};
+partial_sort(a,a+3,a+5);//序列前3个元素被排序,后边不一定[2,3,4,1,0]
+```
+
+### partial_sum局部总和
+
+产生新序列，每个元素都是对应为止元素和前边所有元素的和。
+
+```c++
+#include <algorithm>
+int a[]={1,2,3};
+int res[3];
+partial_sum(a,a+3,res);//目标
+```
+
+### partion&stable_partion切割(并保持元素相对排序)
+
+```c++
+#include <algorithm>
+int a[]={1,2,3,4,5};
+stable_partion(a,a+5);
+```
+
+### random_shuffle随机重排
+
+```c++
+#include <algorithm>
+random_shuffle(v.begin(),v.end());
+```
+
+### remove&remove_copy移除某种元素(并复制)
+
+```c++
+#include <algorithm>
+int a[]={1,2,3};
+vector<int> v(a,a+3);
+iter = remove(v.begin(),v.end(),1);
+int b[3];
+remove_copy(a,a+3,b,0);
+```
+
+### remove_if&reomve_copy_if有条件移除某种元素(并复制)
+
+```c++
+#include <algorithm>
+class op{
+    public:
+    	bool operator()(int v1,int v2){return (v1==v2)&&(v1%2);}//v1==v2且v1是奇数
+}
+int a[] = {1,2,3};
+int b[3];
+remove_copy_if(a,a+3,op);
+```
+
+### replace&replace_copy取代某种元素(并复制)
+
+```c++
+#include <algorithm>
+int a[] = {1,2,3};
+replace(a,a+3,oldval,newval);
+int b[3];
+replace_copy(a,a+3,inserter(r,r.begin()),oldval,newval);//替换到r容器
+```
+
+### replace_if&replace_copy_if有条件取代(并复制)
+
+```c++
+#include <algorithm>
+int a[] = {1,2,3};
+replace(a,a+3,bind2nd(less<int>(),10),newval);
+```
+
+### reverse&reverse_copy反转元素(并复制)
+
+```c++
+#include <algorithm>
+int a[] = {1,2,3};
+int b[3];
+reverse(a,a+3);
+reverse_copy(a,a+3,b);
+```
+
+### rotate&rotate_copy旋转(并复制)
+
+```c++
+#include <algorithm>
+int a[] = {1,2,3,4,5,6,7};
+int b[7];
+rotate(a,a+3,a+7);
+rotate(a,a+3,a+7,b);
+```
+
+### search搜索某个子序列
+
+寻找第2个序列在第1个序列首次出现的位置。
+
+```c++
+#include <algorithm>
+int a[] = {1,2,3,4,5,6,7};
+int b[] ={4,5,6};
+search(a,a+7,b,b+3)
+```
+
+### search_n 搜索连续发生n次的子序列
+
+```c++
+#include <algorithm>
+int a[] = {1,2,3,4,5,6,7,1,2,3};
+int b[]={1,2,3};
+int * p = search_n(a,a+10,2,b);
+```
 
