@@ -1,7 +1,7 @@
 '''
 Author: chenbei
 Date: 2022-03-15 13:38:50
-LastEditTime: 2022-03-15 15:16:09
+LastEditTime: 2022-03-30 12:25:09
 Description: insertSort.py
 FilePath: \myLeetCode\coreAlgorithms\insertSort.py
 A boy without dreams
@@ -24,7 +24,8 @@ class insertSort:
                     self.nums[idx+1]=self.nums[idx] # 从未排序的第1个元素开始向前,总是让前1个元素替换后1个元素
                     idx -= 1 # idx∈[0,i-1],i-1替换i,i-2替换i-1,直到idx替换idx+1,idx的位置就空出来被t替换
             self.nums[idx+1] = t # idx的位置就空出来被t替换,因为while结束idx多减了1,所以用idx+1
-        return self.nums
 if __name__ == '__main__':
-    solution = insertSort([5,4,3,2,1,9],True)
-    print(solution.insert_sort())
+    nums = [5,4,3,2,1,9]
+    solution = insertSort(nums,True)
+    solution.insert_sort()
+    print(nums)
