@@ -704,7 +704,90 @@ class countSort:
 
 这里给出以插入排序为基础的桶排序方法。
 
+C++版本。
+
+```c++
+#include <vector>
+#include <iostream>
+#include <iterator> // include ostream_iterator
+#include "insertSort.h" // 这里的桶排序以插入排序为基础
+using namespace std;
+template<typename T>
+void bucketSort(vector<T> &nums,int bucket_count=5,bool reverse=false){
+    // buck_count指定桶的个数,与用户对要排序的数据的考虑有关,选择合适的大小
+    T maxVal = *max_element(nums.begin(),nums.end());
+    T minVal = *min_element(nums.begin(),nums.end());
+    // 注意不要使用(maxVal-minVal+1)/ bucket_count
+    int bucket_size = (maxVal-minVal)/ bucket_count+1;//桶区间的范围数,是连续的bucket_size个数
+    vector<vector<T>> buckets(bucket_count);//分配bucket_count个桶
+    // 每个桶分到的数取决于在桶区间内的数有多少个
+    for (auto num :nums){ // 每个数放入哪个桶取决于(num-minVal)/bucket_size的差值
+        // 特殊情况,num为最小值自然是第0个桶,最大值就是第bucket-1个桶
+        // (maxVal-minVal)/bucket_size=(maxVal-minVal)/(maxVal-minVal+1)*bucket_count=bucket_count-1
+        int which_buckets = (num-minVal)/bucket_size;//增强可读性∈[0,bucket_count-1]
+        buckets[which_buckets].push_back(num);
+    }
+    nums.clear();
+    for (auto bucket: buckets){
+        insertSort(bucket,reverse);//桶排序
+        nums.insert(reverse?nums.begin():nums.end(),
+            bucket.begin(),bucket.end());//每个桶依次被接在nums后边,降序要前插升序尾插
+    }
+}
+```
+
+Python版本。
+
+```python
+from typing import Any, List
+from insertSort import insertSort
+class bucketSort:
+    def __init__(self,nums:List[int or float],bucket_count=5,reverse=False) -> Any:
+        self.nums = nums
+        self.n = len(self.nums)
+        self.bucket_count = bucket_count
+        self.reverse = reverse
+    def bucket_sort(self)->List[int or float]:
+        maxVal,minVal = max(self.nums),min(self.nums)
+        bucket_size = (maxVal-minVal)//self.bucket_count+1
+        # 准备好bucket_count个容器
+        buckets = [[] for _ in range(self.bucket_count)] 
+        for num in nums:
+            which_bucket = (num-minVal)//bucket_size
+            buckets[which_bucket].append(num)
+        self.nums.clear()
+        # 降序的话要反向遍历buckets,因为后边的大
+        for bucket in (reversed(buckets) if self.reverse else buckets):
+            solution = insertSort(bucket,self.reverse)
+            solution.insert_sort()
+            self.nums.extend(bucket) # 可以去除嵌套列表
+```
+
 ## 基数排序
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
