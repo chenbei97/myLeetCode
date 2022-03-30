@@ -3296,3 +3296,75 @@ int b[]={1,2,3};
 int * p = search_n(a,a+10,2,b);
 ```
 
+### set_difference差集
+
+出现在第一序列但是没出现在第二序列的元素。
+
+### set_intersection交集
+
+两个序列都出现的元素。
+
+### set_symmetric_difference对称差集
+
+出现在第一序列但是没出现在第二序列的元素，以及出现在第二序列但是没出现在第一序列的元素都拿出来，然后排序取出。
+
+例如{0,1,2,3}h额{0,2,4,6}的对称差集是{1,3,4,6}。
+
+### set_union并集
+
+产生的序列包含原有2个序列的所有元素，去重并排序。
+
+```c++
+#include <algorithm>
+string str1[] = {"A","B","C"};
+string str2[] = {"B","C","D"};
+set<string> set1(str1,str1+3),set2(str2,str2+3);
+set<string> res;
+set_union(set1.begin(),set1.end(),set2.begin(),set2.end(),inserter(res,res.begin()));
+res.clear();
+set_intersection(set1.begin(),set1.end(),set2.begin(),set2.end(),inserter(res,res.begin()));
+res.clear();
+set_difference(set1.begin(),set1.end(),set2.begin(),set2.end(),inserter(res,res.begin()));
+res.clear();
+set_symmetric_difference(set1.begin(),set1.end(),set2.begin(),set2.end(),inserter(res,res.begin()));
+```
+
+### sort&stavle_sort(稳定)排序
+
+稳定排序可以保持相同元素的相对次序。
+
+```c++
+#include <algorithm>
+stable_sort(a,a+8,greater<int>());
+```
+
+### transform以两个序列为基础交叉作用生成第三个序列
+
+调用某个运算作用在容器的每个元素上。
+
+```c++
+#include <algorithm>
+int double_val(int val){return val+val;}
+int difference(int val1,int val2){return abs(val1-val2);}
+transform(a,a+5,res.begin(),double_val);
+transform(a,a+5,res.begin(),difference);
+```
+
+### unique&unique_copy去重(并复制)
+
+unique不适用于数组，因为提供了erase函数。unique_copy适合数组。
+
+```c++
+#include <algorithm>
+sort(a.begin(),a.end());
+iter = unique(a.begin(),a.end());
+a.erase(iter,a.end());
+
+int b[5];
+sort(a,a+5);
+unique_copy(a,a+5,b);
+```
+
+
+
+正式完结撒花~2022年3月30日上午8.30，这本书比EffectiveC++稍晚几天看完，比这本书要简单一些，下一本书就是STL源码剖析了。这本书重点在于熟悉STL的使用，原理的话掌握基本说法就可以，毕竟这玩意会了不看也得忘。
