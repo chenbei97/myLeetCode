@@ -17,7 +17,7 @@
 #include "heapSort.h"
 #include "countSort.h"
 #include "bucketSort.h"
-#include "cardinalitySort.h"
+#include "radixSort.h"
 using namespace std;
 int main()
 {
@@ -31,6 +31,6 @@ int main()
     _heapSort_testCode();
     _countSort_testCode();
     _bucketSort_testCode();
-    // _cardinalitySort_testCode();
+    _radixSort_testCode();
     return 0;
 }
