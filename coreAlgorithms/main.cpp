@@ -31,6 +31,6 @@ int main()
     _heapSort_testCode();
     _countSort_testCode();
     _bucketSort_testCode();
-    _cardinalitySort_testCode();
+    // _cardinalitySort_testCode();
     return 0;
 }
