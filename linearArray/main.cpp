@@ -65,6 +65,7 @@ int main()
     _linearArray_bestTimeToSellStocks_iteration();
     _linearArray_bestTimeToSellStocks_dynamicProgramming();
     _linearArray_bestTimeToSellStocks_greedy();
-    
+    cout<<"how to move zeros to end as follows\n";
+    _linearArray_moveZerosToEnd_doublePointers();
     return 0;
 }

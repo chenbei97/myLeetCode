@@ -49,4 +49,6 @@
 #include "linearArrayBestTimeToSellStocks_Iteration.h"
 #include "linearArrayBestTimeToSellStocks_DynamicProgramming.h"
 #include "linearArrayBestTimeToSellStocks_Greedy.h"
+
+#include "linearArrayMoveZerosToEnd_DoublePointers.h"
 #endif // !linearArray_
