@@ -67,5 +67,7 @@ int main()
     _linearArray_bestTimeToSellStocks_greedy();
     cout<<"how to move zeros to end as follows\n";
     _linearArray_moveZerosToEnd_doublePointers();
+    cout<<"how to spiral order matrix as follows\n";
+    _linearArray_spiralMatrix_iteraton();
     return 0;
 }

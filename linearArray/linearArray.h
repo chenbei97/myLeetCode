@@ -21,8 +21,6 @@
 
 #include "linearArraySearchRotateSorted_Binary.h"
 
-#include "linearArrayTwoOfPower.h"
-
 #include "linearArrayFindSingleNumber_HashTable.h"
 #include "linearArrayFindSingleNumber_Bit.h"
 
@@ -44,11 +42,12 @@
 #include "linearArrayNearbyDuplicates_HashTable.h"
 #include "linearArrayNearbyDuplicates_HashSet.h"
 
-#include "linearArrayValidSudoku_Iteration.h"
-
 #include "linearArrayBestTimeToSellStocks_Iteration.h"
 #include "linearArrayBestTimeToSellStocks_DynamicProgramming.h"
 #include "linearArrayBestTimeToSellStocks_Greedy.h"
 
 #include "linearArrayMoveZerosToEnd_DoublePointers.h"
+#include "linearArrayValidSudoku_Iteration.h"
+#include "linearArraySpiralMatrix_Iteraton.h"
+#include "linearArrayTwoOfPower.h"
 #endif // !linearArray_
