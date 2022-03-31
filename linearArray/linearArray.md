@@ -8,6 +8,12 @@
 
 提供一种倾向，遍历数组的每个元素nums[right]，初始时，最前边待交换的元素是nums[left=0]，从nums[right=0]开始到nums[right=n-1]比较是否为0，不为0就弄到前边。如果发生了交换，现在nums[left]是非0元素，而nums[right]可能不是0也可能是0，它可以在之后的某次判断(left到达此时的right时)来决定是否交换，如果是0肯定会被交换到那时的right位置。因为交换发生后，nums[left]一定不会再是0，不能再交换回来，所以下一次交换的是nums[++left]，要让left++。
 
+## 二维数组螺旋遍历
+
+### iteration解法
+
+思路是从外边一圈到次一圈直到最后1圈(在方阵且奇数时只有1个数)，关键就是获取每个圈的4个顶点坐标。因为每圈遍历总是符合这样的遍历过程：[top,left]->[top,right]->[top+1,right]->[bottom,right]->[bottom,right-1]->[bottom,left]->[bottom-1,left]->[top,left]，即top行->right列->bottom行->left列。另外如果不是方阵，会存在top=bottom但是left≠right的情况(反过来也是)，这样最后一圈遍历完top行和right列以后就可以结束，不要再遍历bottom行和left列造成重复，所以要添加一个条件，只有都不相等时才会遍历bottom行和left列。
+
 ## 找到数组的最大和最小值
 
 ### iteration解法
