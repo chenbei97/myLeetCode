@@ -696,7 +696,7 @@ class countSort:
 
 [5,13]、[14,22]、[23,31]、[32,40]、[41,49]。
 
-每个桶内排序时间复杂度为O(klog2k)，m个桶经过换算后时间复杂度为O(nlog2(n/m))。当m接近n时，时间复杂度趋于一个很小的常数，即O(n)复杂度。
+**每个桶内排序时间复杂度为O(klog2k)，m个桶经过换算后时间复杂度为O(nlog2(n/m))**。当m接近n时，时间复杂度趋于一个很小的常数，即O(n)复杂度。
 
 由于桶排序使用了辅助空间，所以桶排序的空间复杂度是O(n + m)。
 
@@ -765,13 +765,123 @@ class bucketSort:
 
 ## 基数排序
 
+基数排序本身也是基于桶排序的思路的。桶排序的缺点很明显，如果要排序的数据最大值很大，但是桶的数量指定数目不多时意味着桶的大小很大，这会占据很多的空间，而桶的大小变小意味着桶变多也是一样的结果。
 
+基数排序是考虑了一个性质，比较两个数的大小可以从比较位的大小开始，可以从低位比也可以从高位比。这里选择从低位开始，比较完低位后就能确定在低位上谁更大，但是低位大的不一定大，所以还要比较高位，但是可以比较完低位后调整数字的位置(假如数字超过2个)。例如，数字19、234、6，比较低位，6和4和9，9＞6＞4，所以可以调整为{6,234,19}。然后比较第十位，也就是2>1>0，故调整为{6,19,234}，再看百位其实不用再比了。
 
+**基数排序的时间复杂度是O(n * m)**，m是最大数字指定进制下的位数，取决于使用何种进制radix，radix越大，自然1位能表示的数更多，效率也更高，相较于桶排序时间复杂度O(nlog2(n/m))提高了。另外每个位会分配一个桶，**故空间复杂度为O(n+m)**，这和桶排序一样，区别在于m非常的小，可能就是几个位。
 
+桶排序的m取决于最大值和桶的大小比值，如果桶的大小是5，这意味桶至多存放连续的5位数，那么桶需要65535/5个桶，如果只要5个桶，那每个桶的大小65525/5又过于庞大。如果使用基数排序，65525即使是用2进制表示为1111 1111 1111 1111也就是16位，每个位比较只有0或者1两个数字，故每次需要2个桶，共32个桶，远远低于正常的桶排序。
 
+基数排序的关键有3个步骤：
 
+第一、找到排序数组的最大值，确定其在指定进制下的最大位数maxbit是多少；
 
+第二、根据最大位数maxbit可以确定需要进行几轮桶排序，每一轮根据radix分配radix个桶；
 
+第三、从低位到高位进行maxbit轮桶排序，每次桶排序后清空原数组并把各个桶的元素放回原数组。
+
+第一个步骤确定位数，可以使用最大数字和radix的反复连乘进行比较，每次连乘都没最大数字大位数就+1；
+
+第二个步骤，关键是确定这个数字属于哪个桶，取决于数字的当前位是多少，这个位一定在[0,radix-1]之间。计算一个数字某个位在指定进制下是多少可以有2个方法。第一个是，先除后取余法，表达式为num/(radix^n)%radix，其中n就是哪一位，从0开始。第二个先取余后除法，表达式为(num%radix^(n+1))/radix^n，n从0开始。
+
+C++版本。
+
+```c++
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
+#include <iterator> // include ostream_iterator
+using namespace std;
+int maxBitsOfRadix(const vector<int>&nums,int radix=10);
+int whichBucket(const int&nums,int which_bit,int radix=10);
+void radixSort(vector<int> &nums,int radix=10,bool reverse=false){
+    // 基数排序因为要求低位到高位的数字,只适用于整数排序
+    int maxbit = maxBitsOfRadix(nums,radix);//指定进制的最大位数                                                                                                       
+    // cout<<"maxbit = "<<maxbit<<endl;
+    for (int i = 0;i<maxbit;++i){ //从低位到高位,让数字的该位和桶的编号对应,例如6进制时低位是5,就放入buckets[5]
+        vector<vector<int>> buckets(radix);//每个位都在[0,raidx-1]之间,需要radix个桶 
+        for (const int &num : nums){ // 遍历每个数字
+            int which_bucket = whichBucket(num,i,radix);// 找出数字在指定进制以及当前位属于的桶编号
+            if (reverse)
+                which_bucket = radix - 1 - which_bucket; //降序的话桶0不和数字0对应,而是与数字radix-1对应
+            buckets[which_bucket].push_back(num); // 把符合条件的数字移入这个桶
+        }
+        nums.clear();//清空nums,把每个桶的元素放回去,用于下一次判断,继续判断高位
+        for (auto &bucket:buckets){
+            for(const int& num:bucket){
+                nums.push_back(num);
+            }
+        }
+    }
+}
+int whichBucket(const int&num, int which_bit,int radix){
+        // 找出数字在指定进制以及指定位属于的进制桶编号
+        int radix_n = 1;// r^0
+        while (which_bit--){
+            radix_n *= radix; // 计算r^n
+        }
+        // // (x%r^(n+1))/r^n可以计算数字x第n位的数字是多少,进而知道属于哪个桶
+        // int which_bucket = (num % (radix*radix_n)) / radix_n;
+        // return which_bucket;
+        return num/(radix_n)%radix; // 2个方法都可以 num/(radix^which_bit)%radix
+}
+int maxBitsOfRadix(const vector<int>&nums,int radix){
+    // 用于找到数组中最大元素在指定进制radix下的最大位数
+    int maxVal = *max_element(nums.begin(),nums.end());
+    int maxbit = 1;//至少1位
+    int p = radix;
+    while (maxVal >= p) //满radix进1,常见基数排序的进制可取2,3,4,5...10
+    {
+        p *= radix;//例如6进制,[0,5]可以用1位表示,[6,35]可以用6进制数10~55表示
+        // 36就必须用3位即100来表示
+        ++maxbit;//只要满足条件就说明进1位,初始radix=6,若num<6,则maxbit=1不变
+    }
+    return maxbit;
+}
+```
+
+Python版本。
+
+```c++
+from typing import Any, List
+class radixSort:
+    def __init__(self,nums:List[int or float],radix=5,reverse=False) -> Any:
+        self.nums = nums
+        self.n = len(self.nums)
+        self.reverse = reverse
+        self.radix = radix
+    def radix_sort(self)->List[int or float]:
+        maxbit = self.maxBitOfRadix()
+        for i in range(maxbit):
+            buckets = [[] for _ in range(self.radix)]
+            for num in self.nums:
+                which_bucket = self.whichBucket(num,i)
+                if self.reverse:
+                    which_bucket = self.radix - 1 - which_bucket
+                buckets[which_bucket].append(num)
+            self.nums.clear()
+            for bucket in buckets:
+                for num in bucket:
+                    self.nums.append(num)
+    def maxBitOfRadix(self)->int:
+        maxVal = max(self.nums)
+        maxbit = 1
+        p = self.radix
+        while maxVal>=p:
+            p *= self.radix
+            maxbit += 1
+        return maxbit
+    def whichBucket(self,num:int,which_bit:int)->int:
+        # 2个方法都可以
+        # radix_n = 1 # r^0
+        # while which_bit:
+        #     radix_n *= self.radix
+        #     which_bit -= 1
+        # return (num % (self.radix*radix_n)) // radix_n
+        return num//(self.radix**which_bit)%self.radix
+```
 
 
 
