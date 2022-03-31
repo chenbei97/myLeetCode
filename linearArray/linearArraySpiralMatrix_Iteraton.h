@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-31 10:40:31
- * @LastEditTime: 2022-03-31 12:38:15
+ * @LastEditTime: 2022-03-31 16:28:15
  * @Description: linearArraySpiralMatrix_Iteraton.h
  * @FilePath: \myLeetCode\linearArray\linearArraySpiralMatrix_Iteraton.h
  * @A boy without dreams
@@ -49,7 +49,7 @@ void _linearArray_spiralMatrix_iteraton(){
     vector<vector<int>> nums = {{1,2,3,4},{5,6,7,8},{9,10,11,12}};
     auto ans = solution.spiralMatrix(nums);
     ostream_iterator<int> os(cout," ");
-    cout<<" as follows\n";// [1,2,3,4,8,12,11,10,9,5,6,7]
+    // [1,2,3,4,8,12,11,10,9,5,6,7]
     copy(ans.begin(),ans.end(),os);
     cout<<"\n";
 }
