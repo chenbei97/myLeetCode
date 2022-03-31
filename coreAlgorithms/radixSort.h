@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-28 16:48:24
- * @LastEditTime: 2022-03-30 17:13:19
+ * @LastEditTime: 2022-03-31 08:12:34
  * @Description: radixSort.h
  * @FilePath: \myLeetCode\coreAlgorithms\radixSort.h
  * @A boy without dreams
@@ -42,9 +42,10 @@ int whichBucket(const int&num, int which_bit,int radix){
         while (which_bit--){
             radix_n *= radix; // 计算r^n
         }
-        // (x%r^(n+1))/r^n可以计算数字x第n位的数字是多少,进而知道属于哪个桶
-        int which_bucket = (num % (radix*radix_n)) / radix_n;
-        return which_bucket;
+        // // (x%r^(n+1))/r^n可以计算数字x第n位的数字是多少,进而知道属于哪个桶
+        // int which_bucket = (num % (radix*radix_n)) / radix_n;
+        // return which_bucket;
+        return num/(radix_n)%radix; // 2个方法都可以 num/(radix^which_bit)%radix
 }
 int maxBitsOfRadix(const vector<int>&nums,int radix){
     // 用于找到数组中最大元素在指定进制radix下的最大位数
