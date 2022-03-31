@@ -50,4 +50,5 @@
 #include "linearArrayValidSudoku_Iteration.h"
 #include "linearArraySpiralMatrix_Iteraton.h"
 #include "linearArrayTwoOfPower.h"
+#include "linearArrayFourSum_DoublePointers.h"
 #endif // !linearArray_

@@ -69,5 +69,7 @@ int main()
     _linearArray_moveZerosToEnd_doublePointers();
     cout<<"how to spiral order matrix as follows\n";
     _linearArray_spiralMatrix_iteraton();
+    cout<<"four sum by double pointers as follows\n";
+    _linearArray_fourSum_doublePointers();
     return 0;
 }
