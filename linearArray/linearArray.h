@@ -51,4 +51,5 @@
 #include "linearArraySpiralMatrix_Iteraton.h"
 #include "linearArrayTwoOfPower.h"
 #include "linearArrayFourSum_DoublePointers.h"
+#include "linearArrayProductExceptSelf_Iteration.h"
 #endif // !linearArray_

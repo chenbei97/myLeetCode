@@ -71,5 +71,7 @@ int main()
     _linearArray_spiralMatrix_iteraton();
     cout<<"four sum by double pointers as follows\n";
     _linearArray_fourSum_doublePointers();
+    cout<<"product except self by iteration as follows\n";
+    _linearArray_productExceptSelf_iteration();
     return 0;
 }
