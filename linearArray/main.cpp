@@ -73,5 +73,7 @@ int main()
     _linearArray_fourSum_doublePointers();
     cout<<"product except self by iteration as follows\n";
     _linearArray_productExceptSelf_iteration();
+    cout<<"two array's intersection by double pointers as follows\n";
+    _linearArray_intersection_doublePointers();
     return 0;
 }

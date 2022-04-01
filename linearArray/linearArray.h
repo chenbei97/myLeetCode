@@ -52,4 +52,5 @@
 #include "linearArrayTwoOfPower.h"
 #include "linearArrayFourSum_DoublePointers.h"
 #include "linearArrayProductExceptSelf_Iteration.h"
+#include "linearArrayIntersection_DoublePointers.h"
 #endif // !linearArray_
