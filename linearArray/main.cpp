@@ -81,5 +81,8 @@ int main()
     _linearArray_receiveRainwater_iteration();
     cout<<"the life boat of num by iteration as follows\n";
     _linearArray_lifeBoat_iteration();
+    cout<<"the sort color by double pointers as follows\n";
+    _linearArray_colorClassify_doublePointers();
+    _linearArray_colorClassify_iteration();
     return 0;
 }

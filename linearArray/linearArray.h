@@ -46,6 +46,9 @@
 #include "linearArrayBestTimeToSellStocks_DynamicProgramming.h"
 #include "linearArrayBestTimeToSellStocks_Greedy.h"
 
+#include "linearArrayColorClassify_DoublePointers.h"
+#include "linearArrayColorClassify_Iteration.h"
+
 #include "linearArrayMoveZerosToEnd_DoublePointers.h"
 #include "linearArrayValidSudoku_Iteration.h"
 #include "linearArraySpiralMatrix_Iteraton.h"
@@ -56,4 +59,5 @@
 #include "linearArraySmallestDistancePairs_DoublePointers.h"
 #include "linearArrayReceiveRainwater_Iteration.h"
 #include "linearArrayLifeBoat_Iteration.h"
+
 #endif // !linearArray_
