@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-31 10:02:49
- * @LastEditTime: 2022-03-31 10:09:39
+ * @LastEditTime: 2022-04-01 09:08:12
  * @Description: blankTemplate.h
  * @FilePath: \myLeetCode\linearArray\blankTemplate.h
  * @A boy without dreams
@@ -12,21 +12,23 @@
 #include <vector>
 #include <string>
 #include <stack>
+#include <algorithm>
+#include <numeric>
 #include <iterator>
 using namespace std;
 class A{
     public:
-        void func(vector<int>&nums){
+        vector<int> func(vector<int>&nums){
             
         }
 };
 void _linearArray_a_b(){
     A solution;
     vector<int> nums = {};
-    solution.func(nums);
+    auto ans = solution.func(nums);
     ostream_iterator<int> os(cout," ");
     cout<<" as follows\n";
-    copy(nums.begin(),nums.end(),os);
+    copy(ans.begin(),ans.end(),os);
     cout<<"\n";
 }
 #endif//!_
