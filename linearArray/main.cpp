@@ -75,5 +75,7 @@ int main()
     _linearArray_productExceptSelf_iteration();
     cout<<"two array's intersection by double pointers as follows\n";
     _linearArray_intersection_doublePointers();
+    cout<<"the smallest k distance by double pointers as follows\n";
+    _linearArray_smallestDistancePairs_doublePointers();
     return 0;
 }

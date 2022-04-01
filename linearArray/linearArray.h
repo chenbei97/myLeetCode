@@ -53,4 +53,5 @@
 #include "linearArrayFourSum_DoublePointers.h"
 #include "linearArrayProductExceptSelf_Iteration.h"
 #include "linearArrayIntersection_DoublePointers.h"
+#include "linearArraySmallestDistancePairs_DoublePointers.h"
 #endif // !linearArray_
