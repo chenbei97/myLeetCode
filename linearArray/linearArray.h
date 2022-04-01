@@ -54,4 +54,5 @@
 #include "linearArrayProductExceptSelf_Iteration.h"
 #include "linearArrayIntersection_DoublePointers.h"
 #include "linearArraySmallestDistancePairs_DoublePointers.h"
+#include "linearArrayReceiveRainwater_Iteration.h"
 #endif // !linearArray_

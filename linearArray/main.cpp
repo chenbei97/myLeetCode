@@ -77,5 +77,7 @@ int main()
     _linearArray_intersection_doublePointers();
     cout<<"the smallest k distance by double pointers as follows\n";
     _linearArray_smallestDistancePairs_doublePointers();
+    cout<<"the receive water by iteration as follows\n";
+    _linearArray_receiveRainwater_iteration();
     return 0;
 }
