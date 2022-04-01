@@ -55,4 +55,5 @@
 #include "linearArrayIntersection_DoublePointers.h"
 #include "linearArraySmallestDistancePairs_DoublePointers.h"
 #include "linearArrayReceiveRainwater_Iteration.h"
+#include "linearArrayLifeBoat_Iteration.h"
 #endif // !linearArray_
