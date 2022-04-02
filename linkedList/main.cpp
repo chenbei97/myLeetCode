@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:20:38
- * @LastEditTime: 2022-04-02 10:23:17
+ * @LastEditTime: 2022-04-02 11:13:19
  * @Description: linkedList's leetcode analysis
  * @FilePath: \myLeetCode\linkedList\main.cpp
  * @A boy without dreams
@@ -34,6 +34,8 @@ int main()
     cout<<"reverst list as follows\n"; 
     _linkedList_reverseList_iteration();
     _linkedList_reverseList_recursion();
-    cout<<"reverst list as follows\n"; 
+    cout<<"revmove list elements as follows\n"; 
+    _linkedList_removeElements_recursion();
+    _linkedList_removeElements_iteration();
     return 0;
 }
