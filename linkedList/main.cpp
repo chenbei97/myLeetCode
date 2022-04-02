@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:20:38
- * @LastEditTime: 2022-04-02 11:13:19
+ * @LastEditTime: 2022-04-02 14:11:05
  * @Description: linkedList's leetcode analysis
  * @FilePath: \myLeetCode\linkedList\main.cpp
  * @A boy without dreams
@@ -34,8 +34,12 @@ int main()
     cout<<"reverst list as follows\n"; 
     _linkedList_reverseList_iteration();
     _linkedList_reverseList_recursion();
-    cout<<"revmove list elements as follows\n"; 
+    cout<<"remove list elements as follows\n"; 
     _linkedList_removeElements_recursion();
     _linkedList_removeElements_iteration();
+    cout<<"rotate list as follows\n"; 
+    _linkedList_rotateList_iteration();
+    cout<<"get odd even list as follows\n";
+    _linkedList_oddEven_iteration();
     return 0;
 }

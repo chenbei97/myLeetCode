@@ -7,6 +7,14 @@
  * A boy without dreams
   -->
 
+## 旋转链表
+
+给你一个链表的头节点head旋转链表，将链表每个节点向右移动k个位置，后面的元素会重新移动到链表首端，类似于循环链表。
+
+### iteration解法
+
+从0开始计数，位置0的节点向前1个单位变成1，向前移动n-1次，就到达位置n-1，此时还没有完整的循环一遍。移动n次时节点0又回到了节点0原本的位置。如果123456，k=2不是想要输出345612，而是561234，这其实就是首节点向前移动，新的首节点对应原来链表在位置length-k的那个节点，但是要考虑k是整数倍length的情况，必须对length取余。 firstIdx = k%length==0?0:length-k%length，如果k是length的倍数，firstIdx=0即可，否则它应该是length-k%length。而lastIdx在firstIdx不为0的情况下等于firstIdx-1即可，否则直接等于length-1，即lastIdx = firstIdx==0?length-1:firstIdx-1。现在iter位置在length-1，首先让它指向头节点成环，然后从位置length-1到lastIdx共lastIdx+1个单位，故它向前移动lastIdx+1个单位即可到达新的链表尾节点。然后它的下一个就是首节点被返回即可，然后断开尾节点和首节点的联系。
+
 ## 奇偶链表
 
 把奇数索引1、3、5上的元素都移到后边，偶数的移到前边。

@@ -1,14 +1,14 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-02 09:23:48
- * @LastEditTime: 2022-04-02 09:38:57
+ * @LastEditTime: 2022-04-02 13:28:11
  * @Description: blankTemplate.h
  * @FilePath: \myLeetCode\linkedList\blankTemplate.h
  * @A boy without dreams
  */
-#include "ListNode.h"
 #ifndef _
 #define _
+#include "ListNode.h"
 #include <iostream>
 using namespace std;
 class A{
