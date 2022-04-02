@@ -9,8 +9,8 @@
             "type": "cppdbg",
             "request": "launch",
             //"program": "${workspaceFolder}\\binaryTree\\main.exe", // ${fileDirname}\\${fileBasenameNoExtension}.exe
-            "program": "${workspaceFolder}\\linearArray\\main.exe",
-            //"program": "${workspaceFolder}\\linkedList\\main.exe",
+            //"program": "${workspaceFolder}\\linearArray\\main.exe",
+            "program": "${workspaceFolder}\\linkedList\\main.exe",
             //"program": "${workspaceFolder}\\characterString\\main.exe",
             //"program": "${workspaceFolder}\\coreAlgorithms\\main.exe",
             "args": [],

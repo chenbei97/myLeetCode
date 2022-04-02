@@ -5,7 +5,26 @@
  * @Description: linkedList's leetcode analysis
  * @FilePath: \myLeetCode\linkedList\linkedList.md
  * A boy without dreams
--->
+  -->
+
+## 反转链表
+
+### iteration解法
+
+从当前节点开始，用cur表示，用prev表示cur的前1个节点(初始位nullptr)，next表示cur的后1个节点，遍历链表的每个节点：第一步让cur的next指向prev，第二步让prev向前移动，也就是等于cur，第三步，让cur向前移动等于cur的next，直到cur为nullptr为止。注意第二步和第三步不能反过来，因为cur要在被cur.next覆盖之前提前交给prev。
+
+### recursion解法
+
+假设第nk个节点之后的节点已经被反转，但是nk-1及之前的节点没有被反转，就处于下面的状态。
+
+n1 -> n2 -> ... -> nk-1 -> nk -> nk+1 <- nk+2 <- nk+3 <- ... <- nk+m
+
+首先不断的递归到最深处，此时到达最后1个节点last，最后1个节点的next是nullptr或者last是nullptr时直接返回last；
+
+然后第一轮退栈，此时当前节点是倒数第二个节点cur，让它的next的next指回自己，也就是last.next=cur，这就让最后1个节点last反转了指向。但是因为cur的next也指向了last，这形成了互指，所以让cur的next断开指向nullptr，cur的next会在下一轮递归指向cur的前一个节点prev。第一轮返回的仍然是last，因为多轮递归能满足返回条件的只有last，其它节点不是nullptr，它们的next也不是nullptr，所以不会返回任何东西；
+
+第二轮退栈，同理cur变成了prev，此时让cur.next.next=cur，就是让prev的后1个节点的next指回prev，然后断开cur的连接避免互指，也就是prev的next=nullptr，之后同理不会返回任何东西，如此反复。
+
 ## 合并两个有序链表
 
 ### recursion解法

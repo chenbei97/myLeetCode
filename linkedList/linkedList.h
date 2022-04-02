@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:17:56
- * @LastEditTime: 2022-03-16 08:18:36
+ * @LastEditTime: 2022-04-02 10:20:34
  * @Description: linkedList.h
  * @FilePath: \myLeetCode\linkedList\linkedList.h
  * @A boy without dreams
@@ -26,4 +26,7 @@
 #include "linkedListCircularExist_HashTable.h"
 
 #include "linkedListInsertSort_Iteration.h"
+
+#include "linkedListReverseList_Iteration.h"
+#include "linkedListReverseList_Recursion.h"
 #endif // !linkedList

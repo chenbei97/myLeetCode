@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:20:38
- * @LastEditTime: 2022-03-16 08:24:52
+ * @LastEditTime: 2022-04-02 10:23:17
  * @Description: linkedList's leetcode analysis
  * @FilePath: \myLeetCode\linkedList\main.cpp
  * @A boy without dreams
@@ -31,5 +31,9 @@ int main()
     _linkedList_circularExist_hashTable();
     cout<<"the list insertSort as follows\n"; 
     _linkedList_insertSort_iteration();
+    cout<<"reverst list as follows\n"; 
+    _linkedList_reverseList_iteration();
+    _linkedList_reverseList_recursion();
+    cout<<"reverst list as follows\n"; 
     return 0;
 }
