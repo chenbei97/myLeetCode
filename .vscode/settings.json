@@ -57,7 +57,9 @@
         "hash_map": "cpp",
         "map": "cpp",
         "numeric": "cpp",
-        "unordered_set": "cpp"
+        "unordered_set": "cpp",
+        "listnode.h": "c",
+        "linkedlistaddtwonumbers_iteration.h": "c"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }
