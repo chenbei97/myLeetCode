@@ -31,6 +31,9 @@
 #include "linkedListRemoveElements_Recursion.h"
 #include "linkedListRemoveElements_Iteration.h"
 
+#include  "linkedListAddTwoNumbers_Iteration.h"
+#include  "linkedListAddTwoNumbers_Stack.h"
+
 #include "linkedListInsertSort_Iteration.h"
 #include "linkedListRotateList_Iteration.h"
 #include "linkedListOddEven_Iteration.h"

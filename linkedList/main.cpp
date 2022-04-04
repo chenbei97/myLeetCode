@@ -1,3 +1,11 @@
+/*
+ * @Author: chenbei
+ * @Date: 2022-03-11 18:55:30
+ * @LastEditTime: 2022-04-04 12:09:34
+ * @FilePath: \myLeetCode\linkedList\main.cpp
+ * @Description:  
+ * @signature: A boy without dreams
+ */
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:20:38
@@ -41,5 +49,8 @@ int main()
     _linkedList_rotateList_iteration();
     cout<<"get odd even list as follows\n";
     _linkedList_oddEven_iteration();
+    cout<<"add two numbers as follows\n";
+    _linkedList_addTwoNumbers_iteration();
+    _linkedList_addTwoNumbers_stack();
     return 0;
 }
