@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:17:56
- * @LastEditTime: 2022-04-02 11:32:33
+ * @LastEditTime: 2022-04-06 09:44:37
  * @Description: linkedList.h
  * @FilePath: \myLeetCode\linkedList\linkedList.h
  * @A boy without dreams
@@ -33,6 +33,9 @@
 
 #include  "linkedListAddTwoNumbers_Iteration.h"
 #include  "linkedListAddTwoNumbers_Stack.h"
+
+#include "linkedListMergeSort_Iteration.h"
+#include "linkedListMergeSort_Recursion.h"
 
 #include "linkedListInsertSort_Iteration.h"
 #include "linkedListRotateList_Iteration.h"

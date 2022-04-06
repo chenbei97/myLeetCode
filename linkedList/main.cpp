@@ -9,7 +9,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:20:38
- * @LastEditTime: 2022-04-02 14:11:05
+ * @LastEditTime: 2022-04-06 10:19:40
  * @Description: linkedList's leetcode analysis
  * @FilePath: \myLeetCode\linkedList\main.cpp
  * @A boy without dreams
@@ -52,5 +52,8 @@ int main()
     cout<<"add two numbers as follows\n";
     _linkedList_addTwoNumbers_iteration();
     _linkedList_addTwoNumbers_stack();
+    cout<<"sort list as follows\n";
+    _linkedList_mergeSort_iteration();
+    _linkedList_mergeSort_recursion();
     return 0;
 }
