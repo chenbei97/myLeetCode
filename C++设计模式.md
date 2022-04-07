@@ -814,19 +814,205 @@ public class Work{
 
 ## 十八、备忘录模式
 
+1、备忘录模式是指，**不破坏封装性的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态，这样可将对象恢复到之前的状态**。
 
+业务类内部有2个备忘录方法，一个是创建备忘录(决定备忘哪些成分)，一个是设置备忘录(恢复之前的备忘录)。备忘录类是独立的类，它可以被另一个类管理作为该类的私有属性，所以最终就是用这个类的私有属性来保存业务类创建备忘录返回的备忘录，然后业务类状态变化后，再取出私有属性重置即可。
+
+**所以关键就是要从业务类内部返回备忘录，同时用一个管理备忘录的类去接收**。
+
+```c#
+class Originator{
+    private string state;//保存的数据状态
+    public string State{
+        get{return state;}
+        set{state = value;}
+    }
+    public Memento CreateMemento(){
+        return (new Memenyo(state));
+        // 外部使用Originator.CreateMemento()
+        // 即保存了Originator的信息
+    }
+    public void SetMemento(Memento mem){
+        state = mem.State;//可以访问备忘录类的State接口(宽),Originator的state可以被重置恢复到以前的状态
+    }
+}
+class Memento{ //完全独立的类,不继承也不使用别的类属性
+    private string state;
+    public Memento(string state){
+        this.state = state;
+    }
+    public string State{
+        get{return state;}//提供给Originator的宽接口
+    }
+}
+class ManagerMemento{ // 管理备忘录的类
+    private Memento mem;//作为私有属性
+    public Memento getAndSetMemento{
+        get{return mem;}
+        set{mem = value;}
+    }
+}
+// 客户端程序
+Originator o = new Originator();//业务类
+o.State = "on";//设置state="on"
+
+ManagerMemento c= new ManagerMemento();//管理备忘录
+c.Memento = o.CreateMemento();//o内部的状态备忘于c
+
+o.State = "off";//改变状态
+o.SetMemento(c.Memento);//恢复备忘录
+```
+
+2、备忘录模式缺点是可能要保存很多的数据，比较消耗内存。
 
 ## 十九、组合模式
 
+1、组合模式是指将对象组合成树形结构以表示"部分-整体"的层次结构。**组合模式使用户对单个对象和组合对象的使用具有一致性**。
 
+例如树具有3个方法，添加节点，移除节点和展示节点值。对于叶子节点没有子节点，所以移除和添加操作是没有意义的。而其它非叶子节点，3个方法都有意义，此时希望对两类节点都可以使用同样的方式去处理，就可以采用组合模式。叶子节点类和非叶子节点类继承同一个类即可。
+
+```c#
+abstract class Component{
+    protected string name;//声明为保护可被继承
+    public Component(string name){
+        this.name = name;
+    }
+    public abstract void Add(Component c);
+    public abstract void Remove(Component c);
+    public abstract void Display(Component c);
+}
+class Leaf:Component{
+    public Leaf(string name):base(name){}
+    public override void Add(Component c){
+        Console.WriteLine("canno add to a leaf node"); //透明模式但不安全
+    }
+    public override void Remove(Component c){
+        Console.WriteLine("canno remove from  a leaf node"); //透明模式但不安全
+    }
+    public override void Display{
+        Console.WriteLine("name is ",name);
+    }
+}
+class Composite:Component{
+    private List<Component>children = new List<Component>();//存储子节点的列表
+    public Composite(string name):base(name){}
+    public override void Add(Component c){
+		children.Add(c);
+    }
+    public override void Remove(Component c){
+        children.Remove(c);
+    }
+    public override void Display{
+        Console.Display();
+    }
+}
+// 客户端代码
+Composite root = new Composite("root");
+root.Add(new Leaf("Leaf A"));
+root.Add(new Leaf("Leaf B"));
+
+Composite comp = new Composite("composite x");
+comp.Add(new Leaf("Leaf XA"));
+comp.Add(new Leaf("Leaf XB"));
+
+Composite comp2 = new Composite("composite xy");
+comp2.Add(new Leaf("Leaf XYA"));
+comp2.Add(new Leaf("Leaf XYB"));
+
+comp.Add(comp2);
+root.Add(comp);
+Leaf leaf = new Leaf("Leaf C");
+root.Add(leaf)
+root.Remove(leaf);
+root.Display();
+```
+
+2、透明模式是基类提供了所有方法，某个子类不能使用某些方法时可以抛出异常或提示信息，这样可以保证接口一致，但是不安全。如果基类只提供子类完全共有的那些函数，可能会导致子类之间有不同的接口。
 
 ## 二十、迭代器模式
 
+1、迭代器模式是指，**提供一种方法顺序访问一个聚合对象中各个元素，而又不暴露该对象的内部表示**。
 
+类似STL容器的迭代器类，既然是迭代，最好把迭代器类嵌套声明在容器类中。如果不嵌套，**容器类可以提供创建迭代器的方法**，类似于备忘录模式内部负责创建备忘录，但是迭代器怎么访问容器类呢，只能是将容器类对象作为私有属性，这样对传入的容器类对象进行迭代即可。容器类也可以有派生类，那么派生类也会继承这个返回迭代器的方法，那么迭代器的派生类去对应容器的派生类即可实现多态且松耦合，因为迭代器可以前向访问也可以反向访问，这个其实是工厂方法模式的体现。
+
+```c#
+abstract class Iterator{
+    public abstract object First();
+    public abstract object Next();
+    public abstract boolIsDone();
+    public abstract object CurrentItem();
+}
+abstract class Containter{
+    public abstract Iterator CreateIterator();//抽象类返回抽象类,只提供接口
+}
+class concreteContainter:Containter{
+    private IList<object> items=new List<object>();
+    public override Iterator CreateIterator(){ //继承的创建迭代器的方法
+        return new ConcreteIterator(this);//创建子类迭代器
+    }
+    public int count{ //返回元素个数
+        get{returrn items.Count;}
+    }
+    public object this(int index){
+        get{return items[index];}//返回和设置指定索引元素
+        set{items.Insert(index,value);}
+    }
+}
+class ConcreteIterator:Iterator{
+    private concreteContainter containter;//迭代器类可直接操作容器类
+    prrivate int currrent = 0;
+    public ConcreteIterator(concreteContainter con){
+        this.containter = con;
+    }
+    public override object First(){
+        return containter[0];
+    }
+    public override object Next(){
+        object ret = null;
+        current++;
+        if (current < containter.Count){
+            ret = containter[current];
+        }
+        return ret;
+    }
+    public override bool IsDone(){
+        return current>=containte.Count?true:false;
+    }
+    public override object CurrentItem(){
+        return containter[currrent];
+    }
+}
+```
+
+2、迭代器类就是分离了集合对象的遍历行为，可以不暴露集合的内部结构还可以让外部代码透明的访问集合内的数据。
 
 ## 二十一、单例模式
 
+1、单例模式是指，保证一个类只有1个实例，并提供一个访问它的全局访问点。
 
+阻止new的使用在C++中就是利用一个类，声明构造函数为私有，然后单例模式的那个子类继承这个类，那么子类就不能进行构造了。对于C#而言可以这样做。
+
+```c#
+class Singleton{
+    private static Signleton instance;//唯一实例
+    private Signleton(){}//阻止new创建新实例
+    public static Signleton getInstance(){
+        // 静态函数,唯一全局访问点,static函数只存在1份内存
+        if (instance == null){
+            instance = new Signleton();
+        }
+        return instance;
+    }
+}
+// 客户端代码
+Signleton s1 = Signleton.getInstance();
+Signleton s2 = Signleton.getInstance();
+if (s1 == s2){ // s1和s2相同
+    ...
+}
+```
+
+2、单例模式可以严格控制客户怎样访问以及何时访问，即对唯一实例的受控访问。
 
 ## 二十二、桥接模式
 
