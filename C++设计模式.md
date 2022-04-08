@@ -1285,18 +1285,341 @@ c2.send("尼玛！");
 string s2 = c1.get();
 ```
 
-
-
 ## 二十六、享元模式
 
+1、享元模式是指，利用共享技术有效地支持大量细粒度的对象，享元模式不强制共享。
 
+其实**还是一个享元工厂类去管理和创建业务基**类，业务基类可以被派生类继承，派生类可以是共享模式也可以不共享。**享元工厂内部使用哈希表的"key"来标记创建的实例，业务基类可以要求必须指定用户对象才能使用**。
+
+```c#
+public class User{
+    private string name;
+    public User(string name){// 用户有自己的名称
+        this.name = name;
+    }
+    public string Name{
+        get{return name;}
+    }
+}
+abstract class Website{
+    public abstract vois Use(User user);//指定对象来使用网站
+}
+class ConcreteWebsite{
+    private string name="";
+    public ConcreteWebsite(string name){
+        this.name = name;
+    }
+    public override void Use(User user){
+        Console.WriteLine("网站名称为: "+name+" 使用者为: ",user.name);
+    }
+}
+class WebsiteFactory{
+    private HashTable websites = new HashTable();
+    public Website getWebsite(string key){
+        if (!websites.ContainsKey(key))
+            websites.Add(key,new ConcreteWebsite(key));
+        return (Website)websites[key];
+    }
+    public int getWebsiteCount(){
+        return websites.Count;//获取网站的实例个数
+    }
+}
+// 客户端
+WebsiteFactory f = new WebsiteFactory();
+
+// 对客户来看好像是3个实例,实际上内部使用的都是1个实例
+Website fx = f.getWebsite("产品展示");
+fx.Use(new User("小陈"));
+Website fx = f.getWebsite("产品展示");
+fx.Use(new User("小王"));
+Website fx = f.getWebsite("产品展示");
+fx.Use(new User("小李"));
+```
+
+2、如果应用程序使用了大量的对象，且这些对象的行为是相似的，那么可以考虑使用享元模式。
 
 ## 二十七、解释器模式
 
+1、解释器模式是指，**如果一种行为出现的频率非常高，那么可以将这组行为作为简单语言的某些句子，解释器遇见这些句子就翻译成原本的行为是什么，这种约定是自己定义的**。
 
+2、解释器模式使用类来表示文法规则，可以使用继承来改变和拓展该文法。但这也带来一个问题，解释器模式为文法的每条规则都定义了至少1个类，可能难以维护。
+
+解释器的典型应用就是编写音乐程序，如约定O表示音阶,O1表示低音阶，O2为中音阶，O3为搞音阶；P表示休止符，"C D E F G A B"表示"Do-Re-Mi-Fa-So-La-Ti"；音符长度1表示1拍，2表示2拍，0.5表示半拍，0.25为四分之一拍，以此类推。例如上海滩的第一句"浪奔"，可以写成"O 2 E 0.5 G 0.5 A 3"表示中音阶开始，演奏的是"mi so la"(其实我也不懂音乐，九那意思照着抄下)。
 
 ## 二十八、访问者模式
 
+1、访问者模式是指，**将数据结构和作用于结构上的操作分开，使操作可以自由的演化和拓展**。
 
+前提是**数据结构是稳定的**，例如人作为一种数据结构其性别只有男和女。然后很多的行为，或者说针对人的一些操作，例如抽烟、谈恋爱、跑步等，对于男和女有不同的反应，那么**行为类可以同时给出基于数据结构类男和女的反应**，然后男和女只需调用对应的方法即可。**为了行为可以拓展，就必须把作用在数据结构的行为和数据结构分开**。
+
+```c#
+// 抽象数据结构类
+abstract class Person{
+    public abstract void accept(Behavior behavior);
+}
+class Man:Person{
+    public override void accpet(Behavior behavior){
+        behavior.getManBehavior(this);//调用男性结论
+    }
+}
+class Woman:Person{
+    public override void accpet(Behavior behavior){
+        behavior.getWomanBehavior(this);//调用女性结论
+    }
+}
+
+// 抽象行为类
+abstract class Action{
+    // 给出针对稳定数据结构的人类男和女的2类反应,这也是访问者模式适合的场景
+    public abstract void getManBehavior(Man m);
+    public abstract void getWomanBehavior(Woman w);
+}
+
+// 各式各样的行为
+class Running:Action{
+    public override void getManBehavior(Man m){
+        Console.WriteLine("跑步有利于不肾虚");
+    }
+    public override void getWomanBehavior(Man m){
+        Console.WriteLine("跑步有利于美容");
+    }
+}
+
+class makeLove:Action{
+    public override void getManBehavior(Man m){
+        Console.WriteLine("谈恋爱又得花不少钱呢");
+    }
+    public override void getWomanBehavior(Man m){
+        Console.WriteLine("嗬,男人就是想跟我睡觉");
+    }
+}
+//...
+```
+
+2、访问者模式有利于观察稳定的数据结构的具象对一列行为产生的反应，需要定义高层接口。
+
+具体是要定义一个对象结构类，内含列表可以存储数据结构对象。这个类还提供添加数据结构和移除数据结构的方法，以及展示功能。
+
+```c#
+class ObejectStructure{//高层接口
+    private IList<Person> elements = new List<Person>();
+    
+    public void Attach(Person element){
+        elements.Add(element);
+    }
+    public void Remove(Person element){
+        elements.Remove(element);
+    }
+    public void Display(Action action){
+        foreach(Person e in elements){
+            e.accept(action);//内部会调用action内分别针对男和女的方法,取决于e是男是女
+        }
+    }
+}
+// 客户端
+ObjectStructure o = new ObjectStructure();
+o.Attach(new Man());
+0.Attach(new Woman());
+Running r = new Running();//跑步的反应
+o.Display(r);
+//...其它任何行为的反应类似代码
+```
 
 ## 二十九、模式总结
+
+先看图，书上给的总结如下。
+
+```mermaid
+graph TD
+SingleMode[单例模式]
+FactoryMethodMode[工厂方法模式]
+AbstractFactoryMode[抽象工厂模式]
+BuliderMode[建造者模式]
+PrototypeMode[原型模式]
+FactoryMode[工厂模式]-->SingleMode
+FactoryMode[工厂模式]-->FactoryMethodMode
+FactoryMode[工厂模式]-->BuliderMode
+FactoryMode[工厂模式]-->PrototypeMode
+FactoryMode[工厂模式]-->AbstractFactoryMode
+
+ObserverMode[观察模式]
+TemplateMethodMode[模板方法模式]
+CommandMode[命令模式]
+StateMode[状态模式]
+DutyChainMode[职责链模式]
+ObservationMode[观察者模式]-->ObserverMode
+ObservationMode[观察者模式]-->TemplateMethodMode
+ObservationMode[观察者模式]-->CommandMode
+ObservationMode[观察者模式]-->StateMode
+ObservationMode[观察者模式]-->DutyChainMode
+
+AdapterMode[适配器模式]
+
+DecorateMode[装饰模式]
+AppearanceMode[外观模式]
+CombinationMode[组合模式]
+ShareMode[享元模式]
+AgentMode[代理模式]
+BridgeMode[桥接模式]
+FacadeMode[外观模式]-->DecorateMode
+FacadeMode[外观模式]-->AppearanceMode
+FacadeMode[外观模式]-->CombinationMode
+FacadeMode[外观模式]-->ShareMode
+FacadeMode[外观模式]-->AgentMode
+FacadeMode[外观模式]-->BridgeMode
+
+ExplainMode[解释器模式]
+IntermediaryMode[中介者模式]
+VisitorMode[访问者模式]
+MemoryMode[备忘录模式]
+IteratorMode[迭代器模式]
+StrategyMode[策略模式]
+TacticMode[策略模式]-->ExplainMode
+TacticMode[策略模式]-->IntermediaryMode
+TacticMode[策略模式]-->VisitorMode
+TacticMode[策略模式]-->MemoryMode
+TacticMode[策略模式]-->IteratorMode
+TacticMode[策略模式]-->StrategyMode
+Mode[模式]-->FactoryMode
+Mode[模式]-->ObservationMode
+Mode[模式]-->FacadeMode
+Mode[模式]-->TacticMode
+Mode[模式]-->AdapterMode
+```
+
+现在使用自己的理解。
+
+首先是工厂模式。
+
+1、简单工厂模式
+
+```mermaid
+graph TD
+m[简单工厂模式]
+s1[工厂类]
+s2[工厂Create函数]
+s3[返回业务具体类对象]
+y1[业务基类]
+y2[业务具体类1]
+y3[业务具体类2]
+y1-->y2
+y1-->y3
+m-->s1-->s2-->|create|s3
+m-->y1
+y1==>|作为参数被使用|s2
+```
+
+2、工厂方法模式
+
+```mermaid
+graph TD
+m[工厂方法模式]
+s1[工厂基类Create]
+y1[业务基类]
+y2[业务具体类1]
+y3[业务具体类2]
+s2[工厂具体类1]
+s3[工厂具体类2]
+m-->s1-->s3
+s1-->s2
+m-->y1
+y1-->y2
+y1-->y3
+s2-.->|create|y2
+s3-.->|create|y3
+```
+
+3、抽象工厂模式
+
+```mermaid
+graph TD
+m[抽象工厂模式]
+s1[工厂基类createA,createB]
+s2[工厂具体类1createA,createB]
+s3[工厂具体类2createA,createB]
+m-->s1
+s1-->s2
+s1-->s3
+y1[业务基类A]
+y2[业务具体类A1]
+y3[业务具体类A2]
+m-->y1
+y1-->y2
+y1-->y3
+x1[业务基类B]
+x2[业务具体类B1]
+x3[业务具体类B2]
+m-->x1
+x1-->x2
+x1-->x3
+s2-.->y2
+s2-.->x2
+s3-.->y3
+s3-.->x3
+```
+
+4、原型模式
+
+```mermaid
+graph TD
+m[原型模式]
+s1[业务基类]
+s2[提供方法clone]
+s3[业务具体类1]
+s4[业务具体类2]
+m-->s1-->s2-->|heritage|s3
+s2-->|heritage|s4
+s3-->overrideClone
+s4-->overrideClone
+```
+
+5、单例模式
+
+```mermaid
+graph TD
+m[单例模式]
+s1[业务类]
+s2[声明构造函数private]
+s3[定义static函数返回实例]
+m-->s1-->s2
+s1-->s3
+```
+
+6、建造者模式
+
+```mermaid
+graph TD
+m[建造者模式]
+s1[抽象建造者类]
+s2[提供一系列固定的建造方法]
+s3[提供返回建造结果的方法]
+m-->s1
+s1-->s2
+s1-->s3
+c1[具体建造者类1]
+c2[具体建造者类2]
+c3[覆写抽象方法]
+s2-->c1
+s2-->c2
+s3-->c1
+s3-->c2
+c1-->c3
+c2-->c3
+k[指挥者类]
+m-->k
+k1[提供固定构造的方法]
+k-->k1
+s1-.->|被作为参数|k1
+s2-.->|按顺序被调用|k1
+```
+
+
+
+
+
+
+
+
+
+
+
