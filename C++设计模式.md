@@ -1016,17 +1016,274 @@ if (s1 == s2){ // s1和s2相同
 
 ## 二十二、桥接模式
 
+1、**优先使用对象合成/聚合，而不是类继承，即用某物实现(has a to implement**)。
 
+类继承会导致子类强烈依赖父类，所以如果可以利用已有的类进行复合完成一个功能的设计更好。
+
+2、**聚合表示一种弱的拥有关系，即A对象可以包含B对象，但B对象不是A对象的一部分；合成则是一种强的拥有关系，体现的是部分与整体的关系**。
+
+例如大雁和翅膀是合成关系，大雁和雁群则是聚合关系。再如手机品牌和手机软件，如果手机品牌作为抽象类，下边子类是各个手机品牌，每个手机品牌还要有不同的手机软件子类，这样随着品牌和软件类型的增长会成为庞然大物。但是如果考虑使用聚合关系，因为手机软件不是手机品牌的一部分，但是手机品牌可以包含手机软件，所以这是一种聚合关系，聚合关系用空心菱形+实线由被聚合物指向聚合物。
+
+```c#
+abstract class HandSoft{
+    //抽象手机软件类
+    public abstract void Run();
+}
+class HandSoftGame:HandSoft{ // 游戏软件
+    public override void Run(){
+        Console.WriteLine("run phone game");
+    }
+}
+class HandSoftAddress:HandSoft{ // 通讯录软件
+    public override void Run(){
+        Console.WriteLine("run address list");
+    }
+}
+abstract class Brand{//抽象手机品牌类
+    protected HandSoft soft;//用手机软件实现,聚合关系
+    public void setHandSoft(HandSoft soft){
+        this.soft = soft;
+    }
+    public abstract void Run();
+}
+class Vivo:Brand{ // vivo
+    public override void Run(){
+        soft.Run();
+    }
+}
+class Oppo:Brand{ // oppo
+    public override void Run(){
+        soft.Run();
+    }
+}
+// 客户端代码
+Brand br = new Brand();
+br.setHandSoft(new HandSoftGame());//安装游戏软件
+br.Run();
+
+br = new Vivo();
+br.setHandSoft(new HandSoftaddress());//安装通讯录软件
+br.Run();
+```
+
+3、桥接模式是指，将抽象部分与它的实现部分分离，使它们都可以独立的变化。
+
+例如手机品牌能分为多个具体品牌，每个具体的品牌可以设计软件类。
+
+```mermaid
+graph TB
+    PB[PhoneBrand]-->V
+    PB[PhoneBrand]-->O
+    V[Vivo]-->VG
+    V[Vivo]-->VD
+    O[Oppo]-->OG
+    O[Oppo]-->OD
+    VG[VivoGame]
+    VD[VivoAddress]
+    OG[OppoGame]
+    OD[OppoAddress]
+```
+
+也可以手机软件分为多个具体软件，每个具体的软件可以设计具体品牌。
+
+```mermaid
+graph TB
+    PB[HandSoft]-->V
+    PB[HandSoft]-->O
+    V[Address]-->VG
+    V[Address]-->VD
+    O[Game]-->OG
+    O[Game]-->OD
+    VG[Vivo]
+    VD[Oppo]
+    OG[Oppo]
+    OD[Vivo]
+```
+
+但是采用桥接模式，就可以把手机品牌和手机软件独立出来，成为聚合关系。
+
+```mermaid
+graph TB
+    P[Phone]==>|combination|HS
+    P[Phone]==>|combination|PB
+    HS[HandSoft]-->hs1
+    HS[HandSoft]-->hs2
+    PB[PhoneBrand]-->pb1
+    PB[PhoneBrand]-->pb2
+	hs1[Game]
+	hs2[Address]
+	pb1[Vivo]
+	pb2[Oppo]
+```
 
 ## 二十三、命令模式
 
+1、将一个请求封装为一个抽象类，类内部管理了客户类对象，并带有执行方法，具体的命令类可以继承这个请求类。同时把记录请求、撤销请求和通知请求的功能独立成一个通知类，内部管理了请求类对象，提供了设置、取消和执行请求等方法。至于客户类因为要告知通知类自己的请求，所以客户类提供1个请求方法，它会被请求类内部调用执行。 
 
+简单来说是**层层包含的聚合关系，通知类包含了命令类，命令类包含了客户类，后者依次作为前者的私有属性被管理**。所以客户类的请求被层层封装，通知类执行->命令类执行->客户类执行向下调用。这种聚合关系看起来很像继承，但是可以独立出3个类互不相关。
+
+```c#
+class Client{ //愿意的话可以有不同的客户,设置客户抽象类,这里没设置
+    public void Ask(){
+        Console.WriteLine("发出请求");
+    }
+}
+class Command{ // 命令设置抽象类,可以有不同的命令
+    protected Client client;//命令类聚合了客户类对象
+    public Command(Client client){
+        this.cilent = client;
+    }
+    abstract public void Execute();
+}
+class ConcreteCommand:Command{ // 命令具体类
+    public ConcreteCommand(Client client):base(client){}
+    public override void Execute(){
+        client.Ask();//封装1层命令
+    }
+}
+class Invoker{//通知类
+    private Command command;//通知类聚合了命令类对象
+    public void setCommand(Command command){
+        this.command = command; //灵活度,可以通知不同的命令
+    }
+    public void Execute(){
+        command.Execute();//封装2层命令
+    }
+}
+//客户端
+Client r = new Client();
+Command c = new Command(r); // 命令类绑定具体客户
+Invoker i = new Invoker();//通知类
+i.setCommand(c);//通知类绑定具体命令
+i.Execute();//执行客户的请求命令
+```
+
+2、命令模式比较容易设计命令队列，在需要的时候可以将命令记入日志延后执行，并决定是否接收命令或者取消命令。增加新的命令也不会影响原有的命令，有利于拓展。
 
 ## 二十四、职责链模式
 
+1、**使多个对象都有权处理请求，可以避免请求的发送者和接收者的耦合关系，将这些对象连成一条链，并沿着链传递该请求，直到有一个对象处理它为止**。
 
+这种情况很像是基层的请求层层上报机制，直到高层有权拍板为止。
+
+2、如果是相似的但不同层级的一些对象可以轮流处理请求，那么每个对象可以设置一个继任者，如果处理不了请求交给它。
+
+所以**定义一个抽象处理者类，内部有私有属性，私有属性是抽象处理者类自身的对象**，只不过这个对象由于泛型的原因除了可以是同级的处理者还可以是不同级的处理者。
+
+```c#
+abstract class Request{}
+abstract class Handler{
+    protected Handler successor;
+    public void setSuccessor(Handler successor){
+        this.successor = successor;
+    }
+    public abstract void handleRequest(Request request);
+}
+class concreteHandler1:Handler{
+    public override void handleRequest(Request request){
+        if (request能被处理){...}
+        else{
+            if (successor ! null){
+                successor.handleRequest();//交给下一位处理
+            }
+        }
+    }
+}
+class concreteHandler2:Handler{
+    public override void handleRequest(Request request){
+        if (request能被处理){...}
+        else{
+            if (successor ! null){
+                successor.handleRequest();//交给下一位处理
+            }
+        }
+    }
+}
+class concreteHandler3:Handler{
+    public override void handleRequest(Request request){
+        if (request能被处理){...}
+        else{
+            if (successor ! null){
+                successor.handleRequest();//交给下一位处理
+            }
+        }
+    }
+}
+//客户端代码
+Handler h1 = new concreteHandler1();
+Handler h2 = new concreteHandler2();
+Handler h3 = new concreteHandler3();
+h1.setSuccessor(h2);
+h2.setSuccessor(h3);
+h1.handleRequest(new Request());//处理请求
+```
 
 ## 二十五、中介者模式
+
+1、将一个系统分割成许多对象虽然可以降低耦合性，但是大量的连接使得系统看起来像不可分割的整体，每个对象都要依赖和其它对象的直接连接。
+
+基于迪米特法则，如果两个类不必直接通信，但是其中一个类需要另一个类的方法，可以利用第三者来转发这个调用。就像联合国的作用一样，各个国家之间都互相有一套连接，其实整体看来还是比较复杂的，一个国家和另一个国家的关系变化就可能导致需要更改和很多国家的关系。联合国可以起到调停的作用，它可以处理任何国家之间的关系。
+
+2、中介者模式，用一个中介对象来封装一系列的对象交互，中介者使对象之间不需要显式的相互引用，从而使耦合松散，可以独立的改变它们之间的交互。
+
+**中介者类对象被分别聚合于双方类的内部，在中介者类中也聚合了双方的类对象，然后在中介者类的内部进行通信即可**。
+
+假如有国家抽象类，国家可以发消息也可以得到消息。然后2个具体的国家类中国和美国继承国家抽象类，它们内部都带有中介者抽象类的对象，这样中介者可以是处理任何2个国家的事物。
+
+```c#
+abstract class Mediator{
+    //发送和获取消息
+    public abstract void send(string message,Nation nation);
+    public abstract string get(Nation nation);
+}
+class concreteMediator : Mediator{
+    // 认识要调停哪2个国家
+    private Nation n1;
+    private Nation n2;
+    public setN1N2(Nation n1,Nation n2){
+        this.n1 = n1;
+        this.n2 = n2;
+    }
+	public void send(string message,Nation n){
+		//... 一些逻辑,我觉得是c#的原因看不太明白
+    }
+    
+}
+abstract Nation{
+    protected Mediator mediator;//带有中介者对象
+    public Nation(Mediator mediator){
+        this.mediator = mediator; //提供弹性,国家可以拥有任何类型的中介人
+    }
+}
+class Chinese{
+    public Chinese(Mediator mediator):base(mediator){}
+    public void send(string message){
+        mediator.send(message,this);//其实是让中间人发自己this的消息
+    }
+    public string get(){
+        return mediator.get()//让中间人接收对方的消息
+    }
+}
+class USA{
+    public USA(Mediator mediator):base(mediator){}
+    public void send(string message){
+        mediator.send(message,this);//其实是让中间人发自己this的消息
+    }
+    public string get(){
+        return mediator.get();//让中间人接收对方的消息
+    }
+}
+concreteMediator cm = new concreteMediator();
+Chinese c = new Chinese(cm);
+USA u = new USA(cm);//都认识中间人cm
+
+cm.setN1N2(c,u);//中间人也知道要调停哪两个国家
+
+c1.send("八嘎!"); //等于中介者发
+string s1 = c2.get();
+c2.send("尼玛！");
+string s2 = c1.get();
+```
 
 
 
