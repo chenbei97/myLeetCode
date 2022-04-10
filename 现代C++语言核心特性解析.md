@@ -8,7 +8,7 @@
 -->
 ## 1. 新基础类型
 
-### 1.1 整数类型long long
+整数类型long long。
 
 long表示为1个32整型，表示范围在-2^31~2^31-1，因为最高位为符号为0，所以就是2^30+2^29+...+2^0=(1-2^(30+1))/(1-2)=2^31-1。负数则是因为补码的原因为-2^31。
 
@@ -66,7 +66,7 @@ printf("long long min = %lld\n",LLONG_MIN);
 printf("unsigned long long max = %llu\n",ULLONG_MAX);
 ```
 
-### 1.2 新字符类型char16_t和char32_t
+新字符类型char16_t和char32_t。
 
 字符集是指系统支持的所有抽象字符的集合，编码方法表示利用数字和字符建立对应关系的一套方法。例如Unicode字符集可以有3种编码方法，即UTF-32，UTF-16和UTF-8，分别占用4子节、2子节和1字节的内存空间。Unicode字符集根据ISO 10646标准大概有0x10FFFF个字符，也就是大概110多万个字符，所以使用UTF-32标准完全够用，大概43亿个字符。而UTF-16最大可容纳0xFFFF个字符，也就是65535个字符，所以这套编码方法使用了一些非一一线性的映射规则去表示字符。同理UTF8也是如此，这也是目前最常用的编码方法。
 
@@ -588,7 +588,7 @@ Line L2{.a{.y=5}};//允许
 
 跳过。
 
-## 12.委托构造函数(C++11)
+## 12.委托构造函数
 
 类似于这样的写法，说实话我觉得还是挺恶心的。
 
@@ -671,107 +671,430 @@ class Derived : public Base{
 
 ## 16.override和final说明符
 
+首先明确重写override、重载overload和隐藏overwrite的概念。
 
+override是指C++的派生类覆盖了基类继承而来的虚函数，这里要求函数签名和返回类型，以及常量性都一致。
+
+overload是函数重载，函数名字是相同的，但是函数签名不同。至于返回类型没有相同不相同的要求，因为函数重载不以返回类型区分。
+
+overwrite是指基类成员函数被继承时，无论它是否为虚函数，只要派生类的函数签名和继承来的函数签名不同就叫隐藏，如果相同那就是override。
+
+如果想要使用基类的成员函数，可以使用using声明基类的函数暴露在子类的作用域中。
+
+重写非常容易出错，如下所示。
+
+```c++
+class Base{
+    virtual void some_func(){}
+    virtual void foo(int x){}
+    virtual void bar()const{}
+    void non_virtual();
+}
+class Drived:public Base{
+    public:
+    	virtual void sone_func(){};//打字错误,这其实是派生类自己定义的虚函数
+    	virtual void foo(int &x){};//签名不一致,同理
+    	virtual void bar(){};//常量性没被继承
+    	virtual void non_virtual();//这是派生类自己的虚函数,基类的不是虚函数
+}
+```
+
+所以C++11之后提供了override关键字，告诉编译期这个虚函数需要覆盖基类的虚函数，如果发现不符合重写规则就会给出提示。
+
+```c++
+class Base{
+    virtual void some_func(){}
+    virtual void foo(int x){}
+    virtual void bar()const{}
+    void non_virtual();
+}
+class Drived:public Base{
+    public:
+    	virtual void sone_func()override{};//报错,4个函数都不能重写
+    	virtual void foo(int &x)override{};
+    	virtual void bar()override{};
+    	virtual void non_virtualoverride();
+}
+```
+
+final关键字是被用来阻止派生类继承自己的虚函数，告诉这个函数不能被重写。
+
+```c++
+class Base{
+    public:
+    	virtual void log(const char*)const{...}//定义自己的日志函数打印到终端
+    	virtual void foo(int x){}//其它函数
+}
+class BaseWithFileLog: public Base{
+    public:
+    	virtual void log(const char*)const override final{...}//为了更好的保存日志，将函数重写改为保存到文件中，不要求后面的继承者不要改变日志的行为
+}
+class Derived:public BaseWithFileLog{
+    public:
+    	void foo(int x){};//只允许foo函数被重写
+}
+```
+
+final也可以用在类上，这是告知这个类不能作为基类被其他类继承。
+
+```c++
+class Base final{
+    public:
+    	virtual void foo(int x){}
+};
+class Derived:public Base{ //报错,不允许被继承
+    public:
+    	void foo(int x){} 
+}
+```
+
+记住，为了与过去的代码兼容，override和final不作为保留的关键字，override只在虚函数的尾部才有意义，final只有在虚函数的尾部及类声明的时候才有意义。
 
 ## 17. 基于范围的for循环
 
+这个改法就像Python那么好用，可以基于范围遍历而不是提供索引值或者迭代器才能遍历。不过要求对象类型必须定义了begin和end成员函数，或者定义了以对象类型为参数的begin和end普通函数。
+
+以前的写法。
+
+```c++
+std::map<int,std::string> m ={{1,"hello"},{2,"C++"},{3,"World"}};
+std::map<int,std::string>::iterator it = m.begin();
+for(;it!=m.end();++it){
+    std::cout<<"key = "<<(*it).first
+        <<" val = "<<(*it).second<<std::endl;//比较啰嗦
+}
+// 可以使用标准库的for_each的方法，自定义仿函数
+void print(std::map<int,std::string>::const_conference element){
+        std::cout<<"key = "<<element.first
+        <<" val = "<<element.second<<std::endl;
+}
+std::for_each(m.begin(),m.end(),print);
+```
+
+C++11之后可以这样写。
+
+```c++
+for(const auto&e : m){//复杂对象最好使用引用
+     std::cout<<"key = "<<e.first
+        <<" val = "<<e.second<<std::endl;
+}
+// 不是容器,普通数组也可以
+int a[]={0,1,2,3,4};
+for(auto e:a){ //基础类型最好使用值
+    std::cout<<e<<std::endl;
+}
+```
+
+C++20对范围循环增加了对初始化语句的支持，还可以这样写。
+
+```c++
+for (vector<int> v = { 1,2,3 }; auto & x:v) {//c++20
+    cout << x << " ";
+}
+cout << "\n";
+```
+
+## 18. 支持初始化语句的if和switch
+
+C++17以后增加了对if和switch初始化语句的支持。
+
+初始化语句的生命周期伴随其下方的整个判断结构if，包括else和else if，但不能作用于上。
+
+```c++
+bool foo(){
+    return false;
+}
+bool bar(){
+    return true;
+}
+int main(){
+    if (bool b=foo();b){
+        ...//做些事
+    }
+    else if (bool c=bar();c){ // c的生命周期不在else if上边,只在下边
+        ... //做些事
+    }
+    else{
+        ... //做些事
+    }
+    return 0;
+}
+```
+
+switch语句也可以。
+
+```c++
+#include <condition_variable>
+#include <chrono>
+using namespace std::chrono_literals;
+std:: condition_variable cv;//一个条件变量
+std::mutex cv_m;//一个锁
+int main(){
+    switch (std::unique_lock<std::mutex> lk(cv_m);//构造独一无二的锁
+           cv.wait_for(lk,100ms))//真正的判断条件
+    { // lk生命周期贯穿整个switch语句，可作用于任何case分支
+        case std::cv_status::timeout:
+            break;
+        case std::cv_status::no_timeout:
+            break;
+    }
+    return 0;
+
+```
+
+## 19.static_assert声明
+
+静态断言出现之前都是运行时断言，即程序跑起来才会触，所以处于debug时才会使用，因为它比较粗暴直接终止程序。而关键字static_assert就可在编译期内触发断言，而不是运行。它要求传入2个实参，常量表达式和诊断信息字符串，常量表达式是因为编译期无法计算运行时才能确定结果的表达式。
+
+```c++
+#include <type_traits>
+class A{};
+class B:public A{};
+class C{};
+template<class T>
+class E{
+    static_assert(std::is_base_of<A,T>::value,"A is not base of T");
+    // A是不是T的基类
+};
+int main(int argc,char*argv[]){
+    static_assert(argv>0,"argv > 0");//错误,argv>0不是常量表达式
+    E<C> x;//通过编译,A不是C的基类,触发断言
+    static_assert(sizeof(int)>=4,"sizeof(int) >=4");//通过编译,返回真不触发断言
+    E<B> y;//通过编译,不会触发断言
+}
+```
+
+因为诊断字符串是个常量字符串，所以它可以被定义成宏，无需第二个参数。故C++17以后，可以不指定第二参数。
+
+```c++
+// C++17
+template<class T>
+class E{
+    static_assert(std::is_base_of<A,T>::value);//不加第二参数
+};
+int main(int argc,char*argv[]){
+    E<C> x;//通过编译,触发断言
+    static_assert(sizeof(int)<4);//通过编译,触发断言,不加第二参数
+    E<B> y;//通过编译,不触发断言
+}
+```
+
+## 20. 结构化绑定
+
+python可以实现结构化绑定的就是tuple，C++11以后也引入，但是不够简洁，这是因为必须要指定返回类型，而python可以自动做到泛型。
+
+```C++
+// c++11
+#include <tuple>
+tuple<int,int> func(){
+    return tuple(11,2);
+}
+int x=0,y=0;
+std::tie(x,y)=func();//必须用tie绑定2个参数
+```
+
+C++17以后可以使用auto[x,y]表达tuple，[x,y]是绑定标识符列表。
+
+```c++
+// c++17
+#include <tuple>
+auto func(){
+    return tuple(11,2);
+}
+auto[x,y]=func();// auto[x,y]
+
+// 绑定到结构体
+struct S{
+    int a = 43;
+    string b = "cb";
+}
+S st;
+auto[x,y]=st;//自动绑定x=a,y=b
+//遍历循环的时候也很好用
+vector<S> st={{1,"A"},{2,"b"},{3,"f"}};
+for(const auto&[x,y]:st){ //很像for x,y in zip(a,b)..
+    ...
+}
+
+// 绑定到原生数组
+int a[3]={1,2,3};
+auto[x,y,z]=a;
+
+//绑定到类对象
+class A{
+    public: //必须是公有
+    	int a=1;
+    	string b="c";
+}
+
+// 且必须都定义在基类或者派生类不能桥接
+class B{
+    public :
+    	int a=1;
+}
+class C : public B{
+    public :
+    	string b="c";
+}
+C ct;
+auto[x,y]=ct;//不能通过编译
+
+// 绑定到元组或者类元组,map就是类元组,pair也是
+map<int,sring> m={{1,"str"}};
+auto[x,y]=m;
+```
+
+## 21. noexcept关键字
+
+暂时跳过，2022年4月10日。
+
+## 22. 类型别名和别名模板
+
+C++11之后，使用using替代typedef。
+
+```c++
+typedef void(*func1)(int,int);
+using func2 = void(*)(int,int);
+```
+
+别名模板是把模板T也可以作为别名。
+
+```c++
+template<class T>
+using int_map = std::map<int,T>;
+int_map<std::string> int2string;
+int2string[11]="7"; // 11作为key,"7"是val
+```
+
+## 23. 指针字面量nullptr
 
+C++中0可以是整型常量也可以是空指针常量。
 
-## 18. 支持初始化语句的if和switch(C++17)
+```c++
+#ifndef NULL
+	#ifdef _cpluscplus
+		#define NULL 0
+	#else
+		#define NULL((void*)0)
+	#endif
+#endif
+```
 
+C标准认为0是整型常量或者空指针常量void * 。
 
+为了避免二义性，C++11引入了关键字nullptr取代NULL专门表示空指针，nullptr是纯右值
 
-## 19.static_assert声明(C++11,C++17)
+## 24.三向比较
 
+三向比较可以有三种可能的比较，但是他只能和0比或者自身。
 
+```c++
+bool b = 7 <=> 11 <0; //true
+bool b = 7 <=> 11 =0; //false
+bool b = 7 <=> 11 >0; //false
+```
 
-## 20. 结构化绑定(C++17,C++20)
+更多内容见书P203页。
 
+## 25. 线程局部存储
 
+跳过。。
 
-## 21. noexcept关键字(C++11,C++17,C++20)
+## 26. 扩展的inline说明符
 
+C++17之前定义类的非常量静态成员要求变量的声明和定义必须分开，除非是const类型。
 
+```c++
+class X{
+    public :
+    	static int a;
+}
+int X::a=1;
+```
 
-## 22. 类型别名和别名模板(C++11,C++14)
+如果定义在头文件被其它cpp文件反复包括就造成重定义。
 
+```c++
+#ifdef X_H
+#define X_H
+class X{
+    public :
+    	static int a;
+}
+int X::a=1;
+#endif
+```
 
+C++17之后可以使用inline。
 
-## 23. 指针字面量nullptr(C++11)
+```c++
+class X{
+    public :
+    	inline static int a = 1;
+}
+```
 
+## 27.常量表达式
 
+内容太多，暂时跳过，书P221~P252，2022.4.10。
 
-## 24.三向比较(C++20)
+## 28.确定的表达式求值顺序
 
+跳过，用处不大。
 
+## 29.字面量优化
 
-## 25. 线程局部存储(C++11)
+跳过，用处不大。
 
+## 30. aligns和alignof
 
+主要用于数据对齐问题，暂时跳过，2022.4.10。P268~P279。
 
-## 26. 扩展的inline说明符(C++17)
+## 31. 属性说明符和标准属性
 
+跳过，用处不大。
 
+## 32. 新增预处理器和宏
 
-## 27.常量表达式(C++11~C++20)
+跳过，用处不大。
 
+## 33. 协程
 
+跳过，用处不大。
 
-## 28.确定的表达式求值顺序(C++17)
+## 34.基础特性的其他优化
 
+跳过，用处不大。
 
+## 35. 可变参数模板
 
-## 29.字面量优化(C++11~C++17)
+跳过，用处不大。
 
+## 36. typename优化
 
+跳过，用处不大。
 
-## 30. aligns和alignof(C++11,C++17)
+## 37. 模板参数优化
 
+跳过，用处不大。
 
+## 38. 类模板的模板实参推导
 
-## 31. 属性说明符和标准属性(C++11~C++20)
+跳过，用处不大。
 
+## 39. 用户自定义推导指引
 
-
-## 32. 新增预处理器和宏(C++17,C++20)
-
-
-
-## 33. 协程(C++20)
-
-
-
-## 34.基础特性的其他优化(C++11~C++20)
-
-
-
-## 35. 可变参数模板(C++11,C++17,C++20)
-
-
-
-## 36. typename优化(C++17,C++20)
-
-
-
-## 37. 模板参数优化(C++11,C++17,C++20)
-
-
-
-## 38. 类模板的模板实参推导(C++17,C++20)
-
-
-
-## 39. 用户自定义推导指引(C++17)
-
-
+跳过，用处不大。
 
 ## 40. SFINE(C++11)
 
+跳过，用处不大。
 
+## 41. 概念和约束
 
-## 41. 概念和约束(C++20)
+跳过，用处不大。
 
+## 42. 模板特性的其他优化
 
-
-## 42. 模板特性的其他优化(C++11,C++14)
+。。。咋说呢，跳过，用处不大。
 
