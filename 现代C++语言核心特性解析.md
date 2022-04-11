@@ -221,7 +221,7 @@ auto推导会返回更强类型。
 auto i = true? 5:8.0;// i是double类型
 ```
 
-auto 声明的变量是按值初始化，则会忽略const和volatile限定符。
+**auto 声明的变量是按值初始化，则会忽略const和volatile限定符**。
 
 ```c++
 const int a = 5;
@@ -294,7 +294,7 @@ struct sometype{
 }
 ```
 
-C++17 可以没有const的限制了。
+**C++17 可以没有const的限制了，但是要配合inline**，这也是后边提到的inline的扩展章节说过的。
 
 ```C++
 // c++17
@@ -597,22 +597,22 @@ Line L2{.a{.y=5}};//允许
 ```c++
 class X{
     public :
-        X():X(0,1.0){} // 委托构造函数
-        X(int a):X(a,1.0){}// 委托构造函数
-        X(double b):X(0,b){}// 委托构造函数
-        X(int a,double b):a(a),b(b){commonInit();}// 代理构造函数
+        X():X(0,1.0){} // 调用委托构造函数
+        X(int a):X(a,1.0){}// 调用委托构造函数
+        X(double b):X(0,b){}// 调用委托构造函数
+        X(int a,double b):a(a),b(b){commonInit();}// 委托构造函数
     private:
-    	void commonInit();//代理构造函数的主体
+    	void commonInit();//委托构造函数的主体
     	int a;
     	double b;
 }
 
 class X{
     public :
-        X():X(0){} // 委托构造函数
-        X(int a):X(a,1.0){}// 委托构造函数,还是X()的代理构造函数
-        X(double b):X(0,b){}// 委托构造函数
-        X(int a,double b):a(a),b(b){commonInit();}// 代理构造函数
+        X():X(0){} // 调用X(int)委托构造函数
+        X(int a):X(a,1.0){}// 是构造函数,还是X()的委托构造函数
+        X(double b):X(0,b){}// 调用X(int,double)委托构造函数
+        X(int a,double b):a(a),b(b){commonInit();}// 构造函数,y委托构造函数
     private:
     	void commonInit();//代理构造函数的主体
     	int a;
@@ -844,7 +844,7 @@ int main(){
 
 ## 19.static_assert声明
 
-静态断言出现之前都是运行时断言，即程序跑起来才会触，所以处于debug时才会使用，因为它比较粗暴直接终止程序。而关键字static_assert就可在编译期内触发断言，而不是运行。它要求传入2个实参，常量表达式和诊断信息字符串，常量表达式是因为编译期无法计算运行时才能确定结果的表达式。
+静态断言出现之前都是运行时断言，即程序跑起来才会触，所以处于debug时才会使用，因为它比较粗暴直接终止程序。而关键字**static_assert就可在编译期内触发断言，而不是运行**。它要求传入2个实参，常量表达式和诊断信息字符串，常量表达式是因为编译期无法计算运行时才能确定结果的表达式。
 
 ```c++
 #include <type_traits>
@@ -881,7 +881,7 @@ int main(int argc,char*argv[]){
 
 ## 20. 结构化绑定
 
-python可以实现结构化绑定的就是tuple，C++11以后也引入，但是不够简洁，这是因为必须要指定返回类型，而python可以自动做到泛型。
+python可以实现结构化绑定的就是tuple，C++11以后也引入，但是不够简洁，这是因为必须要指定返回类型，同时还需要tie函数将2个变量聚合起来，而python可以自动做到泛型。
 
 ```C++
 // c++11
@@ -986,7 +986,7 @@ C标准认为0是整型常量或者空指针常量void * 。
 
 ## 24.三向比较
 
-三向比较可以有三种可能的比较，但是他只能和0比或者自身。
+C++20以后引入三向比较，可以执行字典序比较，它按照基类从左到右的顺序，并按字段声明顺序对非静态成员进行比较。三向比较可以有三种可能的比较，但是他只能和0比或者自身，也就是三向比较符可以是个左值。
 
 ```c++
 bool b = 7 <=> 11 <0; //true
@@ -994,7 +994,148 @@ bool b = 7 <=> 11 =0; //false
 bool b = 7 <=> 11 >0; //false
 ```
 
-更多内容见书P203页。
+具体的用法可以这样使用，可以用于值判断也可以用于向量判断。
+
+```c++
+int a = 1;
+int b = 2;
+auto ans = a <=> b;
+if (ans <0){
+    cout<<"a<b"<<endl;
+}
+else if (ans >0){
+    cout<<"a>b"<<endl;
+}
+else{
+    cout<<"a==b"<<endl;
+}
+
+vector<int> v1 = { 1,2,3 };
+vector<int> v2= { 1,-1,6 };
+auto ret = v1 <=> v2;
+if (ret < 0) {
+    cout << "v1<v2" << endl;
+}
+else if (ret > 0) {
+    cout << "v1>v2" << endl;// v1>v2
+}
+else {
+    cout << "v1==v2" << endl;
+}
+```
+
+另一种用法，在类ClassName中预置 <=> 运算符 `auto operator<=>(const ClassName&) const = default;` 后，编译器会生成全部共六个比较运算符，如 ==、!=、<、<=、> 和 >=。这时因为，在C++20之前，我们如果想要让自己定义的类型支持排序的话，我们至少要定义一种排序关系。这样虽然能够满足简单排序的要求，但是如果在代码的其他位置还涉及到了更多类型的关系判断，就很可能因为缺少定义而报错。因此，很多数学库的自定义类型往往要实现六种比较运算符（`<`、`=`、`>`、`<=`、`!=`、`>=`），但是这样繁琐的手动定义相当的麻烦。三向比较运算符就是为了简单有效地实现排序关系的定义。
+
+```c++
+struct MyInt {
+    int value;
+    explicit MyInt(int val): value{val} { }
+    auto operator<=>(const MyInt& rhs) const {
+        return value <=> rhs.value; // 自动生成6种比较类型
+    }
+};
+// 也可以让编译器自动生成
+struct MyDouble {
+    double value;
+    explicit constexpr MyDouble(double val): value{val} { }
+    auto operator<=>(const MyDouble&) const = default;  // const =default
+};
+```
+
+值得注意的是，如果使用编译器生成的三向比较运算符，将会比较指针而非被引用的对象。
+
+```c++
+struct A
+{
+    std::vector<int> *pointerToVector;
+    auto operator<=>(const A &) const = default;
+};
+A a1{new std::vector<int>()};
+A a2{new std::vector<int>()};
+std::cout << "(a1 == a2): " << (a1 == a2) << "\n";//答案是false,因为比较的是指针本身
+```
+
+如果预置的语义不适合，例如在必须**不按各成员的顺序进行比较**，或**必须用某种不同于它们的自然比较操作的比较**，这种情况下程序员可以编写 `operator<=>` 并令编译器生成适合的关系运算符。<=>可以返回的有三种类型，即强序、弱序和偏序。
+
+| 返回类型                    | 运算符          | 等价的值 | 不可比较的值 |
+| --------------------------- | --------------- | -------- | ------------ |
+| (强序)std::strong_ordering  | == != < > <= >= | 不可区分 | 不允许存在   |
+| (弱序)std::weak_ordering    | == != < > <= >= | 可区分   | 不允许存在   |
+| (偏序)std::partial_ordering | == != < > <= >= | 可区分   | 允许存在     |
+|                             |                 |          |              |
+
+强序的例子。返回 std::strong_ordering 的运算符应该对所有成员都进行比较，且字符串的话每个字符都要比较。因为遗漏了任何成员都将会损害可替换性，这样二个比较相等的值可能变得可以区分，但是强序不允许等价的值可以区分。如果不想进行不区分大小写的比较或者只比较部分成员，则返回类型应该选用weak_ordering
+
+```c++
+// 比较自然的例子,长度比较有三种可能
+class Base {
+public:
+    auto operator<=>(const Base&) const = default;//事先声明
+};
+std::strong_ordering operator <=>(const std::string& a, const std::string& b) { // 强序的声明
+    int cmp = a.compare(b); // 比较2个字符串长度是否相等,a长度小于b返回-1,长度大于b返回1
+    if (cmp < 0) return std::strong_ordering::less;
+    else if (cmp > 0) return std::strong_ordering::greater;
+    else return std::strong_ordering::equivalent;
+}
+/*
+// 定制比较,不是按长度,而是按照姓名的姓比较
+class TotallyOrdered : Base {
+    std::string tax_id;
+    std::string first_name;
+    std::string last_name;
+public:
+    TotallyOrdered(const std::string& id, const std::string& first, const std::string& last) 
+        :tax_id(id), first_name(first), last_name(last) {}//构造函数
+    
+    // 定制 operator<=>，因为我们想先比较姓
+    std::strong_ordering operator<=>(const TotallyOrdered& that) const {
+        if (auto cmp = (Base&)(*this) <=> (Base&)that; cmp != 0) return cmp;
+        if (auto cmp = last_name <=> that.last_name; cmp != 0) return cmp;//名
+        if (auto cmp = first_name <=> that.first_name; cmp != 0) return cmp;// 姓
+        return tax_id <=> that.tax_id;
+    }
+};
+
+// 测试定制比较
+TotallyOrdered to1{ "1", "first1", "last1" }, to2{ "2", "first2", "last2" };
+std::set<TotallyOrdered> s; // ok
+s.insert(to1); // ok
+s.insert(to2);
+if (to1 <= to2) { // ok，调用一次 <=>
+    std::cout << "to1 <= to2\n";
+}
+else {
+    std::cout << "!(to1 <= to2)\n";
+*/
+// 上边这段程序目前不太明白
+struct ID {
+    int id_number;
+    auto operator<=>(const ID&) const = default; // 全部成员比较
+};
+
+struct Person {
+    ID id;
+    string name;
+    string email;
+    std::weak_ordering operator<=>(const Person& other) const
+    {
+        return id<=>other.id; // 只比较Id成员.使用weak_ordering
+        // 通过调用ID的operator<=>来实现
+    }
+};
+```
+
+operator<=>的代码可以由编译器来生成，但是有一个注意事项。就是类成员中有容器类型(例如vector)时，需要将operator==单独列出来。这是为了性能考虑的。编译器生成的operator==的代码，对于容器类型会先比较容器的size，如果size不同，则必定不等，size相等再去逐个比较内容，这样实现效率高，但是operator<=>要同时实现几个运算符的逻辑，它生成的代码是从头比到尾，对于容器也是如此，并不会先去比size，所以在有容器成员的时候它生成的operator==代码性能不是最高，这时候需要单独将operator==再明确写一次。
+
+```c++
+struct SomeType {
+    int int_property;
+    std::vector<int> some_ints; // vector是容器
+    std::strong_ordering operator<=>(const SomeType&) const = default;
+    bool operator==(const SomeType&) const = default; // 加上这一行
+};
+```
 
 ## 25. 线程局部存储
 
