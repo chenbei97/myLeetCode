@@ -9,7 +9,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:20:38
- * @LastEditTime: 2022-04-06 10:19:40
+ * @LastEditTime: 2022-04-11 14:32:12
  * @Description: linkedList's leetcode analysis
  * @FilePath: \myLeetCode\linkedList\main.cpp
  * @A boy without dreams
@@ -55,5 +55,7 @@ int main()
     cout<<"sort list as follows\n";
     _linkedList_mergeSort_iteration();
     _linkedList_mergeSort_recursion();
+    cout<<"get list middle node as follows\n";
+    _linkedList_middleNode_iteration();
     return 0;
 }

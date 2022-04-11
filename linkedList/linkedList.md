@@ -7,6 +7,22 @@
  * @Signature: A boy without dreams
     -->
 
+## 链表中间节点
+
+如果是偶数个节点就返回第2个。
+
+### iteration解法
+
+链表的缺点在于不能通过下标访问对应的元素。可以考虑对链表进行遍历，同时将遍历到的元素依次放入数组 A 中。如果我们遍历到了 N 个元素，那么链表以及数组的长度也为 N，对应的中间节点即为 A[N/2]。
+
+## singlePointer解法
+
+
+
+## doublePointers解法
+
+
+
 ## 归并排序
 
 ### recursion解法

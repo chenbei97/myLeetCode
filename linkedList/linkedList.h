@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:17:56
- * @LastEditTime: 2022-04-06 09:44:37
+ * @LastEditTime: 2022-04-11 14:31:38
  * @Description: linkedList.h
  * @FilePath: \myLeetCode\linkedList\linkedList.h
  * @A boy without dreams
@@ -40,4 +40,6 @@
 #include "linkedListInsertSort_Iteration.h"
 #include "linkedListRotateList_Iteration.h"
 #include "linkedListOddEven_Iteration.h"
+
+#include "linkedListMiddleNode_Iteration.h"
 #endif // !linkedList
