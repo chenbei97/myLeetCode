@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-28 08:17:56
- * @LastEditTime: 2022-04-11 14:31:38
+ * @LastEditTime: 2022-04-11 15:37:18
  * @Description: linkedList.h
  * @FilePath: \myLeetCode\linkedList\linkedList.h
  * @A boy without dreams
@@ -42,4 +42,7 @@
 #include "linkedListOddEven_Iteration.h"
 
 #include "linkedListMiddleNode_Iteration.h"
+#include "linkedListMiddleNode_SinglePointer.h"
+#include "linkedListMiddleNode_DoublePointers.h"
+
 #endif // !linkedList
