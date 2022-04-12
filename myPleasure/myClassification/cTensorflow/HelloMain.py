@@ -1,7 +1,7 @@
 '''
 Author: chenbei
 Date: 2022-04-11 15:59:00
-LastEditTime: 2022-04-12 08:40:50
+LastEditTime: 2022-04-12 13:13:21
 Description: HelloMain.py
 FilePath: \myLeetCode\myPleasure\myClassification\cTensorflow\HelloMain.py
 Signature: A boy without dreams
@@ -11,6 +11,7 @@ from tensorflow.keras import losses,optimizers
 from tensorflow.keras import datasets
 from tensorflow.keras import metrics
 from HelloModel import HelloModel
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 def getDataGenerator():
     mnist = datasets.mnist
@@ -52,6 +53,11 @@ def train(train_ds,test_ds,epochs=5):
         test_loss(loss)
         test_acu(labels,predictions)
     
+    train_loss_list = []
+    train_acu_list = []
+    val_loss_list = []
+    val_acu_list = []
+
     def mytrain():
         for epoch in tqdm(range(epochs)):
             train_loss.reset_states()
@@ -64,13 +70,34 @@ def train(train_ds,test_ds,epochs=5):
             for test_images,test_labels in test_ds:
                 test_step(test_images,test_labels)
             
+            train_acu_list.append(train_acu.result())
+            train_loss_list.append(train_loss.result())
+            val_acu_list.append(test_acu.result())
+            val_loss_list.append(test_loss.result())
+
             printLog = 'epoch={}, train_loss = {}, train_acu = {}, test_loss = {}, test_acu = {}'
             print(printLog.format(epoch+1,
                                   train_loss.result(),
-                                  train_acu.result()*100,
+                                  train_acu.result(),
                                   test_loss.result(),
-                                  test_acu.result()*100))
+                                  test_acu.result()))
+    def plot_acu_loss():
+        plt.subplot(2, 1, 1)
+        plt.plot(range(epochs), train_acu_list, label='Training Accuracy')
+        plt.plot(range(epochs), val_acu_list, label='Validation Accuracy')
+        plt.legend(loc='lower right')
+        plt.title('Training and Validation Accuracy')
+
+        plt.subplot(2, 1, 2)
+        plt.plot(range(epochs), train_loss_list, label='Training Loss')
+        plt.plot(range(epochs), val_acu_list, label='Validation Loss')
+        plt.legend(loc='upper right')
+        plt.title('Training and Validation Loss')
+        plt.show()
+   
     mytrain()
+    plot_acu_loss()
+
 
 if __name__ == '__main__':
     train_ds,test_ds = getDataGenerator()
