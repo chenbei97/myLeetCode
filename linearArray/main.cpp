@@ -84,5 +84,8 @@ int main()
     cout<<"the sort color by double pointers as follows\n";
     _linearArray_colorClassify_doublePointers();
     _linearArray_colorClassify_iteration();
+    cout <<"the daily temperature as follows\n";
+    _linearArray_dailyTemperature_statck();
+    _linearArray_dailyTemperature_iteration();
     return 0;
 }

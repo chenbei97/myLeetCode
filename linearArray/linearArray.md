@@ -1,4 +1,26 @@
+<!--
+ * @Author: chenbei
+ * @Date: 2022-02-23 16:54:57
+ * @LastEditTime: 2022-04-12 15:57:06
+ * @Description: linearArray.md
+ * @FilePath: \myLeetCode\linearArray\linearArray.md
+ * @Signature: A boy without dreams
+-->
 ## 解题思路
+
+## 每日温度
+
+给定一个整数数组 temperatures ，表示每天的温度，温度范围在 [30, 100] 之内。要求返回一个数组 answer ，其中 answer[i] 是指在第 i 天之后，才会有更高的温度。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+### iteration解法
+
+对于温度列表中的每个元素 temperatures[i]，需要找到最小的下标 j，使得 i < j 且 temperatures[i] < temperatures[j]。由于温度范围在 [30, 100] 之内，因此可以维护一个数组 next 记录每个温度第一次出现的下标。数组 next 中的元素初始化为无穷大，在遍历温度列表的过程中更新 next 的值。
+
+反向遍历温度列表。对于每个元素 temperatures[i]，在数组 next 中找到从 temperatures[i] + 1 到 100 中每个温度第一次出现的下标，将其中的最小下标记为 warmerIndex，找到最小的下标是因为这个是第1次出现的比 temperatures[i]高的温度。如果 warmerIndex 不为无穷大，则 warmerIndex - i 即为下一次温度比当天高的等待天数，最后令 next[temperatures[i]] = i。temperatures[i]是温度，让这个温度值作为索引的那个值为i。因为遍历温度列表的方向是反向，当遍历到元素 temperatures[i] 时，只有 temperatures[i] 后面的元素被访问过，即对于任意 t，当 next[t] 不为无穷大时，一定存在 j 使得 temperatures[j] == t 且 i < j。又由于遍历到温度列表中的每个元素时都会更新数组 next 中的对应温度的元素值，因此对于任意 t，当 next[t] 不为无穷大时，令 j = next[t]，则 j 是满足 temperatures[j] == t 且 i < j 的最小下标。
+
+### stack解法
+
+遍历每日温度，维护一个单调栈，若栈空或者每日温度小于栈顶温度直接入栈；否则如果当日温度大于栈顶温度，计算这个温度和栈顶温度的相差天数。这个温度不会入栈，只会在后面的遍历每日温度时入栈。因为要求的是天数，所以栈元素是温度元素的索引值。
 
 ## 颜色分类
 
