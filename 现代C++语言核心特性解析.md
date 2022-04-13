@@ -475,6 +475,170 @@ int main(){
 
 暂时跳过，2022.4.10。
 
+C++11的lambda表达式的语句形式如下。
+
+```c++
+// c++11
+[captures] (params) specifiers exception -> ret{body}
+int main(){
+    int x = 5;
+    auto foo = [x](int y)->int{return x*y;};
+    return 0;
+}
+```
+
+[captures] ：捕获列表，可以捕获当前函数作用域的零个或多个变量，变量之前可以用逗号分开。[x]就是一个捕获列表，不过它只是捕获了1个变量x。捕获之后就可以在函数体内使用这个变量。**捕获方式分为按值捕获和按引用捕获**。
+
+(params)：就是函数的参数列表，对应(int y)。
+
+specifiers ：可选限定符，C++11可以使用mutable，允许在lambda表达式函数体内改变按值捕获的变量，或者调用非const的成员函数。
+
+exception：可选异常抛出符，可以使用noexcept指明是否抛出异常。
+
+ret：可选返回值类型，如果没有返回值(void)，可以忽略包括->在内的整个部分。也可以有返回类型时不指定返回类型，编译期会自动推导。
+
+{body}：lambda表达式的函数体，这个部分和普通函数的函数体一样，对应{return x*y}
+
+C++14和C++ 17对lambda表达式进行了拓展，后边会提到。
+
+
+
+关于捕获列表，其变量的作用域存在于**[ lambda表达式定义的函数作用域 ]以及[lambda表达式函数体的作用域]**，前者是为了捕获变量，后者是为了使用变量。另外**捕获的变量必须是可自动存储的类型，即非静态局部变量**。
+
+```c++
+int x = 0;//x不是自动存储类型,也不存在于lambda表达式定义的作用域
+int main(){
+    int y = 0;
+    static int z = 0;//z不是自动存储类型
+    auto foo = [x,y,z]{};//可能非法
+    return 0;
+}
+// 其实直接使用x,z即可,无需捕获
+int main(){
+    int y = 0;
+    auto foo = [y]{return x+y+z;};//捕获的只能是某个作用域下的非静态局部变量
+}
+
+// 所以如果定义全局的lambda表达式,自己是全局,那么能捕获的变量必定不存在
+int x = 1;
+auto foo = []{return x;};
+int main(){
+    foo();
+    return 0;
+}
+```
+
+再来说说按值捕获和引用捕获。**捕获值是将函数作用域的变量值复制到lambda表达式对象的内部，如同lambda表达式的成员变量一样**。捕获引用和捕获值只有一个&的区别，不过这里捕获的是引用而不是指针，在lambda表达式内可以直接使用变量名访问。
+
+```c++
+int main(){
+    int x = 5, y = 8;
+    auto foo = [&x,&y]{
+        ++x;
+        y += 2;
+        return x * y;};
+    cout << "x = " << x << " y = " << y << endl; // x=5,y=8,会改变原有值
+    cout << foo() << "\n"; // 60
+    cout << "x = " << x << " y = " << y << endl;// x = 6 y = 10
+}
+```
+
+上述代码如果去除了&,会导致编译错误，因为捕获列表不能改变按值捕获的变量值，即**捕获的变量默认为常量，或者说lambda表达式是个常量函数**。按**引用捕获改变的不是引用本身，只是引用的值**，不违反捕获的东西要求是常量这一规则。而mutable可以用于移除lambda表达式的常量性，所以上述代码可以这样写。
+
+```c++
+int main(){
+    int x = 5, y = 8;
+    auto foo = [x,&y]()mutable{ //小括号不要忘,因为mutable存在时参数列表不可省略
+        ++x;
+        y += 2;
+        return x * y;};
+    cout << "x = " << x << " y = " << y << endl; // x=5,y=8,不改变原有值
+    cout << foo() << "\n"; // 60
+    cout << "x = " << x << " y = " << y << endl; // x=5,y=8,不改变原有值
+}
+```
+
+注意按值捕获不能改变外部变量，按引用捕获可以。但是还要注意一点，**按值捕获但是有mutable关键字的情况下，如果多次调用匿名函数，虽然不能改变外部变量，但是可以改变捕获的变量，也就是可以影响到下次调用lambda表达式，可以把按值捕获而来的x看成是lambda表达式的成员变量**，这样去理解就很容易。
+
+```c++
+int main(){
+    int x = 5, y = 8;
+    auto foo = [x,&y]()mutable{ 
+        ++x;
+        y += 2;
+        cout << "lambda => x = " << x << " y = " << y << endl;
+        return x * y;};
+    cout << "before lambda => x = " << x << " y = " << y << endl; //
+    cout << foo() << "\n"; // 60
+    cout << "after lambda => x = " << x << " y = " << y << endl; // 
+    cout << foo() << "\n"; // 60
+    cout << "after lambda again => x = " << x << " y = " << y << endl; // 
+}
+// 输出结果
+before lambda => x = 5 y = 8
+lambda => x = 6 y = 10 //把x,y看成是lambda表达式的成员就可以理解
+60
+after lambda => x = 5 y = 10 // 但是按值捕获不可改变外部变量,引用可以
+lambda => x = 7 y = 12 // 把x,y看成是lambda表达式的成员就可以理解
+84
+after lambda again => x = 5 y = 12 // 但是按值捕获不可改变外部变量,引用可以
+```
+
+还要注意一点，按值捕获的lambda表达式一旦定义，即使外部变量又再次修改了这个值也不会改变捕获的值，可以匿名函数在改变之前就已经复制好了，是自己的东西不会更改。但是引用捕获会更改。
+
+```c++
+int main(){
+    int x = 5, y = 8;
+    auto foo = [x,&y]()mutable{ 
+        ++x;
+        y += 2;
+        cout << "lambda => x = " << x << " y = " << y << endl;
+        return x * y;};
+    x = 6; y = -1;
+    cout << foo() << "\n"; // 6
+}
+输出：lambda => x = 6 y = 1
+```
+
+lambda表达式除了可以捕获指定变量意外，还有3种特殊的捕获方法。**一、可以捕获[this]，即this指针，这样就可使用this类型的成员变量和函数；第二、[=]，可以捕获lambda表达式定义作用域的全部变量的值(注意，不是lambda函数体的作用域)，包括this；第三、[&]，捕获lambda表达式定义作用域的全部变量的引用，包括this。**
+
+关于this的捕获例子如下，因为捕获了this指针，所以lambda函数体内就可以使用this的成员函数和变量了，并进行赋值操作，这说明捕获的是this的引用，能够改变表达式外的值。
+
+```c++
+class HB {
+	public:
+		void print() { cout << "class HB" << endl; }
+		void test() { 
+			auto foo = [this] {print(); x = 5; }; 
+			foo();
+		}
+    	int getX()const { return x; }
+	private:
+		int x;
+};
+int main(){
+    HB hb;
+	hb.test();
+    cout << "x = "<< hb.getX() << endl;
+    return 0;
+}
+// 输出
+class HB
+x = 5
+```
+
+捕获全部变量的值或引用也可以。
+
+```C++
+int main(){
+    int x = 5, y= 8;
+    auto foo = [=]{return x * y};//就可以直接使用了
+    cout << foo() << "\n"; // 40
+}
+```
+
+
+
 ## 8.非静态数据成员默认初始化
 
 C++11以前不允许非静态成员变量初始化，只能这样写。
