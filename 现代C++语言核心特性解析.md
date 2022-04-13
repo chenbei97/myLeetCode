@@ -780,7 +780,43 @@ Line L2{.a{.y=5}};//允许
 
 ## 10. 默认和删除函数
 
-跳过。
+C++11之后定义一个类就会默认提供：默认构造函数、析构函数、复制构造函数、复制赋值运算符构造函数、移动构造函数以及移动赋值运算符函数。但是声明任何构造函数都会阻止默认构造函数的添加，也就是成为非平凡类型，为此我们可能还需要提供一个无参数的构造函数。为了解决这个问题，**C++11提供了默认特殊成员函数的添加与删除的方法，只需要在声明函数的尾部添加=default或者delete即可**。
+
+```c++
+struct X{
+    X() = default; //显式添加默认构造函数
+    virtual ~X() = delete; // 删除析构函数
+    X(const X&); // 显式添加复制构造函数
+};
+X::X(const X&)=default;
+```
+
+default可以在类外使用，这样可以不更改原本定义情况下改变函数内部的行为。
+
+```c++
+// type.h
+struct type{
+    type();
+    int x;
+}
+// type1.cpp
+type::type()=default;//该cpp用默认的构造函数
+// type2.cpp
+type::type(){x=3;}//不用默认的构造
+```
+
+delete不能再在类外使用，否则会引发编译错误，它的作用就是可以代替声明private禁止复制构造函数，而且更彻底。
+
+delete对普通函数使用也可以，最后一句忠告，**不要对类的构造函数同时使用explicit和=delete**。
+
+```c++
+void f()=delete;
+int main(){
+    f();//失败,f已被删除
+}
+```
+
+
 
 ## 11. 非受限联合类型
 
@@ -1468,11 +1504,218 @@ class X{
 
 内容太多，暂时跳过，书P221~P252，2022.4.10。
 
+有些常量表达式合理但是不能通过编译，例如数组长度，case语句、枚举成员的值以及非类型的模板参数，还可以是宏定义作为函数调用或者用函数返回值来初始化1个const常量。
 
+```c++
+int getSize(){return 5;}
+const int ARRAYSIZE = getSize();//不能通过编译
+char buffer[getSize()][getSize()];//亦不能使用
+```
+
+这是因为，这些语法都是运行时才能计算的代码，再如头文件<limits>可以获取unsignd char类型的最大值，但是它用来声明数组的大小不能通过编译。所以C++11之后引入关键字constexpr用来定义常量表达式。
+
+```C++
+#include <limits>
+char arr[std::numeric_limits<unsigned char>::max()] = {0};//不能通过
+```
+
+定义常量表达式很简单，可以这样使用声明。
+
+```c++
+constexpr int x = 5; //编译阶段就可以使用,代替了const int x = 5;后者不能保证编译期常量的特性
+char buffer[x] = {0};
+```
+
+比较const和constexpr的具体区别，所以**constexpr是一个加强版的const，即可以在编译期就确定值的常量**。
+
+```c++
+int x1 = 5;
+const int x = x1;
+char buffer[x] = {0};//不能通过
+
+constexpr int x = x1;
+char buffer[x] = {0};//可以通过
+```
+
+constexpr除了可以定义常量表达式值，还可以定义常量表达式函数，即**constexpr修饰返回值的函数，这个函数的返回值在编译阶段就可算出来，所以可以用于初始化const常量的值**。
+
+C++11中定义constexpr函数有几条规则，首先必须只返回一个值且不能是void；其次函数体只能有1条语句，return expr，expr必须是常量表达式；第三，若函数有形参，则形参替换到expr也必须是常量表达式；第四，函数使用之前必须有定义，且使用constexpr修饰返回值。
+
+```c++
+// C++11
+constexpr int max_uchar(){return 0xff;}
+constexpr int square(int x){return x * x;}
+constexpr int abs(int x){return x>0?x:-x;}
+char buffer[max_uchar()]={0};// ok
+char buffer[square(5)]={0};// ok
+char buffer[abs(-5)]={0};// ok
+
+// 以下是使用constexpr失败的情况
+constexpr void foo1(){}//无返回值
+constexpr int next(int x){return ++x;}// 不是常量表达式,返回值不明确
+int foo2(){return 42;}// 无constexpr修饰
+
+constexpr int max_uchar();
+enum{mUchar = max_uchar()}//调用的函数只有声明没有定义就作为枚举值初始化
+
+constexpr int foo3(int x){
+    if (x>0)return x;
+    else return -x;//多语句
+}
+
+constexpr int sum(int x){
+    int res =0;
+    while (x > 0)
+        res += x--;
+    return res;
+}
+```
+
+但是要注意，**constexpr函数带有形参时，且形参并非常量时，常量表达式可能会退化为普通函数**，例如上方的square函数。
+
+constexpr还可以用于构造函数，不过要求**必须使用constexpr声明，且构造函数初始化列表必须是常量表达式，且函数体为空，因为构造函数没有返回值**。如果使用constexpr声明自定义类型的变量，要求对象类的析构函数是平凡的，即不能有自定义的析构函数，析构函数不能是虚函数，基类和成员的析构函数也必须是平凡的。
+
+```c++
+class X{
+    public:
+    	X():x1(5){}
+    	int get()const{return x1;}
+    private:
+    	int x1;
+}
+constexpr X x;
+char buffer[x.get()]={0};//失败,因为构造函数没用constexpr声明
+
+// 改为
+class X{
+    public:
+    	constexpr X():x1(5){}
+    	constexpr X(int i):x1(i){}
+    	constexpr int get()const{return x1;}// 不加const也可以,constexpr已绑定常量属性
+    private:
+    	int x1;
+}
+constexpr X x;
+char buffer[x.get()]={0}; // 现在成功
+
+int i = 8;
+constexpr X x(i);//失败,i不是常量所以原本的有参构造函数退化为普通构造函数,此时不能再用constexpr声明。
+```
+
+constexpr支持浮点型，不像enum只能操作整型。
+
+```c++
+constexpr double sum(double x){
+    return x > 0? x + sum(x-1):0;
+}
+constexpr double x = sum(5);//15
+```
+
+C++14以后函数体允许声明变量，除了没有初始化、static和thread_local变量以外；也允许if和switch语句，不能使用go语句；允许使用for、do-while和while语句；函数返回值可以声明为void；constexpr声明的成员函数不再具有const属性。
+
+C++17以后，lambda函数都被隐式声明为constexpr，如果希望强制要求也可以后置类型声明。
+
+```c++
+// C++17
+constexpr int foo(){
+    return [](){return 58;}();//匿名函数的调用
+}
+auto get_size = [](int i){return i *2;}//不捕获
+char buffer[foo()]={0};// ok
+char buffer1[get_size(5)] ={0};//ok,get_size是匿名函数,两者效果一样
+
+// 但是匿名函数也会退化为普通函数
+int i = 5;
+char buffer1[get_size(i)] ={0}; //失败,因为i对get_size来说不是纯常量
+
+auto get_size = [](int i)constexpr->{return i*2;}//强制声明
+
+auto get_count = []()constexpr->int{
+    static int x = 5;//静态变量不会在编译期计算,只会在运行时计算
+    return x;
+}
+int a2 = get_count();//编译失败
+
+// C++17还自动将constexpr声明的静态变量内联，它既是声明也是定义
+class X{
+    public:
+    	static constexpr int num{5};
+    	// 等价于
+    	inline static constexpr int num{5}; //c++17之前对&X::num取值是非法的之后不是,因为这也是定义
+}
+```
+
+如果说constexpr是加强版的const，它还提供了一种选择性，即可以使用if constexpr，让代码根据条件进行实例化。但是要求这个**条件必须是编译期能确定结果的常量表达式，且条件结果一旦确定只编译符合条件的代码**。所以，if constexpr用在模板函数才有意义，普通函数使用会很尴尬。
+
+```c++
+// c++17
+// 普通函数使用
+void f1(int i){
+    if constexpr(i>0){//编译失败,不是常量表达式
+        cout<<"i > 0\n";
+    }
+    else cout<<"i <=0\n";
+}
+void f2(){
+    if constexpr(sizeof(int)>sizeof(char)){
+        cout<<"sizeof(int)>sizeof(char)\n";
+    }
+    else cout<<"sizeof(int)<=sizeof(char)\n";
+}
+// 模板函数使用
+template<typename T>
+bool is_same_val(T a,T b){return a==b;}
+//偏特化
+template<>
+bool is_same_val(double a,double b){
+    if (abs(a-b)<0.0001)return true;
+    else return false;
+}
+double x = 0.1+0.1+0.1-0.3;
+x == 0.;//false
+is_same_val(5,5);//true
+is_same_val(x,0.);//true
+
+// 现在使用constexpr进行特化,代码简化很多
+#include <type_traits> // include is_same<>
+template<typename T>
+bool is_same(T a,T b){
+    if constexpr(is_same<T,double>::value){//是double型这么编译
+        if (abs(a-b)<0.01){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    else{ // 不要忽略else语句,
+        return a == b;//其它类型这么编译
+    }
+    
+    //return a == b; // 对于if语句一般来说忽略else没什么问题,但是if constexpr会导致2个代码块都被编译返回可能出现错误
+}
+```
+
+其它constexpr的特性，在C++20之后允许constexpr虚函数，因为虚函数本就是无状态的，可以有条件的作为常量表达式被优化；允许constexpr函数中出现try_catch语句，但是要注意C++20禁止了throw，故try不能抛出异常，也就是catch语句永远不能被执行，那么try_catch也就没有意义；允许constexpr中进行平方的初始化，即结构体成员没初始化时，且一个声明为constexpr的函数使用了这个结构体，C++17就会报错，C++20不会，这说明C++20对constexpr的标准放松了一些；其他更多特性没啥卵用不介绍了。
 
 ## 28.确定的表达式求值顺序
 
-跳过，用处不大。
+表达式求值顺序的不确定性是指一连串的计算在编译期来看不一定按照你想要的顺序。
+
+```c++
+string s ;
+s.replace(...).replace(s.find(),...).replace(s.find()...);
+// 应当是这样执行的
+replace(...);
+tmp1 = find(...);
+replace(tmp1,...);
+tmp2 = find(...);
+replace(tmp2,...);
+//但是编译器可能给出不同的顺序导致结果错误,另一个可能的就是cout
+cout << g()<<f()<<h()<<endl;//不一定按照g,f,h的顺序执行
+```
+
+C++ 17以后，函数表达式一定会在函数的参数之前进行求值。也就是说f(a,b,c)中f一定会在a,b,c之前求值。但是参数之间的求值顺序依然没有确定，也就是a、b、c谁先被求值是未知的。
 
 ## 29.字面量优化
 
