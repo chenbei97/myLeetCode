@@ -600,6 +600,8 @@ int main(){
 输出：lambda => x = 6 y = 1
 ```
 
+
+
 lambda表达式除了可以捕获指定变量意外，还有3种特殊的捕获方法。**一、可以捕获[this]，即this指针，这样就可使用this类型的成员变量和函数；第二、[=]，可以捕获lambda表达式定义作用域的全部变量的值(注意，不是lambda函数体的作用域)，包括this；第三、[&]，捕获lambda表达式定义作用域的全部变量的引用，包括this。**
 
 关于this的捕获例子如下，因为捕获了this指针，所以lambda函数体内就可以使用this的成员函数和变量了，并进行赋值操作，这说明捕获的是this的引用，能够改变表达式外的值。
@@ -637,7 +639,39 @@ int main(){
 }
 ```
 
+另外，如果不捕获变量，也没有任何实现，这样也是可以的，而且它可以隐式转为空的函数指针或引用。
 
+```c++
+auto foo = []{};//合法
+
+void f(void(*)()){} // 一个void函数的指针作为参数
+void g(){
+    f( [] {});//隐式转换为void*函数指针
+}
+
+void f1(void(&)()){}
+void g1(){
+    f( *[] {}); // 隐式转为函数引用
+}
+```
+
+STL中对lambda表达式较为常用，因为一些算法函数要求要求传入第三个参数，往往是函数指针或者函数对象，例如sort和find_if。
+
+以前需要定义仿函数或者类()重载，现在可以直接这样使用。
+
+```c++
+int main(){
+    vector<int> x = {1,2,3,4,5};
+    cout<< * find_if(x.cbegin(),x.cend(),[](int i){return (i%3)==0;})<<endl;// 无需捕获任何变量,返回bool值
+    return 0;
+}
+```
+
+C++20为了区别于=和this，给出了[=,* this]和[=,this]语法，因为=会捕获this副本，this是只捕获this指针。
+
+```c++
+[=,this]{};//c++17编译报错或者警告,c++20ok
+```
 
 ## 8.非静态数据成员默认初始化
 
@@ -1112,9 +1146,100 @@ auto[x,y]=m;
 
 暂时跳过，2022年4月10日。
 
+throw需要跟上异常列表来说明抛出的异常类型，但是大多数情况下不关心抛出的异常类型，只关心是否抛出异常，这是引入noexcept的一个原因；另一个原因是移动构造函数出现之前，如果复制容器元素到另一个容器出现异常，可以丢弃新的容器，不会影响原有容器。但是移动构造出现后，原有容器元素一部分被移动到新容器了，这样2个容器都无法使用，**这里的问题是throw不能根据容器中移动的元素是否会抛出异常来确定移动构造函数是否允许抛出异常**。
+
+noexcept是一个说明符也是运算符。
+
+作为说明符，能够用来说明是否抛出异常，这样编译器可以根据这个声明优化代码。但是要注意noexcept只是告诉编译器不会抛出异常，不代表不会抛出异常，这相当于是一种承诺。如果承诺失败，编译器会调用std::terminate直接终止程序。
+
+```c++
+struct X
+    int f()const noexcept{
+        return 58;
+    }
+    void g()noexcept();
+}
+int foo()noexcept{
+    return 43;
+}
+```
+
+noexcept接受1个返回bool值的常量常量表达式，如果返回true就表示函数不会抛出异常否则会。例如定义一个模板复制函数，如果是基础类型确实不会异常，但是T是复杂类型调用复制构造是可能异常的，所以可以使用表达式来声明双重选择。
+
+```c++
+T copy(const T& rhs)noexcept(std::is_fundamental<T>::value){
+    ...
+}
+```
+
+但是还希望如果构造函数确实不会异常也能使用noexcept，所以赋予了noexcept运算符的特性，不过表达式都是在编译期间找到潜在的异常。运算符就是说可以传入函数来判断函数是否发生异常。
+
+```c++
+void f1()noexcept;
+void f2();
+int f3() throw();
+cout<<except(f1())<<endl; // 作为运算符,f1不会抛出异常返回true
+cout<<except(f2())<<endl;//fasle
+cout<<except(f3())<<endl;// true,异常已抛出
+
+// 那么copy函数这么写
+T copy(const T& rhs)noexcept(noexcept(T(rhs))){ // 第1个是说明符,第2个是运算符
+    ...
+}
+```
+
+noexcept函数可以解决移动构造的问题。
+
+```c++
+template<typename T>
+void swap(T&a,T&b)
+noexcept(noexcept(T(std::move(a)))&&noexcept(a.operator=(std::move(b))))//检查T的移动构造函数和移动赋值函数是否抛出异常
+{
+    static_assert(noexcept(T(std::move(a)))&&noexcept(a.operator=(std::move(b))));//静态断言过于强势
+    T tmp(std::move(a));
+    a = std::move(b);
+    b = std::move(tmp);
+}
+```
+
+C++11中，throw()需要展开堆栈，并调用std::unexpected；而noexcept不会展开堆栈，而且可以随时停止展开，直接调用std::terminate，所以性能更好。C++17中throw(e)的方法都被移除，只保留了throw()，throw()是except的一个别名。C++20中throw()也被移除了，不再使用throw声明函数异常。
+
+noexcept默认在构造函数、复制构造函数、移动构造函数，赋值函数，移动赋值函数都声明为true，否则一旦提供自己的版本就不带noexcept关键字。另外析构函数(即使是自定义的)也带有noexcept(true)声明，除非基类明确声明为noexcept(false)，delete同理。
+
+```c++
+strcut X1{};//默认
+struct X2{
+  	X2(){}
+    X2(const X2&){}
+    X2(X2&&) noexcept{} //移动构造
+    X2 operator=(const X2&)noexcept{return *this;}//移动复制
+    X2 operator=(X2&&)noexcept{return *this;}//移动赋值
+};
+#define PRINT_NOEXCEPT(x) std::cout<<#x<<" = "<<x<<std::endl
+int main(){
+    X1 x1;
+    X2 x2;
+    std::cout<<std::boolalpha;
+    PRINT_NOEXCEPT(noexcept(X1()));//true
+    PRINT_NOEXCEPT(noexcept(X1(x1)));//true
+    PRINT_NOEXCEPT(noexcept(X1(std::move(x1))));//true
+    PRINT_NOEXCEPT(noexcept(x1.operator=(x1)));//true
+    PRINT_NOEXCEPT(noexcept(x1.operator=(std::move(x1))));//true
+    
+    PRINT_NOEXCEPT(noexcept(X2()));//false
+    PRINT_NOEXCEPT(noexcept(X2(x2)));//false
+    PRINT_NOEXCEPT(noexcept(X2(std::move(x2))));//true
+    PRINT_NOEXCEPT(noexcept(x2.operator=(x2)));//true
+    PRINT_NOEXCEPT(noexcept(x2.operator=(std::move(x2))));//false
+    return 0;
+}
+```
+
+C++17以后一个用noexcept声明的函数指针无法接受一个可能抛出异常的函数，也就是要求接受的函数也要有noexcept声明，但是反过来可以，即没有noexcept的函数指针可以传入noexcept函数。同样基类虚函数声明为noexcept之后，子类不能声明不带nexcept的重写，但是反过来可以。
+
 ## 22. 类型别名和别名模板
 
-C++11之后，使用using替代typedef。
+C++11之后，可以使用using替代typedef。
 
 ```c++
 typedef void(*func1)(int,int);
@@ -1339,9 +1464,11 @@ class X{
 }
 ```
 
-## 27.常量表达式
+## 27.常量表达式constexpr
 
 内容太多，暂时跳过，书P221~P252，2022.4.10。
+
+
 
 ## 28.确定的表达式求值顺序
 
