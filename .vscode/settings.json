@@ -59,7 +59,15 @@
         "numeric": "cpp",
         "unordered_set": "cpp",
         "listnode.h": "c",
-        "linkedlistaddtwonumbers_iteration.h": "c"
+        "linkedlistaddtwonumbers_iteration.h": "c",
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "cstdarg": "cpp",
+        "cwctype": "cpp",
+        "memory_resource": "cpp",
+        "random": "cpp",
+        "string_view": "cpp",
+        "numbers": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }
