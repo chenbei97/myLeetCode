@@ -1089,15 +1089,15 @@ class Derived : public Base{
 
 ```C++
 enum school {
-    student;
-    teacher;
-    principal;
-}
+    student,
+    teacher,
+    principal
+};
 enum company{
-    chairman;
-    manager;
-    employee;
-}
+    chairman,
+    manager,
+    employee
+};
 int main(){
     school sch = student;//ok
     company cpy = manager;//ok
@@ -1114,32 +1114,188 @@ int main(){
 
 ```C++
 enum school{
-    student;
-    teacher;
-    principal;
-}
+    student,
+    teacher,
+    principal
+};
 enum newcompany{
-    student; // 重复导致重定义
-    chairman;
-    manager;
+    student, // 重复导致重定义
+    chairman,
+    manager,
     employee;
-}
+};
 // 使用命名空间修改
 using namespace myCpy{
     enum newcompany{
-    student; // 隔离开全局作用域
-    chairman;
-    manager;
-    employee;
+    student, // 隔离开全局作用域
+    chairman,
+    manager,
+    employee
 	}
 }
 ```
 
+C++11以后对枚举类型进行了升级，在enum后边跟上class关键字就可以。强枚举类型具有3个新特性：**枚举标识符属于强枚举类型的作用域；枚举标识符不会隐式转换为整型；能指定强枚举类型的底层类型，默认是int类型。要说明的是强枚举类型不允许匿名，否则无法通过编译。**第一条的改件就可以使得无需声明作用域可以使用具有相同标识符的枚举类型，也就是不再导致重定义，即无法从外部直接访问，所以使用时必须声明是哪个枚举类型下的标识符；其次相同类型的标识符可以进行比较，但是不同类型的不行，因为不再隐式转为int类型。
 
+```c++
+enum class school{
+    student,
+    teacher,
+    principal
+};
+enum class company{
+    student, 
+    chairman,
+    manager,
+    employee
+};
+int main(){
+	school sch = school::student;
+	company cpy = company::employee;
+	cout <<boolalpha<<(sch>school::teacher) << endl; // false
+	cout << boolalpha << (cpy > company::manager) << endl; // true
+    return 0;
+}
+```
+
+再来回看enum和enum class的区别，以前的enum不能直接初始化列表，但是可以指定类型为int后使用，enum class默认是int。
+
+```c++
+enum pro{1,2,3}; // 非法
+enum pro{ aa, bb, cc }; // 合法
+
+enum pro{ aa, bb, cc }; //没声明底层类型都非法
+enum aaa{5};//非法
+enum aaa = 5;//非法
+enum aaa(5);//非法
+
+enum pro:int{aa,bb,cc};//声明底层类型
+enum aaa{5};//声明底层类型后才合法
+enum aaa = 5;//依然非法
+enum aaa(5);//依然非法
+cout << "aa = " << aaa << endl; // 可以打印,隐式转换为整型,aa=5
+
+enum class school {
+    student,
+    teacher,
+    principal
+};
+school sss{ 5 }; // 合法
+school sss(5); // 非法
+school sss=5; // 非法
+cout << "sss = " << boolalpha<<(sss>school::principal) << endl; // true
+school ssb{ -1 };
+cout << "sss < ssb?  " << boolalpha << (sss < ssb) << endl; // sss < ssb?  false
+```
+
+using也可以声明enum class内的标识符作用于某个空间下。
+
+```c++
+enum class Color{
+  	Red,
+    Green,
+    Blue
+};
+const char* ColorToString(Color C){
+    switch (c){
+        case Color::Red : return "red";
+        case Color::Blue: return "blue";
+        case Color::Green: return "green";
+        default: return "none";
+    }
+}
+// 这样的写法冗余,总是要使用Color::,可以使用using简化
+const char* ColorToString(Color C){
+    switch (c){
+        using enum Color;
+        case Red : return "red";
+        case Blue: return "blue";
+        case Green: return "green";
+        default: return "none";
+    }
+}
+// 当然特别指定某个标识符也是可以的
+const char* ColorToString(Color C){
+    switch (c){
+        using enum Color::Red;
+        case Red : return "red";
+        case Color::Blue: return "blue"; // 依然要使用Color::
+        case Color::Green: return "green";
+        default: return "none";
+    }
+}
+```
 
 ## 15.扩展的聚合类型
 
-。。跳过。
+C++17认为从基类公开且非虚继承的类可能也是个聚合，同时聚合也要符合常规条件，即
+
+**没有用户提供的构造函数；没有私有和受保护的非静态数据成员；没有虚函数**。
+
+在新扩展的定义中，如果类存在继承关系，还要求额外的条件
+
+**必须是公开的基类，不能是私有或者受保护的基类，且不能是虚继承**。
+
+这里要注意的是基类是否为聚合类型不影响派生类，判断是否聚合可使用is_aggregate_v函数判断。下方例子中，string有自己的构造函数不是聚合类型，而自定义的类对string公有继承且不存在虚函数、私有数据成员等，所以也是聚合类型。
+
+```c++
+#include <type_traits> // include is_aggretate_v
+class myString:public string{
+}
+cout<<is_aggretate_v<string><<endl; // no
+cout<<is_aggretate_v<myString><<endl; // yes
+```
+
+聚合类型的好处是可以使用{}直接进行初始化对象，如果是以前就必须借助构造函数实现。注意一个规则，如果使用{}初始化，**一般默认基类成员先于派生类成员声明**。
+
+```c++
+class myString : public string{
+    myString(const string&x,int idx):string(x),index(idx){}//string(x)是用于初始化基类成分
+    int index = 0;
+}
+myString s("hello",11);//使用小括号,也就是构造函数
+
+// C++17之后
+// 现在使用聚合就无需构造函数,因为提供构造函数意味着不是聚合类型
+class myString : public string{
+    public:
+    	int index = 0; // 直接初始化即可
+}
+myString s{{"hello"},11};//使用小括号
+myString s{"hello",11};//这样其实也行
+```
+
+如果派生类存在多个基类，也是按照继承类的顺序去初始化对象。
+
+```c++
+class Count{
+    int count;
+}
+class Ctd{
+    float ave;
+}
+class Which:public Count,public Ctd{
+    string name;
+}
+Which w{1,5.5,"hello"};//按顺序初始化count,ave,name
+```
+
+扩展聚合类型存在一些兼容问题。因为C++14之前认为Derived不是个聚合类型，那么Derived d{}会调用编译器默认的构造函数，所以也会调用基类的构造函数，即使受保护也不妨碍调用它。但是C++17之后认为受保护的构造函数不能被聚合类型初始化中调用，故编译器会报错，解决方法是为派生类提供1个默认构造函数即可。
+
+```c++
+// c++11,c++14
+class BaseData{
+    int data;
+    public :
+    	int get(){return data;}
+    protected:
+    	BaseData():data(11){}//受保护的构造函数
+}
+class Derived:public BaseData{
+    public: 
+}
+Derived d{};//试图列表初始化,编译成功,但是c++17失败
+```
 
 ## 16.override和final说明符
 
@@ -2011,3 +2167,4 @@ C++ 17以后，函数表达式一定会在函数的参数之前进行求值。�
 
 。。。咋说呢，跳过，用处不大。
 
+2022年4月14日暂时更新到这里，后面会依据使用的情况继续更新。
