@@ -816,27 +816,133 @@ int main(){
 }
 ```
 
-
-
 ## 11. 非受限联合类型
 
-跳过。
+联合类型在C++中具有局限性，Union是节约内存的一个典型代表，因为联合类型中多个对象可以共享一片内存，且招惹个内存只能由一个对象使用。下方代码可以看出，使用一个变量初始化后，另一个变量就不能使用。
+
+```c++
+U u;
+u.x1 = 5;
+u.x2 = 6.0;
+cout << "u.x1 = " << u.x1 << " u.x2 = " << u.x2 << endl;
+u.x1 = 7;
+cout << "u.x1 = " << u.x1 << " u.x2 = " << u.x2 << endl;
+// 输出结果
+u.x1 = 1086324736 u.x2 = 6
+u.x1 = 7 u.x2 = 9.80909e-45
+```
+
+过去C++要求联合类型的成员变量不能是非平凡类型，也就是不能有自定义构造函数，但是大多数自定义类都是非平凡类型。
+
+```c++
+union U{
+    int x1;
+    float x2;
+    string s;//不能通过编译,s有自己的自定义构造函数
+}
+```
+
+C++11解除了大部分限制，允许联合类型拥有除了引用类型以外的所有类型。不过这样因为允许非平凡类型的存在，所以要求联合类型必须显式的提供构造和析构函数。析构函数在修改版本中要注意，因为联合类型不知道要激活的是哪个成员，所以无法调用成员的析构函数去析构，所以这部分内容必须客户自己进行提供。虽然修改版本中x3可以正常使用了，但是x4依然不能使用。
+
+```c++
+union U{
+    U(){} // 必须提供构造函数,即使没有任何实现
+    ~U(){}// 必须提供析构函数,即使没有任何实现
+    float x1; // 否则不会成功编译
+    int x2;
+    string x3; // 因为x3没有被构造赋值就会出错,所以编译通过也不代表运行不出错
+    vector<int> x4;
+};
+U u;
+u.x3 = "hello";//直接赋值会出错,x3未被构造
+std::cout<<u.x3;
+
+// 修改版本
+union U{
+    U():x3(){} // 列表初始化x3
+    ~U(){x3.~basic_string();}// 对x3的析构
+    float x1; 
+    int x2;
+    string x3; 
+    vector<int> x4;// 但是x4依然会出错
+};
+U u;
+u.x3 = "hello";//现在不会出错
+std::cout<<u.x3;
+u.x4.push_back(5);//依然会出错
+```
+
+基于上述问题，其实可以让联合类型和析构函数为空，什么也不做，而构造和析构的责任全部交给程序员。
+
+```c++
+// 再次修改
+union U{
+    U():x3(){} 
+    ~U(){}
+    float x1; 
+    int x2;
+    string x3; 
+    vector<int> x4;
+};
+U u;
+new(&u.x3) string("hello");//手动构造
+std::cout<<u.x3<<"\n";;
+u.x3.~basic_string();// 手动析构
+
+new(&u.x4)vector<int>;//手动构造
+u.x4.push_back(5);
+std::u.x4[0]<<"\n"; 
+u.x4.~vector();// 手动析构
+```
+
+另外对于静态成员变量，union的表现和类相同，静态成员实际上不属于union的任何对象，不是对象构造时定义的。
+
+```C++
+union u{
+    static int x1;
+};
+int U::x1 = 42;//类外给出定义
+```
 
 ## 12.委托构造函数
 
-类似于这样的写法，说实话我觉得还是挺恶心的。
+如果所有的构造函数都是调用1个公共函数进行初始化操作，可能这不是一个初始化操作，只是一个赋值操作，相当于进行了两次操作，会造成不必要的性能损失。另外对于复杂的成员对象可能不允许赋值操作，即使使用默认参数优化构造函数，但是对于其它的构造函数而言依然要重复初始化成员变量，且可能造成二义性，因为X1(1)可以调用X1(int)也可以调用X1(int,float)导致编译不通过。
 
-每个构造函数都可以委托另一个构造函数为代理，即可能存在一个构造函数，它既是委托构造函数也是代理构造函数。
+```c++
+class X1{
+    public:
+    	X1(){commonInit(0,0.);}
+        X1(int a){commonInit(a,0.);}
+        X1(float b){commonInit(0,b);}
+        X1(int a=0,float b=0.) :a(a),b(b){commonInit(a,b);}//即使默认参数优化对其他构造函数而言也是重复初始化
+    private:
+    	void commonInit(int a,double b){
+            a = a;
+            b = b;
+            c = "hello";//其实这是1个赋值过程,在这之前s已被初始化多执行了1次操作
+        }
+    	int a;
+    	float b;
+    	string s;
+}
+```
+
+现在引入了委托构造函数，类似于下方代码这样的写法，说实话我觉得还是挺恶心的。
+
+每个构造函数都可以委托另一个构造函数为代理，即可能存在一个构造函数，它既是委托构造函数也是代理构造函数。**代理构造函数先执行，然后执行代理构造主体，最后执行委托构造函数**。
+
+为了了防止未定义行为，**一旦委托构造函数主体抛出异常就会自动调用析构函数，但这不与构造函数完成才会调用析构冲突，因为代理构造函数完成也就认为构造已经完成，可以析构**。
 
 ```c++
 class X{
     public :
-        X():X(0,1.0){} // 调用委托构造函数
-        X(int a):X(a,1.0){}// 调用委托构造函数
-        X(double b):X(0,b){}// 调用委托构造函数
-        X(int a,double b):a(a),b(b){commonInit();}// 委托构造函数
+        X():X(0,1.0){} // 自身是委托构造函数,调用代理构造函数X(int,double)
+        X(int a):X(a,1.0){}// 自身是委托构造函数,调用代理构造函数X(int,double)
+        X(double b):X(0,b){}// 自身是委托构造函数,调用代理构造函数X(int,double)
+        X(int a,double b):a(a),b(b){commonInit();}// 代理构造函数
+    	X(const X&other):X(other.a,other.b);//委托复制构造函数,即复制构造让默认构造代理
     private:
-    	void commonInit();//委托构造函数的主体
+    	void commonInit();//代理构造函数的真正主体
     	int a;
     	double b;
 }
@@ -854,17 +960,99 @@ class X{
 }
 ```
 
-其它特性。。诸如委托模板构造函数、捕获委托构造函数的异常等(真TMD闲的)看书P111页
+但要切记不要递归循环委托，因为循环委托不会被编译器报错，但是会产生未定义行为，常见结果是程序因栈内存用尽而崩溃。
+
+```c++
+class X{
+    public :
+        X():X(0){} // X(int)代理
+        X(int a):X(a,1.0){}// X(int,float)代理
+        X(double b):X(0,b){}//  X(int,float)代理
+        X(int a,double b):X(){commonInit();}// 试图又让X()代理,错误！
+    private:
+    	void commonInit();//代理主体
+    	int a;
+    	double b;
+}
+```
+
+委托构造函数不能在初始化列表对数据成员和基类进行初始化，也就是说委托就是都委托，没有委托一半的说法。
+
+```c++
+class X{
+    public :
+        X():a(0),b(0){commonInit();} // ok
+        X(int a):X(),a(a){}// no!,不能再初始化a
+        X(double b):X(),b(b){}//  no!,不能再初始化b 
+    private:
+    	void commonInit();//代理主体
+    	int a;
+    	double b;
+}
+```
+
+委托构造函数也可以交给模板代理构造函数，这样的意义是泛化了构造函数，下方代码就无需编写对vector和deque的构造函数。
+
+```c++
+class X{
+    public:
+    	X(vector<int>&);
+    	X(deque<short>&);
+    private:
+    	template<typename T>
+    	X(T first,T last):L(first,last){}
+    	list<int> L;
+}
+```
+
+委托构造函数发生异常会自动调用析构，而代理构造函数先发生了异常则委托构造函数不会再执行，使用try_catch捕捉异常后交给catch语句处理。
+
+```c++
+class X{
+    public:
+    	X()try:X(0){} //委托给X(int)
+    	catch(int e){
+            cout<<"catch : "<<e<<endl;
+            throw 3;
+        }
+    	
+    	X(int a) try:X(a,0.0){} // 委托给X(int,float)
+    	catch (int e){
+            cout<<"catch : "<<e<<endl;
+            throw 2; 
+        }
+    	
+    	X(double):X(0,b){}// 委托给X(int,float)
+    
+    	X(int a, double b):a(a),b(b){throw 1;}//代理
+    private:
+    	int a;
+    	double b;
+}
+int main(){
+    try{
+        X x;
+    }
+    catch (int e){
+        cout<<"catch : e"<<e<<endl;
+    }
+}
+// 因为X()->X(int)->X(int,double),在X(int,double)异常时会以相反顺序抛出异常
+// 输出结果
+catch : 1
+catch : 2
+catch : 3
+```
 
 ## 13.继承构造函数
 
 派生类是隐式继承基类的构造函数，所以程序中使用了这些构造函数才会为派生类生成继承构造函数的代码；
 
-派生类不会继承基类的默认构造函数和复制构造函数，因为执行派生类之前一定会先执行基类的默认构造和复制构造，这里继承是多余的；
+派生类不需要继承基类的默认构造函数和复制构造函数，因为执行派生类之前一定会先执行基类的默认构造和复制构造，这里继承是多余的；
 
-继承构造函数不会影响派生类默认构造函数的隐式声明；
+继承构造函数**不会影响派生类默认构造函数的隐式声明**；
 
-派生类如果声明了签名相同的构造函数就会自动禁止继承相应的构造函数，即覆盖基类；
+**派生类如果声明了签名相同的构造函数就会自动禁止继承相应的构造函数，即覆盖基类**；
 
 派生类继承多个签名相同的构造函数会导致编译失败；
 
@@ -897,7 +1085,57 @@ class Derived : public Base{
 
 ## 14. 强枚举类型
 
-。。跳过。
+以前的枚举类型可以提升类整型，但是反过来不行，同时不同类型的枚举值是不能赋值的。
+
+```C++
+enum school {
+    student;
+    teacher;
+    principal;
+}
+enum company{
+    chairman;
+    manager;
+    employee;
+}
+int main(){
+    school sch = student;//ok
+    company cpy = manager;//ok
+    
+    school sch = manager;// no!
+    company cpy = student;//no!
+    
+    sch = 1;//不能转换为int
+    return 0;
+}
+```
+
+还有作用域的问题，两个枚举类型部分枚举类型是重合的，就会导致重定义，解决办法是使用命名空间隔离开全局作用域。
+
+```C++
+enum school{
+    student;
+    teacher;
+    principal;
+}
+enum newcompany{
+    student; // 重复导致重定义
+    chairman;
+    manager;
+    employee;
+}
+// 使用命名空间修改
+using namespace myCpy{
+    enum newcompany{
+    student; // 隔离开全局作用域
+    chairman;
+    manager;
+    employee;
+	}
+}
+```
+
+
 
 ## 15.扩展的聚合类型
 
