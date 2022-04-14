@@ -1,13 +1,16 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-23 16:24:25
- * @LastEditTime: 2022-04-12 16:07:15
+ * @LastEditTime: 2022-04-14 15:56:22
  * @Description: linearArray.h
  * @FilePath: \myLeetCode\linearArray\linearArray.h
  * @Signature: A boy without dreams
  */
 #ifndef linearArray_
 #define linearArray_
+#include "linearArrayKNearestDist_Sort.h"
+#include "linearArrayKNearestDist_Heap.h"
+
 #include "linearArrayDailyTemperature_Stack.h"
 #include "linearArrayDailyTemperature_Iteration.h"
 

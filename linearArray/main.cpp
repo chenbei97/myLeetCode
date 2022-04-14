@@ -87,5 +87,8 @@ int main()
     cout <<"the daily temperature as follows\n";
     _linearArray_dailyTemperature_statck();
     _linearArray_dailyTemperature_iteration();
+    cout<<"get k nearest distance as follows\n";
+     _linearArray_kNearestDist_sort();
+     _linearArray_kNearestDist_heap();
     return 0;
 }
