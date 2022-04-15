@@ -1,7 +1,28 @@
 cd STLTestCode\\algorithms\\c++11\\source
 
-g++ -o all_of  all_of.cpp
-.\all_of.exe
+#include <algorithm>
+#include <iostream>
+#include <vector>
+using namespace std;
+int main()
+{
+    return 0;
+}
+g++ -o is_permutation  is_permutation.cpp
+.\is_permutation.exe
+
+g++ -o is_partitioned  is_partitioned.cpp
+.\is_partitioned.exe
 
 g++ -o all_of  all_of.cpp
 .\all_of.exe
+
+g++ -o any_of  any_of.cpp
+.\any_of.exe
+
+g++ -o none_of  none_of.cpp
+.\none_of.exe
+
+g++ -o is_sorted  is_sorted.cpp
+.\is_sorted.exe
+
