@@ -44,7 +44,30 @@ F==>|as policy|AL
 
 ## 二、空间配置器
 
-allocator提供的接口。
+allocator提供的标准接口。
+
+```c++
+allocator::value_type;
+allocator::pointer;
+allocator::const_pointer;
+allocator::reference;
+allocator::const_reference;
+allocator::size_type;
+allocator::difference_type;
+allocator::rebind; // 拥有唯一成员other
+allocator::allocator();// 默认构造
+allocator::allocator(const allocator&); // 复制构造
+template<class U> allocator::allocator(const allocator<U>&);//泛化的复制构造函数
+~allocator(); // 析构
+pointer allocator::address(reference x)const; // 返回地址.&x
+const_pointer allocator::address(const_reference x)const ;// 返回const对象地址
+pointer allocator::allocate(size_type n,const void*=0);//配置n个T对象所需空间,第2参数是个提示可以用来增进区域性
+void allocator::deallocate(pointer p,const T& x); // 归还空间
+size_type allocator::construct(pointer p,const T&x); // 返回可成功配置的最大量
+void allocator::destroy(pointer p);//等同于p->~T()
+```
+
+
 
 
 
