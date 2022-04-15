@@ -1,0 +1,7 @@
+cd STLTestCode\\algorithms\\c++11\\source
+
+g++ -o all_of  all_of.cpp
+.\all_of.exe
+
+g++ -o all_of  all_of.cpp
+.\all_of.exe
