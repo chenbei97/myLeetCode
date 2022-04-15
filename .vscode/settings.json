@@ -67,7 +67,8 @@
         "memory_resource": "cpp",
         "random": "cpp",
         "string_view": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "ratio": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }

@@ -9,17 +9,19 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 //"${workspaceFolder}\\binaryTree\\*.cpp", // ${file},可以构建多个cpp文件而不是单个
-                "${workspaceFolder}\\linearArray\\*.cpp",
+                //"${workspaceFolder}\\linearArray\\*.cpp",
                 //"${workspaceFolder}\\linkedList\\*.cpp",
                 //"${workspaceFolder}\\characterString\\*.cpp",
                 //"${workspaceFolder}\\coreAlgorithms\\*.cpp",
+                "${workspaceFolder}\\STLTestCode\\*.cpp",
                 "-o",
                 //"${workspaceFolder}\\binaryTree\\main.exe", // ${workspaceFolder}\\myProgram.exe 可以替换为硬编码名
                 //${fileDirname}\\${fileBasenameNoExtension}.exe
-                "${workspaceFolder}\\linearArray\\main.exe",
+                //"${workspaceFolder}\\linearArray\\main.exe",
                 //"${workspaceFolder}\\linkedList\\main.exe",
                 //"${workspaceFolder}\\characterString\\main.exe",
                 //"${workspaceFolder}\\coreAlgorithms\\main.exe",
+                "${workspaceFolder}\\STLTestCode\\main.exe",
             ],
             "options": {
                 "cwd": "${fileDirname}"
