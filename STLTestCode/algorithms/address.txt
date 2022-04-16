@@ -1,5 +1,4 @@
-cd STLTestCode\\algorithms\\c++11\\source
-
+cd STLTestCode\\algorithms\\source
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -11,6 +10,15 @@ int main()
     ostream_iterator<int> out(cout," ");
     return 0;
 }
+g++ -o iota  iota.cpp
+.\iota.exe
+
+g++ -o copy_backward  copy_backward.cpp
+.\copy_backward.exe
+
+g++ -o copy_n  copy_n.cpp
+.\copy_n.exe
+
 g++ -o copy_if  copy_if.cpp
 .\copy_if.exe
 

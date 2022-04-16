@@ -1,0 +1,16 @@
+cd STLTestCode\\numeric\\source
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <iterator>
+using namespace std;
+int main()
+{
+    vector<int> src = {};
+    ostream_iterator<int> out(cout," ");
+    return 0;
+}
+g++ -o iota  iota.cpp
+.\iota.exe
+
+
