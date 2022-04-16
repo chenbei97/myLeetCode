@@ -10,6 +10,12 @@ int main()
     ostream_iterator<int> out(cout," ");
     return 0;
 }
+g++ -o equal_to equal_to.cpp
+.\equal_to.exe
+
+g++ -o equal equal.cpp
+.\equal.exe
+
 g++ -o iota  iota.cpp
 .\iota.exe
 
