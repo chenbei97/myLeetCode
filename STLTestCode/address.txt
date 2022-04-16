@@ -3,11 +3,17 @@ cd STLTestCode\\algorithms\\c++11\\source
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <iterator>
 using namespace std;
 int main()
 {
+    vector<int> src = {};
+    ostream_iterator<int> out(cout," ");
     return 0;
 }
+g++ -o copy_if  copy_if.cpp
+.\copy_if.exe
+
 g++ -o is_permutation  is_permutation.cpp
 .\is_permutation.exe
 
