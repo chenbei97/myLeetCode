@@ -10,6 +10,12 @@ int main()
     ostream_iterator<int> out(cout," ");
     return 0;
 }
+g++ -o mismatch mismatch.cpp
+.\mismatch.exe
+
+g++ -o equal_range equal_range.cpp
+.\equal_range.exe
+
 g++ -o equal_to equal_to.cpp
 .\equal_to.exe
 
