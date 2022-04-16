@@ -1,7 +1,7 @@
 '''
 Author: chenbei
 Date: 2022-04-14 16:44:41
-LastEditTime: 2022-04-14 16:56:32
+LastEditTime: 2022-04-16 17:00:57
 Description: VggNetMain.py
 FilePath: \myLeetCode\myPleasure\myClassification\cTensorflow\VggNetMain.py
 Signature: A boy without dreams
@@ -19,9 +19,12 @@ batch_size = 32
 epochs = 10
 seed = 123
 validation_split = 0.2
+# train_dir = os.path.join('',
+# 'C:\\Users\\chenb\\.keras\\datasets\\flower_photos')# 花数据集是5分类问题['sunflowers','dandelion','roses','daisy','tulips']
+# cbacks_path = 'C:\\Users\\chenb\\VscodeItems\\myLeetCode\\myPleasure\\myClassification\\cTensorflow\\save_weights'
 train_dir = os.path.join('',
-'C:\\Users\\chenb\\.keras\\datasets\\flower_photos')# 花数据集是5分类问题['sunflowers','dandelion','roses','daisy','tulips']
-cbacks_path = 'C:\\Users\\chenb\\VscodeItems\\myLeetCode\\myPleasure\\myClassification\\cTensorflow\\save_weights'
+'C:\\Users\\chenbei\\.keras\\datasets\\flower_photos')
+cbacks_path = 'C:\\Users\\chenbei\\VscodeItems\\myLeetCode\\myPleasure\\myClassification\\cTensorflow\\save_weights'
 # 处理数据并返回数据启动器
 def pre_function(img: np.ndarray):
     img = img / 255.
