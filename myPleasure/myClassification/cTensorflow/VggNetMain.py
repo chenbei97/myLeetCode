@@ -71,7 +71,7 @@ def train():
                         callbacks=cbacks)
     return history.history
 
-def plot_acu_loss(history:dict):
+def plot_acu_loss(history:dict,epochs=10):
     history_dict = history
     train_loss = history_dict["loss"]
     train_accuracy = history_dict["accuracy"]
