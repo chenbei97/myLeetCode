@@ -6,6 +6,9 @@
  * @Description: ecm1.0_pointer3d_c.cpp
  * @Signature: A boy without dreams
  */
+// cd STLTestCode
+// g++ -o ecm1_0_pointer3d_c ecm1_0_pointer3d_c.cpp 
+// .\ecm1_0_pointer3d_c.exe
 #include <cstdio>
 #define Point3DPrint( pd ) printf("(%g, %g, %g )",pd->x,pd->y,pd->z);
 typedef struct point3d{

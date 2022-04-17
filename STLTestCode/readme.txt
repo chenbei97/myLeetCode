@@ -10,3 +10,10 @@ ecm打头的都是后者书中出现过的一些例子，ecm = explore c++ model
 cd STLTestCode
 g++ -o ecm1_0_pointer3d_c ecm1_0_pointer3d_c.cpp 
 .\ecm1_0_pointer3d_c.exe
+
+#include <iostream>
+using namespace std;
+int main()
+{
+    return 0;
+}
