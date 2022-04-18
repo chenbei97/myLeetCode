@@ -37,7 +37,6 @@ C:\msys64\mingw64\include
 
 [opencv编译好的版本](https://gitee.com/kirigaya/opencv_built_by_gcc_on_-windows)
 
-或者见[https://github.com/chenbei97/myLeetCode/myPleasure/myOpencv/build](https://github.com/chenbei97/myLeetCode/tree/main/myPleasure/myOpencv/build)
 
 现在要做的事，下载的文件有lib、include、bin。把里边的内容直接复制到上边Mingw的对应文件夹中。
 
@@ -190,4 +189,9 @@ luanch.json。
 }
 ```
 
-现在ctrl_shift+b就可以编译该文件了，执行上述命令在命令行也可以。
+现在ctrl_shift+b就可以编译你的项目文件在myOpencv文件夹了，执行上述命令执行的是testFiles的。
+
+#include <opencv2/xfeatures2d.hpp> 文件夹包含不了是因为知乎提供的opencv2版本没有
+本人因为事先在VS中编译过，所以可以使用，而这个opencv2文件就在
+.\myLeetCode\myPleasure\myOpencv\build\include\opencv2
+可以用这个版本覆盖知乎提供的opencv2
