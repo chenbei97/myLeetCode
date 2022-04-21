@@ -1,7 +1,7 @@
 cd STLTestCode\\algorithms\\source
 /*
-g++ -o m m.cpp
-.\m.exe
+g++ -o ..\output\m m.cpp
+..\output\m.exe
 */
 #include <algorithm>
 #include <iostream>
