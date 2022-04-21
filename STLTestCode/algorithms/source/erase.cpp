@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-21 11:38:40
- * @LastEditTime: 2022-04-21 11:46:02
+ * @LastEditTime: 2022-04-21 11:49:17
  * @Description: test erase.cpp
  * @FilePath: \myLeetCode\STLTestCode\algorithms\source\erase.cpp
  * @Signature: A boy without dreams
@@ -21,7 +21,7 @@ int main()
     vector<int> src = {0,1,2,2,2,2,5,4,2,6,4,2,43,2};
     auto it = erase(src,2); // 不传入迭代器,直接传容器
     ostream_iterator<int> out(cout," ");
-    copy(src.begin(), src.end(), out);
+    copy(src.begin(), src.end(), out);// 0 1 5 4 6 4 43
     cout << endl;
     cout <<"it = " << it << endl; // it = 7
     return 0;
