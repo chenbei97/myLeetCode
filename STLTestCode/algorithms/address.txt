@@ -1,6 +1,8 @@
 cd STLTestCode\\algorithms\\source
+/*
 g++ -o m m.cpp
 .\m.exe
+*/
 #include <algorithm>
 #include <iostream>
 #include <vector>
