@@ -6,9 +6,14 @@
  * @Description: all_of testcode
  * @Signature: A boy without dreams
  */
+/*
+g++ -o ..\output\all_of  all_of.cpp
+..\output\all_of.exe
+*/
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <boost/algorithm/cxx14/equal.hpp>
 using namespace std;
 bool isOdd ( int i ) { return i % 2 == 1; }
 bool lessThan11 ( int i ) { return i < 11; }
@@ -29,11 +34,6 @@ int main(){
     
     cout<<"1,3,5,7,9 all of > 0? "<<std::boolalpha
         <<all_of(v2.begin(), v2.end(), [](int i){return i > 0;})<<endl;//true
-    
-    // all_of_equal的区别不使用谓词来测试序列的元素,而是使用一个值来进行比较
-    // c++20标准已没有这个函数
-    // cout<<"{1,2,3,4,5,6,7,8,9,10} all of equal 1? "<<std::boolalpha
-    //     <<all_of_equal(v1.begin(), v1.end(), 1)<<endl;//false
     return 0;
 }
 /*
@@ -43,13 +43,5 @@ template<typename InputIterator, typename Predicate>
 	bool all_of ( InputIterator first, InputIterator last, Predicate p );
 template<typename Range, typename Predicate>
 	bool all_of ( const Range &r, Predicate p );
-}}
-
-all_of_equal函数原型
-namespace boost { namespace algorithm {
-template<typename InputIterator, typename V>
-	bool all_of_equal ( InputIterator first, InputIterator last, V const &val );
-template<typename Range, typename V>
-	bool all_of_equal ( const Range &r, V const &val );
 }}
 */
