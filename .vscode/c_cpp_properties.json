@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:/msys64/mingw64/include",
-                "C:/msys64/mingw64/include/opencv2"
+                "C:/msys64/mingw64/include/opencv2",
+                "C:/msys64/mingw64/include/boost"
             ],
             "defines": [
                 "_DEBUG",
