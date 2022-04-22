@@ -2,6 +2,13 @@ cd STLTestCode\\algorithms\\source
 /*
 g++ -o ..\output\m m.cpp
 ..\output\m.exe
+g++.exe -g C:\Users\chenbei\VscodeItems\myLeetCode\STLTestCode\algorithms\source\all_of.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/lib -l libboost_unit_test_framework-vc143-mt-gd-x64-1_79 -o C:\Users\chenbei\VscodeItems\myLeetCode\STLTestCode\algorithms\source\all_of.exe
+-l libboost_atomic-vc143-mt-gd-x64-1_79 
+-l libboost_atomic-vc143-mt-x64-1_79 
+-l libboost_chrono-vc143-mt-gd-x64-1_79
+-l libboost_chrono-vc143-mt-x64-1_79 
+-l libboost_container-vc143-mt-gd-x64-1_79
+-l libboost_container-vc143-mt-x64-1_79
 */
 #include <algorithm>
 #include <iostream>
@@ -43,9 +50,6 @@ g++ -o is_permutation  is_permutation.cpp
 
 g++ -o is_partitioned  is_partitioned.cpp
 .\is_partitioned.exe
-
-g++ -o all_of  all_of.cpp
-.\all_of.exe
 
 g++ -o any_of  any_of.cpp
 .\any_of.exe
