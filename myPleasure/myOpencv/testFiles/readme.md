@@ -195,3 +195,9 @@ luanch.json。
 本人因为事先在VS中编译过，所以可以使用，而这个opencv2文件就在
 .\myLeetCode\myPleasure\myOpencv\build\include\opencv2
 可以用这个版本覆盖知乎提供的opencv2
+
+2022/4/22,移除了.\myOpencv\build\include\opencv2的opencv2文件夹
+因为这个文件夹很大,且不是我自己写的cpp,所以移入百度网盘,可自行下载
+
+链接：https://pan.baidu.com/s/1AerQeip4qklhUEqJCAf9ZA 
+提取码：e5ej
