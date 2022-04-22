@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-22 15:54:34
- * @LastEditTime: 2022-04-22 15:56:10
+ * @LastEditTime: 2022-04-22 16:00:38
  * @Description: test move.cpp
  * @FilePath: \myLeetCode\STLTestCode\algorithms\source\move.cpp
  * @Signature: A boy without dreams
@@ -28,5 +28,12 @@ int main()
     cout<<"src:\n";
     copy(src.begin(),src.end(),out);
     cout<<endl;
+
+    vector<int> dst1(src.size());
+    auto it = move(src.begin(),src.end(),dst1.begin());
+    if (it == dst1.end())
+    {
+        cout<<"move success\n"; // 返回的是end迭代器,如果是move_backward返回的是beign迭代器
+    }
     return 0;
 }
