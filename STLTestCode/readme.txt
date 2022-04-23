@@ -7,6 +7,10 @@ ecm打头的都是后者书中出现过的一些例子，ecm = explore c++ model
 《STL源码剖析》脚本都只有1个主函数，可以使用ctrl+shift+p编译
 
 《深度探索C++对象模型》都是使用终端编译,每个脚本都有main函数
+
+yushiqi的文件夹是于仕琪老师在b站的课的一些知识补充笔记
+https://www.bilibili.com/video/BV1Vf4y1P7pq?spm_id_from=333.337.search-card.all.click
+
 /*
 cd STLTestCode
 g++ -o ecm1_0_pointer3d_c ecm1_0_pointer3d_c.cpp 
