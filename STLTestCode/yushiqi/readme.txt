@@ -55,3 +55,24 @@ g++ char.cpp -o char.exe
 float.cpp说明了一些精度问题,以及如何设置打印精度
 g++ float.cpp -o float.exe
 ./float.exe
+
+convert.cpp说明了溢出问题,有符号最高位是符号位
+unsigned char a = 255;
+unsigned char b = 1;
+int c1 = a + b ;
+unsigned int c2 = a + b ;
+unsigned char c3 = a + b ;
+cout<<"c1 = "<<c1<<endl; // 256
+cout<<"c2 = "<<c2<<endl; // 256
+cout<<"c3 = "<<c3<<endl; // 没有结果,直接溢出
+g++ convert.cpp -o convert.exe
+./convert.exe
+
+stdint.cpp定义了一些常见的int类型宏的最大值
+int8_t,int16_t,int32_t,int64_t
+uint8_t,uint16_t,uint32_t,uint64_t
+INT8_MIN,INT16_MIN,INT32_MIN,INT64_MIN
+INT8_MAX,INT16_MAX,INT32_MAX,INT64_MAX
+UINT8_MAX,UINT16_MAX,UINT32_MAX,UINT64_MAX
+g++ stdint.cpp -o stdint.exe
+./stdint.exe
