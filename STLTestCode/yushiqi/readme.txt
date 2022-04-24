@@ -48,6 +48,10 @@ sizeof是个操作符,不是函数,因为它可接收非参数,sizeof(int)
 g++ sizeof.cpp -o sizeof.exe
 ./sizeof.exe
 
-char.cpp说明了一些char字面量的用法
+char.cpp说明了一些char字面量的用法,c++11引入char16_t和char32_t
 g++ char.cpp -o char.exe
 ./char.exe
+
+float.cpp说明了一些精度问题,以及如何设置打印精度
+g++ float.cpp -o float.exe
+./float.exe
