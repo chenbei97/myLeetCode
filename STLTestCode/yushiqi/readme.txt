@@ -1,3 +1,10 @@
+#include <iostream>
+using namespace std;
+int main()
+{
+    return 0;
+}
+
 mul.hpp包含了一个返回乘积的函数声明
 int mul(int x, int y);
 mul.cpp给出了其完整定义
@@ -40,3 +47,7 @@ param 6: !
 sizeof是个操作符,不是函数,因为它可接收非参数,sizeof(int)
 g++ sizeof.cpp -o sizeof.exe
 ./sizeof.exe
+
+char.cpp说明了一些char字面量的用法
+g++ char.cpp -o char.exe
+./char.exe
