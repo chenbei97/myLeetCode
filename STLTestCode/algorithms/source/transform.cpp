@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-21 11:05:20
- * @LastEditTime: 2022-04-21 11:15:44
+ * @LastEditTime: 2022-04-24 14:59:44
  * @Description: test transform.cpp
  * @FilePath: \myLeetCode\STLTestCode\algorithms\source\transform.cpp
  * @Signature: A boy without dreams
@@ -32,6 +32,16 @@ int main()
     for (auto i : dst)
     {
         cout << i << " "; // 1,3,6,10,15,21,28,36,45,55
+    }
+    cout << endl;
+
+    // 允许双参数,与第二者交互
+    vector<int> src2 = {10,9,8,7,6,5,4,3,2,1};
+    dst.clear();
+    transform(src.begin(), src.end(), src2.begin(), back_inserter(dst), [](int x, int y){return x+y;});
+    for (auto i : dst)
+    {
+        cout << i << " "; // 11,11,11,11,11,11,11,11,11,11
     }
     cout << endl;
     return 0;
