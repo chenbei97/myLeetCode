@@ -1,4 +1,8 @@
 cd STLTestCode\\numeric\\source
+/*
+g++ -o ..\output\m m.cpp
+..\output\m.exe
+*/
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -10,7 +14,6 @@ int main()
     ostream_iterator<int> out(cout," ");
     return 0;
 }
-g++ -o iota  iota.cpp
-.\iota.exe
+
 
 
