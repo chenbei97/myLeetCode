@@ -11,6 +11,8 @@ ecm打头的都是后者书中出现过的一些例子，ecm = explore c++ model
 yushiqi的文件夹是于仕琪老师在b站的课的一些知识补充笔记
 https://www.bilibili.com/video/BV1Vf4y1P7pq?spm_id_from=333.337.search-card.all.click
 
+other是一些新特性
+
 /*
 cd STLTestCode
 g++ -o ecm1_0_pointer3d_c ecm1_0_pointer3d_c.cpp 
