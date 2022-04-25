@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-25 08:41:39
- * @LastEditTime: 2022-04-25 08:45:19
+ * @LastEditTime: 2022-04-25 08:47:51
  * @Description: test inclusive_scan.cpp
  * @FilePath: \myLeetCode\STLTestCode\numeric\source\inclusive_scan.cpp
  * @Signature: A boy without dreams
@@ -18,6 +18,8 @@ using namespace std;
 int main()
 {
     // 这个函数非常像accumulate,但是不是直接计算累加和,而是把每个结果用数组存起来
+    // 和exclusive_scan区别是开头元素是初始值+第一个元素
+    // exclusive_scan第1个元素就是初始值
     vector<int> src = {2,1,7,5,3};
     vector<int> dst;
     inclusive_scan(src.begin(), src.end(), back_inserter(dst));
