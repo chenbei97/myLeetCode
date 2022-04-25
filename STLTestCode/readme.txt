@@ -85,6 +85,9 @@ cl /Fo".\output\test_cl" /Fe".\output\test_cl.exe" ".\test_cl.cpp"
 src: 1 2 3 4 5 
 sum: 15
 
+如果能通过编译，但连接时候提示LINK : fatal error LNK1104:无法打开文件“kernel32.lib”
+kernel32.lib应当在C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\下的um文件夹中x64,x86,arm各有1个
+
 cl /?可以查看命令参数列表,常见命令给定如下
 ```
 /Fa[file] 命名程序集列表文件            /FA[scu] 配置程序集列表
