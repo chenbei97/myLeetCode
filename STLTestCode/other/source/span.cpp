@@ -11,6 +11,11 @@ g++ -o ..\output\span span.cpp
 ..\output\span.exe
 不再使用上述命令,因为msys2不支持c++20
 可以在VS运行此程序
+或者使用cl.exe命令行编译,如何配置可见STLTestCode/readme.txt,前提已经装了VS Studio
+必须支持最新的c++20,可以编译span.cpp
+cl /Fo"..\output\span" /Fe"..\output\span.exe" /std:c++latest ".\span.cpp"
+..\output\span.exe
+
 总的运行结果如下：
 1 2 3 4 5 6 7 8 9 10
 size: 6
