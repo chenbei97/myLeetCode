@@ -11,7 +11,9 @@ ecm打头的都是后者书中出现过的一些例子，ecm = explore c++ model
 yushiqi的文件夹是于仕琪老师在b站的课的一些知识补充笔记
 https://www.bilibili.com/video/BV1Vf4y1P7pq?spm_id_from=333.337.search-card.all.click
 
-other是一些新特性
+other是一些c++17/20的一些新特性的测试
+
+output是存放编译产生的二进制文件
 
 /*
 cd STLTestCode
@@ -46,3 +48,66 @@ C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\1
 cl hello.cpp类似的命令
 六、参考配置网址
 https://zhuanlan.zhihu.com/p/98384105
+七、测试
+终端输入cl,出现cl [ 选项... ] 文件名... [ /link 链接选项... ]说明正确
+现在在../STLTestCode新建1个测试cl.exe的文件test_cl.cpp
+```
+#include <iostream>
+#include <vector>
+#include <numeric>
+#include <algorithm>
+#include <iterator>
+using namespace std;
+int main()
+{
+    vector<int> src = {5,4,3,2,1};
+    sort(src.begin(),src.end());
+    cout<<"src: ";
+    copy(src.begin(), src.end(), ostream_iterator<int>(cout, " "));
+    cout << endl;
+    int sum = accumulate(src.begin(),src.end(),0);
+    cout<<"sum: "<<sum<<endl;
+    
+    return 0;
+}
+```
+然后输入命令:
+cd STLTestCode
+cl test_cl.cpp或
+cl ./test_cl.cpp或
+cl .\test_cl.cpp 均可
+会自动生成a.obj和a.exe文件
+执行.\test_cl.exe，但是./test_cl.exe和test_cl.exe不行
+
+还可指定命名对象文件可用/Fo,可执行文件为/Fe,然后跟上被编译的文件,都用双引号指定好路径
+cl /Fo".\output\test_cl" /Fe".\output\test_cl.exe" ".\test_cl.cpp"
+输出:
+src: 1 2 3 4 5 
+sum: 15
+
+cl /?可以查看命令参数列表,常见命令给定如下
+```
+/Fa[file] 命名程序集列表文件            /FA[scu] 配置程序集列表
+/Fd[file] 命名 .PDB 文件                /Fe<file> 命名可执行文件
+/Fm[file] 命名映射文件                  /Fo<file> 命名对象文件
+/Fp<file> 命名预编译头文件              /Fr[file] 命名源浏览器文件
+/FR[file] 命名扩展 .SBR 文件            /Fi[file] 命名预处理的文件
+/Fd: <file> 命名 .PDB 文件              /Fe: <file> 命名可执行文件
+/Fm: <file> 命名映射文件                /Fo: <file> 命名对象文件
+/Fp: <file> 命名 .PCH 文件              /FR: <file> 命名扩展 .SBR 文件
+/Fi: <file> 命名预处理的文件            /Ft<dir> 为 #import 生成的头文件的地址
+/doc[file] 处理 XML 文档注释，并可选择命名 .xdc 文件
+/AI<dir> 添加到程序集搜索路径           /FU<file> 强制使用程序集/模块 
+/C 不抽出注释                           /D<name>{=|#}<text> 定义宏
+/E 预处理到 stdout                      /EP 预处理到 stdout，无行号
+/P 预处理到文件                         /Fx 将插入的代码合并到文件中
+/FI<file> 命名强制包含文件              /U<name> 移除预定义的宏
+/u 移除所有预定义的宏                   /I<dir> 添加到包含搜索路径
+/X 忽略“标准位置”                     /PH 在预处理时生成 #pragma file_hash
+/PD 打印所有宏定义
+/std:<c++14|c++17|c++latest> C++ 标准版
+    c++14 - ISO/IEC 14882:2014 (默认值)
+    c++17 - ISO/IEC 14882:2017
+    c++latest - 最新草案标准(功能集可能会更改)
+/permissive[-] 使某些非符合代码可编译(功能集可更改)(默认开启)
+```
