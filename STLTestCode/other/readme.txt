@@ -2,6 +2,8 @@ cd STLTestCode\\other\\source
 /*
 g++ -o ..\output\m m.cpp
 ..\output\m.exe
+cl /Fo"..\output\m" /Fe"..\output\m.exe" /std:c++latest ".\m.cpp"
+..\output\m.exe
 */
 #include <iostream>
 #include <vector>
