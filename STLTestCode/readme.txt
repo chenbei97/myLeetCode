@@ -80,7 +80,8 @@ cl .\test_cl.cpp 均可
 执行.\test_cl.exe，但是./test_cl.exe和test_cl.exe不行
 
 还可指定命名对象文件可用/Fo,可执行文件为/Fe,然后跟上被编译的文件,都用双引号指定好路径
-cl /Fo".\output\test_cl" /Fe".\output\test_cl.exe" /std:c++latest ".\test_cl.cpp"
+cl /Fo"..\output\test_cl" /Fe"..\output\test_cl.exe" /std:c++latest ".\test_cl.cpp"
+..\output\test_cl.exe
 输出:
 src: 1 2 3 4 5 
 sum: 15
