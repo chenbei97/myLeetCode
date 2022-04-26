@@ -87,7 +87,10 @@ src: 1 2 3 4 5
 sum: 15
 
 如果能通过编译，但连接时候提示LINK : fatal error LNK1104:无法打开文件“kernel32.lib”
-kernel32.lib应当在C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\下的um文件夹中x64,x86,arm各有1个
+找到C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64下的Uuid.Lib、kernel32.Lib 2个lib文件
+以及C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\ucrt\x64下的libucrt.lib、libucrtd.lib、ucrt.lib和ucrtd.lib 4个lib文件
+将其复制到C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.29.30133\lib\x64当中
+注意：6个lib文件都要复制；其次根据自己的位数(x64)选择；是找到Windows Kits下的lib复制到Visual Studio下MSVC的lib中
 
 cl /?可以查看命令参数列表,常见命令给定如下
 ```
