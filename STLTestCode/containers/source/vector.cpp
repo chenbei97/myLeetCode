@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-26 14:36:18
- * @LastEditTime: 2022-04-26 15:15:38
+ * @LastEditTime: 2022-04-26 16:40:24
  * @Description: test vector<T>
  * @FilePath: \myLeetCode\STLTestCode\containers\source\vector.cpp
  * @Signature: A boy without dreams
@@ -20,6 +20,8 @@ using namespace std;
 int main()
 {
     vector<int> src = {1,2,3,4,5};
+    // 使用深拷贝复制src必须是构造函数
+    vector<int> deep_src(src);
     // 可以使用begin和end来访问vector
     cout<<"src.begin() = "<<*src.begin()<<endl; // 1
     cout<<"src.end()-1 = "<<*(src.end()-1)<<endl; // 5
