@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-26 16:51:38
- * @LastEditTime: 2022-04-28 16:53:49
+ * @LastEditTime: 2022-04-29 07:55:51
  * @Description: test unordered_set<T>
  * @FilePath: \myLeetCode\STLTestCode\containers\source\unordered_set.cpp
  * @Signature: A boy without dreams
@@ -21,12 +21,12 @@ int main()
 {
     ostream_iterator<int> out(cout," ");
     /*
-        unordered_map的底层是一个防冗余的哈希表,map一般采用红黑树(RB Tree) 实现
-        构造函数上,unordered_map 需要hash函数,等于函数
-        map只需要比较函数(小于函数),unordered_map查找速度比 map 快
-        查找速度基本和数据数据量大小无关，属于常数级别
-        而map 的查找速度是 log(n) 级别
-        考虑效率使用hash_map，考虑内存使用map
+        set基于红黑树实现，红黑树具有自动排序的功能，set是有序的
+        unordered_set基于哈希表，数据插入和查找的时间复杂度很低，几乎是常数时间
+        而代价是消耗比较多的内存，无自动排序功能
+        底层实现上，使用一个下标范围比较大的数组来存储元素，形成很多的桶
+        利用hash函数对key进行映射到不同区域进行保存
+        当不需要自动有序且可以元素类型可以用哈希表表示的话，用unordered_set效率更高
     */
     // unordered_set的构造函数
     unordered_set<int> uset1 = {10,-1,2,4,-5,1}; // 支持列表初始化
