@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-26 16:49:10
- * @LastEditTime: 2022-04-28 15:05:30
+ * @LastEditTime: 2022-04-28 16:03:02
  * @Description: test map<const k,v>
  * @FilePath: \myLeetCode\STLTestCode\containers\source\map.cpp
  * @Signature: A boy without dreams
@@ -223,6 +223,18 @@ int main()
     for_each(m10.begin(), m10.end(), [](pair<int, string> p){cout << p.first << " " << p.second << endl;}); // ok
     // 1 A 2 C 3 D 8 F
     
+    // 可以获取key比较器
+    auto cmp = m10.key_comp();
+    cout<<"cmp(1,2) = "<<cmp(1,2)<<endl; // 0=false
+    cout<<"cmp(2,1) = "<<cmp(2,1)<<endl; // 1=true
+    cout<<"cmp(1,1) = "<<cmp(1,1)<<endl; // 0=false
+
+    // 可以获取值比较器
+    auto cmp2 = m10.value_comp();
+    cout<<"cmp2(1,2) = "<<cmp2({1,"1"},{2,"2"})<<endl; // 1=true
+    cout<<"cmp2(2,1) = "<<cmp2({2,"2"},{1,"1"})<<endl; // 0=false
+    cout<<"cmp2(1,1) = "<<cmp2({1,"1"},{1,"1"})<<endl; // 0=false
+
     // map也有自己的内存分配器,可以自己指定
     // 直接定义分配这样的内存
     map<int,string,std::less<int>,std::allocator<pair<int,string>>> m11;
