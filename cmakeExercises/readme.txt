@@ -1,3 +1,0 @@
-这是一个关于如何使用cmake最简单的例子
-source只有2个文件，CMakeLists.txt和test_cmake.cpp
-output是输出目录

@@ -1,0 +1,3 @@
+C:/Users/chenbei/VscodeItems/myLeetCode/cmakeExercises/hello_cmake/build/CMakeFiles/test_cmake.dir
+C:/Users/chenbei/VscodeItems/myLeetCode/cmakeExercises/hello_cmake/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenbei/VscodeItems/myLeetCode/cmakeExercises/hello_cmake/build/CMakeFiles/ZERO_CHECK.dir
