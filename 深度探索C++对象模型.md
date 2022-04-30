@@ -293,6 +293,46 @@ h4[类的构造函数]
 h1-->h2-->h3-->h4-->h1
 ```
 
+C++对象还有继承关系，因为支持多重继承和虚继承，对于虚继承而言表示不管基类被派生多少次，永远只会存在一个实例，例如iostream只有一个虚基类实例virtual ios base。
+
+```mermaid
+graph TD
+ios -->ostream
+ios -->istream
+ostream --> iostream
+istream -->iostream
+```
+
+在简单对象模型中，认为每一个基类都可以被派生类对象的一个slot指出，这个slot含有基类唯一实例的地址。缺点是因为间接性导致的空间和存取时间上的额外负担，优点是类对象的大小不会因为基类的改变而改变，因为只是包含一个指向的地址。
+
+也可以设想有个虚表，但不是虚函数表，这里是虚基类表，每个slot存放一个基类的地址，就像虚函数表的slot存放的是虚函数的地址一样。每个类对象都内含有一个bptr类似于vptr，会被初始化，指向其虚基类表。缺点是由于间接性导致的空间和存取时间上的额外负担，优点是每个类对象对于继承都有一致的表现方式：每一个类对象都应该在某个固定位置上安放一个bptr，与虚基类的大小和个数无关，此外无需改变类对象本身就可以放大和缩小或者更改虚基类表。
+
+```mermaid
+graph LR
+iostream_class_object-->|包含|iostream_class_object_bptr
+iostream_class_object_bptr-->|指向|base_class_table_for_iostream
+base_class_table_for_iostream-->|指向|istream_class_obeject
+base_class_table_for_iostream-->|指向|ostream_class_obeject
+```
+
+```mermaid
+graph LR
+istream_class_obeject-->|包含|istream_class_obeject_bptr
+ostream_class_obeject-->|包含|ostream_class_obeject_bptr
+ostream_class_obeject_bptr-->|指向|base_class_table_for_ostream
+istream_class_obeject_bptr-->|指向|base_class_table_for_istream
+base_class_table_for_ostream-->|指向|ios_class_object
+base_class_table_for_istream-->|指向|ios_class_object
+```
+
+但是不管上述哪种模型都因为多重继承的间接性导致存取到继承自基类的成员的时间成本提高。
+
+C++最初不考虑任何间接性，基类实例的成员直接放在了派生类对象中，也就是基类不存放数据。但是这样做就是基类任何成员的改变都会影响到派生类导致重新编译。
+
+2022/4/30/21:35
+
+### 1.3 对象的差异
+
 
 
 ## 二、构造函数语义学
