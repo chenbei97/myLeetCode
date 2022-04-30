@@ -14,6 +14,6 @@ g++ -o ..\output\m -g m.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64
 int main(int argc,char**argv)
 {
     // Mat src = imread(("../images/m.jpg"), IMREAD_GRAYSCALE);
-    Mat src = imread(argv[1]), IMREAD_GRAYSCALE);
+    Mat src = imread(argv[1], IMREAD_GRAYSCALE);
     return 0;
 }
