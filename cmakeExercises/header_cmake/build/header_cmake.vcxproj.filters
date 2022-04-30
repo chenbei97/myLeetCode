@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\header_cmake\src\hello.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\header_cmake\src\test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\header_cmake\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\header_cmake\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{D51B77A4-CD4E-36EF-A9FD-74646904B952}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
