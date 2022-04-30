@@ -1,6 +1,8 @@
 cd myPleasure\\myOpencv\\examples\\source
 
 #include <iostream>
+#include "simpleShow.hpp"
+#include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/ximgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
