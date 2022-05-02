@@ -13,6 +13,11 @@ cd STLTestCode\\yushiqi
 g++ main.cpp mul.cpp -o mul.exe
 ./mul
 
+同时编译且输出可以这样做
+g++ -o m m.cpp && .\m
+g++ m.cpp && .\a
+不过本版本测试以后不能通过编译,说是g++版本不支持&&
+
 但是更常用的是分别编译,然后动态链接,同样可以得到结果
 g++ -c main.cpp
 g++ -c mul.cpp
