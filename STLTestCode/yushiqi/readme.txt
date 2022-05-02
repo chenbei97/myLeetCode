@@ -1,3 +1,8 @@
+/*
+cd STLTestCode\\yushiqi
+g++ -o m m.cpp
+./m
+*/
 #include <iostream>
 using namespace std;
 int main()
