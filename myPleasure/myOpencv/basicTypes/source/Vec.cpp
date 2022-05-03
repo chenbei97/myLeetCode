@@ -239,7 +239,10 @@ int main()
     cout<<"Matx33d's diag() = "<<m33d.diag()<<endl; //[1.5;5.9;9.9]
     // 13.5、通过diag_type可以当成double使用
     cout<<"Vec<double,4>::diag_type = "<<Vec<double,4>::diag_type(1.33)<<endl; // [1.33]
-    // 13.6、改变矩阵的形状,reshape,Mat可以,Vec和Matx不知道为啥不行
+    // 13.6、改变矩阵的形状,reshape
+    Matx33d m33d_reshape(1,2,3,4,5,6,7,8,9);
+    Matx<double,1,9> m19d_reshape = m33d_reshape.reshape<1,9>();
+    cout<<"m19d_reshape = "<<m19d_reshape<<endl; // [1,2,3,4,5,6,7,8,9]
     Mat m1(220,180,CV_8U);
     cout<<"m1.size() = "<<m1.size()<<endl; // [180 x 220]
     Mat m2 = m1.reshape(0,200);// 第1个参数是调整后的通道数,0表示不变,第二个是行数,0也是不变
