@@ -11,6 +11,7 @@ int main(int argc,char**argv)
     /*
         Size和Point类似,可以互相转换
         只是Point的属性为x,y,而Size的属性为width,height
+        另外Point可以转换为固定向量类但是Size类不支持
     */
     // 默认、复制和值构造函数
     Size s1; // 默认构造函数
