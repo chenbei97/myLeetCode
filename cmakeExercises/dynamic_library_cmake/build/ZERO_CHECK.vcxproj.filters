@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\dynamic_library_cmake\build\CMakeFiles\8b3dc3a8a76561046e802bdc7f4d5c87\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{EB3E02B2-54D5-315E-B6C9-8B3AFD7A14DB}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

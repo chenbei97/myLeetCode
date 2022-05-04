@@ -30,10 +30,23 @@ dynamic_library_cmake
 cd cmakeExercises/dynamic_library_cmake/build
 cmake ..
 cmake --build .
-.\Debug\dynamic_library_cmake_binary.exe 
+.\Debug\out.exe
 
 遇到的问题：动态库总是提示找不到文件link 1104错误
+第一个方法：最简单的改动是在hello.h类的声明中加一句__declspec(dllexport)即可
+class __declspec(dllexport) Hello
+第二个方法是使用宏方法：
+// #ifdef __HELLO_DLL__
+// #define __HELLO_DLL__ __declspec(dllexport)
+// #else
+// #define __HELLO_DLL__ __declspec(dllimport)
+// #endif
+// class __HELLO_DLL__ Hello
+第三个方法使用定义宏的头文件：可见my_hello_export.h中的定义
 
+解决问题的链接：
+https://blog.csdn.net/Snow__Sunny/article/details/123182732
+https://blog.csdn.net/Snow__Sunny/article/details/123190631
 辅助解决问题链接：
 cmake中添加引用动态链接和静态链接库
 https://blog.csdn.net/KYJL888/article/details/85109782?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-2.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-2.pc_relevant_default&utm_relevant_index=5

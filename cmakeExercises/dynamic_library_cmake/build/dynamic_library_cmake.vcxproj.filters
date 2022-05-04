@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\dynamic_library_cmake\src\hello.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\chenbei\VscodeItems\myLeetCode\cmakeExercises\dynamic_library_cmake\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{D814DE10-F7E4-3C00-94B0-F057119A6295}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
