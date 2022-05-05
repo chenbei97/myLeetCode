@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-05 08:18:14
+ * @LastEditTime: 2022-05-05 08:40:54
+ * @Description: test for TermCriteria
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\basicTypes\source\TermCriteria.cpp
+ * @Signature: A boy without dreams
+ */
 #include <iostream>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
