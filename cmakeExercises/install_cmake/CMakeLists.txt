@@ -2,26 +2,28 @@ cmake_minimum_required(VERSION 3.23.1)
 
 # 生成的VS项目名称
 project(install_cmake)
-set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to release")
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
-# IF (NOT CMAKE_BUILD_TYPE)
-#     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-#         "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
-# ENDIF()
+
+# 设定模式为release 或 debug,实际测试中都注释掉也没事
+# set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to release")
+# Set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+# set(CMAKE_BUILD_TYPE Debug CACHE STRING "set build type to debug")
+# Set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 
 
+# 更有效的条件编译法，这里注释掉也是可以执行的，但是还是开启了
+if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -O0")
+    set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+    message("Debug mode:${CMAKE_C_FLAGS_DEBUG}")
 
-# if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-#     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -O0")
-#     message("Debug mode:${CMAKE_C_FLAGS_DEBUG}")
-
-# elseif(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
-#     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall -O3")
-#     message("Release mode:${CMAKE_C_FLAGS_RELEASE}")
-# else()
-#     message("else:${CMAKE_BUILD_TYPE}")
-#     message("else:${CMAKE_C_FLAGS_RELEASE}")
-# endif()
+elseif(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall -O3")
+    set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+    message("Release mode:${CMAKE_C_FLAGS_RELEASE}")
+else()
+    message("else:${CMAKE_BUILD_TYPE}")
+    message("else:${CMAKE_C_FLAGS_RELEASE}")
+endif()
 
 # 添加动态库
 add_library(install_cmake_lib SHARED src/hello.cpp) 
@@ -51,8 +53,8 @@ install (TARGETS install_cmake_binary
 install (TARGETS install_cmake_lib
     LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/lib)
 
-
-# install (TARGETS install_cmake_lib
+# 可能的替代上述2条命令，因为有可能上边2条不能在windows运行
+# install (TARGETS install_cmake_lib 
 #     LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/lib
 #     RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/bin)
 

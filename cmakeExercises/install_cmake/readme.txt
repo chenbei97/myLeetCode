@@ -36,13 +36,17 @@ windows命令格式为：<cmake --install . --prefix "/install/location">
 cd cmakeExercises/install_cmake/build
 cmake ..
 [cmake -D CMAKE_BUILD_TYPE=Release .. ]
-cmake --build .
+cmake --build . --target ALL_BUILD --config Release
+cmake --build . --target ALL_BUILD --config Debug
 .\Debug\install_cmake_binary.exe
-./build/Debug改名为.build/Release
-cmake --install . --prefix "C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/"
+.\Release\install_cmake_binary.exe
+cmake --install . --prefix "C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/" 
 ..\bin\install_cmake_binary.exe
 
-// 一下是尝试解决问题的链接但是都不行，最后把Debug改名为Release就行了
+
+// 一下是尝试解决问题的链接但是都不行，最后把命令cmake --build .变为cmake --build . --target ALL_BUILD --config Release就可以了
+https://qa.1r1g.com/sf/ask/1331698161/
+
 // 1、设置默认Realease：https://blog.csdn.net/qq_41961459/article/details/113945069
 IF (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -84,6 +88,8 @@ ELSEIF (CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
 ELSE ()
     MESSAGE(STATUS "unknown CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE})
 ENDIF ()</span>
+
+// 6、博客cmake的使用 http://www.cppblog.com/tx7do/archive/2010/08/19/124000.html
 
 
 
