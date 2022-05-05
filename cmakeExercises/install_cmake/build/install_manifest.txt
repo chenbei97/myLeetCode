@@ -1,0 +1,4 @@
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/bin/install_cmake_binary.exe
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/lib/install_cmake_lib.lib
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/bin/install_cmake_lib.dll
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/etc/install_cmake.conf

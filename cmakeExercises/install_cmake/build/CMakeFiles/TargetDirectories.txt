@@ -1,0 +1,5 @@
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/build/CMakeFiles/install_cmake_lib.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/build/CMakeFiles/install_cmake_binary.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/build/CMakeFiles/INSTALL.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/install_cmake/build/CMakeFiles/ZERO_CHECK.dir
