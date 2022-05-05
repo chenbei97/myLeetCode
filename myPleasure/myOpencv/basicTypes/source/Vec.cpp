@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-05 08:18:14
+ * @LastEditTime: 2022-05-05 08:41:14
+ * @Description: test for Vec
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\basicTypes\source\Vec.cpp
+ * @@Signature: A boy without dreams
+ */
 #include <iostream>
 #include "opencv2/opencv.hpp"
 using namespace cv;
