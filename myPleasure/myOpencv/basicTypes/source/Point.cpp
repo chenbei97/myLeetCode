@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-05 08:18:14
+ * @LastEditTime: 2022-05-05 08:38:56
+ * @Description: test for cv::Point
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\basicTypes\source\Point.cpp
+ * @Signature: A boy without dreams
+ */
 #include <iostream>
 #include "opencv2/opencv.hpp"
 using namespace cv;
