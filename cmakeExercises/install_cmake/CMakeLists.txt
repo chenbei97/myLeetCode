@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.23.1)
 
 # 生成的VS项目名称
 project(install_cmake)
-
+set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to release")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 # IF (NOT CMAKE_BUILD_TYPE)
 #     set(CMAKE_BUILD_TYPE "Release" CACHE STRING
 #         "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 # ENDIF()
 
-# set(CMAKE_BUILD_TYPE Release CACHE STRING "set build type to release")
+
 
 # if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
 #     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -O0")
