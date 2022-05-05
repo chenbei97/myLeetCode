@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-05 08:18:14
+ * @LastEditTime: 2022-05-05 08:39:18
+ * @Description: test for cv::Rect
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\basicTypes\source\Rect.cpp
+ * @Signature: A boy without dreams
+ */
 #include <iostream>
 #include "opencv2/opencv.hpp"
 using namespace cv;
