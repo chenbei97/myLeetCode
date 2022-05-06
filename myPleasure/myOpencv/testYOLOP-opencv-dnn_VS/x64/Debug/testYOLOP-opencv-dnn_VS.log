@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\chenb\Desktop\testYOLOP-opencv-dnn_VS\YOLO.h(21,47): warning C4305: “初始化”: 从“double”到“const float”截断
+C:\Users\chenb\Desktop\testYOLOP-opencv-dnn_VS\YOLO.h(22,46): warning C4305: “初始化”: 从“double”到“const float”截断
+C:\Users\chenb\Desktop\testYOLOP-opencv-dnn_VS\main.cpp(4,49): warning C4305: “参数”: 从“double”到“float”截断
+  testYOLOP-opencv-dnn_VS.vcxproj -> C:\Users\chenb\Desktop\testYOLOP-opencv-dnn_VS\x64\Debug\testYOLOP-opencv-dnn_VS.exe
