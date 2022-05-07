@@ -13,3 +13,5 @@ g++ YOLO.o main.o -o YOLODNN
 
 本代码在VSCODE测试不能运行，应该是因为opencv版本的问题，提示找不到dnn的某些东西，这个opencv版本来源于网上的编译版本，不够新
 VS同样的代码能够运行，见testYOLOP-opencv-dnn_VS文件夹，这是因为VS配置的Opencv版本是4.3.0
+
+python的实现是可以在VSCODE运行的，和VS的C++运行效果完全一致
