@@ -90,4 +90,8 @@ g++ stdint.cpp -o stdint.exe
 do_while语句要注意至少执行1次，while可能一次也不执行
 另外不要使用无符号size_t作为控制变量,当size_t变为0再--时就会出错
 
-goto语句要少用
+goto语句要少用,见goto.cpp
+
+strlen可以计算char_8的字符长度，和sizeof不同，不会包含\0的长度
+
+strcpy和strcmp有更安全的方式，见strcpy.cpp
