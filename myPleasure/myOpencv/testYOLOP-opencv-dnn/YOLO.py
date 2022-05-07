@@ -63,7 +63,6 @@ class yolop():
         # lower confidences.
         indices = cv2.dnn.NMSBoxes(boxes, confidences, self.confThreshold, self.nmsThreshold)
         for i in indices:
-            i = i[0]
             box = boxes[i]
             left = box[0]
             top = box[1]
