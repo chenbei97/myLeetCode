@@ -70,11 +70,21 @@ int main(int argc,char**argv)
         2、Mat::zeros(rows,cols,type)：创建一个全0的矩阵
         3、Mat::eye(rows,cols,type)：创建一个单位矩阵(对角线为1,其他为0)
 
-        Mat的访问方式主要是2种,一种是基于模板函数at<T>(),另一种是基于迭代器访问
-        如果是一维的,T就是常见内置类型,如uchar、float、double等
-        如果是二维的,T常常使用Point2f类型,即img.at<Point2f>(i,j)表示第i行第j列的点
-        如果是三维的,T常常使用Vec3f类型,但是也只有i,j,第三个维度使用[]访问,即img.at<Vec3f>(i,j)[k]表示第i行第j列的点的第k个维度
+        Mat的访问方式主要是3种,一种是基于模板函数at<T>(),一种是基于智能指针ptr，另一种是基于迭代器访问
+        借助模板函数at<T>()访问:
+        对于单通道的一维数组使用at<T>(i),二维数组使用at<T>(i,j),三维数组使用at<T>(i,j,k)
+        对于双通道的一维数组不存在,二维数组对于uchar类型不能使用Point2i,float类型可以使用Point2f(i,j)/Vec2f(i,j)访问
+            如果单独使用uchar或者float只能访问到第1通道,第2通道必须借助Point2f(i,j)/Vec2f(i,j)[k]访问
+            三维数组,无法借助Vec或Point访问,也不能借助单独的float或uchar访问,只能借助step访问
+        对于三通道的一维数组不存在,三维数组不常用忽略,二维数组最常用,基于Vec3f/Vec3b访问
+        借助智能指针访问:
+        只针对单通道和三通道的二维图像进行说明,如果是三通道uchar*p或者Vec3f *p可以获取某行指向第一个通道的指针
+            如果是单通道,这两个指针实际就是指向了1个元素的指针
+        借助迭代器访问:
+        需要使用MatIterator类型的迭代器,可以使用begin()和end()方法获取迭代器,迭代器可以使用++和--进行前后移动
+            对于单通道直接按照一行行打印元素,对于三通道每次打印的是一个Vec3f,即(i,j)位置的连续3个通道元素
 
+        
     */
     // 1、常用构造函数测试
     Mat m1; // 1、Mat
@@ -134,7 +144,7 @@ int main(int argc,char**argv)
     cout << "m11 = \n" << m11 << endl;//[1, 2, 3;4,5,6;7,8,9]
 
     // 4.1.1.3、三维数组(很少使用,需要借助不常用的构造函数构建高维数组(dims≥3)): at<uchar>(i,j,k)
-    int sz14[] = { 2,3,4 };
+    int sz14[] = { 2,3,4 }; // 高、宽、长 = 2，3，4
     const int* psz14 = sz14;
     float data14[2*3*4] = {};
     for (int i = 0; i < 2 * 3 * 4; ++i) data14[i] = (i +1)/ 24.0;
@@ -186,7 +196,108 @@ int main(int argc,char**argv)
     m16_.at<Point2f>(0, 1) = Point2f(-1.0, -2.0); m16_.at<Point2f>(0, 1) = Point2f(-3.0, -4.0); m16_.at<Point2f>(0, 2) = Point2f(10.0, 11.0);
     m16_.at<Point2f>(1, 0) = Point2f(-5.0, -6.0); m16_.at<Point2f>(1, 1) = Point2f(-7.0, -8.0); m16_.at<Point2f>(1, 2) = Point2f(15.0, 16.0);
     cout << "m16_ = \n" << m16_ << endl; // [1, 2, -3, -4, 10, 11;-5, -6, -7, -8, 15, 16]
-    
-    // 4.1.2.3、三维数组视为双通道
+    cout<<"m16_(0,1)[0]"<<m16_.at<Vec2f>(0,1)[0] <<endl;
+    /*
+        [1, 2, -3, -4, 10, 11;
+        -5, -6, -7, -8, 15, 16]
+        从下方Vec2f的访问可以知道,数据的排列是第一通道然后第二通道,再第一、二通道交替
+        即(0,0)的第1通道是1,(0,0)的第2通道是2..
+    */ 
+    // 使用Vec2f来访问,[]访问不同的通道
+    cout << "m16_(0,1)[0] = " << m16_.at<Vec2f>(0, 1)[0] << endl; // m16_(0,1)[0] = -3
+    cout << "m16_(0,1)[1] = " << m16_.at<Vec2f>(0, 1)[1] << endl;// m16_(0,1)[1] = -4
+    cout << "m16_(1,2)[1] = " << m16_.at<Vec2f>(1, 2)[1] << endl;// m16_(1,2)[1] =16
+
+    // 4.1.2.3、三维数组视为双通道(很少用)
+    float data17[2 * 3 * 4 * 2] = {}; // 必须分配2个通道的数据也就是48个否则后边访问时部分数据不存在
+    for (int i = 0; i < 48; ++i) data17[i] = (i + 1) / 48.0;
+    Mat m17(3, psz14, CV_32FC2, data17);
+   cout << "m17.dims = " << m17.dims << " m17.channels() = " << m17.channels() << endl;
+   // cout<<"m17.size = " << m17.size() << endl; // 不能运行
+    // cout << m17.at<Point2f>(0, 0) << endl; // Assertion failed (dims <= 2) 不允许
+    // cout << m17.at<Vec2f>(0, 0) << endl; // Assertion failed (dims <= 2) 不允许
+    // cout << m17.at<float>(0, 0 , 0) << endl; // elemSize() == sizeof(_Tp) 不允许
+    // cout << m17.at<Vec3f>(0, 0)[0] << endl; // Assertion failed (dims <= 2) 不允许
+    // 高维图像借助step取值和赋值,
+    for (int i = 0; i < sz14[0]; ++i) {
+        for (int j = 0; j < sz14[1]; ++j) {
+            for (int k = 0; k < sz14[2]; ++k) {
+                int id = m17.step[0] * i + m17.step[1] * j + m17.step[2] * k ; // 内存块标记
+                // cout << "id = " << id << endl;
+                float* p = (float*)(m17.data + id); 
+                cout << "m17(" << i << "," << j << "," << k<<") = " <<*p<< endl;
+            }
+        }
+    }
+
+    // 4.1.3、三通道
+    // 4.1.3.1、一维数组的三通道也是不存在的
+    // 4.1.3.2、二维数组的三通道(最常见)
+    Mat m18(3, 2, CV_32FC3);
+    // 常见的使用Vec3f访问遍历
+    for (int i = 0; i < m18.rows; ++i) {
+        for (int j = 0; j < m18.cols; ++j) {
+            Vec3f& v = m18.at<Vec3f>(i, j);
+            v[0] = i + 3.0;
+            v[1] = j + 6.0;
+            v[2] = (float)(i + 1) * (j + 1);
+        }
+    }
+    cout << "m18 : \n" << m18 << endl;
+    /*
+        [3, 6, 1, 3, 7, 2;
+         4, 6, 2, 4, 7, 4;
+         5, 6, 3, 5, 7, 6]
+    */
+    // 可以使用Point2f访问,访问的其实是相邻2个通道
+    cout << m18.at<Point2f>(0, 0) << endl; //3×2有3个通道,每列都是一个通道[3,6]
+    cout << m18.at<Point2f>(2, 2) << endl; // [7, 6],这其实是第2行的第3个连续通道
+    // 显然Point2f割裂了相同通道的访问这样并不好,使用Vec3f是最好的,代表3个通道
+    cout << m18.at<Vec3f>(0, 0) << endl;// [3, 6, 1] 位置(0,0)连续的3个通道
+     // 4.1.3.2、三维数组的三通道,这里忽略,很少用
+
+    // 4.2、基于ptr访问,这里只给出单通道二维和三通道二维的访问方式,其它的情况比较少见
+    // 4.2.1、单通道二维
+    Mat m19 = Mat::eye(3, 3, CV_32FC1);
+    for (int i = 0; i < m19.rows; ++i) {
+        for (int j = 0; j < m19.cols; ++j) {
+            float* p = m19.ptr<float>(i, j); // 单通道返回指向元素(i,j)的指针
+            cout << *p << " ";
+        }
+        cout << endl;
+    }
+    // 4.2.2、三通道二维
+    Mat m20 = Mat::eye(3, 3, CV_32FC3);
+    cout << "m20 : \n" << m20 << endl;
+    for (int i = 0; i < m20.rows; ++i) {
+        Vec3f* p = m20.ptr<Vec3f>(i); //三通道返回指向元素(i,j)的连续3通道的指针
+        for (int j = 0; j < m20.cols; ++j) {
+                p[j][0] = (float)i + 3.0 + (float)j;
+                p[j][1] = ((float)i + 1.0) * 2.0 - (float)j;
+                p[j][2] = ((float)j - 1.0) * 2.0 + (float)i;
+        }
+    }
+    cout << "m20 : \n" << m20 << endl;
+    /*
+        [3, 2, -2, 4, 1, 0, 5, 0, 2;
+         4, 4, -1, 5, 3, 1, 6, 2, 3;
+         5, 6, 0, 6, 5, 2, 7, 4, 4]
+    */
+
+    //4.3、基于迭代器访问
+    // 4.3.1、单通道二维
+    MatIterator_ <float> it = m19.begin<float>();
+    MatIterator_ <float> itend = m19.end<float>();
+    for (; it != itend; ++it) {
+        cout << *it << " "; // 1 0 0 0 1 0 0 0 1
+    } // 按照先行后列的顺序打印元素
+    cout << endl;
+    // 4.3.2、三通道二维
+    MatIterator_ <Vec3f> it2 = m20.begin<Vec3f>();
+    MatIterator_ <Vec3f> it2end = m20.end<Vec3f>();
+    for (; it2 != it2end; ++it2) {
+        cout << *it2 << " "; // [3, 2, -2] [4, 1, 0] [5, 0, 2] [4, 4, -1] [5, 3, 1] [6, 2, 3] [5, 6, 0] [6, 5, 2] [7, 4, 4]
+    } // 按照每个点连续的3个通道打印
+    cout << endl;
     return 0;
 }
