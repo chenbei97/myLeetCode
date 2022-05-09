@@ -92,32 +92,101 @@ int main(int argc,char**argv)
     Mat m11(Matx<float,3,3>(1, 2, 3, 4, 5, 6, 7, 8, 9)); // 2、Mat(const Matx<T,m,n>&matx,bool copyData=true)
     Mat m12(vector<uchar>{0,0,255}); // 3、Mat(const vector<T>&vec,bool copyData=true)
     
-    // 4、访问方式
+     // 4、访问方式
     // 4.1、基于模板函数at<T>()
-    // 4.1.1、视为单通道,常见内置类型uchar、float、double等
-    // 4.1.1.1、一维数组
+    // 4.1.1、单通道
+    // 4.1.1.1、一维数组: at<uchar>(i)
     uchar u1 = m10.at<uchar>(0); //  n
     uchar u2 = m10.at<uchar>(1); //  c
     uchar u3 = m10.at<uchar>(2); // y
-    cout << "uchar u1 = " << u1 <<" uchar u2 = "<<u2<<" uchar u3 = "<<u3<< endl;
-    // 4.1.1.2、二维数组
+    cout << "uchar u1 = " << u1 << " uchar u2 = " << u2 << " uchar u3 = " << u3 << endl;
+    // m10.at<Point2i>(0,0) = Point2i(1, 2); // 不允许
+    // m10.at<Vec2i>(0,0) = Vec2i(1, 2); // 不允许
+    
+    // 4.1.1.2、二维数组: at<uchar>(i,j)
     Mat m13(Size(3, 2), CV_8UC1);
+    cout << "m13.channels() = " << m13.channels() << endl; // 是单通道的
     m13.at<uchar>(0, 0) = 10; m13.at<uchar>(0, 1) = 11; m13.at<uchar>(0, 2) = 12;
     m13.at<uchar>(1, 0) = 13; m13.at<uchar>(1, 1) = 14; m13.at<uchar>(1, 2) = 15;
-    cout << "m13 = \n" << m13 << endl;// [ 10,  11,  12;13, 14, 15]
-    // 4.1.1.3、一般不使用单通道的三维数组,一维数组三通道也不这么用,二维数组无法表示
+    cout << "m13 = \n" << m13 << endl;// [ 10, 11, 12;  13, 14, 15]
+   // m13.at<Point2i>(0, 0) = Point2i(1, 2); // uchar不允许
+   //  m13.at<Vec2i>(0, 0) = Vec2i(1, 2); // uchar不允许
    
-    // 4.1.2、视为双通道,常见内置类型Point2f类型
-    // 4.1.2.1、一维数组视为双通道,这样可能有些元素不能访问
+   // 单通道浮点数的二维数组虽然可以使用point2f访问但是会漏或多一些东西
+    // 这是因为内存访问按照指定大小跨越,一对sizeof(float)逐个的被Point2f捕获
+    Mat  m13_(Size(3, 2), CV_32FC1);
+    m13_.at<float>(0, 0) = 10.; m13_.at<float>(0, 1) = 11; m13_.at<float>(0, 2) = 12.;
+    m13_.at<float>(1, 0) = 13.; m13_.at<float>(1, 1) = 14; m13_.at<float>(1, 2) = 15.;
+    cout << "m13_ = \n" << m13_ << endl;// [ 10, 11, 12;  13, 14, 15]
+    cout << "m13_(0,0) = " << m13_.at<Point2f>(0, 0)  // float允许
+        << " m13_(0,1) = " << m13_.at<Point2f>(0, 1) << endl; // m13_(0,0) = [10, 11] m13_(0,1) = [12, 13]
+    cout << "m13_(1,0) = " << m13_.at<Point2f>(1, 0) 
+        << " m13_(1,1) = " << m13_.at<Point2f>(1, 1) << endl; // m13_(1,0) = [13, 14] m13_(1,1) = [15, -4.31602e+08] 多了1个
+    m13_.at<Point2f>(0, 0) = Point2f(1, 2); // float允许
+    cout << "m13_ = \n" << m13_ << endl;//[1, 2, 12 ;13, 14, 15]
+
+   // m11是Matx初始化的二维数组,和m13_类似,使用Point2f会漏东西
+    cout << "m11.channels() = " << m11.channels() << endl; // 1,是单通道的
     Point2f p1 = m11.at<Point2f>(0, 0); cout << "point2f p1 = " << p1 << "\n"; // [1, 2]
     Point2f p2 = m11.at<Point2f>(0, 1); cout << "point2f p2 = " << p2 << "\n"; // [3, 4]
     Point2f p3 = m11.at<Point2f>(1, 0); cout << "point2f p3 = " << p3 << "\n"; // [4, 5]
-    Point2f p4 = m11.at<Point2f>(1, 1); cout << "point2f p4 = " << p4 << "\n"; // [6, 7]
+    Point2f p4 = m11.at<Point2f>(1, 1); cout << "point2f p4 = " << p4 << "\n"; // [6, 7],8和9漏了
+    cout << "m11 = \n" << m11 << endl;//[1, 2, 3;4,5,6;7,8,9]
+
+    // 4.1.1.3、三维数组(很少使用,需要借助不常用的构造函数构建高维数组(dims≥3)): at<uchar>(i,j,k)
+    int sz14[] = { 2,3,4 };
+    const int* psz14 = sz14;
+    float data14[2*3*4] = {};
+    for (int i = 0; i < 2 * 3 * 4; ++i) data14[i] = (i +1)/ 24.0;
+    Mat m14(3, psz14, CV_32FC1,data14); // dims=3, 2×3×4
+    cout << "m14(0,0,0) = "<<m14.at<float>(0, 0, 0) 
+            << " m14(0,0,1) = " << m14.at<float>(0, 0, 1)
+            << " m14(0,0,2) = " << m14.at<float>(0, 0, 2)
+            << " m14(0,0,3) = " << m14.at<float>(0, 0, 3)<< endl;
+    cout << "m14(0,1,0) = " << m14.at<float>(0, 1, 0)
+        << " m14(0,1,1) = " << m14.at<float>(0, 1, 1)
+        << " m14(0,1,2) = " << m14.at<float>(0, 1, 2)
+        << " m14(0,1,3) = " << m14.at<float>(0, 1, 3) << endl;
+    cout << "m14(0,2,0) = " << m14.at<float>(0, 2, 0)
+        << " m14(0,2,1) = " << m14.at<float>(0, 2, 1)
+        << " m14(0,2,2) = " << m14.at<float>(0, 2, 2)
+        << " m14(0,2,3) = " << m14.at<float>(0, 2, 3) << endl;
+    cout << "m14(1,0,0) = " << m14.at<float>(1, 0, 0)
+        << " m14(1,0,1) = " << m14.at<float>(1, 0, 1)
+        << " m14(1,0,2) = " << m14.at<float>(1, 0, 2)
+        << " m14(1,0,3) = " << m14.at<float>(1, 0, 3) << endl;
+    cout << "m14(1,1,0) = " << m14.at<float>(1, 1, 0)
+        << " m14(1,1,1) = " << m14.at<float>(1, 1, 1)
+        << " m14(1,1,2) = " << m14.at<float>(1, 1, 2)
+        << " m14(1,1,3) = " << m14.at<float>(1, 1, 3) << endl;
+    cout << "m14(1,2,0) = " << m14.at<float>(1, 2, 0)
+        << " m14(1,2,1) = " << m14.at<float>(1, 2, 1)
+        << " m14(1,2,2) = " << m14.at<float>(1, 2, 2)
+        << " m14(1,2,3) = " << m14.at<float>(1, 2, 3) << endl;
     
-    Mat m14(Size(3, 2), CV_8UC2); // 2行3列
-    m14.at<uchar>(0, 0) = 1; m14.at<uchar>(0, 1) = 2; m14.at<uchar>(0, 2) = 3;
-    m14.at<uchar>(1, 0) = 4; m14.at<uchar>(1, 1) = 5; m14.at<uchar>(1, 2) = 6;
-    cout << "m14 = \n" << m14 << endl; // 其实只是把第1个通道赋值了,第2个通道没有赋值
-    // m14.at<Point2f>(0, 0) = Point2f(1, 2);  这种方式是不允许的
+    // 4.1.2、双通道
+    // 4.1.2.1、一维数组且双通道(不存在)
+    Mat m15(1, 3, CV_32FC2); // 即使这样也是二维数组,向量初始化模板就是m10,默认是单通道初始化的
+    cout << "m10.channels() = " << m10.channels() << endl; // channels = 1
+
+    // 4.1.2.2、二维数组视为双通道
+    Mat m16(Size(3, 2), CV_8UC2); // 2行3列
+    // 使用uchar赋值只能覆盖第1通道
+    m16.at<uchar>(0, 0) = 1; m16.at<uchar>(0, 1) = 2; m16.at<uchar>(0, 2) = 3;
+    m16.at<uchar>(1, 0) = 4; m16.at<uchar>(1, 1) = 5; m16.at<uchar>(1, 2) = 6;
+    cout << "m16 = \n" << m16 << endl; // 其实只是把第1个通道赋值了,第2个通道没有赋值
+    // [1,   2,   3, 205, 205, 205;4,   5,   6, 205, 205, 205]
+    // m16.at<Point2i>(0, 0) = Point2i(1, 2);  // 这种方式是不允许的,同理Vec2i
+
+    Mat m16_(2, 3, CV_32FC2);
+    m16_.at<float>(0, 0) = 1; m16_.at<float>(0, 1) = 2; m16_.at<float>(0, 2) = 3;
+    m16_.at<float>(1, 0) = 4; m16_.at<float>(1, 1) = 5; m16_.at<float>(1, 2) = 6;
+    cout << "m16_ = \n" << m16_ << endl; // 浮点数同理,只覆盖第1通道
+    // 浮点数允许使用Point2f赋值,且可以对第2通道赋值
+    m16_.at<Point2f>(0, 1) = Point2f(-1.0, -2.0); m16_.at<Point2f>(0, 1) = Point2f(-3.0, -4.0); m16_.at<Point2f>(0, 2) = Point2f(10.0, 11.0);
+    m16_.at<Point2f>(1, 0) = Point2f(-5.0, -6.0); m16_.at<Point2f>(1, 1) = Point2f(-7.0, -8.0); m16_.at<Point2f>(1, 2) = Point2f(15.0, 16.0);
+    cout << "m16_ = \n" << m16_ << endl; // [1, 2, -3, -4, 10, 11;-5, -6, -7, -8, 15, 16]
+    
+    // 4.1.2.3、三维数组视为双通道
     return 0;
 }
