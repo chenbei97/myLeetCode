@@ -99,7 +99,47 @@ int main(int argc,char**argv)
         按元素比较，返回0-255的uchar矩阵，就是掩码
         矩阵之间或矩阵和元素之间按位进行逻辑操作
         矩阵之间或矩阵和元素之间按元素选择最大值和最小值，以及按元素取绝对值
+        1、矩阵之间的加减法： m0 = m1 + m2; m0 = m1 - m2;
+        2、矩阵与元素之间的加减法： m0 = m1 + 2; m0 = m1 - 2;
+        3、矩阵与元素之间的乘法： m0 = m1 * 2; m0 = m1 / 2;
+        4、矩阵和矩阵按元素相乘除： m0 = m1 * m2; m0 = m1 / m2;
+        5、矩阵取负： m0 = -m1;
+        6、矩阵转置zi： m0 = m1.t();
+        7、矩阵求逆： m0 = m1.inv(DECOMP_LU); // DECOMP_LU表示使用LU分解法,还可以使用DECOMP_SVD和DECOMP_CHOLESKY
+            LU分解法必须是非奇异矩阵,SKY解法适用于矩阵半正定,此时大型矩阵运算速度很快,SVD解法可用于奇异矩阵求出伪逆
+        8、矩阵按元素比较： m0 = m1 > m2; m0 = m1 < m2; m0 = m1 == m2; m0 = m1 != m2;
+        9、矩阵与矩阵之间的按位运算： m0 = m1 & m2; m0 = m1 | m2; m0 = m1 ^ m2;
+        10、矩阵与元素之间的按位运算： m0 = m1 & 2; m0 = m1 | 2; m0 = m1 ^ 2;
+        11、矩阵与矩阵之间的按元素选择最大值和最小值： m0 = max(m1,m2); m0 = min(m1,m2);
+        12、矩阵与元素之间的按元素选择最大值和最小值： m0 = max(m1,2); m0 = min(m1,2);
+        13、矩阵与矩阵之间的按元素取绝对值： m0 = abs(m1);
+        14、矩阵的叉乘： m0 = m1.cross(m2); 只适用于3x1和1x3的矩阵
+        15、矩阵的点积： m0 = m1.dot(m2); 
+        16、其它诸如cv::sum(),cv::norm(),cv::mean()可以分别求和、范数、均值等
 
+        Mat具备饱和转换操作，即saturate_cast()函数，可以将其他类型的Mat转换为指定类型的Mat
+        可以自动检测是否上溢出或者下溢，如果是，则进行饱和转换，该函数具有返回值，与要转换的类型一致
+
+        Mat更多的函数成员，这里并不一一测试：
+        1、m1 = m0.clone()：从m0完全复制给m1,该操作将复制所有的数据元素
+        2、m0.copyTo(m1)：将m0中的数据元素复制给m1,等同于clone()
+        3、m0.convertTo(m1,type,scale=1,offset=0)：将m0转换为m1,type为转换的类型,scale为缩放因子,offset为偏移量
+        4、m0.assignTo(m1,type)：只在内部使用,集成在convertTo
+        5、m0.setTo(value,mask)：将m0中的所有数据元素设置为value,如果有mask,则针对mask中的数据元素设置为value
+        6、m0.reshape(cn,rows)：将m0转换为cn列，rows行的矩阵,可以为0表示不做更改
+        7、m0.push_back(m1)：将m1添加到m0的末尾,m1是个?×n的数组
+        8、m0.pop_back(n)：从m×n的矩阵移除行,默认是1
+        9、m0.locateROI(size,offset)：返回m0的ROI区域，size为m0的大小，offset为Point偏移量,以(宽,高)=(列,行)给出
+        10、m0.adjustROI(up,down,left,right)：通过4个值来调整ROI范围,也就是类似截图操作,负数表示截掉多少行多少列,方向取决于参数
+        11、m0.total()：计算数组序列的元素数目,不包括通道
+        12、m0.isContinuous()：如果m0的行之间没有空隙将返回true,说明是连续的内存
+        13、m0.elemSize()：返回m0的位长度，例如三通道浮点矩阵返回12,因为每个通道float占据4字节
+        14、m0.elemSize1()：返回m0最基本元素的位长度,三通道浮点矩阵返回12,因为float是4字节
+        15、m0.type()：返回元素类型如CV_32FC3对应的整数枚举值
+        16、m0.depth()：返回通道中元素类型如CV_32F
+        17、m0.channels()：通道数
+        18、m0.size()：返回矩阵的(宽,高)=(行,列)
+        19、m0.empty()：矩阵是否存在元素,等价于m0.total==0 & m0.data=nullptr
     */
     // 1、常用构造函数测试
     Mat m1; // 1、Mat
@@ -361,6 +401,87 @@ int main(int argc,char**argv)
     Mat m20_col0_1 = m20.colRange(0,2); // 返回2个列向量
     cout << "m20_row1_2 : \n" << m20_row1_2 << endl; // [4, 4, -1, 5, 3, 1, 6, 2, 3;5, 6, 0, 6, 5, 2, 7, 4, 4]
     cout << "m20_col0_1 : \n" << m20_col0_1 << endl; // [3, 2, -2, 4, 1, 0; 4, 4, -1, 5, 3, 1;5, 6, 0, 6, 5, 2]
+
+    // Mat的一些算术操作，只测试个别操作
+    Mat m22 = cv::abs(m20_col0_1);
+    cout << "m22 = " << m22 << endl;
+    Mat m23 = m20_col0_1 * 2;
+    Mat m24 = m20_col0_1.mul(2);
+    Mat m25 = m20_col0_1.mul(m20_col0_1);
+    Mat m26 = m20_col0_1 / m20_col0_1;
+    Mat m27 = m20_col0_1 / 2;
+    Mat m28 = Mat(3, 3, CV_32FC1);
+    m28.at<float>(0, 0) = 1.0f; m28.at<float>(0, 1) = 2.0f; m28.at<float>(0, 2) = 3.0f;
+    m28.at<float>(1, 0) = 1.0f; m28.at<float>(1, 1) = 0.0f; m28.at<float>(1, 2) = -1.0f;
+    m28.at<float>(2, 0) = 0.0f; m28.at<float>(2, 1) = 1.0f; m28.at<float>(2, 2) = 1.0f;
+    Mat m28_inv = m28.inv();
+    cout << "m23 = " << m23 << endl;
+    cout << "m24 = " << m24 << endl;
+    cout << "m25 = " << m25 << endl;
+    cout << "m26 = " << m26 << endl;
+    cout << "m27 = " << m27 << endl;
+    cout << "m28 = " << m28 << endl;
+    cout << "m28_inv = " << m28_inv << endl;
+
+    // Mat的饱和转换测试
+    Matx<uchar,2,2> m29 = Matx<uchar, 2, 2>{ 10,12,23,44 };
+    uchar& m29_ref_0_0 = m29(0, 0); uchar& m29_ref_0_1 = m29(0, 1);
+    uchar& m29_ref_1_0 = m29(1, 0); uchar& m29_ref_1_1 = m29(1, 1);
+    m29_ref_0_0 = saturate_cast<uchar>((m29_ref_0_0 - 128) * 2 + 128);
+    m29_ref_0_1 = saturate_cast<uchar>((m29_ref_0_1 - 128) * 2 + 128);
+    m29_ref_1_0 = saturate_cast<uchar>((m29_ref_1_0 - 128) * 2 + 128);
+    m29_ref_1_1 = saturate_cast<uchar>((m29_ref_1_1 - 128) * 2 + 128);
+    cout << "m29 = " << m29 << endl; // 全部变成0
+
+    // push_back和pop_back操作
+    Mat m30 = Mat::ones(3, 5, CV_8UC1);
+    m30.pop_back(1);
+    cout << "m30.size() = " << m30.size() << endl; // [5 x 2],表示删除行
+    m30.push_back(Mat::ones(13, 5, CV_8UC1));
+    cout << "m30.size() = " << m30.size() << endl; // [5 x 15],表示添加列相同的多行
+
+    // 测试locateROI函数,m31是m30的[1,2]行,[3,4]列,使用Range的方式代替rowRange,colRange获取m30的块区域
+    Mat m31 = m30(Range(7,10), Range(3,5));
+    Size sz_m32; Point2i ofs_m32;
+    m31.locateROI(sz_m32, ofs_m32);
+    cout << "sz_m32 = " << sz_m32 << endl; // [5 x 15]
+    cout << "ofs_m32 = " << ofs_m32 << endl; // [3, 7],偏置的意思是偏离了m30的起点3列,7行,因为宽3高7
+
+    // 测试adjustROI函数,指定(up,down,left,right)=(-5,-5,-1,-1)
+    // 含义是从顶行向下减去5行,底层向上减去5行,左右也向中心删除边界行
+    m30.at<uchar>(6, 3) = 18;
+    cout << "m30 :\n" << m30 << endl;
+    Mat m32 = m30.adjustROI(-5, -5, -1, -1); // m32.size() = [3 x 5]
+    cout << "m32.size() = " << m32.size() << endl;
+    cout << "m32 :\n" << m32 << endl;
+    /*
+         可以看出确实是截图,且改变了m32也会改变m30
+            m30 :
+        [  1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,  18,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1;
+           1,   1,   1,   1,   1]
+        m32 :
+        [  1,   1,   1;
+           1,   1,  18;
+           1,   1,   1;
+           1,   1,   1;
+           1,   1,   1]
+    */
+    cout << boolalpha <<" m32.isContinuous() = "<< m32.isContinuous() << endl; // false
+    cout << "m32.elemSize() = " << m32.elemSize() << endl; // 1
+    cout << "m32.elemSize1() = " << m32.elemSize1() << endl; // 1
 
     return 0;
 }
