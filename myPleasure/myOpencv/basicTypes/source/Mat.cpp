@@ -83,8 +83,23 @@ int main(int argc,char**argv)
         借助迭代器访问:
         需要使用MatIterator类型的迭代器,可以使用begin()和end()方法获取迭代器,迭代器可以使用++和--进行前后移动
             对于单通道直接按照一行行打印元素,对于三通道每次打印的是一个Vec3f,即(i,j)位置的连续3个通道元素
+        三种方式，ptr是最快的，迭代器是最慢的，无论是单通道还是三通道
 
-        
+        Mat还可以通过块访问,例如col(int)和row(int)可以返回该行或该列的data指针,改变指针内容就可以改变原有数据
+        不过col()和row()只适用于二维数组
+        与col,row密切相关的是rowRange()和colRange()方法,可以返回一个Mat对象,该对象包含了一行或一列的数据
+        colRange(col1,col2),rowRange(row1,row2)
+        相关的类是Range,rowRange(Range(x0,x1)),colRange(Range(x0,x1)),借助Range类型的对象可以获取某一行或某一列的数据
+        Range类其实也能实现rowRange()和colRange()的功能,注意左闭右开,即m(Range(x1,x2),Range(y1,y2)),这里不赘述见Range.cpp
+        还可以使用Rect获取一个矩形区域的Mat对象,m(Rect(x,y,w,h))会获取(x,y)到(x+2-1,y+h-1)的矩形区域,注意左闭右开
+        diag()：返回对角线元素的Mat对象,如果是0就是主对角线,如果是整数就是相对主对角线向上的偏移对角线,反之向下偏移
+
+        Mat的常用运算方法，支持矩阵之间的加减法和矩阵与元素之间的加减法，支持取负
+        支持按元素相乘除mul、/，矩阵乘法 *，求逆inv、转置t()、
+        按元素比较，返回0-255的uchar矩阵，就是掩码
+        矩阵之间或矩阵和元素之间按位进行逻辑操作
+        矩阵之间或矩阵和元素之间按元素选择最大值和最小值，以及按元素取绝对值
+
     */
     // 1、常用构造函数测试
     Mat m1; // 1、Mat
@@ -299,5 +314,53 @@ int main(int argc,char**argv)
         cout << *it2 << " "; // [3, 2, -2] [4, 1, 0] [5, 0, 2] [4, 4, -1] [5, 3, 1] [6, 2, 3] [5, 6, 0] [6, 5, 2] [7, 4, 4]
     } // 按照每个点连续的3个通道打印
     cout << endl;
+    // 一个使用迭代器访问三维三通道数组,找到最长的向量的例子,也就是x^2+y^2+z^2最大的向量
+    // 不仅是某个通道中最长的向量,还是所有通道中最长的向量
+    int sz_iter[] = {4,4,4};
+    Mat m21(3,sz_iter,CV_32FC3); // 3维,3通道,4行4列高度4
+    randu(m21,-1.0f,1.0f); // 填充随机数
+    MatConstIterator_<Vec3f> it3 = m21.begin<Vec3f>(); // 可以使用const迭代器
+    MatConstIterator it4 = m21.begin<Vec3f>(); // 也可以使用const迭代器
+    // MatConstIterator和MatConstIterator_是两种不同的迭代器,两者的区别是
+    // MatConstIterator继承自MatConstIterator_,没有模板参数
+    float max_m21 = 0.0f;
+    while (it3 != m21.end<Vec3f>()) {
+        float len = (*it3)[0] * (*it3)[0] + (*it3)[1] * (*it3)[1] + (*it3)[2] * (*it3)[2];
+        if (max_m21 < len) {
+            max_m21 = len;
+        }
+        it3++;
+    }
+    cout << "max_m21 : " << max_m21 << endl; //  1.41017
+    // 使用MatConstIterator也是可以的,但是含义不同
+    max_m21 = 0.0f;
+    while (it4 != m21.end<Vec3f>()) {
+        float len = sqrt((*it4)[0] * (*it4)[0] + (*it4)[1] * (*it4)[1] + (*it4)[2] * (*it4)[2]);
+        if (max_m21 < len) {
+            max_m21 = len;
+        }
+        it4++;
+    }
+    cout << "max_m21 : " << max_m21 << endl; // 380.576
+
+    // Mat基于块的访问方式
+    // 使用row和col方法访问块,以m20为例
+    // 访问m20的第2行和第1列
+    Mat m20_row1 = m20.row(1); // 返回一个行向量
+    auto m20_col0 = m20.col(0); // 返回一个列向量
+    /*
+         [3, 2, -2, 4, 1, 0, 5, 0, 2;
+         4, 4, -1, 5, 3, 1, 6, 2, 3;
+         5, 6, 0, 6, 5, 2, 7, 4, 4]
+    */
+    // 比较可以知道row,col会把所有通道的数都取出来
+    cout << "m20_row1 : \n" << m20_row1 << endl; // [4, 4, -1, 5, 3, 1, 6, 2, 3]
+    cout << "m20_col0 : \n" << m20_col0 << endl; // [3, 2, -2;4, 4, -1;5, 6, 0]
+    // 也可以访问某个范围的行或列,如1-2行,0-1列,但是注意左闭右开
+    Mat m20_row1_2 = m20.rowRange(1,3); // 返回2个行向量
+    Mat m20_col0_1 = m20.colRange(0,2); // 返回2个列向量
+    cout << "m20_row1_2 : \n" << m20_row1_2 << endl; // [4, 4, -1, 5, 3, 1, 6, 2, 3;5, 6, 0, 6, 5, 2, 7, 4, 4]
+    cout << "m20_col0_1 : \n" << m20_col0_1 << endl; // [3, 2, -2, 4, 1, 0; 4, 4, -1, 5, 3, 1;5, 6, 0, 6, 5, 2]
+
     return 0;
 }
