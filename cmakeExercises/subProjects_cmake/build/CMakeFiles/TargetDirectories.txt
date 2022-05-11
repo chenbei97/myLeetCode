@@ -1,0 +1,7 @@
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/sublibrary1/CMakeFiles/sublibrary1.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/sublibrary1/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/sublibrary2/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/subbinary/CMakeFiles/subbinary.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/subbinary/CMakeFiles/ALL_BUILD.dir

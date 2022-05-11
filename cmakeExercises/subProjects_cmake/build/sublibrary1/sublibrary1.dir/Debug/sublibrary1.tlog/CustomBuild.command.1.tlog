@@ -1,0 +1,10 @@
+^C:\USERS\CHENB\VSCODEITEMS\MYLEETCODE\CMAKEEXERCISES\SUBPROJECTS_CMAKE\SUBLIBRARY1\CMAKELISTS.TXT
+setlocal
+C:\cmake-3.23.1-windows-x86_64\bin\cmake.exe -SC:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake -BC:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build --check-stamp-file C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/sublibrary1/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

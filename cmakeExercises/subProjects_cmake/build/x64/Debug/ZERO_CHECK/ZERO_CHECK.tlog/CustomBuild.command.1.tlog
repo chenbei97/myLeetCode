@@ -1,0 +1,10 @@
+^C:\USERS\CHENB\VSCODEITEMS\MYLEETCODE\CMAKEEXERCISES\SUBPROJECTS_CMAKE\BUILD\CMAKEFILES\26412749CB23F9DE83A7754E1FEE5496\GENERATE.STAMP.RULE
+setlocal
+C:\cmake-3.23.1-windows-x86_64\bin\cmake.exe -SC:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake -BC:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/subProjects_cmake/build/subProjects_cmake.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
