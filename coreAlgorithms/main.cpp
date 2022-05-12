@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-03-15 09:31:04
- * @LastEditTime: 2022-03-28 16:50:20
+ * @LastEditTime: 2022-05-12 09:31:01
  * @Description: core algorithms main.cpp
  * @FilePath: \myLeetCode\coreAlgorithms\main.cpp
  * @A boy without dreams
@@ -14,6 +14,7 @@
 #include "shellSort.h"
 #include "mergeSort.h"
 #include "quickSort.h"
+#include "quickSort.hpp"
 #include "heapSort.h"
 #include "countSort.h"
 #include "bucketSort.h"
@@ -28,6 +29,7 @@ int main()
     _shellSort_testCode();
     _mergeSort_testCode();
     _quickSort_testCode();
+    _quickSortSTL_testCode();
     _heapSort_testCode();
     _countSort_testCode();
     _bucketSort_testCode();
