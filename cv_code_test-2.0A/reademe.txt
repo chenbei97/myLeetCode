@@ -1,0 +1,15 @@
+文件目录：
+--cv_code_test-2.0A
+    --CMakeLists.txt
+    --build
+    --include --bilateral_filter.h,calc_homography.h,has_overlap.h,point_on_line.h
+    --src ----bilateral_filter.cpp,calc_homography.cpp,has_overlap.cpp,point_on_line.cpp
+    --main.cpp
+    --readme.txt
+
+mkdir build
+cd build
+
+// 使用win下的cmake命令,linux使用make代替cmake --build .
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build . --target ALL_BUILD --config RelWithDebInfo // 使用make替代
