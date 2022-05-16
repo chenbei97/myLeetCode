@@ -1,3 +1,11 @@
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-15 17:50:42
+ * @LastEditTime: 2022-05-16 19:25:27
+ * @Description: calc_homography.cpp
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\cv_code_test-2.0A\src\calc_homography.cpp
+ * @Signature: A boy without dreams
+ */
 /**
  * Project3: 单应性变换
  * 要求： 
@@ -13,7 +21,7 @@
  *       N个相机2图像中坐标的点，以长度为N的二维数组形式给出 
  * 输出： N个相机1图像中坐标的点，以长度为N的二维数组形式给出 
  * */
-#include "calc_homography.h"
+#include "../include/calc_homography.h"
 void calc_homography(int pts1[4][2], int pts2[4][2], int pts_in[][2], int pts_out[][2])
 {
     // 不使用第三方库不会求,使用第三库使用2个函数即可

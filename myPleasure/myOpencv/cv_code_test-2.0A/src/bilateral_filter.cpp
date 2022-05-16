@@ -1,4 +1,12 @@
-#include "bilateral_filter.h"
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-15 17:47:28
+ * @LastEditTime: 2022-05-16 19:25:34
+ * @Description: bilateral_filter.cpp
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\cv_code_test-2.0A\src\bilateral_filter.cpp
+ * @Signature: A boy without dreams
+ */
+#include "../include/bilateral_filter.h"
 /**
  * Project2: 使用双边滤波处理给定图像
  * 要求： 

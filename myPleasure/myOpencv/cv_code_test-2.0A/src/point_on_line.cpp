@@ -1,4 +1,12 @@
-#include "point_on_line.h"  // point_on_line
+/*** 
+ * @Author: chenbei
+ * @Date: 2022-05-15 17:38:43
+ * @LastEditTime: 2022-05-16 19:26:16
+ * @Description: point_on_line.cpp
+ * @FilePath: \myLeetCode\myPleasure\myOpencv\cv_code_test-2.0A\src\point_on_line.cpp
+ * @Signature: A boy without dreams
+ */
+#include "../include/point_on_line.h"  // point_on_line
 // 1个判断点(x,y)是否在2点(x1,y1),(x2,y2)构成的线段上的辅助函数
 bool point_on_line(int x1,int y1,int x2,int y2,int x,int y){
     // 1.首先判断(x,y)是否满足直线方程
