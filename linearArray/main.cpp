@@ -90,5 +90,7 @@ int main()
     cout<<"get k nearest distance as follows\n";
      _linearArray_kNearestDist_sort();
      _linearArray_kNearestDist_heap();
+     cout<<"full permutation as follows\n";
+     _linearArray_fullPermutation_recursion();
     return 0;
 }

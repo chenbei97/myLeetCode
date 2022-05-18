@@ -8,6 +8,94 @@
 -->
 ## 解题思路
 
+## 全排列
+
+想象全排列是在填格子，初始的数组是一种状态，进去以后，先从第0个格子填，用变量first=0来控制。
+
+填第0个格子的动作就是交换第0个格子和第first个格子改变数组的状态，开始因为first=0等于没交换
+
+然后进入递归状态填第1个格子，将除了第0个格子以外的数组部分也调整状态，即交换第1个格子和第first格子，只是此时first=1；
+
+同理进入递归状态填第2个格子，从第2个格子开始和第first=2个格子进行交换。
+
+假设输入数组是3个数，初始输入是[1,2,3]。一开始填第0个格子，也就是交换第0个和第first个格子，因为等于没交换就相当于元素0固定了，然后进入递归去固定第1个格子，也就是1，同样实际没交换，[1,2]固定；继续递归，第2个格子同理，直到递归条件满足，也就是填的格子满了，即first=n=3，此时数组作为一种状态被答案添加进去。
+
+之后要恢复状态，[1,2,3]被添加进答案后，退出递归过程，栈返回到上一级，考虑进入递归的时候first=2，而i=first，当然i也是2，然后i++不符合i<3的条件退出循环；继续退栈，此时i=first=1，i++可以再进行一次循环，i=2，然后交换的就是nums[i]和nums[first]也就是nums[2]和nums[1]，由于之前的状态保持不变也就是数组还是[1,2,3]，此时交换之后就变成[1,3,2]，然后进入递归过程，此时依然是first=i=2，再进入递归因为满足递归条件[1,3,2]被添加进答案，所以退出。类似的会进入2次退栈过程，2次for循环不满足条件，最后总之会退回到[1,2,3]的状态，此时first=0,i=0的递归过程已经结束，下一轮应当是first=0,i=1的过程。
+
+```c++
+class linearArrayFullPermutationRecursion{
+    public:
+        vector<vector<int>> res;
+        int n ;
+        vector<vector<int>> permute(vector<int>&nums){
+            this->n = nums.size();
+            backTrace(nums,0);
+            return this->res;
+        }
+        void backTrace(vector<int>&nums,int first){
+        if (first == this->n){
+            res.emplace_back(nums); // 添加进答案
+        }
+        for(int i =first; i < this->n;++i){ // 对于每一个位置
+            swap(nums[i],nums[first]); // 改变状态
+            backTrace(nums,first+1); // 反复递归
+            swap(nums[i],nums[first]);// 撤销状态
+        }
+    }
+};
+```
+
+使用流程图展示如下，具体可见链接[全排列 - 全排列 - 力扣（LeetCode）](https://leetcode.cn/problems/permutations/solution/quan-pai-lie-by-leetcode-solution-2/)
+
+i = 0,first = 0
+
+i = 1,first = 1 --> i = 2,first = 1 --> 1,3,2
+
+i = 2,first = 2--> 1,2,3
+
+
+
+i = 1,first = 0
+
+i = 1,first = 1 --> i = 2,first = 2 --> 2,3,1
+
+i = 2,first = 2-->2,1,3
+
+
+
+i = 2,first = 0
+
+i = 1,first = 1 --> i = 2,first = 2-->3,1,2
+
+i = 2,first = 2--> 3,2,1
+
+
+
+
+```mermaid
+graph LR
+HA00[i=0,first=0]-->|递归|HA11[i=1,first=1]
+HA11[i=1,first=1]-->|递归|HA22[i=2,first=2]
+HA22-->|递归|HA23[i=2,first=3]
+HA23-->A1[递归终止]-->1,2,3
+A1-->|退栈|HA22-->|for循环终止退栈|HA11
+HA11-->|for循环|HA21[i=2,first=1]-->|递归|HA22_[i=2,first=2]-->A2[递归终止]-->1,3,2
+A2-->|退栈|HA11[i=1,first=1]-->|退栈|HA00
+
+HA00-->|for循环|HB10[i=1,first=0]-->|递归|HB11[i=1,first=1]-->|递归|HB22[i=2,first=2]
+HB22-->|递归|HB23[i=2,first=3]
+HB23-->B1[递归终止]-->2,1,3
+B1-->|退栈|HB22-->|for循环终止退栈|HB11
+HB11-->|for循环|HB21[i=2,first=1]-->|递归|HB22_[i=2,first=2]-->B2[递归终止]-->2,3,1
+B2-->|退栈|HB11[i=1,first=1]-->|退栈|HB10
+
+HB10-->|for循环|HC20[i=2,first=0]-->|递归|HC11[i=1,first=1]-->|递归|HC22[i=2,first=2]
+HC22-->|递归|HC23[i=2,first=3]-->C1[递归终止]-->3,2,1
+C1-->|退栈|HC22-->|for循环终止退栈|HC11
+HC11-->|for循环|HC21[i=2,first=1]-->|递归|HC22_[i=2,first=2]-->C2[递归终止]-->3,1,2
+C2-->|退栈|HC11[i=1,first=1]-->|退栈|HC20
+```
+
 ## 最接近原地的k个点
 
 给定一个数组 points ，其中 points[i] = [xi, yi] 表示 X-Y 平面上的一个点，并且是一个整数 k ，返回离原点 (0,0) 最近的 k 个点。

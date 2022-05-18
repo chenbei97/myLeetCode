@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-02-23 16:24:25
- * @LastEditTime: 2022-04-14 15:56:22
+ * @LastEditTime: 2022-05-18 17:37:53
  * @Description: linearArray.h
  * @FilePath: \myLeetCode\linearArray\linearArray.h
  * @Signature: A boy without dreams
@@ -73,5 +73,5 @@
 #include "linearArraySmallestDistancePairs_DoublePointers.h"
 #include "linearArrayReceiveRainwater_Iteration.h"
 #include "linearArrayLifeBoat_Iteration.h"
-
+#include "linearArrayFullPermutation_Recursion.h"
 #endif // !linearArray_
