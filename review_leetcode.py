@@ -1,7 +1,7 @@
 '''
 Author: chenbei
 Date: 2022-05-17 08:24:16
-LastEditTime: 2022-05-17 14:46:33
+LastEditTime: 2022-05-18 14:13:52
 Description: review leetCode
 FilePath: \myLeetCode\review_leetcode.py
 Signature: A boy without dreams
@@ -172,6 +172,65 @@ def addTwoNumbers(l1:ListNode,l2:ListNode):
     if carry:
         next.next = ListNode(carry)
     return dumpy.next
+# 9.二分查找
+def binarySearch(nums,target):
+    '''
+        要求输入数组事先有序
+        然后定义2个指针left,right分别指向开头和结尾,即0和n-1
+        取left,right的中间位置mid,如果nums[mid]就是要寻找的target直接返回mid
+        如果nums[mid]>target,说明target处于[0,mid-1]之间,让right从n-1变为mid-1
+        否则nums[mid]<target,说明target处于[mid+1,n-1]之间,让left从0变为mid+1
+        left≠right时循环就继续
+    '''
+    left,right = 0,len(nums)-1
+    while left != right:
+        mid = (left+right) // 2
+        if nums[mid] == target: 
+            return mid
+        elif nums[mid] > target: # [0,mid-1]
+            right = mid - 1
+        else: left = mid + 1 # [mid+1,n-1]
+    return -1
+# 10.冒泡排序
+def bubbleSort(nums):
+    '''
+        稳定排序,最坏和平均时间复杂度O(n^2),最好时间复杂度O(n)
+        原理是两两交换,总是把更大的元素交换到前边
+        从第1个元素开始固定,然后这一轮会依次从第2个元素直到最后1个元素与nums[0]进行比较
+            只要比nums[0]小就换到前边,本轮结束,nums[0]就已经是最小的元素
+        然后从第2个元素开始固定,同理可以让nums[1]是最小的元素
+        以此类推,为了避免越界,直到倒数第2个元素固定,只有nums[n-2]和nums[n-1]进行比较,循环结束
+    '''
+    n = len(nums)
+    for i in range(n-1): # 避免j越界
+        for j in range(i+1,n) : # nums[i]固定,nums[j++]总是和nums[i]比较,如果更小就交换到前边
+            if nums[i]>nums[j]:
+                nums[i],nums[j]=nums[j],nums[i]
+    return nums        
+# 11.计数排序
+def countSort(nums):
+    '''
+        平均复杂度是nlog2n,稳定性排序
+        思路是,先两两比较元素,控制变量从i=1,2..,n-1,控制变量j从j=0,1,..i
+        元素更大的在名次数组对应位置+1,例如nums[i]>nums[j]就在rank[i]+1
+        得到名次数组之后,rank[i]≠i,只要rank[i]=i就可以实现有序
+        所以遍历每个元素nums[i],当前元素nums[i]的排名可以找到,也就是rank[i]
+        如果rank[i]≠i说明排名没有按照顺序,而rank[i]对应的元素是nums[rank[i]]
+        将这2个元素交换,同时名次数组也交换,即rank[i]和rank[rank[i]]进行交换
+        遍历结束后,rank[i]=i,nums也已经有序
+    '''
+    n = len(nums)
+    rank = [0] * n
+    for i in range(1,n):
+        for j in range(i):
+            if nums[i]>nums[j] : rank[i]+=1
+            else: rank[j]+=1
+    for i in range(n): # 遍历每个元素
+        while rank[i] != i: # 有序的元素应当满足排名rank[i]=i
+            r = rank[i] # rank[i]对应的元素是nums[rank[i]],把它换到现在的nums[i]即可实现rank[i]=i
+            nums[i],nums[r]=nums[r],nums[i]
+            rank[i],rank[r]=rank[r],rank[i] # 排名也要交换
+    return nums
 if __name__ == '__main__':
     print(twoSums([3,2,4],6)) # [1,2]
     print(threeSum([-1,0,1,2,-1,-4])) # [[-1, -1, 2], [-1, 0, 1]]
@@ -179,6 +238,9 @@ if __name__ == '__main__':
     print(sellStocksII([7,1,5,3,6,4])) # 7
     print(kNearestPoints([[1,1],[3,4],[-3,4],[5,5],[3,7],[10,6]],3)) # [[1, 1], [3, 4], [-3, 4]]
     print(dailyTemperature([73,74,75,71,69,72,76,73]))
+    print(binarySearch([1,3,4,6,7,9,12,14,15,16,17,18,20,23,35,78,88,100],17)) # 10
+    print(bubbleSort([5,4,3,2,1])) # [1, 2, 3, 4, 5]
+    print(countSort([5,4,3,2,1])) # [1, 2, 3, 4, 5]
 
     colors = [2,0,2,1,1,0]
     colorClassify(colors)
