@@ -1,0 +1,17 @@
+参考书:https://github.com/changkun/modern-cpp-tutorial/blob/master/book/zh-cn/02-usability.md
+现代C++指南的介绍部分 modern-cpp-tutorial 02_useability
+cd STLTestCode\\modern-cpp-tutorial\\02_useability
+/*
+g++ -o useability -std=c++20 useability.cpp
+.\useability
+*/
+#include <iostream>
+#include <vector>
+using namespace std;
+int main()
+{
+    /*
+
+    */
+    return 0;
+}
