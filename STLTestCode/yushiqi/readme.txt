@@ -95,3 +95,8 @@ goto语句要少用,见goto.cpp
 strlen可以计算char_8的字符长度，和sizeof不同，不会包含\0的长度
 
 strcpy和strcmp有更安全的方式，见strcpy.cpp
+
+opencv中step的含义是：每行需要的步，起始就是列的大小
+利用步，即使在大矩阵中的某个小矩阵去获取数据，也可以通过data指针反复加上step就可以得到每行的首地址
+可见图片opencv中step的用法.jpg的示意图
+libfacedetection.jpg则是于仕琪老师的人脸检测库
