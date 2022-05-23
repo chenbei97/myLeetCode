@@ -100,3 +100,24 @@ opencv中step的含义是：每行需要的步，起始就是列的大小
 利用步，即使在大矩阵中的某个小矩阵去获取数据，也可以通过data指针反复加上step就可以得到每行的首地址
 可见图片opencv中step的用法.jpg的示意图
 libfacedetection.jpg则是于仕琪老师的人脸检测库
+
+myString.cpp说明了如何定义自己的operator=、复制构造函数以及析构释放函数
+进行深拷贝，防止释放内存多次导致错误
+void release(){
+    cout<<"release() is called"<<endl;
+    this->buf_size=0;
+    if (this->characters!=nullptr){ // 不为空的话先释放
+        delete[] this->characters;//先释放掉自己的空间
+        this->characters=nullptr;
+    }
+}
+bool create(int buf_size,const char*data){
+    this->release(); // 先释放掉自己的空间
+    this->buf_size=buf_size;
+    if (this->buf_size !=0){ // 如果申请的空间不为0
+        this->characters=new char[this->buf_size]{};
+    }
+    // 如果data不为空,就拷贝数据
+    if(data) strncpy(this->characters,data,this->buf_size);
+    return true;
+}
