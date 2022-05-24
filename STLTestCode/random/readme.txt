@@ -21,6 +21,11 @@ g++ -o ..\output\m m.cpp
 cl /Fo"..\output\m" /Fe"..\output\m.exe" /std:c++latest ".\m.cpp"
 ..\output\m.exe
 */
+传统的随机数函数为rand(),包含于头文件<cstdlib>
+srand可以指定随机种子,如果希望设置与时间有关的种子可以包含<ctime>
+利用srand(time(nullptr))即可实现与时间有关的随机种子
+rand()函数会返回0到RAND_MAX之间的整数
+不过此随机函数具有严重的缺陷，如果需要严格的随机数应当使用c++11之后引入的这些随机数引擎
 
 随机数引擎和引擎适配器在c++11下有6种：
 1.linear_congruential_engine 是基于线性同余生成器 (LCG) 的随机数引擎
