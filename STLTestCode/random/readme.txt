@@ -1,15 +1,11 @@
 cd STLTestCode\\random\\source
 这个文件夹提到的函数不一定只是头文件<random>的
 凡是与随机数相关的都会被搜罗进去，包括随机种子、随机打乱、随机分布以及随机引擎等
-/*
-g++ -o ..\output\m m.cpp
-..\output\m.exe
-cl /Fo"..\output\m" /Fe"..\output\m.exe" /std:c++latest ".\m.cpp"
-..\output\m.exe
-*/
+
 #include <iostream>
 #include <vector>
 #include <random>
+#include <functional>
 #include <iterator>
 using namespace std;
 int main()
@@ -19,6 +15,12 @@ int main()
     */
     return 0;
 }
+/*
+g++ -o ..\output\m m.cpp
+..\output\m.exe
+cl /Fo"..\output\m" /Fe"..\output\m.exe" /std:c++latest ".\m.cpp"
+..\output\m.exe
+*/
 
 随机数引擎和引擎适配器在c++11下有6种：
 1.linear_congruential_engine 是基于线性同余生成器 (LCG) 的随机数引擎
@@ -74,8 +76,8 @@ seed seq(C++11)：种子序列
 
 随机数的几种分布：
 1、均匀分布
-uniform_int_distribution(C++11)
-uniform_real_distribution(C++11)
+uniform_int_distribution(C++11) 离散概率P(i/a,b)=1/(b-a+1)
+uniform_real_distribution(C++11) 概率密度函数P(i/a,b)=1/(b-a)
 generate_canonical(C++11)
 2、伯努利分布
 bernoulli_distribution(C++11)
