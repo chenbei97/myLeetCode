@@ -22,8 +22,8 @@ int main(){
     return 0;
 }
 /*
-g++ -o m m.cpp
-.\m.exe
-cl /Fo"..\output\m" /Fe"..\output\m.exe" /std:c++latest ".\m.cpp"
-.\m.exe
+g++ -o main main.cpp
+.\main.exe
+cl /Fo"..\output\main" /Fe"..\output\main.exe" /std:c++latest ".\main.cpp"
+.\main.exe
 */
