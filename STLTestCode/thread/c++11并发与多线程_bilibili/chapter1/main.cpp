@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-05-24 15:34:37
- * @LastEditTime: 2022-05-24 16:22:31
+ * @LastEditTime: 2022-05-25 07:59:06
  * @Description: chapter1\main.cpp
  * @FilePath: \myLeetCode\STLTestCode\thread\c++11并发与多线程_bilibili\chapter1\main.cpp
  * @Signature: A boy without dreams
@@ -41,8 +41,8 @@ int main(){
     return 0;
 }
 /*
-g++ -o main main.cpp
-.\main.exe
-cl /Fo"..\output\main" /Fe"..\output\main.exe" /std:c++latest ".\main.cpp"
-.\main.exe
+g++ -o main_g++ main.cpp
+.\main_g++.exe
+cl /Fo".\main_cl" /Fe".\main_cl.exe" /std:c++latest ".\main.cpp"
+.\main_cl.exe
 */
