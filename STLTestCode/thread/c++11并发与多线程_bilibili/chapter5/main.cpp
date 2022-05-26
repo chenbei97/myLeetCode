@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-05-25 16:32:04
- * @LastEditTime: 2022-05-26 09:24:28
+ * @LastEditTime: 2022-05-26 10:05:38
  * @Description: /chapter5/main.cpp
  * @FilePath: \myLeetCode\STLTestCode\thread\c++11并发与多线程_bilibili\chapter5\main.cpp
  * @Signature: A boy without dreams
@@ -16,7 +16,7 @@ using namespace std;
 class Message{
     public:
         void collect_msg(){// 模拟收集过来的命令
-            for(int i = 0; i<10000; ++i){
+            for(int i = 0; i<1000; ++i){
                 // 如果不使用智能锁,一前一后用lock和unlock
                 // 如果需要智能锁最好加上{},这样可以离开{}作用域时析构
                 cout<<"collect msg "<<i+1<<endl;
@@ -29,10 +29,10 @@ class Message{
             }
         }
         void take_msg(){ // 模拟取出命令
-            int command = 0;
             // 取出命令似乎比收集命令慢,取出停止后还在收集,所以这里循环适当延长
             // 运行结果会显示最后的消息都是no msg而不是collect msg
-            for(int i = 0; i<80000; ++i){
+            for(int i = 0; i<10000; ++i){ // 经实际测试差不多10000左右可以把所有命令都取出来,否则都是no msg
+                int command = 0;
                 bool result = exec_command(command);
                 if (result){
                     cout<<"take msg "<<command<<endl;
@@ -45,7 +45,7 @@ class Message{
             std::lock_guard<std::mutex> lck(mtx); // 智能锁
             // mtx.lock();
             if (!msgQueue.empty()){
-                int command = msgQueue.front(); // 取出最早的命令
+                command = msgQueue.front(); // 取出最早的命令
                 msgQueue.pop_front();
                 // mtx.unlock(); // 注意2个分支都要unlock
                 return true;
