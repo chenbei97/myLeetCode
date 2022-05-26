@@ -1,10 +1,13 @@
+(1) 设计模式概况
+(2) 单例设计模式
+(3) 单例设计模式共享数据问题分享和解决
+(4) std::call_once()
 
 #include <iostream>
 #include <thread>
-#include <vector>
 #include <mutex>
-#include <string>
-#include <windows.h> // sleep
+#include <list>
+#include <chrono>
 using namespace std;
 int main(){
     /*
