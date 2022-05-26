@@ -1,7 +1,7 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-05-25 15:27:35
- * @LastEditTime: 2022-05-25 16:30:04
+ * @LastEditTime: 2022-05-26 08:35:30
  * @Description: \chapter4\main.cpp
  * @FilePath: \myLeetCode\STLTestCode\thread\c++11并发与多线程_bilibili\chapter4\main.cpp
  * @Signature: A boy without dreams
@@ -57,12 +57,12 @@ void data_enable_write(){
 class Message{
     public:
         void collect_msg(){// 模拟收集过来的命令
-            for(int i = 0; i<100000; ++i){
+            for(int i = 0; i<10000; ++i){
                 msgQueue.push_back(i+1);
             }
         }
         void take_msg(){ // 模拟取出命令
-            for(int i = 0; i<100000; ++i){
+            for(int i = 0; i<10000; ++i){
                 if (!msgQueue.empty()){
                     int command = msgQueue.front(); // 取出最早的命令
                     // 依据命令...做一些事情
@@ -70,7 +70,7 @@ class Message{
                     cout<<"msg["<<i<<"] = "<<command<<endl;
                     msgQueue.pop_front(); 
                 }
-                else{cout<<"msg queue is empty!"<<endl; return;}   
+                else{cout<<"msg queue is empty!"<<endl;}   
             }
             return;
         }
