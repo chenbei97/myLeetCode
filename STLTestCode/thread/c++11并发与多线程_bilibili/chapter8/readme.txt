@@ -1,10 +1,12 @@
-
+(1) 条件变量 condition_variable、wait()、notify_one()
+(2) notify_all()
 #include <iostream>
 #include <thread>
-#include <vector>
 #include <mutex>
-#include <string>
-#include <windows.h> // sleep
+#include <chrono>
+#include <condition_variable>
+#include <list>
+#include <functional>
 using namespace std;
 int main(){
     /*
