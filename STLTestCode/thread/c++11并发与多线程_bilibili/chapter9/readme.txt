@@ -1,10 +1,13 @@
+(1) std::async、std::future创建后台任务并返回值
+(2) std::packaged_task
+(3) std::promise
 
 #include <iostream>
 #include <thread>
-#include <vector>
 #include <mutex>
-#include <string>
-#include <windows.h> // sleep
+#include <chrono>
+#include <condition_variable>
+#include <future>
 using namespace std;
 int main(){
     /*
