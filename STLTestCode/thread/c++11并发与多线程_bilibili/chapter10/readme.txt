@@ -1,10 +1,23 @@
+(1) future其它成员函数
+    (1.1) future_status
+    (1.2) get_future
+    (1.3) valid
+    (1.4) shared
+    (1.5) get
+    (1.6) wait
+    (1.7) wait_for
+    (1.8) wait_until
+(2) shared_future
+(3) 原子操作atomic
+    (3.1) 原子操作概念
+    (3.2) 用法示例
 
 #include <iostream>
 #include <thread>
-#include <vector>
 #include <mutex>
-#include <string>
-#include <windows.h> // sleep
+#include <chrono>
+#include <condition_variable>
+#include <future>
 using namespace std;
 int main(){
     /*
