@@ -1,10 +1,20 @@
+(1) 补充知识点
+    (1.1) 虚假唤醒
+    (1.2) atomic
+(2) 浅谈线程池
+    (2.1) 场景设想
+    (2.2) 实现方式
+(3) 线程创建数量谈
+(4) c++11多线程总结
 
 #include <iostream>
 #include <thread>
-#include <vector>
 #include <mutex>
-#include <string>
-#include <windows.h> // sleep
+#include <chrono>
+#include <condition_variable>
+#include <future>
+#include <list>
+#include <functional>
 using namespace std;
 int main(){
     /*
