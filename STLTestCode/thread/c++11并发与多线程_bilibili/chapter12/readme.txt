@@ -1,10 +1,17 @@
+(1) windows临界区
+(2) 多次进入临界区试验
+(3) 自动析构技术
+(4) recursive_mutex递归的独占互斥量
+(5) 带超时的互斥量std::timed_mutex和std::recursive_timed_mutex
 
 #include <iostream>
 #include <thread>
-#include <vector>
 #include <mutex>
-#include <string>
-#include <windows.h> // sleep
+#include <chrono>
+#include <condition_variable>
+#include <future>
+#include <minwinbase.h> // include CRITICAL_SECTION
+#include <list>
 using namespace std;
 int main(){
     /*
