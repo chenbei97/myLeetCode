@@ -109,5 +109,8 @@
         "variant": "cpp",
         "*.in": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Enabled"
+    "C_Cpp.errorSquiggles": "Enabled",
+    // 针对clang-format的设置
+    "editor.formatOnSave": true,
+    "clang-format.executable": "${workspaceRoot}",
 }

@@ -20,7 +20,10 @@
     "workbench.preferredDarkColorTheme": "Default Light+",
     "git.autofetch": true,
     "git.confirmSync": false,
-
+    
+    // 针对clang-format的设置
+    "editor.formatOnSave": true,
+    "clang-format.executable": "${workspaceRoot}", // ${cwd} or ${workspaceRoot} or ${env.VAR} or "/absolute/path/to/clang-format"
     //codesnap代码截图配置
     "codesnap.backgroundColor":"#f2f2f2", //截图代码容器边缘颜色
     "codesnap.boxShadow": "5px 5px 60px 0px #888888", //阴影设置
