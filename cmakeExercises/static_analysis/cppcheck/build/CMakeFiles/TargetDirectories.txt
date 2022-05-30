@@ -1,0 +1,9 @@
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/analysis.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/subproject1/CMakeFiles/subproject1_analysis.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/subproject1/CMakeFiles/subproject1.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/subproject1/CMakeFiles/ALL_BUILD.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/subproject2/CMakeFiles/subproject2_analysis.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/subproject2/CMakeFiles/subproject2.dir
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/subproject2/CMakeFiles/ALL_BUILD.dir

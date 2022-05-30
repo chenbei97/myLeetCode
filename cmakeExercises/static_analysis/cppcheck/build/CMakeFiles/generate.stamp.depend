@@ -1,0 +1,26 @@
+# CMake generation dependency list for this directory.
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/CMakeLists.txt
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/3.23.1/CMakeCCompiler.cmake
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/3.23.1/CMakeCXXCompiler.cmake
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/3.23.1/CMakeRCCompiler.cmake
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/build/CMakeFiles/3.23.1/CMakeSystem.cmake
+C:/Users/chenb/VscodeItems/myLeetCode/cmakeExercises/static_analysis/cppcheck/cmake/modules/FindCppCheck.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeCInformation.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeCXXInformation.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeCommonLanguageInclude.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeGenericSystem.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeInitializeConfigs.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeLanguageInformation.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeRCInformation.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeSystemSpecificInformation.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/CMakeSystemSpecificInitialize.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Compiler/MSVC-C.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Compiler/MSVC-CXX.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/FindPackageHandleStandardArgs.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/FindPackageMessage.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Platform/Windows-MSVC-C.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Platform/Windows-MSVC-CXX.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Platform/Windows-MSVC.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Platform/Windows.cmake
+C:/cmake-3.23.1-windows-x86_64/share/cmake-3.23/Modules/Platform/WindowsPaths.cmake
