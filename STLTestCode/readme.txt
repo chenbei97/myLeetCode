@@ -1,24 +1,35 @@
-这是关于Boost一些库函数的测试,持续更新
-https://www.boost.org/doc/libs/1_79_0/?view=condensed&sort=cxxstd
-
-也有《STL源码剖析》以及《深度探索C++对象模型》的一些小脚本
-ecm打头的都是后者书中出现过的一些例子，ecm = explore c++ model
-
+1、速查表
+关于STL标准库的一些函数的图，可以快速查阅
+2、algorithms
+对<algorithms>的函数测试
+3、containers
+对所有容器类型进行测试
+4、memory
+针对3个智能指针测试，即unique_ptr、weak_ptr和shared_ptr
+5、numeric
+一些<numeric>的函数测试
+6、other
+other是一些c++17/20的一些新特性的测试
+7、random
+专门针对<random>的测试，说明了各种随机生成器和随机分布的应用
+8、STLSourceCodeAnalysis
+《STL源码剖析》一书的一些程序，可配合STLSourceCodeAnalysis.md一起查看
 《STL源码剖析》脚本都只有1个主函数，可以使用ctrl+shift+p编译
-
-《深度探索C++对象模型》都是使用终端编译,每个脚本都有main函数
-
+也有《深度探索C++对象模型》的一些小脚本，《深度探索C++对象模型》都是使用终端编译,每个脚本都有main函数
+ecm打头的都是《深度探索C++对象模型》书中出现过的一些例子，ecm = explore c++ model
+9、thread
+线程的知识，目前是依据b站的视频学习的
+10、yushiqi
 yushiqi的文件夹是于仕琪老师在b站的课的一些知识补充笔记
 https://www.bilibili.com/video/BV1Vf4y1P7pq?spm_id_from=333.337.search-card.all.click
-
-other是一些c++17/20的一些新特性的测试
-
-output是存放编译产生的二进制文件
+11、其它
+readme.txt 说明
+test_cl.cpp 因为有的函数似乎g++不能编译,所以纳入了VS的cl.exe进行编译，这是测试文件
 
 /*
 cd STLTestCode
-g++ -o ecm1_0_pointer3d_c ecm1_0_pointer3d_c.cpp 
-.\ecm1_0_pointer3d_c.exe
+g++ -o m m.cpp 
+.\m.exe
 */
 #include <iostream>
 using namespace std;
