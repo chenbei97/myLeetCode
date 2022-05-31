@@ -191,11 +191,127 @@ std::alloc把空间配置拆成了4个过程，即分配内存、构造、析构
 
 <stl_uninitialized.h>是用于填充和复制大块内存数据，一些全局函数被定义，un_initialized_copy()、un_initialized_fill()、un_initialized_fill_n()等
 
+其它的内容暂时跳过。
 
+## 三、迭代器概念和traits编程技法
 
+设计模式中提到Iterator设计模式，即提供一种方法使之能够按照顺序访问某个聚合物容器所含的各个元素，又无需暴漏该聚合物的内部表述方式。STL的中心思想就是将数据容器和算法分开，类模板和函数模板可以分别实现，但是设计出两者之间的胶合剂比较困难。
 
+在STL的find函数是这样定义的，它可以接受2个迭代器和一个搜寻目标，如果找到就返回指向该模板的迭代器否则返回end()。
 
+```c++
+template<class InputIterator,class T>
+InputIterator find(InputIterator first,InputIterator last,const T&value){
+    while (first!=last && *first !=value)
+        ++first;
+    return first;
+} 
+vecto<int> arr={1,2,3};
+vector<int>:iterator it = find(arr.begin(),arr.end(),3);
+```
 
+从上述例子来看，好像迭代器依附于容器，其实并非如此，只是容器类内部的嵌套了迭代器类，并提供了begin和end两种方法，之所以嵌套只是更容易访问容器的元素。
 
+迭代器其实是个智能指针，它也可以解引用和成员访问，所以关键在于重载opertor * 和operaotr->函数。
 
+现在以List为例设计一个迭代器。
+
+```c++
+// ListItem类,是List的节点
+template<typename T>
+class ListItem{
+    public:
+        T value()const{return _value;}
+        ListItem<T> *next()const{return _next;}
+        ListItem<T> *prev()const{return _prev;}
+        // ...
+    private:
+        T _value;
+        ListItem<T> *_next; // 单向链表
+        ListItem<T> *_prev; // 双向链表
+};
+
+// 原书定义的List类(P85)
+template<typename T>
+class myList{
+    public:
+        void insert_front(T value); // 缺省定义
+        void insert_back(T value); // 缺省定义
+        void size(); // 缺省定义
+        void display(std::ostream &os = std::cout) const; // 缺省定义
+        // ...
+    private:
+        ListItem<T> *_head;
+        ListItem<T> *_tail;
+        long _size;
+};
+
+// 用于List的迭代器类,胶合剂
+template<typename Item> // Item是ListItem的类型
+struct ListIter
+{
+    Item * ptr; // 保持与链表节点的联系,一个原生的指向链表节点的指针
+    ListIter(Item *p = nullptr) : ptr(p) {} // 默认构造函数
+    // copy构造函数和operator=可以缺省，默认已足够
+
+    // 解引用函数operator*重载
+    Item & operator*() const {return *ptr;}
+    // 成员访问函数operator->重载
+    Item * operator->() const {return ptr;}
+
+    // 前置++
+    ListIter & operator++() {ptr = ptr->next(); return *this;} // ++iter,先改变指针,再返回
+    // 后置++,其中++*this借助了前置++的返回值
+    ListIter operator++(int) {ListIter tmp = *this; ++*this; return tmp;} // iter++,先返回,再改变指针
+    // 前置--
+    ListIter & operator--() {ptr = ptr->prev(); return *this;} // --iter,先改变指针,再返回
+    // 后置--,其中--*this借助了前置--的返回值
+    ListIter operator--(int) {ListIter tmp = *this; --*this; return tmp;} // iter--,先返回,再改变指针
+
+    // 比较运算符operator==和operator!=重载
+    bool operator==(const ListIter &rhs) const {return ptr == rhs.ptr;}
+    bool operator!=(const ListIter &rhs) const {return ptr != rhs.ptr;}
+
+    // 重载operator<<函数
+    friend std::ostream & operator<<(std::ostream &os, const ListIter &iter)
+    {
+        os << *iter;
+        return os;
+    }
+};
+```
+
+由于find函数比较时左边的first是ListItem<T>类型,value是个T类型,所以不能直接比较,需要转换
+
+```c++
+template<typename T>
+bool operator!=(const ListItem<T>&lhs,const T n){
+  return lhs.value() != n;
+}
+```
+
+测试程序：
+
+```c++
+myList<int> mylist;
+for(int i = 0; i < 5; i++){
+    mylist.insert_front(i);
+    mylist.insert_back(i+2);
+}
+mylist.display(); // 输出: 4 3 2 1 0 2 3 4 5 6 
+
+ListIter<ListItem<int>> begin(mylist.begin());
+ListIter<ListItem<int>> end(mylist.end()); // default nullptr
+ListIter<ListItem<int>> it; // default nullptr
+it = find(begin, end, 3); // 查找3
+if (it != end)
+	cout << *it << endl; // 输出: 3
+else
+	cout << "not found" << endl;
+it = find(begin, end, 10); // 查找10
+if (it != end)
+	cout << *it << endl; // 输出: not found
+else
+	cout << "not found" << endl;
+```
 
