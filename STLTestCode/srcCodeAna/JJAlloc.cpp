@@ -1,13 +1,11 @@
 /*** 
  * @Author: chenbei
  * @Date: 2022-04-15 14:54:58
- * @LastEditTime: 2022-04-15 15:39:15
- * @Description: JJAlloc.h
- * @FilePath: \myLeetCode\STLTestCode\JJAlloc.h
+ * @LastEditTime: 2022-05-31 08:39:32
+ * @Description: JJAlloc.cpp
+ * @FilePath: \myLeetCode\STLTestCode\srcCodeAna\JJAlloc.cpp
  * @Signature: A boy without dreams
  */
-#ifndef _JJALLOC_
-#define _JJALLOC_
 #include <new> // 用于placement new重载
 #include <cstddef> // 使用ptrdiff_t,size_t类型
 #include <cstdlib> // 使用exit
@@ -103,4 +101,12 @@ void _jj_allocate_testcode(){
     }
     cout<<"\n";
 }
-#endif // !_JJALLOC_
+int main(){
+    _jj_allocate_testcode();
+    return 0;
+}
+/*
+cd STLTestCode\srcCodeAna
+g++ -o .\output\JJAlloc JJAlloc.cpp 
+.\output\JJAlloc.exe
+*/
