@@ -7,3 +7,6 @@ g++.exe -fdiagnostics-color=always -g C:\Users\chenb\VscodeItems\myLeetCode\myPl
 cd myPleasure\myOpencv\testFiles
 .\test_opencv_for_vscode.exe
 
+2022/6/6
+g++.exe -fdiagnostics-color=always -g C:\Users\chenb\Desktop\myLeetCode\myPleasure\myOpencv\testFiles\*.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/lib -l libopencv_calib3d452 -l libopencv_core452 -l libopencv_dnn452 -l libopencv_features2d452 -l libopencv_flann452 -l libopencv_gapi452 -l libopencv_highgui452 -l libopencv_imgcodecs452 -l libopencv_imgproc452 -l libopencv_ml452 -l libopencv_objdetect452 -l libopencv_photo452 -l libopencv_stitching452 -l libopencv_video452 -l libopencv_videoio452 -o C:\Users\chenb\Desktop\myLeetCode\myPleasure\myOpencv\testFiles\test_opencv_for_vscode.exe
+.\test_opencv_for_vscode.exe
