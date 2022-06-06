@@ -14,7 +14,11 @@ g++.exe -fdiagnostics-color=always -g C:\Users\chenb\Desktop\myLeetCode\myPleasu
 推测可能是因为lib并不是454版本，很明显原来的是452版本
 
 现在把lib和include都统一用455，且只有2个动态库libopencv_img_hash455.dll.a和libopencv_world455.dll.a
-g++.exe -fdiagnostics-color=always -g C:\Users\chenb\Desktop\myLeetCode\myPleasure\myOpencv\testFiles\*.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/lib -l libopencv_world455 -l libopencv_img_hash455 -o C:\Users\chenb\Desktop\myLeetCode\myPleasure\myOpencv\testFiles\test_opencv_for_vscode.exe
+g++.exe -fdiagnostics-color=always -g *.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/lib -l libopencv_world455 -l libopencv_img_hash455 -o test_opencv_for_vscode.exe
+.\test_opencv_for_vscode.exe
+
+简化命令版本
+g++.exe -fdiagnostics-color=always -g *.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/lib -l libopencv_world455 -l libopencv_img_hash455 -o test_opencv_for_vscode.exe
 .\test_opencv_for_vscode.exe
 发现是可以执行的，所以真的就是版本问题！
 现在之所以这么麻烦，是因为有2台电脑，家里和公司的，公司的在6月还重装了一次系统，路径发生变化
