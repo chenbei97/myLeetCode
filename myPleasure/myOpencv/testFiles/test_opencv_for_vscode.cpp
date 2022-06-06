@@ -6,13 +6,15 @@
  * @FilePath: \myLeetCode\myPleasure\myOpencv\main.cpp
  * @Signature: A boy without dreams
  */
+#include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
 using namespace std;
 using namespace cv;
 int main(){
-    cv::Mat src = cv::imread("./myBaby.jpg",IMREAD_GRAYSCALE);
+    cout<<"hello opencv"<<endl;
+    cv::Mat src = cv::imread("myBaby.jpg",IMREAD_GRAYSCALE);
     if (!src.empty())
     {
         std::cout << "src.depth()=" << src.depth() << std::endl;
@@ -23,4 +25,5 @@ int main(){
     }
     else
         printf("could not load image...");
+    return 0;
 }
