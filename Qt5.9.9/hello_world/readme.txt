@@ -42,7 +42,8 @@
 那么槽函数一定要一致,命名为void on_fontSizeBox_valueChanged(int fontsize);
 
 2. 整个工程结构其实就是1个.ui文件,它背后其实是"ui_helloworld.h"
-不过在QtCreator找不到这个文件,VS是可以找到的,内部其实就定义了一个Ui_helloWorld类
+不过在QtCreator默认找不到这个文件,可以点击工程上方的工具栏点击过滤器树形视图,取消隐藏文件就可以看到了
+VS如果配置过Qt,就可以直接找到的,内部其实就定义了一个Ui_helloWorld类，设了一些Gui的控件参数
 Ui_helloWorld类有2个函数setupUi和retranslateUi函数,这个类被命名空间下Ui的helloworld所继承
 namespace Ui {
     class helloWorld: public Ui_helloWorld {};
@@ -135,4 +136,4 @@ connect(this->startProgressbar,&QAction::triggered,this,&helloWorld::on_startPro
 12. 其他
 线程阻塞问题可以:QCoreApplication::processEvents(QEventLoop::AllEvents, 100);来解决问题
 
-
+13. 运行结果可以见图片app.png
