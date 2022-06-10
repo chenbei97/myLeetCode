@@ -35,11 +35,10 @@
     "codesnap.realLineNumbers":false,
     "codesnap.transparentBackground":false,
     "codesnap.target":"container",
-
+    // koroFileHeader配置
     "fileheader.customMade": {
         // 头部注释默认字段
         "Author": "chenbei",
-
     "fileheader.customMade": {
         // 头部注释默认字段
         "Author": "chenbei",
