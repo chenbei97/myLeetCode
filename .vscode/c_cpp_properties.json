@@ -1,12 +1,15 @@
 {
     "configurations": [
         {
+            // 关注compilerPath是否正确,包含路径可以将mingw64的opencv2加上
+            // 若boost编译过也可以加上
+            // cppStandard和cStandard可以更改编译标准
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:/msys64/mingw64/include",
-                "C:/msys64/mingw64/include/opencv2",
-                // "C:/msys64/mingw64/include/boost"
+                "C:/msys64/mingw64/include/opencv2", //配置过opencv可以添加上
+                // "C:/msys64/mingw64/include/boost" // 配置过boost可以加上
             ],
             "defines": [
                 "_DEBUG",

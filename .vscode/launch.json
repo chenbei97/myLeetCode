@@ -5,10 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // 关注program字段和miDebuggerPath字段是否正确
+            // 其中program字段要与tasks.json的args字段的-g参数一致
             "name": "C/C++: g++.exe Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            //"program": "${workspaceFolder}\\binaryTree\\main.exe", // ${fileDirname}\\${fileBasenameNoExtension}.exe
+            //"program": "${workspaceFolder}\\binaryTree\\main.exe", 
             //"program": "${workspaceFolder}\\linearArray\\main.exe",
             //"program": "${workspaceFolder}\\linkedList\\main.exe",
             //"program": "${workspaceFolder}\\characterString\\main.exe",
@@ -22,7 +24,9 @@
             "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe",
-            "logging":{"engineLogging":true},
+            "logging": {
+                "engineLogging": true
+            },
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",

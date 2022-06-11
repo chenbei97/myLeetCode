@@ -6,14 +6,16 @@
             "label": "C/C++: g++.exe 生成活动文件",
             "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
             "args": [
-                "-fdiagnostics-color=always",
+                // 关注command和detail字段是否正确
+                // -g 字段要与launch.json的program字段一致
                 "-g",
-                //"${workspaceFolder}\\binaryTree\\*.cpp", // ${file},可以构建多个cpp文件而不是单个
+                //"${workspaceFolder}\\binaryTree\\*.cpp", 
                 //"${workspaceFolder}\\linearArray\\*.cpp",
                 //"${workspaceFolder}\\linkedList\\*.cpp",
                 //"${workspaceFolder}\\characterString\\*.cpp",
                 //"${workspaceFolder}\\coreAlgorithms\\*.cpp",
                 "${workspaceFolder}\\STLTestCode\\*.cpp",
+                // 如果配置的是opencv,还需要列出包含目录include,库目录lib,以及附加依赖项dll
                 // "${workspaceFolder}\\myPleasure\\myOpencv\\*.cpp",
                 // "-std=c++20",
                 // "-I","C:/msys64/mingw64/include",
@@ -34,7 +36,7 @@
                 // "-l","libopencv_video452",
                 // "-l","libopencv_videoio452",
                 "-o",
-                //"${workspaceFolder}\\binaryTree\\main.exe", // ${workspaceFolder}\\myProgram.exe 可以替换为硬编码名
+                //"${workspaceFolder}\\binaryTree\\main.exe", 
                 //${fileDirname}\\${fileBasenameNoExtension}.exe
                 //"${workspaceFolder}\\linearArray\\main.exe",
                 //"${workspaceFolder}\\linkedList\\main.exe",

@@ -59,7 +59,6 @@
         "numeric": "cpp",
         "unordered_set": "cpp",
         "listnode.h": "c",
-        "linkedlistaddtwonumbers_iteration.h": "c",
         "array": "cpp",
         "*.tcc": "cpp",
         "cstdarg": "cpp",
@@ -110,7 +109,4 @@
         "*.in": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled",
-    // 针对clang-format的设置
-    "editor.formatOnSave": true,
-    "clang-format.executable": "${workspaceRoot}",
 }
