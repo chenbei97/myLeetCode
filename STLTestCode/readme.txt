@@ -52,8 +52,8 @@ C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared
 C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um
 四、新建环境变量LIB
 返回到Windows Kits\Lib下,2个文件夹包含进去ucrt,um,以及C\Tools\MSVC下的lib\x64文件夹
-C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\ucrt
-C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um
+C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\ucrt\x64
+C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC\14.29.30133\lib\x64
 五、一定要重启终端,VSCode也是重启即可命令行使用
 cl hello.cpp类似的命令
