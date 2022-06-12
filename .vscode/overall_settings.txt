@@ -1,17 +1,12 @@
 {
     "files.autoGuessEncoding": true,
-    "python.analysis.diagnosticPublishDelay": 100,
     "editor.fontFamily": "Consolas, 'Times New Roman', monospace",
     "files.autoSave": "onFocusChange",
-    "kite.showWelcomeNotificationOnStartup": false,
     "explorer.confirmDelete": false,
     "C_Cpp.clang_format_sortIncludes": true,
     "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.cStandard": "c11",
-    "C_Cpp.clang_format_fallbackStyle": "{BaseOnStyle:LLVM,UseTab:Never,IndentWidth:4}",
     "debug.onTaskErrors": "showErrors",
-    "C_Cpp.updateChannel": "Insiders",
-    "terminal.integrated.shell.windows": "C:\\WINDOWS\\System32\\cmd.exe",
     "terminal.explorerKind": "external",
     "editor.fontSize": 20,
     "editor.mouseWheelZoom": true,
@@ -20,24 +15,28 @@
     "workbench.preferredDarkColorTheme": "Default Light+",
     "git.autofetch": true,
     "git.confirmSync": false,
+    "editor.inlineSuggest.enabled": true,
+    "doxdocgen.file.fileOrder": [],
     
     //codesnap代码截图配置
-    "codesnap.backgroundColor":"#f2f2f2", //截图代码容器边缘颜色
+    "codesnap.backgroundColor": "#f2f2f2", //截图代码容器边缘颜色
     "codesnap.boxShadow": "5px 5px 60px 0px #888888", //阴影设置
-    "codesnap.containerPadding":"3em",
-    "codesnap.roundedCorners":true,
-    "codesnap.showWindowControls":true,
-    "codesnap.showWindowTitle":false,
-    "codesnap.showLineNumbers":true,
-    "codesnap.realLineNumbers":false,
-    "codesnap.transparentBackground":false,
-    "codesnap.target":"container",
+    "codesnap.containerPadding": "3em",
+    "codesnap.roundedCorners": true,
+    "codesnap.showWindowControls": true,
+    "codesnap.showWindowTitle": false,
+    "codesnap.showLineNumbers": true,
+    "codesnap.realLineNumbers": false,
+    "codesnap.transparentBackground": false,
+    "codesnap.target": "container",
+    
     // koroFileHeader配置
     "fileheader.customMade": 
     {
         // 头部注释默认字段
         "Author": "chenbei",
-        "fileheader.customMade": {
+        "fileheader.customMade": 
+        {
             // 头部注释默认字段
             "Author": "chenbei",
             "Date": "Do not edit", // 设置后默认设置文件生成时间
@@ -47,7 +46,8 @@
             "custom_string_obkoro1": "@Signature: A boy without dreams"
         },
         // 函数注释
-        "fileheader.cursorMode": {
+        "fileheader.cursorMode": 
+        {
             // 默认字段
             "description": "",
             "param": "",
@@ -61,36 +61,43 @@
             "autoAlready": true, // 只添加插件支持的语言以及用户通过`language`选项自定义的注释
             "supportAutoLanguage": [], // 设置之后，在数组内的文件才支持自动添加
             // 自动添加头部注释黑名单
-            "prohibitAutoAdd": [
+            "prohibitAutoAdd": 
+            [
                 "json"
             ],
-            "prohibitItemAutoAdd": [
+            "prohibitItemAutoAdd": 
+            [
                 "项目的全称禁止项目自动添加头部注释, 使用快捷键自行添加"
             ],
-            "folderBlacklist": [
+            "folderBlacklist": 
+            [
                 "node_modules"
             ], // 文件夹或文件名禁止自动添加头部注释
             "wideSame": false, // 头部注释等宽设置
             "wideNum": 13, // 头部注释字段长度 默认为13
             "functionWideNum": 0, // 函数注释等宽设置 设为0 即为关闭
             // 头部注释第几行插入
-            "headInsertLine": {
+            "headInsertLine": 
+            {
                 "php": 2 // php文件 插入到第二行
             },
             "beforeAnnotation": {}, // 头部注释之前插入内容
             "afterAnnotation": {}, // 头部注释之后插入内容
             "specialOptions": {}, // 特殊字段自定义
-            "switch": {
+            "switch": 
+            {
                 "newlineAddAnnotation": true // 默认遇到换行符(\r\n \n \r)添加注释符号
             },
             "moveCursor": true, // 自动移动光标到Description所在行
             "dateFormat": "YYYY-MM-DD HH:mm:ss",
-            "atSymbol": [
+            "atSymbol": 
+            [
                 "@",
                 "@"
             ], // 更改所有文件的自定义注释中的@符号
             "atSymbolObj": {}, //  更改单独语言/文件的@
-            "colon": [
+            "colon": 
+            [
                 ": ",
                 ": "
             ], // 更改所有文件的注释冒号
@@ -107,7 +114,8 @@
             // 自定义配置是否在函数内生成注释 不同文件类型和语言类型
             "cursorModeInternalAll": {}, // 默认为false 在函数外生成函数注释
             "openFunctionParamsCheck": true, // 开启关闭自动提取添加函数参数
-            "functionParamsShape": [
+            "functionParamsShape": 
+            [
                 "{",
                 "}"
             ], // 函数参数外形自定义 
@@ -154,4 +162,6 @@
             },
         },
     },
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "doxdocgen.file.copyrightTag": [],
 }
