@@ -1,0 +1,3 @@
+﻿  源.cpp
+C:\Users\chenb\source\repos\Project1\源.cpp(53,32): warning C4018: “<”: 有符号/无符号不匹配
+  Project2.vcxproj -> C:\Users\chenb\source\repos\Project2\x64\Debug\Project2.exe
