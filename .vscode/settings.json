@@ -109,5 +109,4 @@
         "*.in": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled",
-    "cmake.configureOnOpen": true,
 }
