@@ -162,6 +162,19 @@ QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
 ### 2.1 Qt核心特点
 
+涉及的头文件和宏定义主要是：
+
+```c++
+#include  <QObject>
+#include    <QMetaProperty>
+Q_OBJECT
+Q_CLASSINFO
+Q_PROPERT
+Q_UNUSED
+SIGNAL
+SLOT
+```
+
 #### 2.1.1 元对象系统和编译器
 
 Qt本身其实是用C++开发的库，但是它具备Qt自己的属性，也就是信号与槽机制、对象属性等，这些并不属于C++的范畴，所以需要一个预处理过程。**Qt元对象编译器也就是MOC是一个预处理器，在源程序编译前先转换为标准C++兼容的形式**，即对信号和槽的代码进行宏替换，这也是为何必须添加Q_OBJECT宏的原因。
@@ -511,6 +524,10 @@ QMetaObjectTest::QMetaObjectTest(QWidget *parent)// 构造函数
     this->initProperty();
     this->initConnect();
 }
+QMetaObjectTest::~QMetaObjectTest()
+{
+  delete ui;
+}
 void QMetaObjectTest :: initProperty() // 初始化一些属性
 {
   this->boy = new QPerson("chenbei");
@@ -597,6 +614,14 @@ void QMetaObjectTest::on_btnGirlInc_clicked()//"girl长大一岁"按钮
 {
     this->girl->increaseAge(); /// 调用成员函数
 }
+void QMetaObjectTest::on_btnClassInfo_clicked()
+{//"类的元对象信息"按钮
+      const QMetaObject *meta1=boy->metaObject();
+      const QMetaObject *meta2=girl->metaObject();
+      ui->textEdit->clear();
+      this->printClassInfo(meta1,"Boy");
+      this->printClassInfo(meta2,"Girl");
+}
 void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  sex)
 { // "显示元对象信息"按钮槽函数去调用的,节省重复代码
   ui->textEdit->appendPlainText("=="+sex+"元对象信息==");
@@ -616,24 +641,164 @@ void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  se
       ui->textEdit->appendPlainText(
       QString("propertyName=%1，value=%2").arg(propName).arg(boy->property(propName).toString()));
   }
-
-}
-void QMetaObjectTest::on_btnClassInfo_clicked()
-{//"类的元对象信息"按钮
-      const QMetaObject *meta1=boy->metaObject();
-      const QMetaObject *meta2=girl->metaObject();
-      ui->textEdit->clear();
-      this->printClassInfo(meta1,"Boy");
-      this->printClassInfo(meta2,"Girl");
-}
-
-QMetaObjectTest::~QMetaObjectTest()
-{
-  delete ui;
 }
 ```
 
 ### 2.2 Qt全局定义
+
+涉及的头文件和宏定义主要是：
+
+```c++
+#include <QtGlobal>
+#include <QFloat16>
+#include <QtMath>
+QT_VERSION、QT_VERSION_CHECK、QT_VERSION_STR // 版本号
+Q_BYTE_ORDER、Q_BIG_ENDIAN、Q_LITTLE_ENDIAN // 字节序
+Q_DECL_IMPORT、Q_DECL_EXPORT // 导入导出
+Q_DECL_OVERRIDE // 重载虚函数使用
+Q_DECL_OVERRIDE、Q_DECL_FINAL   // override,final
+Q_UNUSED(name) // 定义不在函数体使用的参数
+foreach(variable,containter) // 容器遍历
+forever // 构造无限循环
+qDebug // 在debugger窗体显示信息
+qWaring,qCritical,qFatal,qInfo // 其他debugger窗体显示信息
+```
+
+<QtGlobal>定义了许多的数据类型，为了确保各个平台的数据长度相同，例如qint8。
+
+qfloat16是Qt5.9以后新增的类，表示16位的浮点数。
+
+```c++
+typedef signed char qint8;
+typedef signed short qint16;
+typedef signed int qint32;
+typedef signed long long int qint64;
+typedef signed long long int qlonglong;
+
+typedef unsigned char quint8;
+typedef unsigned char uchar;
+
+typedef unsigned short quint16;
+typedef unsigned short ushort;
+
+typedef unsigned int quint32;
+typedef unsigned int uint;
+
+typedef unsigned long ulong;
+
+typedef unsigned long long int quint64;
+typedef unsigned long long int qulonglong;
+
+typedef double ureal;
+qfloat16; // 需要包含<QFloat16>头文件
+```
+
+<QtGlobal>还定义了常用的全局函数，有些函数是模板参数，参数同时支持float或者double。
+
+```c++
+T qAbs(const T&value); // 绝对值
+const T& qBound(const T&min,const T&value,const T&max);//裁剪数值在[min,max]
+bool qFuzzyCompare(double p1,double p2);// p1约等于p2时返回true
+bool qFuzzyIsNULL(double d); // 参数约等于0返回true
+double qInf(); // 返回inf
+bool qIsFinite(double d);// d是有限数返回true
+bool qIsInf(double d); // 是无限大数返回true
+bool qIsNaN(double d); // 不是1个数返回true
+const T& qMax(const T&value1,const T&value2); // max
+const T& qMin(const T&value1,const T&value2); // min
+qint64 qRound64(double value); //取整最接近的qint64整数
+int qRound(double value);// 取整int
+int qrand();//标准C++的rand()线程安全型版本,[0,RAND_MAX]
+void qsrand(uint seed);//随机种子
+```
+
+其他的就是在<QtMath>定义的基础数学运算函数，如三角运算、弧度与角度转换等。
+
+宏定义，如Qt版本是Qt5.9.1，则QT_VERSION=0x050901，这个宏就是用于控制条件编译使用的，根据版本的不同编译不同的代码段，例如
+
+```c++
+#if QT_VERSION >= 0x040100
+	QIcon icon = style()->standardIcon(QStyle::SP_TrashIcon);
+#else
+	QPixmap pixmap = style()->standardPixmap(QStyle::SP_TrashIcon);
+	QIcon icon(pixmap);
+#endif
+```
+
+QT_VERSION_CHECK则是展开为版本号的整数表示。
+
+```c++
+#if (QT_VERSION >=QT_VERSION_CHECK(5,0,0))
+#include <QtWidgets>
+#else
+#include <QtGui>
+#endif
+```
+
+QT_VERSION_STR则是版本号的字符串表示，如"5.9.0"。
+
+Q_BYTE_ORDER、Q_BIG_ENDIAN、Q_LITTLE_ENDIAN分别表述内存中数据的字节序、大端字节序和小端字节序，在判断系统字节序时可以到。例如
+
+```c++
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+...
+#endif
+```
+
+Q_DECL_IMPORT和Q_DECL_EXPORT用于使用和设计共享库时用于导入或导出库的内容。
+
+Q_DECL_OVERRIDE可以重载虚函数使用，如果没有被重载就会报错。Q_DECL_FINAL将1个虚函数定义为最终级别不能再被重载，或者1个类不可再被继承。例如
+
+```c++
+void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
+class QRect Q_DECL_FINAL{ // QRect不可再被继承
+    ...
+}
+void paintEvent(QPaintEvent*) override final;// 使用override&final技术也可以
+```
+
+Q_UNUSED(name) 用于定义不在函数体使用的参数，例如：
+
+```c++
+void mainWindow::on_imagedSaved(int id, const QString &filenname)
+{
+    Q_UNUSED(id);
+    LabInfo->setText("file is saved in "+filename);
+}
+```
+
+foreach(variable,containter) 用于容器遍历。
+
+```c++
+foreach(const QString& codeName,recorder->supportedAudioCodes())
+    ui->comboCode->addItem(codeName);
+```
+
+forever 用于构造无限循环。
+
+```c++
+forever{
+    ...
+}
+```
+
+qDebug 用于在debugger窗体显示信息，其他的类似的还有qWaring,qCritical,qFatal,qInfo。
+
+但是如果编译器设置了Qt_NO_DEBUG_OUTPUT，则不作任何输出。
+
+```c++
+qDebug("item is in list: %d",mylist.size());
+```
+
+### 2.3 Qt容器类
+
+
+
+
+
+
+
+
 
 
 
