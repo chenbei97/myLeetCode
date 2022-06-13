@@ -9,3 +9,5 @@
 1. hello_world
 
 2. MyPlatform是重新配好环境后，再次运行成功的研究生时期写的软件
+
+3. MetaObjectTest是元对象的测试实例

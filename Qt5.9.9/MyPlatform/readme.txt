@@ -46,7 +46,7 @@ signWindow_rc.py     import signWindow_rc -> from MyPlatform import  signWindow_
 
 faultPlatform.py
 # 编译这样生成的有问题,用下方2段代码替换掉
-# from QChartView import QChartView import fault_platform_icon_rc
+# from QChartView import QChartView import fault_platform_rc
 from PyQt5.QtChart import QChartView
 from MyPlatform import fault_platform_rc
 
@@ -60,3 +60,8 @@ pyrcc5 .\Fault_Monitoring_Platform\fault_platform_icon.qrc -o fault_platform_rc.
 从前要替换的代码：
 from PyQt5.QtChart import QChartView
 from MyPlatform import  fault_platform_rc
+
+注：生成的资源文件因为比较大，所以fault_platform_rc、signDialog_rc、signWindow_rc删除了
+完整的本文件夹，MyPlatform可在百度云下载。
+链接：https://pan.baidu.com/s/1B-8WP_FDUk7O53u5jNLD9A 
+提取码：iq4d
