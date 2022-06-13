@@ -45,7 +45,7 @@ public:
         QMetaObjectTest->resize(800, 600);
         layoutWidget = new QWidget(QMetaObjectTest);
         layoutWidget->setObjectName(QStringLiteral("layoutWidget"));
-        layoutWidget->setGeometry(QRect(190, 70, 391, 64));
+        layoutWidget->setGeometry(QRect(80, 40, 641, 101));
         gridLayout = new QGridLayout(layoutWidget);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
         gridLayout->setContentsMargins(0, 0, 0, 0);
@@ -96,7 +96,7 @@ public:
 
         textEdit = new QPlainTextEdit(QMetaObjectTest);
         textEdit->setObjectName(QStringLiteral("textEdit"));
-        textEdit->setGeometry(QRect(189, 139, 392, 232));
+        textEdit->setGeometry(QRect(79, 139, 641, 431));
 
         retranslateUi(QMetaObjectTest);
 

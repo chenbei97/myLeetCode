@@ -16,15 +16,15 @@ QMetaObjectTest::QMetaObjectTest(QWidget *parent)
 void QMetaObjectTest :: initProperty()// 初始化一些性质
 {
    // 可以设定Q_PROPERTY已宏定义过的属性age,name和score
-  this->boy = new QPerson("chenbei"); // 构造函数自动关联可了私有属性myname,而myname宏定义中关联了name属性是其member
+  this->boy = new QPerson("cb"); // 构造函数自动关联可了私有属性myname,而myname宏定义中关联了name属性是其member
   this->boy->setAge(20); // 方式1使用成员函数设置属性
-  this->boy->setProperty("age",10);// 方式2使用继承的成员函数设置属性,因为age声明为READ和WRITE兼具
-  this->boy->setProperty("score",95);// score同理
+  this->boy->setProperty("age",25);// 方式2使用继承的成员函数设置属性,因为age声明为READ和WRITE兼具
+  this->boy->setProperty("score",100);// score同理
   this->boy->setProperty("sex","Boy"); // 设置宏定义没出现过的是动态属性
   this->boy->setProperty("isBoy",true);
   this->girl = new QPerson("baby");
-  this->girl->setProperty("score",81);
-  this->girl->setProperty("age",20);
+  this->girl->setProperty("score",60);
+  this->girl->setProperty("age",27);
   this->girl->setProperty("sex","Girl");//动态属性
   this->girl->setProperty("isBoy",false);
 
@@ -122,11 +122,12 @@ void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  se
   ui->textEdit->appendPlainText(sex+" classProperty =>");// 打印属性
     // 1.propertyOffset()返回类的第1个属性的序号,不一定是0;
   //  2.propertyCount();属性的个数,这里是age,name,score 3个
+  auto which = sex=="Boy"?boy:girl;
   for (int i=meta->propertyOffset();i<meta->propertyCount();i++) //
   {
       const char* propName=meta->property(i).name(); // 获取姓名
       ui->textEdit->appendPlainText(
-      QString("propertyName=%1，value=%2").arg(propName).arg(boy->property(propName).toString()));
+      QString("propertyName=%1，value=%2").arg(propName).arg(which->property(propName).toString()));
   }
 }
 void QMetaObjectTest::on_btnClassInfo_clicked()

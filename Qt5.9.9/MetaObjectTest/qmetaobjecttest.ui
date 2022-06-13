@@ -16,10 +16,10 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>70</y>
-     <width>391</width>
-     <height>64</height>
+     <x>80</x>
+     <y>40</y>
+     <width>641</width>
+     <height>101</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
@@ -93,10 +93,10 @@
   <widget class="QPlainTextEdit" name="textEdit">
    <property name="geometry">
     <rect>
-     <x>189</x>
+     <x>79</x>
      <y>139</y>
-     <width>392</width>
-     <height>232</height>
+     <width>641</width>
+     <height>431</height>
     </rect>
    </property>
   </widget>
