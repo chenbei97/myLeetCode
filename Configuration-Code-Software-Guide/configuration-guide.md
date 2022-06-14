@@ -2,22 +2,28 @@
 
 下载地址：[Download Python | Python.org](https://www.python.org/downloads/)
 
-注意安装的时候，勾选add_path即可，默认的python解释器地址在用户的Appdata\Local/Programs文件夹下，例如：
+注意安装的时候，勾选add_path即可，默认的python解释器地址在用户的Appdata\Local/Programs文件夹下，例如（但是如果你想安装tensorflow和pytorch，python版本过高可能无法下载，建议3.6-3.7版本）：
+
+如果自己查找python包，注意寻找Windows x86-64 executable installer标识的下载包，这样可以一键安装。例如python3.6.5可在[Windows x86-64 executable installer](https://www.python.org/ftp/python/3.6.5/python-3.6.5-amd64.exe)下载，不过**3.6.5版本的pip最多支持到21.3.1版本**。
+
+python<=>tensorflow版本对应关系可见：[在 Windows 环境中从源代码构建  |  TensorFlow (google.cn)](https://tensorflow.google.cn/install/source_windows#cpu)。
 
 ```powershell
-C:\Users\chenb\AppData\Local\Programs\Python\Python310\python.exe
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python36\python.exe
 ```
 
 为了避免命名冲突（如果有多个python解释器），可以执行命令修改名称。
 
+注：如果你只有1个解释器没必要修改！
+
 ```powershell
-ren python.exe python310.exe
+ren python.exe python36.exe
 ```
 
 如果希望终端能够使用pip install xxx命令，要在环境变量添加pip的所在路径：
 
 ```powershell
-C:\Users\chenb\AppData\Local\Programs\Python\Python310\Scripts
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python37-32\Scripts\
 ```
 
 这样就可以在终端使用pip命令安装python的依赖包。
@@ -25,6 +31,478 @@ C:\Users\chenb\AppData\Local\Programs\Python\Python310\Scripts
 参考图片：
 
 ![python-pip](python-pip.png)
+
+### pip常见命令
+
+```powershell
+python -m pip install --upgrade pip 升级pip
+C:\...\venv\Scripts\python.exe -m pip install --upgrade pip 这样也可以
+pip list --outdated 列出过时包
+pip install --upgrade numpy 升级
+pip list -o 查看可升级的包
+pip freeze 查看版本号
+pip install pycaret --user 以管理员方式安装
+pip install numpy==查看包有哪些版本 
+
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple selenium # 清华源下载
+其他镜像源：
+[1] 阿里云 http://mirrors.aliyun.com/pypi/simple/
+[2] 豆瓣http://pypi.douban.com/simple/
+[3] 清华大学 https://pypi.tuna.tsinghua.edu.cn/simple/
+[4] 中国科学技术大学 http://pypi.mirrors.ustc.edu.cn/simple/
+[5] 华中科技大学http://pypi.hustunique.com/
+
+pip3 install --index-url https://pypi.douban.com/simple pandas // 给定pypi链接下载
+```
+
+**官方下载包链接**：
+
+[1. Python Extension Packages for Windows - Christoph Gohlke (uci.edu)](https://www.lfd.uci.edu/~gohlke/pythonlibs/)
+
+[2. PyPI · The Python Package Index](https://pypi.org/)
+
+### 安装autopep8
+
+参考链接：[PyCharm配置autopep8](https://blog.csdn.net/lly1122334/article/details/111988359)
+
+```powershell
+pip install autopep8
+```
+
+pycharm外部工具设置参数。
+
+```powershell
+programs: autopep8(和名称相同)
+Arguments:     --in-place --aggressive --aggressive $FilePath$
+Working directory: $ProjectFileDir$
+Output filters:  $FILE_PATH$\:$LINE$\:$COLUMN$\:.*
+```
+
+![autopep8](autopep8.png)
+
+### 安装tensorflow
+
+执行下方命令。
+
+```powershell
+pip install tensorflow-cpu==2.5.0 -i https://pypi.douban.com/simple/
+```
+
+如果提示下方错误，是因为python版本有点高，要求低于3.7.6版本，建议安装python3.6版本。
+
+```powershell
+No matching distribution found for tensorflow 
+No matching distribution found for tensorflow-cpu==2.5.0
+```
+
+python<=>tensorflow版本对应关系可见：[在 Windows 环境中从源代码构建  |  TensorFlow (google.cn)](https://tensorflow.google.cn/install/source_windows#cpu)。
+
+经过笔者实测，**python3.6.5版本最高可安装tensorflow-cpu-2.5.0版本**。为了防止安装位置错误，你可以**临时把其他解释器的路径从环境变量剔除**，终端python --version就是你刚安装的3.6.5版本了，记得先执行更新pip的命令，否则也无法下载tensorflow，此时再执行下载命令才会安装在python3.6.5版本的库目录。
+
+```powershell
+python -m pip install --upgrade pip
+pip install tensorflow-cpu==2.5.0
+```
+
+![python3.6.5-tensorflow2.5.0](python3.6.5-tensorflow2.5.0.png)
+
+下载好了以后，你可以把之前剔除的其他解释器如python37的路径再加回来环境变量，由于依赖都已经安装好了。你在pycharm或者vscode或者vs使用的时候切换到python36环境就可以使用tensorflow了。
+
+例如，笔者在**python36安装了tensorflow、pytorch和opencv-python，tensorflow37安装了pyqt5和opencv-python，python39什么也没装，python310笔者没有安装已经卸载了**，这样各个环境互相不干扰，只需要IDE切换好解释器就可以。
+
+![python-env-compare](python-env-compare.jpg)
+
+对tensorflow进行测试，结果是ok的。
+
+![test-tensorflow](test-tensorflow.jpg)
+
+代码如下。
+
+```python
+'''
+测试下tensorflow2.5.0-python3.6.5的环境
+首次运行数据集会下载在C:\\Users\\Lenovo\\.keras\\datasets文件夹，也就是你的用户文件夹下。
+'''
+# main.py的代码
+import tensorflow as tf
+from tensorflow.keras import losses, optimizers
+from tensorflow.keras import datasets
+from tensorflow.keras import metrics
+from HelloModel import HelloModel
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+def getDataGenerator():
+    mnist = datasets.mnist
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    x_train, x_test = x_train / 255.0, x_test / 255.0
+
+    # 添加新通道
+    x_train = x_train[..., tf.newaxis]
+    x_test = x_test[..., tf.newaxis]
+    train_ds = tf.data.Dataset.from_tensor_slices(
+        (x_train, y_train)).shuffle(10000).batch(32)
+    test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(32)
+    return train_ds, test_ds
+
+
+def train(train_ds, test_ds, epochs=5):
+    model = HelloModel()
+    lossFunction = losses.SparseCategoricalCrossentropy()  # (y_true,y_pred)
+    optimizer = optimizers.Adam()
+
+    train_loss = metrics.Mean(name='train_loss')
+    train_acu = metrics.SparseCategoricalAccuracy(
+        name='train_accuracy')  # update_state,reset_state
+    test_loss = metrics.Mean(name='test_loss')
+    test_acu = metrics.SparseCategoricalAccuracy(name='test_accuracy')
+
+    @tf.function
+    def train_step(images, labels):
+        with tf.GradientTape() as tape:
+            preditions = model(images)
+            loss = lossFunction(labels, preditions)
+        # 更新梯度
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        train_loss(loss)  # 计算损失和准确率
+        train_acu(labels, preditions)
+
+    @tf.function
+    def test_step(images, labels):
+        predictions = model(images)
+        loss = lossFunction(labels, predictions)
+        test_loss(loss)
+        test_acu(labels, predictions)
+
+    train_loss_list = []
+    train_acu_list = []
+    val_loss_list = []
+    val_acu_list = []
+
+    def mytrain():
+        for epoch in tqdm(range(epochs)):
+            train_loss.reset_states()
+            train_acu.reset_states()
+            test_loss.reset_states()
+            test_acu.reset_states()
+
+            for images, labels in train_ds:
+                train_step(images, labels)
+            for test_images, test_labels in test_ds:
+                test_step(test_images, test_labels)
+
+            train_acu_list.append(train_acu.result())
+            train_loss_list.append(train_loss.result())
+            val_acu_list.append(test_acu.result())
+            val_loss_list.append(test_loss.result())
+
+            printLog = 'epoch={}, train_loss = {}, train_acu = {}, test_loss = {}, test_acu = {}'
+            print(printLog.format(epoch + 1,
+                                  train_loss.result(),
+                                  train_acu.result(),
+                                  test_loss.result(),
+                                  test_acu.result()))
+
+    def plot_acu_loss():
+        plt.subplot(2, 1, 1)
+        plt.plot(range(epochs), train_acu_list, label='Training Accuracy')
+        plt.plot(range(epochs), val_acu_list, label='Validation Accuracy')
+        plt.legend(loc='lower right')
+        plt.title('Training and Validation Accuracy')
+
+        plt.subplot(2, 1, 2)
+        plt.plot(range(epochs), train_loss_list, label='Training Loss')
+        plt.plot(range(epochs), val_acu_list, label='Validation Loss')
+        plt.legend(loc='upper right')
+        plt.title('Training and Validation Loss')
+        plt.show()
+
+    mytrain()
+    plot_acu_loss()
+
+
+if __name__ == '__main__':
+    train_ds, test_ds = getDataGenerator()
+    train(train_ds, test_ds)
+    
+# 依赖中HelloWorld.py的代码
+from typing import Any
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Dense,Flatten,Conv2D
+class HelloModel(Model):
+    def __init__(self) -> Any:
+        super(HelloModel,self).__init__()
+        self.conv1 = Conv2D(32,3,activation='relu') # 32 kernels,kernel size=3
+        self.flatten = Flatten()
+        self.dense1 = Dense(128,activation='relu')
+        self.dense2 = Dense(10,activation='softmax') # 10 classifications,[0,1]
+    def call(self,x,**kwargs):
+        # input=>[batch,28,28,1] output=>[batch,26,26,32]
+        # N2=[(N1-k+2*p)/s]+1=[(28-3+2*0)/1]+1=26=>[batch,26,26,32]
+        # flatten=>26*26*32=21632
+        x = self.conv1(x) #[batch,26,26,32]
+        x = self.flatten(x) # [batch,21632]
+        x = self.dense1(x) # [batch,128]
+        return self.dense2(x) # [batch,10]
+if __name__ == '__main__':
+    model = HelloModel()
+    model.build(input_shape=(None,28,28,1))
+    model.summary()
+```
+
+如果python的解释器有很多，建议[安装anaconda](#安装anaconda)去创建虚拟环境，然后切换环境，但是也是可能遭遇下载tensorflow之类的问题。
+
+### 安装pytorch
+
+```powershell
+pip3 install torch torchvision torchaudio
+pip install torchsummary // 必要的依赖
+```
+
+同理如果出现和安装tensorflow类似的错误信息，也是python版本过高，解决问题的方案相同。
+
+![torch-install](torch-install.png)
+
+同样对pytorch进行环境测试。
+
+```python
+'''
+这里要注意2个问题，首次下载数据要指定下载的目标文件夹root，root我这里在用户文件夹下创建了.torch文件夹，就像.kera那样
+首次下载时在torchvision.datasets.CIFAR10函数中要指定download=true，如果不是改为false
+然后本程序运行的时候会把训练权重保存,所以也要指定路径，这里使用相对路径，也就是本文件所在的文件夹下，你可以默认不修改它
+'''
+# LeNetMain.py代码
+import torch
+import torchvision
+import torch.nn as nn
+from LeNetModel import LeNetModel
+import torch.optim as optim
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+root = r"C:\Users\Lenovo\.torch"
+save_path = 'myLeNet.pt'
+batch_size = 36
+def getDataGenerator():
+    transform = transforms.Compose( # 图片数据numpy->tensor并标准化
+        [transforms.ToTensor(),
+         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    train_set = torchvision.datasets.CIFAR10(root=root, train=True, #这里download=True
+                                             download=True, transform=transform)
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size,
+                                               shuffle=True, num_workers=0)
+    val_set = torchvision.datasets.CIFAR10(root=root, train=False,
+                                           download=True, transform=transform)
+    val_loader = torch.utils.data.DataLoader(val_set, batch_size=5000, # 验证集多一些,1次验证5000张
+                                             shuffle=False, num_workers=0)
+    return train_loader,val_loader
+
+def train(train_loader,val_loader,epochs=10):
+    val_data_iter = iter(val_loader) # 将启动器转为可迭代的启动器
+    val_image, val_label = val_data_iter.next() # 图像、标签成对迭代器next
+
+    model = LeNetModel()
+    loss_function = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    train_epoch_acu,train_epoch_loss = [],[]
+    for epoch in range(epochs):
+        running_loss = 0.0 # 每个周期的累积运行损失
+        # step取决于样本数量和批次的商
+        for step, data in enumerate(train_loader, start=0): # 从训练数据的启动器获取每步和数据,start为下标的起始位置,可指定遍历的起始位置
+            inputs, labels = data # data是列表 [inputs, labels]
+            # forward + backward + optimize
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = loss_function(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item() # 取出损失
+            if step % 500 == 499:    # 每500步打印一次信息
+                with torch.no_grad(): # 验证集不进行梯度计算
+                    # 验证集是每次验证5000个
+                    outputs = model(val_image)  # [batch, 5000],val_image自动可迭代,就无需自己写循环了
+                    # print(outputs.size()) # 5000×10
+                    # torch.max函数返回values,indices,即最大值所在索引,恰好就是预测的标签
+                    predict_y = torch.max(outputs, dim=1)[1] # max在第2个维度比较,某行列元素之间,可用argmax代替
+                    # print(predict_y.size()) # (5000,)
+                    accuracy = torch.eq(predict_y, val_label).sum().item() / val_label.size(0) # 标签相等的数目之和除总的标签数
+                    running_loss = running_loss / 500
+                    print('[epoch=%d, step=%5d] loss: %.3f  test_acu: %.3f' %
+                          (epoch + 1, step + 1, running_loss, accuracy)) # 准确来说是每每500步acu,loss的值,其中loss是平均值,acu是实时渐变值
+                    train_epoch_acu.append(accuracy)
+                    train_epoch_loss.append(running_loss)
+                    running_loss = 0.0 # 每500步计算损失值然后清零
+    torch.save(model.state_dict(), save_path) # 保存模型
+    return train_epoch_acu,train_epoch_loss
+def plot_acu_loss(acu,loss):
+    plt.subplot(1, 2, 1)
+    plt.plot(range(len(acu)), acu, label='acu')
+    plt.legend(loc='lower right')
+    plt.xlabel("global steps")
+    plt.ylabel("acu")
+    plt.title('Training  Accuracy')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(range(len(acu)), loss, label='loss')
+    plt.xlabel("global steps")
+    plt.ylabel("acu")
+    plt.legend(loc='upper right')
+    plt.title('Training  Loss')
+    plt.show()
+if __name__ == '__main__':
+    epochs = 20
+    acu,loss = train(*(getDataGenerator()),epochs=epochs)
+    plot_acu_loss(acu,loss)
+    
+# LeNetModel.py代码
+import torch.nn as nn
+from torch.nn import functional
+from torchsummary import summary
+class LeNetModel(nn.Module):
+    def __init__(self):
+        super(LeNetModel,self).__init__()
+        self.conv1 = nn.Conv2d(3,16,5)
+        self.pool1 = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(16, 32, 5)
+        self.pool2 = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(32*5*5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+    def forward(self, x):
+        x = functional.relu(self.conv1(x))      # input(3, 32, 32) output(16, 28, 28)
+        x = self.pool1(x)                       # output(16, 14, 14)
+        x = functional.relu(self.conv2(x))      # output(32, 10, 10)
+        x = self.pool2(x)                       # output(32, 5, 5)
+        x = x.view(-1, 32*5*5)                  # output(32*5*5)
+        x = functional.relu(self.fc1(x))        # output(120)
+        x = functional.relu(self.fc2(x))        # output(84)
+        x = self.fc3(x)                         # output(10)
+        return x
+if __name__ == '__main__':
+    model = LeNetModel()
+    summary(model, (3,32,32))
+```
+
+![test-torch](test-torch.png)
+
+### 安装cv2
+
+命令含义是，安装py3.7支持的win x64下的opencv-4.5.5版本，所以要与你的python版本一致。
+
+包的查询可见：[Python Extension Packages for Windows - Christoph Gohlke (uci.edu)](https://www.lfd.uci.edu/~gohlke/pythonlibs/)
+
+```powershell
+pip install opencv_python‑4.5.5‑cp37‑cp37m‑win_amd64.whl
+```
+
+或者不指定版本，自适应安装。
+
+```powershell
+pip install opencv-python -i https://pypi.douban.com/simple
+```
+
+![opencv4.6.0-py36-install](opencv4.6.0-py36-install.png)
+
+测试opencv。
+
+```python
+import cv2
+img = cv2.imread("lena.jpg")
+cv2.namedWindow("Image")
+cv2.imshow("Image",img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+```
+
+![test-opencv-python](test-opencv-python.png)
+
+### 安装jupyterlab
+
+注：此应用安装问题没有解决，如果你想要尝试自己解决，可以参考以下内容，但是可能会出现问题
+
+可以终端使用命令安装，不过这是网页版，见[jupyterlab · PyPI](https://pypi.org/project/jupyterlab/#files)，或者[jupyterlab-github.com](https://github.com/jupyterlab/jupyterlab-desktop)。
+
+```powershell
+pip install jupyterlab-requirements //先安装依赖
+pip install jupyterlab
+```
+
+可能会提示问题，从原因来看是pywinpty是rust编译的，然后在https://rustup.rs/可以安装，这里笔者不用rust，所以也就没去尝试解决这个问题。
+
+```powershell
+Collecting pywinpty
+  Using cached pywinpty-2.0.5.tar.gz (23 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... error
+  error: subprocess-exited-with-error
+
+  × Preparing metadata (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [6 lines of output]
+
+      Cargo, the Rust package manager, is not installed or is not on PATH.
+      This package requires Rust and Cargo to compile extensions. Install it through
+      the system's package manager or via https://rustup.rs/
+
+      Checking for Rust toolchain....
+      [end of output]
+
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: metadata-generation-failed
+
+× Encountered error while generating package metadata.
+╰─> See above for output.
+
+note: This is an issue with the package mentioned above, not pip.
+hint: See above for details.
+```
+
+笔者还尝试了下载桌面版，[JupyterLab-Setup-Windows.exe - 22 Apr 2022](https://github.com/jupyterlab/jupyterlab-desktop/releases)。
+
+默认换装在C盘。
+
+```powershell
+C:\JupyterLab
+```
+
+安装过程，有个选项，安装新的解释器还是使用已存在的，这里我选择已存在的解释器python3.6.5或者python3.7.8均不通过，所以应该只能安装新的解释环境。
+
+![jupyterLab](jupyterLab.png)
+
+还有一些勾选，不过这里第二条可以注意，如果你主要依赖jupyter写代码，可以勾选。就像他说的，如果勾选了，在vscode、pycharm等可以自动检测到jupyter，不过设为默认的话其实在环境变量就是上下移动路径即可。排在第一的路径解释器自然是首先被搜索到，也是默认的解释器。
+
+这里笔者不勾选，jupyterLab不必要设置为默认的，我用自己配置好的解释器就行，也就是python3.6.5和python3.7.8，它安装的是python3.8x，所以不勾选了。
+
+![jupyterLab-install](jupyterLab-install.png)
+
+不过从实际情况来看，不知为何总是提示错误，总之安装失败。
+
+```powershell
+Failed to find a compatible Python environment at the configured path "C:\Users\Lenovo\AppData\Roaming\jupyterlab-desktop\jlab_server\python.exe". Environment Python package requirements are: jupyterlab >=3.1.0.
+```
+
+后来笔者发现，其实E:\anaconda\python.exe的库目录下已经安装过jupyterLab了，完全没必要再安装，可以参考[安装anaconda](#安装anaconda)。
+
+![jupyterlab-anaconda](jupyterlab-anaconda.png)
+
+可以这样启动jupyterLab，首先激活环境，然后输入命令。
+
+```powershell
+conda activate base
+jupyter lab
+```
+
+![start-conda-jupyterlab](start-conda-jupyterlab.png)
+
+或者在anaconda 的navigator右键root-base以jupyter方式打开也是可以的。
+
+用户文件夹会自动生成以下文件夹，保留jupyter格式文件的回调内容。
+
+```powershell
+C:\Users\Lenovo\.ipython
+C:\Users\Lenovo\.jupyter
+```
 
 ## 安装VS
 
@@ -153,6 +631,109 @@ $ {YEAR} - 今年。
 $ {MONTH} - 当月。
 $ {DAY} - 当月的当天。
 $ {HOUR} - 目前的小时。
+```
+
+还可以在市场安装插件，例如github copilot、chinese以及autopep8等。
+
+## 安装anaconda
+
+下载地址：https://www.anaconda.com/。
+
+为了终端可以使用conda命令，将以下路径添加金环境变量，从安装目录寻找。
+
+```powershell
+E:\anaconda\Scripts
+```
+
+conda常见的命令：
+
+```powershell
+conda create -n xxx python=3.6.5 创建xxx环境
+conda activate xxx 激活xxx环境
+conda init 可以得到是否已更改的信息
+conda deactivate 取消激活
+conda env list 列出conda管理的所有环境
+conda install tensorflow
+conda list 列出当前环境的所有包
+conda remove numpy 卸载包
+conda remove -n xxx --all 删除xxx环境及下属所有包
+conda update -n xxx numpy 更新xxx环境的numpy包
+conda env export > environment.yaml 导出当前环境的包信息
+conda env create -f environment.yaml 用配置文件创建新的虚拟环境
+
+更多命令终端输入conda即可显示
+```
+
+安装过程**不要勾选把anaconda路径添加进环境变量，同时勾选python3.9版本**，如他所说可以支持VS、Python以及各类环境，从而可以检测到已存在的环境。
+
+打开ANACONDA.NAVIGATOR，也可以手动创建环境，参考图片如下。
+
+![anaconda-navigator](anaconda-navigator.png)
+
+现在命令行创建1个虚拟环境：
+
+```powershell
+conda create -n forTF python=3.6.5
+conda activate forTF 激活
+conda init 首次激活需要执行此命令,然后重启终端
+conda activate forTF 再次激活
+conda remove -n forTF --all 移除该环境
+```
+
+你可以在以下目录查找你安装过的环境。
+
+```powershell
+E:\anaconda\envs
+```
+
+尝试安装tensorflow。
+
+```powershell
+conda install tensorflow 
+```
+
+如果提示如下错误信息，是通道不对，该通道目前没有这个包。
+
+```powershell
+Collecting package metadata (current_repodata.json): done
+Solving environment: failed with initial frozen solve. Retrying with flexible solve.
+Collecting package metadata (repodata.json): done
+Solving environment: failed with initial frozen solve. Retrying with flexible solve.
+
+PackagesNotFoundError: The following packages are not available from current channels:
+
+  - tensorflow-cpu
+
+Current channels:
+
+  - https://repo.anaconda.com/pkgs/main/win-64
+  - https://repo.anaconda.com/pkgs/main/noarch
+  - https://repo.anaconda.com/pkgs/r/win-64
+  - https://repo.anaconda.com/pkgs/r/noarch
+  - https://repo.anaconda.com/pkgs/msys2/win-64
+  - https://repo.anaconda.com/pkgs/msys2/noarch
+
+To search for alternate channels that may provide the conda package you're
+looking for, navigate to
+
+    https://anaconda.org
+
+and use the search bar at the top of the page.
+```
+
+可以参考解决方案：[PackagesNotFoundError: The following packages are not available from current channels的解决办法](https://blog.csdn.net/weixin_45552562/article/details/109668589)（不过笔者没成功，其他的也没尝试）
+
+```powershell
+// 后来笔者发现，不要激活环境，直接终端执行命令
+conda install -c intel tensorflow // 可以安装成功，安装的是基于anaconda的而不是虚拟环境
+```
+
+但是笔者还发现，这样的话似乎安装的不在这个虚拟环境里边，packages in environment at E:\anaconda:，实际安装在了conda-meta(也就是base环境)，使用conda list可以查看已安装的包。
+
+```powershell
+E:\anaconda\conda-meta
+conda list
+conda activate base 激活base环境
 ```
 
 ## 安装Typora
@@ -1708,6 +2289,16 @@ ren python.exe python310.exe
 
 如果想了解cmd其他的可用命令，输入help即可。
 
+### cmd删除文件
+
+例如可以对windowsAPP的那个python.exe和python3.exe进行删除，以免对其他解释器路径终端冲突造成干扰
+
+```powershell
+cd C:\Users\Lenovo\AppData\Local\Microsoft\WindowsApps
+del python.exe
+del python3.exe
+```
+
 ### 切换磁盘
 
 如果cd不到其它磁盘,例如d盘,直接输入d:就可以切换磁盘，因为cd是用于磁盘文件的切换而不是磁盘。
@@ -1723,3 +2314,6 @@ Microsoft Office无法启动， 出现 0x426 - 0x0 错误代码
 原因是因为开机启动项禁用了微软office即点即用服务，启用即可。
 
 ![office0x426-0x0](office0x426-0x0.png)
+
+
+
