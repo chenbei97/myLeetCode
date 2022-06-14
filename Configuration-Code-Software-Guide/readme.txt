@@ -15,6 +15,7 @@
 安装anaconda
 装Typora
 安装Bandzip
+安装Graphviz
 安装Qt
     vs配置qt
     qtcreator

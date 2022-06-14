@@ -762,6 +762,24 @@ Typora现在不免费，可以在微信公众号：软件智库找到下载。
 
 无广告，无尿点的解压软件。
 
+## 安装Graphviz
+
+这个是tensorflow-board绘制图的时候可能需要用的插件，如果没有，就会提示错误。
+
+下载地址：[graphviz-4.0.0 (64-bit) EXE installer [sha256]](http://graphviz.org/download/)。
+
+安装过程记得勾选，添加路径到当前用户的环境变量，安装目录在
+
+```powershell
+E:\Graphviz
+```
+
+检查以下目录是否在环境变量中，没有就手动添加。
+
+```powershell
+E:\Graphviz\bin
+```
+
 ## 安装Qt
 
 下载地址：[qt-opensource-windows-x86-5.9.9.exe](https://download.qt.io/archive/qt/5.9/5.9.9/)
