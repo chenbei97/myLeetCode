@@ -418,7 +418,7 @@ cv2.destroyAllWindows()
 
 ### 安装jupyterlab
 
-注：此应用安装问题没有解决，如果你想要尝试自己解决，可以参考以下内容，但是可能会出现问题
+注：**此应用安装问题没有解决，如果你想要尝试自己解决**，可以参考以下内容，但是可能会出现问题
 
 可以终端使用命令安装，不过这是网页版，见[jupyterlab · PyPI](https://pypi.org/project/jupyterlab/#files)，或者[jupyterlab-github.com](https://github.com/jupyterlab/jupyterlab-desktop)。
 
@@ -482,11 +482,11 @@ C:\JupyterLab
 Failed to find a compatible Python environment at the configured path "C:\Users\Lenovo\AppData\Roaming\jupyterlab-desktop\jlab_server\python.exe". Environment Python package requirements are: jupyterlab >=3.1.0.
 ```
 
-后来笔者发现，其实E:\anaconda\python.exe的库目录下已经安装过jupyterLab了，完全没必要再安装，可以参考[安装anaconda](#安装anaconda)。
+后来笔者发现，**其实E:\anaconda\python.exe的库目录下已经安装过jupyterLab了，完全没必要再安装**，可以参考[安装anaconda](#安装anaconda)。
 
 ![jupyterlab-anaconda](jupyterlab-anaconda.png)
 
-可以这样启动jupyterLab，首先激活环境，然后输入命令。
+可以这样启动jupyterLab，**首先激活环境，然后输入命令jupyter lab**。
 
 ```powershell
 conda activate base
@@ -735,6 +735,10 @@ E:\anaconda\conda-meta
 conda list
 conda activate base 激活base环境
 ```
+
+不过这里安装的tensorflow是intel版本，可能不符合常规的cpu-2.5.0版本。
+
+2022/6/14，安装tensorflow的问题已经解决，可见[安装tensorflow](#安装tensorflow)的说明。
 
 ## 安装Typora
 

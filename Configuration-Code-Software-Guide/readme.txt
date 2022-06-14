@@ -4,8 +4,15 @@
 
 文档目录为：
 安装Python
+    pip常见命令
+    安装autopep8
+    安装tensorflow
+    安装pytorch
+    安装cv2
+    安装jupyterlab
 安装VS
 安装PyCharm
+安装anaconda
 装Typora
 安装Bandzip
 安装Qt
