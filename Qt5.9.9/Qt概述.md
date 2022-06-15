@@ -792,6 +792,609 @@ qDebug("item is in list: %d",mylist.size());
 
 ### 2.3 Qt容器类
 
+Qt提供了多个基于模板的容器类，比STL的容器类更加轻巧、安全，这些容器类是隐式共享和可重入的，进行了速度和存储优化，可减少可执行文件的大小。此外它是线程安全的，即作为只读容器时可被多个线程访问。
+
+Qt容器类分为顺序容器类和关联容器类，包含了Java类型和STL类型的迭代类，Java类型易于使用，提供高级功能，STL则是迭代效率高。
+
+Qt还提供了foreach宏用于遍历容器内的所有数据项。
+
+#### 2.3.1 顺序容器类
+
+主要包括QList、QLinkedList、QVector、QStack和QQueue。
+
+**QList：**最常用的容器类，但是以数组列表实现的线性列表，而不是链表，可以使用下标索引访问数据项，但是头插和尾插数据非常快。
+
+常用函数。
+
+```c++
+insert(); // 插入
+replace(); // 替换
+removeAt(); // 移除
+move(); // 移动
+swap(); // 交换
+append(); // 尾插
+prepend(); // 头插
+removeFirst(); // 头删
+removeLast(); // 尾删
+isEmpty(); // 是否为空
+```
+
+**QLinkedList：**是链表，基于迭代器访问数据项，不能使用下标索引，插入和删除数据项的操作时间相同。
+
+其它的接口函数和QList很像，基本一致。
+
+**QVector：**提供动态数组的功能，可以以下标索引访问数据，函数接口也与QList基本相同。区别是QVector效率更高，因为数据项是连续存储的，其风格就是STL的vector，QList则更像Java。
+
+**QStack：**堆栈的后入先出LIFO数据类型，push()和pop()是主要的接口函数。
+
+```c++
+QStack<int> stack;
+stack.push(10);
+stack.push(20);
+stack.push(30);
+while(!stack.isEmpty())
+	cout<<stack.pop()<<endl;
+```
+
+**QQueue：**先入先出FIFO的数据类型，enqueue()和dequeue()是主要的接口函数，用于入列和出列。
+
+```c++
+QQueue<int> q;
+q.enqueue(10);
+q.enqueue(20);
+q.enqueue(30);
+while (!q.isEmpty())
+    cout<<q.dequeue()<<endl;
+```
+
+#### 2.3.2 关联容器类
+
+Qt提供QMap、QMultiMap、QHash、QMultiHash和QSet。
+
+QMultiMap和QMultiHash支持1个键关联多个值。
+
+QSet、QHash、QMultiHash底层是哈希散列函数进行查找，速度比较快，类似于STL的unordered_map和unordered_set。
+
+**QSet：**基于散列表的集合模板类，存储数据顺序不固定查找值的速度很快，内部使用QHash实现。
+
+具备Java的风格，例如contains函数，其实STL的set不包含。
+
+```C++
+QSet<QString> set;
+set<<"dog"<<"cat"<<"tiger"; // 通过<<重载可以自动插入值
+if (!set.contains("cat")){
+    ... // do something
+}
+```
+
+**QMap：**<Key，T>，提供关联数组(字典)，一个键映射到一个值，**内部是有序的按照键的顺序**，如果不在乎存储顺序，使用QHash更快。如果查找没找到指定的键会返回一个缺省构造值，例如键是字符串类型，就会返回空字符串。所以可以用**value()函数查找键值时可以指定1个缺省的返回值**。
+
+```c++
+QMap<QString,int> map;
+map["one"] = 1;
+map["two"] = 2;
+map["three"] = 3;
+map.insert("four",4);
+map.remove("two");
+int num1 = map["one"];
+int num2 = map.value("two");
+int timeout = map.value("TIMEOUT",-1); // 表示如果找到TIMEOUT就返回关联的值否则返回-1
+```
+
+**QMultiMap：**多值映射，是QMap的子类，继承了QMap的大部分函数接口，有些函数略有区别，例如**QMultiMap::insert()等价于QMap::insertMulti()，QMultiMap::replace()等价于QMap::insert()**。QMap一般不允许多值映射，除非使用了函数QMap::insertMulti()添加键值对。
+
+另外QMultiMap不像QMap提供[]操作符，只能使用value()函数来获取值，如果希望获取1个键对应的所有值可以使用values()函数，返回值是QList<T>类型。
+
+```c++
+QList<int> values = map.values("plenty");
+for (int i = 0; i < values.size(); ++i)
+    cout << values.at(i) << endl;
+```
+
+**QHash：**基于散列表实现字典功能的模板类<Key，T>，和QMap用法类似。
+
+区别是QHash的查找速度更快，数据项是无序的，不像QMap数据项安装键排序。QMap的键必须提供"<"运算符，QHash则是提供"=="运算符和一个名称为qHash()的全局散列函数。
+
+**QMultiHash**：是QHash的子类，支持多值映射，用法类似于QMultiMap。
+
+#### 2.3.3 容器类的迭代
+
+分为Java类型的迭代器和STL类型的迭代器。**Java类型迭代器的指针不是指向一个数据项，而是数据项之间**，例如，起始时刻指针不指向第1个数据项，而是在它之前，需要使用next()获取第1个数据项。
+
+另外**Java类型的迭代器并不是嵌套类，而是独立类，而且具备模板参数，实例化需要相同类型的容器对象作为构造参数**。
+
+**Java类型的迭代器汇总如下。**
+
+|             容器类              |       只读迭代器       |         读写迭代器          |
+| :-----------------------------: | :--------------------: | :-------------------------: |
+|       QList<T>,QQueue<T>        |   QListIterator<<T>    |   QMutableListIterator<T>   |
+|         QLinkedList<T>          | QLinkedListIterator<T> |   QMutableListIterator<T>   |
+|      QVector<T>,QStack<T>       |   QVectorIterator<T>   |  QMutableVectorIterator<T>  |
+|             QSet<T>             |    QSetIterator<T>     |   QMutableSetIterator<T>    |
+|  QMap<Key,T>,QMultiMap<Key,T>   |  QMapIterator<Key,T>   | QMutableMapIterator<Key,T>  |
+| QHash<Key,T>,,QMultiHash<Key,T> |  QHashIterator<Key,T>  | QMutableHashIterator<Key,T> |
+
+QList、QLinkedList和QSet的迭代器用法相同，QMap和QHash用法相同，这里以QList和QMap进行说明。
+
+**QList的Java型迭代器：**
+
+```c++
+// 只读迭代器QListIterator<<T>
+QList<QString> list; // 容器
+list << "A" << "B" << "C" << "D" ;// 容器构造
+QListIterator<QString> iter(list); // 容器迭代器构造,以容器作为参数
+while (iter.hasNext())
+    qDebug() << iter.next(); // iter总是指向实际数据项的前边,初始iter指向第1个元素的前边
+// 反向遍历也可以
+iter.toBack(); // 指向尾部元素的后面
+while (iter.hasPrevious())
+    qDebug() << i.previous();
+// 读写迭代器QMutableListIterator<T>
+QList<int> ql;
+ql << 1 << 2 << 3 << 4 << 5;
+QMutableListIterator<int> miter(ql);
+while (miter.hasNext()){
+    if (miter.next() % 2 != 0) // 如果不是偶数
+        miter.remove();  // 移除这个刚next()跳过的数据项不影响迭代器
+        // miter.setValue(0); 设置刚跳过数据项的值为0
+}
+```
+
+只读迭代器QListIterator<<T>常用的函数如下。
+
+```c++
+void toFront(); void toBack(); // 迭代器移动到首元素前边或尾元素后面
+bool hasPrevious(); bool hasNext(); // 如果迭代器不是处于开头/最后位置返回true
+const T& previous(); const T& next(); // 获取前/后一个数据项,迭代器也前/后移
+const T& peekPrevious(); const T& peekNext(); // 获取前/后一个数据项,迭代器不移动
+```
+
+**QMap的Java型迭代器：**
+
+迭代器具备了QListIterator<<T>所有的常用函数，并新增key()和value()获取刚跳过的数据项的键值。
+
+```c++
+QMap<QString,QString> map;
+map.insert("one","1");
+map.insert("two","2");
+map.insert("two1","2");
+map.insert("three","3");
+QMutableMapIterator<QString,QString> iter(map);
+while (iter.hasNext())
+    if (iter.next().key().endsWith("o")) // 删除以字母"o"结尾的键的数据项，即"two"
+        iter.remove();
+
+// 如果是多值容器可以这样遍历
+QMutableMapIterator<QString,QString> iter(map);
+while (iter.findNext("2")) // 还有findPrevious,查找下1个或上1个值,删除值为2的所有数据项
+    iter.remove(); // "two"和"two1"2个会被删除
+```
+
+**STL类型的迭代器汇总如下。**
+
+cionst_iterator定义只读迭代器，iterator读写迭代器，还有反向的只读和读写迭代器，const_reverse_iterator和reverse_iterator。
+
+|        容器类        |           只读迭代器           |        读写迭代器        |
+| :------------------: | :----------------------------: | :----------------------: |
+|  QList<T>,QQueue<T>  |    QList<T>::const_iterator    |    QList<T>::iterator    |
+|    QLinkedList<T>    | QLinkedList<T>::const_iterator | QLinkedList<T>::iterator |
+| QVector<T>,QStack<T> |   QVector<T>::const_iterator   |   QVector<T>::iterator   |
+|       QSet<T>        |    QSet<T>::const_iterator     |    QSet<T>::iterator     |
+|     QMap<Key,T>      |    QMap<T>::const_iterator     |    QMap<T>::iterator     |
+|   QMultiMap<Key,T>   |    QMap<T>::const_iterator     |    QMap<T>::iterator     |
+|     QHash<Key,T>     |    QHash<T>::const_iterator    |    QHash<T>::iterator    |
+|  QMultiHash<Key,T>   |    QHash<T>::const_iterator    |    QHash<T>::iterator    |
+
+类似的QList和QMap的示例用法如下。
+
+```c++
+ // QList只读迭代器
+QList<QString> ql;
+ql << "A" << "B" << "C";
+QList<QString>::const_iterator i;
+for (i = ql.constBegin(); i!= ql.constEnd(); ++i)
+    qDebug << *i;
+// QList反向迭代器
+QList<QString>::reverse_iterator r;
+for (r = ql.rbegin(); r != ql.rend();++r)
+    *r = r->toLower();// 改为小写
+// QMap只读迭代器
+QMap<int,int> m;
+QMap<int,int> ::const_iterator mi;
+for(mi = m.constBegin(); mi != m.constEnd(); ++mi)
+    qDebug() << mi.key() <<","<< mi.value(); // 输出key,value,使用*mi也可以得到value
+```
+
+**隐式共享的概念。**
+
+很多返回值是QList或者QStringList，遍历返回的这些容器，必须先复制，但是Qt使用了隐式共享，这样的复制没有多大开销，猜测内部是使用了移动语义避免拷贝构造，或者只是传递了1个指针，只有发生数据修改时才会复制数据。
+
+```c++
+// 这样的写法正确
+const QList<int> sizes = splitter->sizes(); // 隐式共享
+QList<int> :: const_iterator i;
+for (i = sizes.begin(); i != sizes.end(); ++i)
+    ...
+
+// 这样的写法错误
+QList<int> :: const_iterator i;
+for (i = splitter->sizes().begin(); i != splitter->sizes().end(); ++i)
+    ...
+```
+
+**foreach宏的使用。**
+
+定义于<QtGlobal>，其语法如下。
+
+```c++
+foreach(variable,containter);
+```
+
+示例如下。
+
+```c++
+QLinkedList<int> list;
+int val;//定义用于迭代的变量
+for each(list,val)
+    qDebug()<<val;
+
+// 或者这样也可以
+foreach(const int &val,list){ // 迭代变量定义在foreach语句内
+    if (val == 0) break;
+    qDebug() << val;
+}
+
+// 如果是QMap和QHash,foreach会自动访问键值对的值,无需调用values(),键可以用keys()
+QMap<QString,int> m;
+foreach(const QString&str,m.keys())
+    qDebug()<< str<<" = "<< m.value(str);
+// 多值映射可以这样
+QMultiMap<QString,int> m;
+foreach(const QString&str,m.uniqueKeys())
+    foreach(int i ,m.values(str)) 
+    	qDebug()<< str<<" = "<< i ;
+```
+
+### 2.4 Qt模块
+
+Qt模块分为几大类。
+
+Qt基本模块提供了Qt在所有平台的基本功能；
+
+Qt附加模块：实现特定功能的提供附加价值的模块；
+
+Qt增值模块：单独发布的提供额外价值的模块或工具；
+
+Qt技术预览模块：处于开发阶段尚未发布的模块；
+
+Qt工具：帮助应用程序开发的一些工具。
+
+#### 2.4.1 Qt基本模块
+
+QtCore是Qt类库的核心，其他模块都依赖次模块，如果使用qmake构建项目，QtCore会自动加入项目；
+
+QtGui提供了用于开发GUI应用程序必要的类，如果使用qmake构建项目，QtGui会自动加入项目。如果不使用，可以在.pro文件加入命令。
+
+```c++
+QT -= gui
+```
+
+其他模块一般不会自动加入到项目，可以自己加入，例如加入2个media模块和sql模块。
+
+```c++
+QT += multimedia multimediawidgets
+QT += sql
+```
+
+Qt基本模块的表一览。
+
+|         模块          |                       描述                       |
+| :-------------------: | :----------------------------------------------: |
+|        Qt Core        |                   核心非图形类                   |
+|        Qt GUI         |          设计GUI界面基础类，包括OpenGL           |
+|     Qt Multimedia     |           音频、视频、摄像头和广播功能           |
+| Qt Multimedia Widgets |               多媒体功能的界面组件               |
+|      Qt Network       |                     网络编程                     |
+|        Qt QML         |              用于QML和JavaScipt语言              |
+|       Qt Quick        |     创建定制用户界面的动态应用程序的声明框架     |
+|   Qt Quick Controls   | 创建桌面样式用户界面，基于Qt Quick的用户界面控件 |
+|   Qt Quick Dialogs    |           用于Qt Quick的系统对话框类型           |
+|   Qt Quick Layouts    |          用于Qt Quick界面元素的布局项目          |
+|        Qt SQL         |                    数据库操作                    |
+|        Qt Test        |              应用程序和库的单元测试              |
+|      Qt Widgets       |            构建GUI界面的C++图形组件类            |
+
+#### 2.4.2 Qt其他模块
+
+Qt的附加、增值、技术预览模块这些模块不再单独列出，可见Qt官网的"All Modules"界面查看这些模块的信息。Qt的工具可以说明一下，即Qt Designer用于设计UI界面，Qt Help用于在线文档查找、Qt UI Tools用于操作Qt Designer生成的窗体类。
+
+特别的，如果你用的是Python开发，还会有pyuic和pyrcc等编译工具。
+
+## 3. 常用界面设计组件
+
+### 3.1 字符串类
+
+#### 3.1.1 QString
+
+输入输出的一些组件都有读取文本的函数，例如QLabel和QLineEdit有以下2个函数，它们涉及的都是QString。
+
+```c++
+QString text() const;
+void setText(const QString&);
+```
+
+##### 3.1.1.1 字符串转换为其他类型
+
+QString可以从**字符串转换为其它数据类型**，常用的转换函数如下。
+
+```c++
+// 默认10进制把字符串转换为整数
+int toInt(bool * ok = Q_NULLPTR, int base = 10) const;
+long toLong(bool * ok = Q_NULLPTR, int base = 10) const;
+short toShort(bool * ok = Q_NULLPTR, int base = 10) const;
+uint toUInt(bool * ok = Q_NULLPTR, int base = 10) const;
+ulong toULong(bool * ok = Q_NULLPTR, int base = 10) const;
+// 转为浮点数
+double ToDouble(bool * ok = Q_NULLPTR) const;
+float ToFloat(bool * ok = Q_NULLPTR) const;
+```
+
+##### 3.1.1.2 其他类型转换为字符串
+
+如果是**其他数据类型转为字符串，可以使用4个方法**，其中2个是静态函数，2个是公共成员函数。
+
+静态函数：QString::number()、QString::asprintf()
+
+公共成员函数：QString.sprintf()、QString.setNum()
+
+```c++
+// 指定float的数字n,格式f,精度prec
+static QString number(double, char f='g', int prec=6);
+inline QString &QString::setNum(float n, char f, int prec);
+// 同C语言的sprintf()格式,只是跟随了声明宏
+QString &sprintf(const char *format, ...) Q_ATTRIBUTE_FORMAT_PRINTF(2, 3);
+static QString asprintf(const char *format, ...) Q_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+
+// 其他的setNum重载版本
+inline QString &QString::setNum(short n, int base);
+inline QString &QString::setNum(ushort n, int base);
+inline QString &QString::setNum(int n, int base);
+inline QString &QString::setNum(uint n, int base);
+inline QString &QString::setNum(long n, int base);
+inline QString &QString::setNum(ulong n, int base);
+QString &setNum(short, int base=10);
+QString &setNum(ushort, int base=10);
+QString &setNum(int, int base=10);
+QString &setNum(uint, int base=10);
+QString &setNum(long, int base=10);
+QString &setNum(ulong, int base=10);
+QString &setNum(qlonglong, int base=10);
+QString &setNum(qulonglong, int base=10);
+QString &setNum(float, char f='g', int prec=6);
+QString &setNum(double, char f='g', int prec=6);
+static QString number(int, int base=10);
+static QString number(uint, int base=10);
+static QString number(long, int base=10);
+static QString number(ulong, int base=10);
+static QString number(qlonglong, int base=10);
+static QString number(qulonglong, int base=10);
+static QString number(double, char f='g', int prec=6);
+```
+
+示例代码：
+
+```c++
+QString str1("120.1456");
+float r = str1.toFloat(); // string->float
+qDebug()<<"r = "<<r;
+// float -> string 的 4种方法
+QString s1 = str1.sprintf("%.2f",r); // inline QString &QString::setNum(float n, char f, int prec)
+QString s2 = str1.setNum(r,'f',2);
+QString s3 = QString::number(r,'f',2); // static QString number(double, char f='g', int prec=6);
+QString s4 = QString::asprintf("%.2f",r);
+qDebug()<<"s1 = "<<s1<<" s2 = "<<s2<<" s3 = "<<s3<<" s4 = "<<s4;
+QString str2("120");
+int i = str2.toInt();
+qDebug()<<"i = "<<i;
+// int -> string 的 4种方法
+QString i1 = str2.sprintf("%d",i);
+QString i2 = str2.setNum(i,10); // inline QString &QString::setNum(int n, int base)
+QString i3 = QString::number(i,10); //  static QString number(int, int base=10);
+QString i4 = QString::asprintf("%d",i);
+qDebug()<<"i1 = "<<i1<<" i2 = "<<i2<<" i3 = "<<i3<<" i4 = "<<i4;
+
+// 输出结果
+r =  120.146
+s1 =  "120.15"  s2 =  "120.15"  s3 =  "120.15"  s4 =  "120.15"
+i =  120
+i1 =  "120"  i2 =  "120"  i3 =  "120"  i4 =  "120"
+```
+
+##### 3.1.1.3 进制转换
+
+还有**进制转换**，进制转换也是通过number和setNum函数实现。例如下方3个都是进制转换函数。
+
+```c++
+int i = str.toInt(); // 缺省转换为10进制
+str1 = QString::number(i,16); // 转为16进制的字符串
+str2 = str.setNum(i,2); // 转为2进制的字符串
+
+// 其实用到的函数原型就是
+int toInt(bool *ok=Q_NULLPTR, int base=10) const;
+static QString number(int, int base=10);
+QString &setNum(int, int base=10);
+```
+
+##### 3.1.1.4 常见成员函数
+
+QString存储字符串使用Unicode，每个字符是16位的QChar，所以可以春初中文字符，且1个汉字算作1个字符
+
+**追加字符串的append和prepend方法**。
+
+```c++
+QString s1 = "a", s2 = "b";
+QString s3 = s1.append(s2); // "ab"
+QString s4 = s2.append(s1); // "ba"
+```
+
+**大小写转换toUpper和toLower方法。**
+
+```c++
+QString s1 = "a", s2 = "B";
+QString s3 = s1.toUpper; // "A"
+QString s4 = s2.toLower(); // "b"
+```
+
+**返回字符串字符个数，count、size和length**，要注意一个汉字算1个字符。
+
+```c++
+QString s = "NI 好";
+int n1 = s.count(); // 3
+int n2 = s.size(); // 3
+int n3 = s.length(); // 3
+```
+
+**去除空格trimmed、simplified方法**。
+
+```c++
+QString s = "   Are   you    Ok?   ", r1, r2;
+r1 = s.trimmed(); // "Are   you    Ok?" 只去除首尾的空格
+r2 = s.simplified(); // "Are you Ok?" 中间空格也去除,保留单空格
+```
+
+**indexOf查找字符串内参数字符串str首次出现的位置**，可以指定起始查找位置from。
+
+**lastIndexOf()则是查找字符串最后出现的位置**。
+
+```c++
+// 函数原型
+int indexOf(const QString&str,int from=0,Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+QString s = "G:\Qt5Book\QT5.9Study\qw.cpp";
+int n1 = s.indexOf("5.9"); // n1=13
+int n2 = s.lastIndexOf("\\"); // n2=21,"\"是转义字符,如果查找"\"要输入"\\"
+```
+
+**字符串是否为空isNull和isEmpty**，区别是isNULL会考虑"\0"结束符。
+
+```c++
+QString s1,s2="";
+bool n1 = s1.isNull(); // true
+bool n2 = s2.isNull(); // false "\0"不为空
+bool n3 = s1.isEmpty(); // true
+bool n4 = s2.isEmpty(); // true
+```
+
+**是否包含某个字符串contains。**
+
+```c++
+QString s = "   Are   You    Ok?   ";
+bool n1 = s.contains("you",Qt::CaseInsensitive); // true,不区分大小写
+bool n2 = s.contains("you",Qt::CaseSensitive); // false,区分大小写
+```
+
+**是否以某个字符开始或者结束endsWith和startsWith。**
+
+```c++
+QString s = "Are   You    OK?  Baby";
+bool n1 = s.endsWith("baby",Qt::CaseInsensitive); // true,不区分大小写
+bool n2 = s.startsWith("Are",Qt::CaseSensitive); // true,区分大小写
+```
+
+**取字符串left和right。**
+
+```c++
+QString s = "Are   You    OK?  Baby";
+QString s1 = s.left(3);
+QString s2 = s.right(4);
+```
+
+提取以sep作为分隔符的，从start到end端到端的字符串。
+
+```c++
+// 函数原型
+QString section(const QString& sep,int start,int end=-1,
+                SectionFlags flags = SectionDefault) const;
+QString s1,s2 = "学生姓名，男，1984-3-4，汉族，山东";
+s1 = s2.section("，",0,0); // "学生姓名",第1段编号为0 [0,0]
+s1 = s2.section("，",1,1); // "男",第2段编号为1 [1,1]
+s1 = s2.section("，",0,1); // "学生姓名，男",第1-2段编号为0，1 [0,1]
+s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
+```
+
+#### 3.1.2 QVariant
+
+### 3.2 输入组件类
+
+#### 3.2.1 QSpinBox
+
+#### 3.2.3 QLineEdit
+
+#### 3.2.4 QCombobox
+
+#### 3.4.5 QPlainTextEdit
+
+### 3.3 输出组件类
+
+#### 3.3.1 QLabel
+
+#### 3.3.2 QProgressBar
+
+#### 3.3.3 QLCDNumber
+
+### 3.4 时间日期类
+
+#### 3.4.1 QTime
+
+#### 3.4.2 QDate
+
+#### 3.4.3 QDateTime
+
+#### 3.4.4 QTimeEdit
+
+#### 3.4.5 QDateTimeEdit
+
+#### 3.4.6 QCalendarWidget
+
+### 3.5 表格文字类
+
+#### 3.5.1 QListWidget
+
+#### 3.5.2 QTreeWidget
+
+#### 3.5.3 QTableWidget
+
+### 3.6 按钮类
+
+#### 3.6.1 QPushButton
+
+#### 3.6.2 QRadioButton
+
+#### 3.6.3 QToolButton
+
+#### 3.6.4 QCheckBox
+
+### 3.7 其他类
+
+这些类不再赘述，自行查看Qt文档。
+
+**Layouts类：**Vertical Layout、Horizontal Layout、Grid Layout和Form Layout，布局方向；
+
+**Spacers类：**Horizontal Spacer、Vetiacal Spacer，空格间距；
+
+**Buttons类：**Command Link Button、Dialog Button box，按钮;
+
+**ItemViews类：**List View、Tree View、Table View、Column View、Undo View，第4章会详细介绍；
+
+**Containers类：**Group Box、Scroll Area、Tool Box、Stacked Widget、 Tab Widget、Frame、Widget、MDI Area、DockWidget和QAxWidget，容器类；
+
+**InputWidgets类：**Font Combo Box、Text Edit、Double Spin Box、Dial、Horizontal Scroll Bar、Verical  Scroll Bar、Horizontal Silder、Vertical Silider以及Key Sequence Edit，输入组件类；
+
+**Display Widgets类：**Text Browser、Graphics View、Horizontal Line、Vertical Line、OpenGL Widget和QQuickWidget。
+
+## 4. Model/View结构
+
+
+
 
 
 
