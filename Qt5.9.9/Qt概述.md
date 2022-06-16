@@ -1112,7 +1112,7 @@ Qt的附加、增值、技术预览模块这些模块不再单独列出，可见
 
 ## 3. 常用界面设计组件
 
-### 3.1 字符串类
+### 3.1 常见数据类型
 
 #### 3.1.1 QString
 
@@ -1323,9 +1323,189 @@ s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
 
 #### 3.1.2 QVariant
 
-### 3.2 输入组件类
+QVariant类就像最常见的Qt数据类型的Union。**QVariant对象一次保存一个单一类型的单一值**，允许某些类型的多值，例如字符串列表。可以找出变量的类型T，**使用convert()函数将其转换为其他类型**，使用其中一个toT()函数例如toSize()获取其值，并**检查是否可以使用canConvert()将该类型转换为特定类型**。
+
+头文件需要包含<QVariant>。
+
+```c++
+#include <QVariant>
+```
+
+qmake的包含，在.pro文件加上QT += core即可。
+
+```c++
+QT += core
+```
+
+##### 3.1.2.1 常见成员函数
+
+它可以转换为任意数据类型，常见的公共成员和静态函数有。
+
+```c++
+void clear();// 转换为QMetaType::UnknownType,释放已使用的资源
+bool isNull() const; // 如果是空的varinat返回true
+bool isValid() const;// 不是QMetaType::UnknownType类型就返回true
+bool canConvert(int targetTypeId) const; // 是否可以转换为QMetaType的枚举值类型
+bool convert(int targetTypeId); // 进行转换
+void setValue(const T &value); // 可以设定QMetaType支持的类型
+T value() const;   
+bool toBool() const;
+int toInt(bool *ok = Q_NULLPTR) const;
+double toDouble(bool *ok = Q_NULLPTR) const;
+float toFloat(bool *ok = Q_NULLPTR) const;
+QString toString() const;
+Type type() const;
+const char *typeName() const;
+// 返回包含值副本的QVariant。否则，其行为与setValue()完全相同
+static QVariant fromValue(const T &value); 
+
+// setValue、value和fromValue例子
+QVariant v;
+struct MyCustomStruct{
+    int id;
+    char * name;
+};
+```
+
+##### 3.1.2.2 2个示例
+
+这里给出2个例子，说明如何使用QVariant。
+
+第1个例子。
+
+```c++
+// 使用setValue设定值
+v.setValue(5);
+int i1 = v.toInt();         // i1 is now 5
+QString s1 = v.toString()；   // s1 is now "5"
+MyCustomStruct c11; // 自定义类型的对象
+v.setValue(c11);// 设定为该自定义类型对象
+MyCustomStruct c12 = v.value<MyCustomStruct>();// converson successful 可以转换
+//使用value<T>()来获取值
+MyCustomStruct c21;
+if (v.canConvert<MyCustomStruct>()) // 如果可以转换该自定义类型
+	c21 = v.value<MyCustomStruct>();
+v = 7;
+int i2 = v.value<int>();                        // same as v.toInt(), i2 is now 7
+QString s2 = v.value<QString>();                // same as v.toString(), s2 is now "7"
+MyCustomStruct c22 = v.value<MyCustomStruct>(); // conversion failed,v=7不是自定义类型
+// 使用fromValue()获取值
+MyCustomStruct c31;
+QVariant c32 = QVariant::fromValue(吃1);  // 无需setValue,直接从自定义类型创建1个variant类型
+```
+
+第2个例子。
+
+```c++
+QVariant v(123);                // 以int构造的QVariant
+int x = v.toInt();              // 可通过toInt()获取其值
+qDebug() << v;                       // QVariant(int, 123)
+v = QVariant("hello");          // 可以以字符数组构造赋值
+v = QVariant(tr("hello"));      // 以QString构造也是ok的,tr()是翻译的意思
+int y = v.toInt();              // y = 0 因为v不能转换为int
+QString s = v.toString();       // s = tr("hello")  (see QObject::tr())
+qDebug() << v;                       // QVariant(QString, "hello")
+qDebug("Type is %s", v.typeName()); // Type is QString
+qDebug()<<v.canConvert(QMetaType::QChar); // false
+qDebug()<<v.canConvert(QMetaType::Int); // true
+x = v.convert(QMetaType::Int);
+QChar y1 = v.convert(QMetaType::QChar);
+qDebug()<<"x = "<<x<<" y1 = "<<y1; // x = 0 y1 =  '\x0'
+```
+
+甚至可以在变量中存储QList<QVariant>和QMap<QString，QVariant>值，因此可以轻松构建任意类型的任意复杂数据结构。这是非常强大和通用的，但与在标准数据结构中存储特定类型相比，内存和速度效率可能会更低。QVariant还支持空值的概念，在空值中可以定义一个没有值集的类型。但是，请注意，QVariant类型只有在具有值集时才能强制转换。例如
+
+```c++
+QVariant x, y(QString()), z(QString("")); // x,y是空集,z不是
+x.convert(QVariant::Int);
+// x.isNull() == true y.isNull() == true, z.isNull() == false
+```
+
+### 3.2 常见输入组件类
 
 #### 3.2.1 QSpinBox
+
+一般用于整数的显示和输入，一般显示十进制数，也可以显示二、十六进制数，类似的类是QDoubleSpinBox，用于显示浮点数，也就是说有小数位数。使用QSpinBox和QDoubleSpinBox的优点是，**读取和设置数值时无需做字符串和数值的转换**，也无需作进制的转换，**其显示效果（前缀、后缀、进制和小数位数）已经在spin组件属性就设置好了**，所以十分方便。
+
+常见的属性表如下，可以设置数字显示前缀和后缀，数值范围，数值调整的步长、当前显示的值。
+
+以及QSpinBox特有的属性，即显示整数使用的进制，例如2表示二进制；QDoubleSpinBox的特有属性，显示数值的小数位数。
+
+|        属性        |                 描述                 |
+| :----------------: | :----------------------------------: |
+|       prefix       |          数字前缀，例如"$"           |
+|       suffix       |          数字后缀，例如"kg"          |
+|      minimum       |          数值范围下限，如0           |
+|      maximum       |         数值范围上限，如255          |
+|     singlestep     |        数值调整步长，如1，0.1        |
+|       value        |              当前显示值              |
+| displayIntegerBase |      QSpinBox特有属性，设置进制      |
+|      decimals      | QDoubleSpinBox特有属性，设置小数位数 |
+
+另外，要说明的每个属性都一般会有2个函数，即只读函数和设置函数。例如decimals属性的2个函数为
+
+```c++
+int decimals();
+void setDecimals(int prec);
+```
+
+常见的公共成员函数如下。
+
+```c++
+QString cleanText() const;
+int displayIntegerBase() const; // 设置获取进制
+void setDisplayIntegerBase(int base);
+int maximum() const;// 设置获取范围
+int minimum() const; 
+void setMaximum(int max);
+void setMinimum(int min);
+void setRange(int minimum, int maximum);
+QString prefix() const; // 设置获取前后缀
+QString suffix() const;
+void setPrefix(const QString &prefix);
+void setSuffix(const QString &suffix);
+void setSingleStep(int val);//设置获取调整步长
+int singleStep() const
+int value() const;// 获取当前值
+// 其他的函数还有继承而来的
+30 public functions inherited from QAbstractSpinBox;
+214 public functions inherited from QWidget;
+32 public functions inherited from QObject;
+14 public functions inherited from QPaintDevice ;
+```
+
+公共的槽函数主要是
+
+```c++
+void setValue(int val); // 设定当前值
+4 public slots inherited from QAbstractSpinBox;
+19 public slots inherited from QWidget;
+1 public slot inherited from QObject ;
+```
+
+常用的发射信号为
+
+```c++
+void valueChanged(int i);
+void valueChanged(const QString &text);
+1 signal inherited from QAbstractSpinBox;
+3 signals inherited from QWidget;
+2 signals inherited from QObject;
+```
+
+可能的示例代码。
+
+```c++
+void Widget::on_btnCal_clicked() // 一个QPushButton的槽函数
+{
+    ui->spinNum->setSuffix(" kg");
+	int num = ui->spinNum->value();//获取spinNum当前显示的数量
+    float price = ui->spinPrice->value();//获取spinPrice当前显示的价格
+    ui->spinPrice->setPrefix("$");
+    float total = num * price;
+    ui->spinTotal->setValue(total); // 显示到总价spinTotal上
+}
+```
 
 #### 3.2.3 QLineEdit
 
@@ -1333,15 +1513,15 @@ s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
 
 #### 3.4.5 QPlainTextEdit
 
-### 3.3 输出组件类
+### 3.3 常见输出组件类
 
 #### 3.3.1 QLabel
 
 #### 3.3.2 QProgressBar
 
-#### 3.3.3 QLCDNumber
+ QProgressBar的父类是QWidget，一般用于进度显示。
 
-### 3.4 时间日期类
+### 3.4 常见时间日期类
 
 #### 3.4.1 QTime
 
@@ -1349,13 +1529,7 @@ s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
 
 #### 3.4.3 QDateTime
 
-#### 3.4.4 QTimeEdit
-
-#### 3.4.5 QDateTimeEdit
-
-#### 3.4.6 QCalendarWidget
-
-### 3.5 表格文字类
+### 3.5 常见表格文字类
 
 #### 3.5.1 QListWidget
 
@@ -1363,7 +1537,7 @@ s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
 
 #### 3.5.3 QTableWidget
 
-### 3.6 按钮类
+### 3.6 常见按钮类
 
 #### 3.6.1 QPushButton
 
@@ -1387,11 +1561,27 @@ s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
 
 **Containers类：**Group Box、Scroll Area、Tool Box、Stacked Widget、 Tab Widget、Frame、Widget、MDI Area、DockWidget和QAxWidget，容器类；
 
-**InputWidgets类：**Font Combo Box、Text Edit、Double Spin Box、Dial、Horizontal Scroll Bar、Verical  Scroll Bar、Horizontal Silder、Vertical Silider以及Key Sequence Edit，输入组件类；
+**InputWidgets类：**Font Combo Box、Text Edit、Double Spin Box、Dial、Horizontal Scroll Bar、Verical  Scroll Bar、Horizontal Silder、Vertical Silider、QDial以及Key Sequence Edit，输入组件类；
 
-**Display Widgets类：**Text Browser、Graphics View、Horizontal Line、Vertical Line、OpenGL Widget和QQuickWidget。
+**以前的版本是QSlider**，现在拆成了Horizontal Silder和Vertical Silider；同理以前的**QScrollBar**拆成了Horizontal Scroll Bar和Verical  Scroll Bar，**QDial没有变化**。
+
+这些类都从**基类QAbstractSlider继承而来**，有一些共有的属性。**QSlider是滑动的标尺型组件**，滑动标尺的一个滑块可以改变值；**QScrollBar是滚动条；QDial是仪表盘式的组件**，通过旋转表盘获得输入值。
+
+**Display Widgets类：**QLCDNumber、Text Browser、Graphics View、Horizontal Line、Vertical Line、OpenGL Widget和QQuickWidget。
+
+**QLCDNumber是模拟LCD显示数字的组件**，可以显示整数或小数。
+
+**Times类：**QTimeEdit、QDateTimeEdit、QCalendarWidget等
 
 ## 4. Model/View结构
+
+
+
+
+
+
+
+
 
 
 
