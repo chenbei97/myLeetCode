@@ -1521,6 +1521,81 @@ void Widget::on_btnCal_clicked() // 一个QPushButton的槽函数
 
  QProgressBar的父类是QWidget，一般用于进度显示。
 
+常见的属性值如下。
+
+```c++
+alignment : Qt::Alignment
+format : QString
+invertedAppearance : bool
+maximum : int
+minimum : int
+orientation : Qt::Orientation
+text : const QString
+textDirection : Direction
+textVisible : bool
+value : int
+59 properties inherited from QWidget
+1 property inherited from QObject 
+```
+
+常见的公共成员函数如下。
+
+```c++
+Qt::Alignment alignment() const; // 对齐方式
+void setAlignment(Qt::Alignment alignment);
+QString format() const;// 格式
+void resetFormat();
+void setFormat(const QString &format);
+bool invertedAppearance() const;// 反相器,也就是从大到小
+void setInvertedAppearance(bool invert);
+bool isTextVisible() const;// 文本可见性
+void setTextVisible(bool visible);
+int maximum() const; // 进度条范围
+int minimum() const;
+Qt::Orientation orientation() const; // 方向
+void setTextDirection(QProgressBar::Direction textDirection);
+QProgressBar::Direction textDirection() const;
+virtual QString text() const; // 文本
+int value() const;//当前值
+```
+
+常见的公有槽函数。
+
+```c++
+void reset(); // 重置
+void setMaximum(int maximum); // 设置范围
+void setMinimum(int minimum);
+void setRange(int minimum, int maximum);
+void setOrientation(Qt::Orientation); // 设置方向
+void setValue(int value); // 设置当前值
+19 public slots inherited from QWidget;
+1 public slot inherited from QObject ;
+```
+
+最常用的信号。
+
+```c++
+void valueChanged(int value);
+3 signals inherited from QWidget
+2 signals inherited from QObject 
+```
+
+这里可以提一下对齐方式的枚举值Qt::Alignment。
+
+```c++
+// 水平枚举值
+Qt::AlignLeft 0x0001; // Aligns with the left edge.
+Qt::AlignRight0x0002; // Aligns with the right edge.
+Qt::AlignHCenter0x0004; // Centers horizontally in the available space.
+Qt::AlignJustify0x0008; // Justifies the text in the available space.
+// 垂直枚举值
+Qt::AlignTop 0x0020; // Aligns with the top.
+Qt::AlignBottom 0x0040; // Aligns with the bottom.
+Qt::AlignVCenter 0x0080; // Centers vertically in the available space.
+Qt::AlignBaseline 0x0100; // Aligns with the baseline.
+Qt::AlignCenter AlignVCenter | AlignHCenter; // Centers in both dimensions.
+```
+
 ### 3.4 常见时间日期类
 
 #### 3.4.1 QTime
