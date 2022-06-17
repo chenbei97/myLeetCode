@@ -1421,6 +1421,461 @@ x.convert(QVariant::Int);
 // x.isNull() == true y.isNull() == true, z.isNull() == false
 ```
 
+#### 3.1.3 QColor
+
+常见的公共成员函数如下。
+
+```c++
+QColor(Qt::GlobalColor color);
+QColor(int r, int g, int b, int a = 255);
+QColor(QRgb color);
+QColor(const QColor &color);
+QString QColor::name() const;//返回形如"#RRGGBB"格式的颜色表示
+int QColor::value() const; // 返回颜色的组成部分
+QColor convertTo(Spec colorSpec) const; // 详见枚举值QColor:Spec
+QColor toHsv() const;
+QColor toRgb() const;
+// 获取和设置RGB值和透明度
+int saturation() const;
+int hue() const;
+int lightness() const;
+void setHsv(int h, int s, int v, int a = 255);
+QRgb rgb() const;
+void setRgb(int r, int g, int b, int a = 255);
+void setRgb(QRgb rgb);
+QRgb rgba() const;
+void setRgba(QRgb rgba);
+int alpha() const;
+void setAlpha(int alpha);
+int red() const;
+void setRed(int red);
+int blue() const;
+void setBlue(int blue);
+int green() const;
+void setGreen(int green);
+int black() const;
+int cyan() const;
+int yellow() const;
+...
+```
+
+其他的不怎么常用的静态成员函数和关联函数可以了解一下。
+
+```c++
+static QStringList colorNames();
+static QColor fromCmyk(int c, int m, int y, int k, int a = 255);
+static QColor fromCmykF(qreal c, qreal m, qreal y, qreal k, qreal a = 1.0);
+static QColor fromHsl(int h, int s, int l, int a = 255);
+static QColor fromHslF(qreal h, qreal s, qreal l, qreal a = 1.0);
+static QColor fromHsv(int h, int s, int v, int a = 255);
+static QColor fromHsvF(qreal h, qreal s, qreal v, qreal a = 1.0);
+static QColor fromRgb(QRgb rgb);
+static QColor fromRgb(int r, int g, int b, int a = 255);
+static QColor fromRgba64(ushort r, ushort g, ushort b, ushort a = USHRT_MAX);
+static QColor fromRgba64(QRgba64 rgba64);
+static QColor fromRgbF(qreal r, qreal g, qreal b, qreal a = 1.0);
+static QColor fromRgba(QRgb rgba);
+static bool isValidColor(const QString &name);
+static bool isValidColor(QLatin1String name);
+
+typedef QRgb;
+int qAlpha(QRgb rgba);
+uint qAlpha(QRgba64 rgba64);
+int qBlue(QRgb rgb);
+uint qBlue(QRgba64 rgba64);
+int qGray(int r, int g, int b);
+int qGray(QRgb rgb);
+int qGreen(QRgb rgb);
+uint qGreen(QRgba64 rgba64);
+QRgb qPremultiply(QRgb rgb);
+QRgba64 qPremultiply(QRgba64 rgba64);
+int qRed(QRgb rgb);
+uint qRed(QRgba64 rgba64);
+QRgb qRgb(int r, int g, int b);
+QRgba64 qRgba64(quint16 r, quint16 g, quint16 b, quint16 a);
+QRgba64 qRgba64(quint64 c);
+QRgb qRgba(int r, int g, int b, int a);
+QRgb qUnpremultiply(QRgb rgb);
+QRgba64 qUnpremultiply(QRgba64 rgba64);
+```
+
+需要知道的枚举值定义如下。
+
+```c++
+enum QColor::NameFormatQColor={QColor:HexRgb=0,QColor:HexArgb=1};
+enum QColor::Spec = {QColor::Rgb=1,QColor::Hsv=2,QColor::Cmyk=3,
+                     QColor::Hsl=4,QColor::Invalid=0};
+```
+
+#### 3.1.4 QTime
+
+QTime类提供时钟时间函数。
+QTime对象包含时钟时间，即从午夜开始的小时、分钟、秒和毫秒数。它可以从系统时钟读取当前时间，并测量经过的时间范围。它提供了用于比较时间和通过添加毫秒数来操纵时间的函数。
+QTime使用24小时时钟格式；它没有上午/下午的概念。与QDateTime不同，QTime对时区或夏令时（DST）一无所知。
+QTime对象通常是通过明确给出小时、分钟、秒和毫秒数来创建的，或者通过使用静态函数currentTime()来创建包含系统本地时间的QTime对象。请注意，精度取决于底层操作系统的精度；并非所有系统都提供1毫秒的精度。
+hour()、minute()、second()和msec()函数提供对时间的小时数、分钟数、秒数和毫秒数的访问。toString()函数以文本格式提供相同的信息。
+QTime提供了一整套操作符来比较两个QTime对象。如果A早于B，则认为QTime A小于QTime B。
+addSecs()和addMSecs()函数提供比给定时间晚于给定秒数或毫秒数的时间。相应地，可以使用secsTo()或msecsTo()找到两次之间的秒数或毫秒数。
+QTime可以使用start()、restart()和appeased()函数来测量经过的时间跨度。
+
+常见的成员函数。
+
+```c++
+QTime();
+QTime(int h, int m, int s = 0, int ms = 0);
+QTime addMSecs(int ms) const; // 返回从当前时间延迟后的1个时间点
+QTime addSecs(int s) const;
+// 例子
+QTime n(14, 0, 0);                // n == 14:00:00
+QTime t;
+t = n.addSecs(70);                // t == 14:01:10 70s
+t = n.addSecs(-70);               // t == 13:58:50 -70s
+t = n.addSecs(10 * 60 * 60 + 5);  // t == 00:00:05 
+t = n.addSecs(-15 * 60 * 60);     // t == 23:00:00
+
+int elapsed() const; // 流逝时间,返回上次调用start()或restart()以来经过的毫秒数
+int hour() const; // 返回时分秒毫秒
+int minute() const;
+int msec() const;
+int second() const;
+bool isNull() const; // QTimer()默认构造时为NULL
+bool isValid() const; // 是否有效
+QTime::isValid(21, 10, 30); // returns true
+QTime::isValid(22, 5,  62); // returns false
+
+int msecsSinceStartOfDay() const; // 返回从00:00:00开始的毫秒数
+int msecsTo(const QTime &t) const; // 将从当前时间到t的毫秒数返回,如果t早于该时间，则返回的毫秒数为负
+int secsTo(const QTime &t) const; // 将从该时间到t的秒数返回。如果t早于该时间，则返回的秒数为负
+bool setHMS(int h, int m, int s, int ms = 0); // 设置时间格式hms-ms
+void start(); // 设置该时间为当前时间
+int restart(); // 将此时间设置为当前时间，并返回自上次调用start()或restart()以来经过的毫秒
+// 例子
+QTime t;
+t.start(); // 开始
+some_lengthy_task(); // 做一些事情
+qDebug("Time elapsed: %d ms", t.elapsed()); // 返回流逝的时间
+
+QString toString(const QString &format) const;
+QString toString(Qt::DateFormat format = Qt::TextDate) const;
+// Qt::TextDate,表示设置格式为HH:mm:ss,例如"23:59:59"
+// Qt::ISODate,设置格式为HH:mm:ss,ISO 8601规范
+// Qt::ISODateWithMs,HH:mm:ss.zzz
+// Qt::SystemLocaleShortDate或Qt::SystemLocaleLongDate,取决于系统,会调用QLocale::system().toString(time, QLocale::ShortFormat)函数或者QLocale::system().toString(time, QLocale::LongFormat).函数
+// 其他更多的参数可见枚举值enum Qt::DateFormat
+enum Qt::DateFormat = {
+Qt::TextDate=0,
+Qt::ISODate=1,
+Qt::ISODateWithMs=?,
+Qt::SystemLocaleShortDate=?,
+Qt::SystemLocaleLongDate=?,
+Qt::DefaultLocaleShortDate=?,
+Qt::DefaultLocaleLongDate=?,
+Qt::SystemLocaleDate=2,  
+Qt::LocaleDate=?,
+Qt::LocalDate=SystemLocaleDate,
+Qt::RFC2822Date=?
+}
+```
+
+静态成员函数。
+
+```c++
+QTime currentTime(); // 返回系统时间
+bool isValid(int h, int m, int s, int ms = 0); // 判断时间是否有效
+QTime fromMSecsSinceStartOfDay(int msecs);// 返回一个新的QTime实例，时间设置为从一天开始（即从00:00:00开始）起的毫秒数。如果毫秒超出有效范围，将返回无效的QTime。
+QTime fromString(const QString &string, Qt::DateFormat format = Qt::TextDate);
+// 使用给定的格式返回字符串中表示为QTime的时间，如果不可能，则返回无效时间。
+QTime fromString(const QString &string, const QString &format);
+// 格式控制符主要有以下
+h; // 小时0-23
+hh; // 小时00-23
+m; // 分钟0-59
+mm; // 分钟00-59
+s; // 秒0-59
+ss; // 秒00-59
+z; // 秒的小数部分,在小数点后,不带尾随的零(0到999)也就是毫秒精度
+zzz; // 带尾随0,更高的精度
+AP; // 告知上午或下午时间,AP则是AM或者PM
+ap; // am或pm
+hh:mm:ss.zzz; // 14:13:09.042
+H:m:s a; // 14:13:9 pm
+h:m:s ap; // 2:13:9 pm
+// 例子
+QTime time=QTime::fromString("1mm12car00", "m'mm'hcarss");// time is 12:01.00
+QTime time = QTime::fromString("00:710", "hh:ms"); // invalid
+QTime time = QTime::fromString("1.30", "m.s");// time is 00:01:30.000
+```
+
+#### 3.1.5 QTimer
+
+QTimer是从QObject继承而来的，不是界面组件，是一个定时器类。例如，可以设置定时器对象周期为1000ms，那么每1000ms这个对象就会自动发射定时器的timeout()信号，然后这个信号可以关联槽函数，进行响应的处理。
+
+常见的性质如下。
+
+```c++
+active: const bool; // 定时器是否已启动,是返回true
+bool is Active() const;//关联函数
+interval : int ; // 定时器的周期
+void setInterval(int mesec); // ms
+void setInterval(std::chrono::milliseconds value);
+remaining Time:const int; // 超时剩余时间
+int remainingTime() const; // 超时返回0,非激活状态返回-1
+singleShot : bool ; // 是否为单次触发计时器，单次触发计时器仅触发一次，非单次触发计时器每隔毫秒触发一次，此属性的默认值为false
+bool isSingleShot() const ;
+void setSingleShot(bool singleShot);
+timerType : Qt::TimerType ; // 控制定时器的精度,默认类型是Qt::CoarseTimer
+Qt::TimerType timerType() const;
+void setTimerType(Qt::TimerType atype);
+```
+
+需要了解的枚举值类型如下。
+
+```c++
+enum Qt::TimerType = {Qt::PreciseTimer=0,Qt::CoarseTimer=1,
+                      Qt::VeryCoarseTimer=2};//毫秒精度、精度为间隔的5%以内、秒精度
+```
+
+常见的公共成员函数如下，很多已经介绍过。
+
+```c++
+int interval() const;
+std::chrono::milliseconds intervalAsDuration() const;
+bool isActive() const;
+bool isSingleShot() const;
+int remainingTime() const;
+std::chrono::milliseconds remainingTimeAsDuration() const;
+void setInterval(int msec);
+void setInterval(std::chrono::milliseconds value);
+void setSingleShot(bool singleShot);
+void setTimerType(Qt::TimerType atype);
+void start(std::chrono::milliseconds msec);
+int timerId() const;
+Qt::TimerType timerType() const;
+```
+
+公共的槽函数如下。
+
+```c++
+void start(int msec); // 以毫秒的超时间隔启动或重新启动计时器.如果计时器已经在运行，它将停止并重新启动。如果singleShot为true，则计时器将仅激活一次。
+void start(); // 以间隔中指定的超时值启动或重新启动计时器。如果计时器已经在运行，它将停止并重新启动。如果singleShot为true，则计时器将仅激活一次。
+void QTimer::start(std::chrono::milliseconds msec);
+void stop(); // 停止定时器
+```
+
+唯一的信号。
+
+```c++
+void QTimer::timeout();// 私有信号
+2 signals inherited from QObject 
+```
+
+静态成员函数都是关于singleShot的，有些比较少用，不再列举。
+
+```c++
+static void QTimer::singleShot(int msec, const QObject *receiver, const char *member);
+static void singleShot(int msec, Qt::TimerType timerType, const QObject *receiver, const char *member);
+static void singleShot(int msec, const QObject *receiver, PointerToMemberFunction method);
+static void singleShot(int msec, Qt::TimerType timerType, const QObject *receiver, PointerToMemberFunction method);
+static void singleShot(int msec, Functor functor);
+```
+
+典型的例子。
+
+```c++
+QTimer *timer = new QTimer(this);
+connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+timer->start(1000); // 每1s都会调用update函数
+// 通过调用setSingleShot（true），可以将计时器设置为仅超时一次。还可以使用静态QTimer：：singleShot()函数在指定的间隔后调用槽函数：
+QTimer::singleShot(200, this, SLOT(updateCaption())); // 静态成员函数200ms触发1次
+
+#include <QApplication>
+#include <QTimer>
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    QTimer::singleShot(600000, &app, SLOT(quit())); // 600后停止程序
+    ...
+    return app.exec();
+}
+```
+
+#### 3.1.6 QDate
+
+QDate类提供日期函数。
+QDate对象包含公历中的日历日期，即年、月和日数。它可以从系统时钟读取当前日期。它提供了比较日期和操纵日期的功能。例如，可以对日期的天数、月份和年份进行加减。
+QDate对象通常是通过明确给出年、月和日的数字来创建的。请注意，QDate按原样解释两位数年份，即0-99年。还可以使用静态函数currentDate()构造QDate，该函数创建一个包含系统时钟日期的QDate对象。还可以使用setDate()设置显式日期。函数的作用是：返回给定字符串的QDate和用于解释字符串中日期的日期格式。
+year()、month()和day()函数提供对年、月和日数字的访问。此外，还提供了dayOfWeek()和dayOfYear()函数。toString()、shortDayName()、longDayName()、shortMonthName()和longMonthName()函数以文本格式提供相同的信息。
+QDate提供了一整套操作符来比较两个QDate对象，其中较小的表示较早，较大的表示较晚。
+您可以使用addDays()将日期增加（或减少）给定的天数。类似地，您可以使用addMonths()和addYears()。daysTo()函数的作用是：返回两个日期之间的天数。
+daysInMonth()和daysInYear()函数分别返回该日期的月份和年份中有多少天。isLeapYear()函数的作用是：指示日期是否在闰年。
+
+常见的成员函数。
+
+```c++
+QDate::QDate(int y, int m, int d);
+bool isNull() const;
+bool isValid() const;
+QDate addDays(qint64 ndays) const; // 增加年月日
+QDate addMonths(int nmonths) const;
+QDate addYears(int nyears) const;
+int day() const; // 返回日期参数
+int month() const;
+int year() const;
+void getDate(int *year, int *month, int *day) const;
+bool setDate(int year, int month, int day);
+int dayOfWeek() const; // 返回星期几,1 = Monday to 7 = Sunday
+int dayOfYear() const; // 返回一年的第几天 1-365 || 1-366
+int daysInMonth() const; // 每月多少天
+int daysInYear() const; // 每年多少天
+
+qint64 daysTo(const QDate &d) const; // 返回指定时间点到现在的天数之差
+// 例子
+QDate d1(1995, 5, 17);  // May 17, 1995
+QDate d2(1995, 5, 20);  // May 20, 1995
+d1.daysTo(d2);          // returns 3
+d2.daysTo(d1);          // returns -3
+
+// 返回字符串表示的日期，可参考枚举值Qt::DateFormat
+QString toString(const QString &format) const;
+QString toString(Qt::DateFormat format = Qt::TextDate) const;
+d; // 1-31
+dd; // 01-31
+ddd; // Mon to Sun 用字符串表示
+dddd; // Monday to Sunday
+M; // 1-12
+MM; // 01-12
+MMM; // Jan to Dec 用字符串表示
+MMMM; // January to December
+yy; // 00-99
+yyyy; // 年份为四位数。如果年份为负数，则在前面加上负号
+QDate date = QDate::fromString("1MM12car2003", "d'MM'MMcaryyyy");// date is 1 December 2003
+QDate date = QDate::fromString("130", "Md"); // invalid
+QDate::fromString("1.30", "M.d");           // January 30 1900
+QDate::fromString("20000110", "yyyyMMdd");  // January 10, 2000
+QDate::fromString("20000110", "yyyyMd");    // January 10, 2000
+int weekNumber(int *yearNumber = Q_NULLPTR) const;
+```
+
+静态成员函数。
+
+```c++
+QDate currentDate();
+bool isValid(int year, int month, int day);
+QDate fromJulianDay(qint64 jd);
+QDate fromString(const QString &string, Qt::DateFormat format = Qt::TextDate);
+QDate fromString(const QString &string, const QString &format);
+// 例子
+dd.MM.yyyy; // 20.07.1969
+ddd MMMM d yy; // Sun July 20 69
+'The day is' dddd; // The day is Sunday
+
+bool isLeapYear(int year);
+QString longDayName(int weekday, MonthNameType type = DateFormat); 
+1 = "Monday"
+2 = "Tuesday"
+3 = "Wednesday"
+4 = "Thursday"
+5 = "Friday"
+6 = "Saturday"
+7 = "Sunday"
+QString longMonthName(int month, MonthNameType type = DateFormat);
+1 = "January"
+2 = "February"
+3 = "March"
+4 = "April"
+5 = "May"
+6 = "June"
+7 = "July"
+8 = "August"
+9 = "September"
+10 = "October"
+11 = "November"
+12 = "December"
+QString shortDayName(int weekday, MonthNameType type = DateFormat);
+1 = "Mon"
+2 = "Tue"
+3 = "Wed"
+4 = "Thu"
+5 = "Fri"
+6 = "Sat"
+7 = "Sun"
+QString shortMonthName(int month, MonthNameType type = DateFormat);
+1 = "Jan"
+2 = "Feb"
+3 = "Mar"
+4 = "Apr"
+5 = "May"
+6 = "Jun"
+7 = "Jul"
+8 = "Aug"
+9 = "Sep"
+10 = "Oct"
+11 = "Nov"
+12 = "Dec"
+```
+
+枚举值对象，此枚举描述用于**月份名称的字符串表示形式**的类型。
+
+```c++
+enum QDate::MonthNameType = {   
+QDate::DateFormat = 0, // 此类型的名称可用于日期到字符串格式
+QDate::StandaloneFormat = 1 // 需要枚举月份或工作日时，使用此类型。通常独立名称以单数形式表示，首字母大写
+}
+```
+
+#### 3.1.7 QDateTime
+
+是QDate和QTime的组合类，常见的构造函数如下。
+
+```c++
+QDateTime();
+QDateTime(const QDate &date);
+QDateTime(const QDate &date, const QTime &time, Qt::TimeSpec spec = Qt::LocalTime);
+QDateTime(const QDate &date, const QTime &time, Qt::TimeSpec spec, int offsetSeconds);
+QDateTime(const QDate &date, const QTime &time, const QTimeZone &timeZone);
+QDateTime(const QDateTime &other);
+QDateTime(QDateTime &&other);
+```
+
+常见的成员函数如下，很多和QTime、QDate的含义类似。
+
+```c++
+ // 类似的函数
+QDateTime addDays(qint64 ndays) const;
+QDateTime addMSecs(qint64 msecs) const;
+QDateTime addMonths(int nmonths) const;
+QDateTime addSecs(qint64 s) const;
+QDateTime addYears(int nyears) const;
+QDate date() const;
+QTime time() const;
+void setTime(const QTime &time);
+void setDate(const QDate &date);
+qint64 daysTo(const QDateTime &other) const;
+qint64 msecsTo(const QDateTime &other) const;
+qint64 secsTo(const QDateTime &other) const;
+bool isNull() const;
+bool isValid() const;
+// 其他函数
+Qt::TimeSpec timeSpec() const;
+QTimeZone timeZone() const;
+int offsetFromUtc() const;
+void setTimeSpec(Qt::TimeSpec spec);
+void setTimeZone(const QTimeZone &toZone);
+QString toString(const QString &format) const;
+QString toString(Qt::DateFormat format = Qt::TextDate) const;
+QDateTime toTimeSpec(Qt::TimeSpec spec) const;
+QDateTime toTimeZone(const QTimeZone &timeZone) const;
+...
+```
+
+常用的静态成员函数。
+
+```c++
+QDateTime currentDateTime();
+QDateTime fromString(const QString &string, Qt::DateFormat format = Qt::TextDate);
+QDateTime fromString(const QString &string, const QString &format);
+```
+
 ### 3.2 常见输入组件类
 
 #### 3.2.1 QSpinBox
@@ -1509,6 +1964,93 @@ void Widget::on_btnCal_clicked() // 一个QPushButton的槽函数
 
 #### 3.2.3 QLineEdit
 
+这是1个可以进行文本编辑的输入组件。
+
+常见的属性。
+
+```c++
+acceptableInput : const bool
+alignment : Qt::Alignment
+clearButtonEnabled : bool
+cursorMoveStyle : Qt::CursorMoveStyle
+cursorPosition : int
+displayText : const QString
+dragEnabled : bool
+echoMode : EchoMode
+frame : bool
+hasSelectedText : const bool
+inputMask : QString
+maxLength : int
+modified : bool
+placeholderText : QString
+readOnly : bool
+redoAvailable : const bool
+selectedText : const QString
+text : QString
+undoAvailable : const bool
+```
+
+常见的成员函数。
+
+```c++
+QLineEdit(QWidget *parent = Q_NULLPTR);
+QLineEdit(const QString &contents, QWidget *parent = Q_NULLPTR);
+void addAction(QAction *action, ActionPosition position);
+QAction *addAction(const QIcon &icon, ActionPosition position);
+Qt::Alignment alignment() const;
+void backspace();
+void del();
+QString displayText() const;
+EchoMode echoMode() const;
+void insert(const QString &newText);
+bool isClearButtonEnabled() const;
+bool isModified() const;
+bool isReadOnly() const;
+bool isRedoAvailable() const;
+bool isUndoAvailable() const;
+int maxLength() const;
+void setAlignment(Qt::Alignment flag);
+void setEchoMode(EchoMode);
+void setReadOnly(bool);
+QString text() const;
+```
+
+常用的公共槽函数。
+
+```c++
+void clear();
+void copy() const;
+void cut();
+void paste();
+void redo();
+void selectAll();
+void setText(const QString &);
+void undo();
+```
+
+主要的信号如下。
+
+```c++
+void cursorPositionChanged(int old, int new);
+void editingFinished();
+void returnPressed();
+void selectionChanged();
+void textChanged(const QString &text); // 常用
+void textEdited(const QString &text); // 常用
+3 signals inherited from QWidget
+2 signals inherited from QObject 
+```
+
+定义了2个枚举类型。
+
+```c++
+enum ActionPosition { QLineEdit::LeadingPosition, QLineEdit::TrailingPosition }; 
+// LeadingPosition：Qt::LeftToRight时,部件在左侧;Qt::RightToLeft时在右侧
+// TrailingPosition：正好反过来,Qt::LeftToRight时,部件在右侧
+enum EchoMode { QLineEdit::Normal, QLineEdit::NoEcho, QLineEdit::Password, QLineEdit::PasswordEchoOnEdit };
+// 输入时显示字符、不要显示任何内容、显示与平台相关的密码掩码字符、编辑时按输入显示字符，否则按密码显示字符，就是文本可以直接显示、不显示或者*****这样显示或者输入时***但是不输入时显示
+```
+
 #### 3.2.4 QCombobox
 
 #### 3.4.5 QPlainTextEdit
@@ -1516,6 +2058,62 @@ void Widget::on_btnCal_clicked() // 一个QPushButton的槽函数
 ### 3.3 常见输出组件类
 
 #### 3.3.1 QLabel
+
+QLabel用于显示文本或图像，未提供用户交互功能。
+
+它可以展示的类型主要是以下几类。
+
+```c++
+void setText(const QString &); // 纯文本 或 富文本
+void setPixmap(const QPixmap &);// 传递QPixmap
+void setMovie(QMovie *movie);// 传递 QMovie
+void setNum(int num);// 传递数字int或double可转为文本
+void setNum(double num); 
+```
+
+主要的性质如下。
+
+```c++
+pixmap : QPixmap;
+alignment : Qt::Alignment;
+text : QString;
+textFormat : Qt::TextFormat;
+```
+
+常见的公共成员函数如下。
+
+```c++
+Qt::Alignment alignment() const;
+void setAlignment(Qt::Alignment);
+QString text() const;
+Qt::TextFormat textFormat() const;
+void setTextFormat(Qt::TextFormat);
+const QPicture *picture() const;  
+const QPixmap *pixmap() const;
+```
+
+常见的公共槽函数如下。
+
+```c++
+void clear();
+void setMovie(QMovie *movie);
+void setNum(int num);
+void setNum(double num);
+void setPicture(const QPicture &picture);
+void setPixmap(const QPixmap &);
+void setText(const QString &);
+19 public slots inherited from QWidget
+1 public slot inherited from QObject 
+```
+
+QLabel的信号不常见，但是可以提一句。
+
+```c++
+void linkActivated(const QString &link);
+void linkHovered(const QString &link);
+3 signals inherited from QWidget
+2 signals inherited from QObject 
+```
 
 #### 3.3.2 QProgressBar
 
@@ -1598,11 +2196,171 @@ Qt::AlignCenter AlignVCenter | AlignHCenter; // Centers in both dimensions.
 
 ### 3.4 常见时间日期类
 
-#### 3.4.1 QTime
+#### 3.4.1 QTimeEdit
 
-#### 3.4.2 QDate
+对应的时间数据类型是QTime，仅表示时间，如15:23:13。
 
-#### 3.4.3 QDateTime
+关于QTime的内容可见[3.1.4 QTime](#3.1.4 QTime)。
+
+专门用于处理时间的一个类是定时器，即QTimer，可见[3.1.5 QTimer](#3.1.5 QTimer)。
+
+QTimeEdit本身没有太多东西，大多数都是继承性质，主要来源于QWidget和QDateTimeEdit。
+
+```c++
+QTimeEdit(QWidget *parent = Q_NULLPTR);
+QTimeEdit(const QTime &time, QWidget *parent = Q_NULLPTR);
+45 public functions inherited from QDateTimeEdit
+30 public functions inherited from QAbstractSpinBox
+214 public functions inherited from QWidget
+32 public functions inherited from QObject
+14 public functions inherited from QPaintDevice
+```
+
+#### 3.4.2 QDateEdit
+
+对应的日期数据类型是QDate，仅表示日期，如2017-03-24。
+
+关于QDate的内容可见[3.1.6 QDate](#3.1.6 QDate)。
+
+类似的，日期类组件也是继承性质为主。
+
+```c++
+QDateEdit(QWidget *parent = Q_NULLPTR);
+QDateEdit(const QDate &date, QWidget *parent = Q_NULLPTR);
+45 public functions inherited from QDateTimeEdit
+30 public functions inherited from QAbstractSpinBox
+214 public functions inherited from QWidget
+32 public functions inherited from QObject
+14 public functions inherited from QPaintDevice
+```
+
+#### 3.4.3 QDateTimeEdit
+
+对应的数据类型是QDateTime，可以表示日期时间，如2017-4-5 08:12:44等。
+
+关于QDateTime的内容可见[3.1.7 QDateTime](#3.1.7 QDateTime)。
+
+常见的性质如下。
+
+```c++
+calendarPopup : bool
+currentSection : Section
+currentSectionIndex : int
+date : QDate
+dateTime : QDateTime
+displayFormat : QString
+displayedSections : const Sections
+maximumDate : QDate
+maximumDateTime : QDateTime
+maximumTime : QTime
+minimumDate : QDate
+minimumDateTime : QDateTime
+minimumTime : QTime
+sectionCount : const int
+time : QTime
+timeSpec : Qt::TimeSpec
+12 properties inherited from QAbstractSpinBox
+59 properties inherited from QWidget
+1 property inherited from QObject 
+```
+
+常见的成员函数如下。
+
+```c++
+QDateTimeEdit(QWidget *parent = Q_NULLPTR);
+QDateTimeEdit(const QDateTime &datetime, QWidget *parent = Q_NULLPTR);
+QDateTimeEdit(const QDate &date, QWidget *parent = Q_NULLPTR);
+QDateTimeEdit(const QTime &time, QWidget *parent = Q_NULLPTR);
+QTime time() const;
+Qt::TimeSpec timeSpec() const;
+QCalendarWidget *calendarWidget() const;
+bool calendarPopup() const;
+int currentSectionIndex() const;
+QDate date() const;
+QDateTime dateTime() const;
+QString displayFormat() const;
+QString sectionText(Section section) const;
+Sections displayedSections() const;
+QDate maximumDate() const;
+QDateTime maximumDateTime() const;
+QTime maximumTime() const;
+QDate minimumDate() const;
+QDateTime minimumDateTime() const;
+QTime minimumTime() const;
+Section sectionAt(int index) const;
+Section currentSection() const;
+int sectionCount() const;
+
+void clearMaximumDate();
+void clearMaximumDateTime();
+void clearMaximumTime();
+void clearMinimumDate();
+void clearMinimumDateTime();
+void clearMinimumTime();
+void setCalendarPopup(bool enable)
+void setCalendarWidget(QCalendarWidget *calendarWidget)
+void setCurrentSection(Section section)
+void setCurrentSectionIndex(int index)
+void setDateRange(const QDate &min, const QDate &max)
+void setDateTimeRange(const QDateTime &min, const QDateTime &max)
+void setDisplayFormat(const QString &format)
+void setMaximumDate(const QDate &max)
+void setMaximumDateTime(const QDateTime &dt)
+void setMaximumTime(const QTime &max)
+void setMinimumDate(const QDate &min)
+void setMinimumDateTime(const QDateTime &dt)
+void setMinimumTime(const QTime &min)
+void setSelectedSection(Section section)
+void setTimeRange(const QTime &min, const QTime &max)
+void setTimeSpec(Qt::TimeSpec spec)
+```
+
+常用的公共槽函数如下。
+
+```c++
+void setDate(const QDate &date);
+void setDateTime(const QDateTime &dateTime);
+void setTime(const QTime &time);
+4 public slots inherited from QAbstractSpinBox
+19 public slots inherited from QWidget
+1 public slot inherited from QObject
+```
+
+常见的信号如下。
+
+```c++
+void dateChanged(const QDate &date);
+void dateTimeChanged(const QDateTime &datetime);
+void timeChanged(const QTime &time);
+1 signal inherited from QAbstractSpinBox
+3 signals inherited from QWidget
+2 signals inherited from QObject 
+```
+
+一个可能的示例。
+
+```c++
+QDateTimeEdit *dateEdit = new QDateTimeEdit(QDate::currentDate()); // 以当前时间日期创建
+dateEdit->setMinimumDate(QDate::currentDate().addDays(-365)); // 设置最小日期为去年同天
+dateEdit->setMaximumDate(QDate::currentDate().addDays(365)); // 最大明年同年
+dateEdit->setDisplayFormat("yyyy.MM.dd"); // 应用格式20220501
+```
+
+需要知道的枚举类型。
+
+```c++
+enum QDateTimeEdit::Section = {
+    QDateTimeEdit::NoSection 0x0000
+    QDateTimeEdit::AmPmSection 0x0001
+    QDateTimeEdit::MSecSection 0x0002
+    QDateTimeEdit::SecondSection 0x0004
+    QDateTimeEdit::MinuteSection 0x0008
+    QDateTimeEdit::HourSection 0x0010
+    QDateTimeEdit::DaySection 0x0100
+    QDateTimeEdit::MonthSectio 0x0200
+    QDateTimeEdit::YearSection 0x0400
+}
+```
 
 ### 3.5 常见表格文字类
 
@@ -1632,7 +2390,7 @@ Qt::AlignCenter AlignVCenter | AlignHCenter; // Centers in both dimensions.
 
 **Buttons类：**Command Link Button、Dialog Button box，按钮;
 
-**ItemViews类：**List View、Tree View、Table View、Column View、Undo View，第4章会详细介绍；
+**ItemViews类：**List View、Tree View、Table View、Column View、Undo View，**第4章会详细介绍**；
 
 **Containers类：**Group Box、Scroll Area、Tool Box、Stacked Widget、 Tab Widget、Frame、Widget、MDI Area、DockWidget和QAxWidget，容器类；
 
@@ -1646,7 +2404,7 @@ Qt::AlignCenter AlignVCenter | AlignHCenter; // Centers in both dimensions.
 
 **QLCDNumber是模拟LCD显示数字的组件**，可以显示整数或小数。
 
-**Times类：**QTimeEdit、QDateTimeEdit、QCalendarWidget等
+**Times类：**QCalendarWidget，一个用日历形式选择日期的组件，关联的数据类型是QTime、QDate和QDateTime，关联的组件类型是QTimeEdit、QDateEdit和QDateTimeEdit。
 
 ## 4. Model/View结构
 
