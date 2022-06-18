@@ -1977,9 +1977,442 @@ QDateTime fromString(const QString &string, const QString &format);
 
 #### 3.1.7 QIcon
 
+这是一个图标设置的数据类型，它总是和QPixmap打交道，具体可见[3.1.10 QPixmap](#3.1.10 QPixmap)。
+
+QPixmap是屏幕的图像表示类，它可以是任何图像格式，png、jpg或者ico等，但是不同于QPicture和QImage。
+
+有关他们的区别可以查看[3.1.10 QPixmap](#3.1.10 QPixmap)。
+
+QIcon需要了解的枚举类型如下。
+
+```c++
+// 此枚举类型描述要如何使用pixmap
+enum Mode { Normal, Disabled, Active, Selected };
+// 当用户未与图标交互，但图标所代表的功能可用时，显示pixmap
+// 当图标表示的功能不可用时，显示pixmap。
+// 当图标所代表的功能可用且用户正在与图标交互时（例如，将鼠标移到图标上或单击图标），显示pixmap。
+// 选择图标表示的项目时，显示pixmap
+
+// 此枚举描述打算使用pixmap的状态
+enum State { Off, On };
+// 当小部件处于“关闭”状态时显示pixmap
+// 当小部件处于“打开”状态时显示pixmap
+```
+
+关于这2组枚举类型的组合，图标状态如下所示。
+
+![QIcon_Enum](QIcon_Enum.jpg)
+
+常见的成员函数如下，静态成员函数不太常用不再列举。
+
+```c++
+QIcon(const QPixmap &pixmap);// 以图像构造
+QIcon(const QIcon &other); // 以图标构造
+QIcon(const QString &fileName); // 从文件来源构造
+QIcon(QIconEngine *engine); // 图标引擎构造(少见)
+// 返回在指定的模式和状态的图标时请求的实际大小。结果可能比要求的小，但永远不会大
+QSize actualSize(const QSize &size, Mode mode = Normal, State state = Off) const;
+QSize actualSize(QWindow *window, const QSize &size, Mode mode = Normal, State state = Off) const;
+// 将具有给定文件名的文件中的图像添加到图标，作为大小、模式和状态的专用化。文件将按需加载
+void addFile(const QString &fileName, const QSize &size = QSize(), Mode mode = Normal, State state = Off);
+// 将pixmap添加到图标，作为模式和状态的专用化
+void addPixmap(const QPixmap &pixmap, Mode mode = Normal, State state = Off);
+bool isMask() const;// 是否为掩码图像
+bool isNull() const;// 是否为空
+QString name() const;// 返回用于创建图标的名称
+// 使用画师将具有指定对齐方式、所需模式和状态的图标绘制到矩形矩形中
+void paint(QPainter *painter, const QRect &rect, Qt::Alignment alignment = Qt::AlignCenter, Mode mode = Normal, State state = Off) const;
+void paint(QPainter *painter, int x, int y, int w, int h, Qt::Alignment alignment = Qt::AlignCenter, Mode mode = Normal, State state = Off) const;
+// 返回具有请求的大小、模式和状态的pixmap，必要时生成一个。pixmap可能比请求的要小，但永远不会大
+QPixmap pixmap(const QSize &size, Mode mode = Normal, State state = Off) const;
+QPixmap pixmap(int w, int h, Mode mode = Normal, State state = Off) const;
+QPixmap pixmap(int extent, Mode mode = Normal, State state = Off) const;
+QPixmap pixmap(QWindow *window, const QSize &size, Mode mode = Normal, State state = Off) const;
+```
+
+示例代码。
+
+```c++
+QToolButton *button = new QToolButton;
+button->setIcon(QIcon("open.xpm"));
+
+void MyWidget::drawIcon(QPainter *painter, QPoint pos)
+{
+    QPixmap pixmap = icon.pixmap(QSize(22, 22),
+                                 isEnabled() ? QIcon::Normal
+                                 : QIcon::Disabled,
+                                 isChecked() ? QIcon::On
+                                 : QIcon::Off);
+    painter->drawPixmap(pos, pixmap);
+}
+```
+
 #### 3.1.8 QStringList
 
+QStringList类提供字符串列表。
+QStringList继承自QList。与QList一样，QStringList也是隐式共享的。它提供了基于索引的快速访问以及快速插入和删除。将字符串列表作为值参数传递既快速又安全。QList的所有功能也适用于QStringList。例如，可以使用isEmpty()测试列表是否为空，还可以调用append()、prepend()、insert()、replace()、removeAll()、removeAt()、removeFirst()、removeast()和removeOne()等函数来修改QStringList。此外，QStringList还提供了一些方便的函数，使字符串列表的处理更加容易。
+
+常见的成员函数如下。
+
+```c++
+QStringList(const QString &str);
+QStringList(const QList<QString> &other);
+QStringList(QList<QString> &&other);
+QStringList(std::initializer_list<QString> args);
+bool contains(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+QStringList filter(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+QStringListfilter(const QRegExp &rx) const;
+QStringList filter(const QRegularExpression &re) const;
+int indexOf(const QRegExp &rx, int from = 0) const;
+int indexOf(QRegExp &rx, int from = 0) const;
+int indexOf(const QRegularExpression &re, int from = 0) const;
+QString join(const QString &separator) const;
+QString join(QLatin1String separator) const;
+QString join(QChar separator) const;
+int lastIndexOf(const QRegExp &rx, int from = -1) const;
+int lastIndexOf(QRegExp &rx, int from = -1) const;
+int lastIndexOf(const QRegularExpression &re, int from = -1) cons
+int removeDuplicates();
+QStringList &replaceInStrings(const QString &before, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
+QStringList &replaceInStrings(const QRegExp &rx, const QString &after);
+QStringList &replaceInStrings(const QRegularExpression &re, const QString &after
+void sort(Qt::CaseSensitivity cs = Qt::CaseSensitive);
+
+QStringList &operator<<(const QString &str); // 注意这个重载版本,使得可以直接用<<拼接字符串
+QStringList &operator<<(const QStringList &other);
+QStringList &operator<<(const QList<QString> &other);
+// 例子
+QStringList fonts;
+fonts << "Arial" << "Helvetica" << "Times" << "Courier";
+// 使用索引
+for (int i = 0; i < fonts.size(); ++i) // 迭代字符串
+     cout << fonts.at(i).toLocal8Bit().constData() << endl;
+// 使用Java风格
+QStringListIterator javaStyleIterator(fonts);
+while (javaStyleIterator.hasNext())
+     cout << javaStyleIterator.next().toLocal8Bit().constData() << endl;
+// 使用STL风格
+QStringList::const_iterator constIterator;
+for (constIterator = fonts.constBegin(); constIterator != fonts.constEnd();
+             ++constIterator)
+    cout << (*constIterator).toLocal8Bit().constData() << endl;
+```
+
 #### 3.1.9 QSize
+
+**QSize类使用整数点精度定义二维对象的大小**。
+大小由**width()和height()指定**。它可以在构造函数中设置，并使用setWidth()、setHeight()或scale()函数或使用算术运算符进行更改。通过使用rwidth()和rheight()函数检索对宽度和高度的引用，也可以直接操纵大小。最后，可以使用transpose()函数交换宽度和高度。
+isValid()函数的作用是：确定大小是否有效（有效大小的宽度和高度均大于或等于零）。如果宽度和高度都小于或等于零，isEmpty()函数将返回true，而isNull()函数仅当宽度和高度都为零时才返回true。
+使用expandedTo()函数检索一个大小，该大小包含此大小和给定大小的最大高度和宽度。类似地，boundedTo()函数返回一个大小，该大小保持此大小和给定大小的最小高度和宽度。
+
+常见的成员函数如下。
+
+```c++
+QSize();
+QSize(int width, int height);
+QSize boundedTo(const QSize &otherSize) const;
+QSize expandedTo(const QSize &otherSize) const;
+int height() const;
+bool isEmpty() const;
+bool isNull() const;
+bool isValid() const;
+int &rheight();
+int &rwidth();
+void scale(int width, int height, Qt::AspectRatioMode mode);
+void scale(const QSize &size, Qt::AspectRatioMode mode);
+QSize scaled(int width, int height, Qt::AspectRatioMode mode) const;
+QSize scaled(const QSize &s, Qt::AspectRatioMode mode) const;
+void setHeight(int height);
+void setWidth(int width);
+CGSize toCGSize() const;
+void transpose();
+QSize transposed() const;
+int width() const;
+```
+
+#### 3.1.10 QPixmap
+
+QPixmap类是一种屏幕外图像表示，可以用作绘制设备。
+Qt提供了四个用于处理图像数据的类：**QImage、QPixmap、QBitmap和QPicture**。QImage针对I/O、直接像素访问和操作进行了设计和优化，而QPixmap针对在屏幕上显示图像进行了设计和优化。QBitmap只是一个继承QPixmap的方便类，确保深度为1。如果QPixmap对象实际上是位图，则isQBitmap()函数返回true，否则返回false。最后，QPicture类是一个绘制设备，用于记录和重放QPaint命令。
+使用**QLabel或QAbstractButton的子类之一（如QPushButton和QToolButton）**，可以很容易地在屏幕上显示QPixmap。QLabel有一个pixmap属性，而QAbstractButton有一个icon属性。**因为QPixmap是QPaintDevice子类，所以QPainter可以用于直接绘制到Pixmap上**。只**能通过QPaint功能或通过将QPixmap转换为QImage来访问像素**。但是，fill()函数可用于初始化具有给定颜色的整个pixmap。
+有一些函数可以在QImage和QPixmap之间进行转换。通常，在将QImage对象转换为要在屏幕上显示的QPixmap之前，**QImage类用于加载图像文件，可以选择操作图像数据**。或者，如果不需要操作，则可以将图像文件直接加载到QPixmap中。
+
+可以使用**toImage()函数将QPixmap对象转换为QImage**。同样，可以使用**fromImage()将QImage转换为QPixmap**。如果这是一个过于昂贵的操作，那么可以使用QBitmap::fromImage()。
+
+QPixmap支持的加载文件格式以及支持的操作类型如下。
+
+```c++
+BMP Read/write
+GIF Read
+JPG Joint Photographic Experts Group Read/write
+JPEG Read/write
+PNG Read/write
+PBM Read
+PGM Read
+PPM Read/write
+XBM Read/write
+XPM Read/write
+```
+
+常见的公共成员函数如下。
+
+```c++
+QPixmap(int width, int height);
+QPixmap(const QSize &size);
+QPixmap(const QString &fileName, const char *format = Q_NULLPTR,
+        Qt::ImageConversionFlags flags = Qt::AutoColor);
+QPixmap(const char * const[] xpm);
+QPixmap(const QPixmap &pixmap);
+
+bool convertFromImage(const QImage &image, 
+                      Qt::ImageConversionFlags flags = Qt::AutoColor);
+QPixmap copy(const QRect &rectangle = QRect()) const;
+QPixmap copy(int x, int y, int width, int height) const;
+int depth() const;
+void fill(const QColor &color = Qt::white);
+bool hasAlpha() const;
+bool hasAlphaChannel() const;
+int width() const;
+int height() const;
+bool isNull() const;
+bool isQBitmap() const;
+bool load(const QString &fileName, const char *format = Q_NULLPTR,
+          Qt::ImageConversionFlags flags = Qt::AutoColor);
+QRect rect() const;
+bool save(const QString &fileName, const char *format = Q_NULLPTR, int quality = -1) const;
+bool save(QIODevice *device, const char *format = Q_NULLPTR, int quality = -1) const;
+QPixmap scaled(const QSize &size, 
+               Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
+               Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QPixmap scaled(int width, int height, 
+               Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
+               Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QPixmap scaledToHeight(int height, 
+                       Qt::TransformationMode mode = Qt::FastTransformation) const;
+QPixmap scaledToWidth(int width, 
+                      Qt::TransformationMode mode = Qt::FastTransformation) const;
+QSize size() const;
+void swap(QPixmap &other);
+QImage toImage() const;
+```
+
+常用的静态成员函数如下，涉及了2个数据类型QMatrix和QTransform，可见[3.1.14 QMatrix](#3.1.14 QMatrix)和[3.1.15 QTransform](#3.1.15 QTransform)。
+
+```c++
+static int defaultDepth();
+static QPixmap fromImage(const QImage &image,
+                         Qt::ImageConversionFlags flags = Qt::AutoColor);
+static QPixmap fromImage(QImage &&image, 
+                         Qt::ImageConversionFlags flags = Qt::AutoColor);
+static QPixmap fromImageReader(QImageReader *imageReader, 
+                               Qt::ImageConversionFlags flags = Qt::AutoColor);
+static QTransform trueMatrix(const QTransform &matrix, int width, int height);
+static QMatrix trueMatrix(const QMatrix &m, int w, int h);
+```
+
+#### 3.1.11 QImage
+
+处理图像的数据类型。
+
+需要了解的枚举类型如下。
+
+```c++
+// 定义了一些图像格式
+enum Format { Format_Invalid, Format_Mono, Format_MonoLSB, Format_Indexed8, ..., Format_Grayscale8 };
+// 此枚举类型用于描述在invertPixels()函数中应如何反转像素值
+enum InvertMode { InvertRgb, InvertRgba };
+```
+
+常见的构造函数如下。
+
+```c++
+QImage(const QSize &size, Format format);
+QImage(int width, int height, Format format);
+QImage(uchar *data, int width, int height, Format format, 
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(const uchar *data, int width, int height, Format format, 
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(uchar *data, int width, int height, int bytesPerLine, Format format,
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(const uchar *data, int width, int height, int bytesPerLine, Format format,
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(const char * const[] xpm);
+QImage(const QString &fileName, const char *format = Q_NULLPTR);
+QImage(const QImage &image);
+```
+
+常见的公共成员函数如下。
+
+```c++
+QImage convertToFormat(Format format, 
+                       Qt::ImageConversionFlags flags = Qt::AutoColor) const;
+QImage convertToFormat(Format format, const QVector<QRgb> &colorTable, 
+                       Qt::ImageConversionFlags flags = Qt::AutoColor) const;
+int depth() const;
+void fill(uint pixelValue);
+void fill(const QColor &color);
+void fill(Qt::GlobalColor color);
+Format format() const;
+bool hasAlphaChannel() const;
+int height() const;
+void invertPixels(InvertMode mode = InvertRgb);
+bool isGrayscale() const;
+bool isNull() const;
+bool load(const QString &fileName, const char *format = Q_NULLPTR);
+bool load(QIODevice *device, const char *format);
+bool loadFromData(const uchar *data, int len, const char *format = Q_NULLPTR);
+bool loadFromData(const QByteArray &data, const char *format = Q_NULLPTR);
+QImage mirrored(bool horizontal = false, bool vertical = true) const;
+QRgb pixel(const QPoint &position) const;
+QRgb pixel(int x, int y) const;
+QColor pixelColor(const QPoint &position) const;
+QColor pixelColor(int x, int y) const;
+QPixelFormat pixelFormat() const;
+QRect rect() const;
+bool save(const QString &fileName, 
+          const char *format = Q_NULLPTR, int quality = -1) const;
+bool save(QIODevice *device, const char *format = Q_NULLPTR, int quality = -1) const;
+QImage scaled(const QSize &size, 
+              Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
+              Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QImage scaled(int width, int height, 
+       Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio,
+       Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QImage scaledToHeight(int height, 
+               Qt::TransformationMode mode = Qt::FastTransformation) const;
+QImage scaledToWidth(int width, 
+                     Qt::TransformationMode mode = Qt::FastTransformation) const;
+void setColor(int index, QRgb colorValue);
+setOffset(const QPoint &offset)
+void setPixel(const QPoint &position, uint index_or_rgb);
+void setPixel(int x, int y, uint index_or_rgb);
+void setPixelColor(const QPoint &position, const QColor &color);
+void setPixelColor(int x, int y, const QColor &color);
+void setText(const QString &key, const QString &text);
+QSize size() const;
+QString text(const QString &key = QString()) const;
+bool valid(const QPoint &pos) const;
+bool valid(int x, int y) const;
+int width() const;
+```
+
+静态成员函数如下。
+
+```c++
+QImage fromData(const uchar *data, int size, const char *format = Q_NULLPTR);
+QImage fromData(const QByteArray &data, const char *format = Q_NULLPTR);
+QImage::Format toImageFormat(QPixelFormat format);
+QPixelFormat toPixelFormat(QImage::Format format);
+QMatrix trueMatrix(const QMatrix &matrix, int width, int height);
+QTransform trueMatrix(const QTransform &matrix, int width, int height);
+```
+
+示例代码。
+
+```c++
+QImage image(3, 3, QImage::Format_Indexed8);
+QRgb value;
+value = qRgb(122, 163, 39); // 0xff7aa327
+image.setColor(0, value);
+value = qRgb(237, 187, 51); // 0xffedba31
+image.setColor(1, value);
+value = qRgb(189, 149, 39); // 0xffbd9527
+image.setColor(2, value);
+image.setPixel(0, 1, 0);
+image.setPixel(1, 0, 0);
+image.setPixel(1, 1, 2);
+image.setPixel(2, 1, 1);
+
+QImage image(3, 3, QImage::Format_RGB32);
+QRgb value;
+value = qRgb(189, 149, 39); // 0xffbd9527
+image.setPixel(1, 1, value);
+value = qRgb(122, 163, 39); // 0xff7aa327
+image.setPixel(0, 1, value);
+image.setPixel(1, 0, value);
+value = qRgb(237, 187, 51); // 0xffedba31
+image.setPixel(2, 1, value);
+```
+
+#### 3.1.12 QBitmap
+
+QBitmap类提供单色（1位深度）像素贴图。
+QBitmap类是一种单色屏幕外绘制设备，主要用于创建自定义QCursor和QBrush对象，构建QRegion对象，以及设置pixmap和widget的掩码。**QBitmap是一个QPixmap子类**，确保深度为1，但深度为0的空对象除外。如果为位图指定了深度大于1的像素贴图，则位图将自动抖动。
+在QBitmap对象（或深度为1的QPixmap对象）上绘制时，请使用QColor对象Qt::color0和Qt::color1。
+使用Qt::color0绘制将位图位设置为0，使用Qt::color1绘制将位设置为1。对于位图，0位表示背景（或透明像素），1位表示前景（或不透明像素）。使用clear()函数将所有位设置为Qt::color0。请注意，使用Qt::black和Qt::white没有任何意义，因为QColor::pixel()值对于黑色不一定是0，对于白色不一定是1。
+QBitmap类提供transformed()函数，返回位图的转换副本；使用QTransform参数可以平移、缩放、剪切和旋转位图。此外，QBitmap还提供了静态fromData()函数，该函数返回由给定uchar数据构造的位图，以及静态fromdimage()函数，该函数返回QImage对象的转换副本。
+
+常见的成员函数和静态成员函数如下。
+
+```c++
+QBitmap(const QPixmap &pixmap);
+QBitmap(int width, int height);
+QBitmap(const QSize &size);
+QBitmap(const QString &fileName, const char *format = Q_NULLPTR);
+QBitmap(const QBitmap &other);
+void clear();
+void swap(QBitmap &other);
+QBitmap transformed(const QTransform &matrix) const;
+
+static QBitmap fromData(const QSize &size, const uchar *bits, QImage::Format monoFormat = QImage::Format_MonoLSB);
+static QBitmap fromImage(const QImage &image, Qt::ImageConversionFlags flags = Qt::AutoColor);
+```
+
+#### 3.1.13 QPicture
+
+QPicture类是记录和重放**QPaint命令**的绘制设备，总是与QPainter结合使用，可见[3.1.16 QPainter](#3.1.16 QPainter)。
+图片以独立于平台的格式将painter命令序列化到IO设备。它们有时被称为元文件。
+Qt图片使用专有的二进制格式。与许多窗口系统上的本机图片（元文件）格式不同，Qt图片对其内容没有限制。可以在小部件或pixmap上绘制的所有内容（例如字体、pixmap、区域、转换的图形等）也可以存储在图片中。
+QPicture与分辨率无关，即QPicture可以显示在外观相同的不同设备（例如svg、pdf、ps、打印机和屏幕）上。例如，这是所见即所得打印预览所必需的。QPicture在默认系统dpi中运行，并根据窗口系统缩放画师以匹配分辨率差异。
+
+常见成员函数如下。
+
+```c++
+QPicture(int formatVersion = -1);
+QPicture(const QPicture &pic);
+QRect boundingRect() const;
+const char *data() const;
+bool isNull() const;
+bool load(const QString &fileName, const char *format = Q_NULLPTR);
+bool load(QIODevice *dev, const char *format = Q_NULLPTR);
+bool play(QPainter *painter);
+bool save(const QString &fileName, const char *format = Q_NULLPTR);
+bool save(QIODevice *dev, const char *format = Q_NULLPTR);
+void setBoundingRect(const QRect &r);
+virtual void setData(const char *data, uint size);
+uint size() const;
+void swap(QPicture &other);
+```
+
+可能的示例代码。
+
+```c++
+QPicture picture;
+QPainter painter;
+painter.begin(&picture);           // paint in picture
+painter.drawEllipse(10,20, 80,70); // draw an ellipse
+painter.end();                     // painting done
+picture.save("drawing.pic");       // save picture
+
+QPicture picture;
+picture.load("drawing.pic");           // load picture
+QPainter painter;
+painter.begin(&myImage);               // paint in myImage
+painter.drawPicture(0, 0, picture);    // draw the picture at (0,0)
+painter.end();                         // painting done
+```
+
+#### 3.1.14 QMatrix
+
+
+
+#### 3.1.15 QTransform
+
+
+
+#### 3.1.16 QPainter
+
+
 
 ### 3.2 常见输入组件类
 
@@ -2349,7 +2782,7 @@ wordWrapMode : QTextOption::WrapMode
 QPlainTextEdit(const QString &text, QWidget *parent = Q_NULLPTR);
 bool backgroundVisible() const;
 QTextCharFormat currentCharFormat() const;
-QTextDocument *document() const;
+QTextDocument *document() const; // QPlainTextEdit存储的文本以QTextDocument指向
 QString documentTitle() const;
 bool isReadOnly() const;
 bool isUndoRedoEnabled() const;
@@ -2366,6 +2799,24 @@ setTextCursor(const QTextCursor &cursor);
 void setUndoRedoEnabled(bool enable);
 void setWordWrapMode(QTextOption::WrapMode policy);
 ...
+```
+
+可能的示例代码。
+
+```c++
+void Widget::on_btnToCombobox_clicked()
+{
+    QTextDocument* doc = ui->plainTextEdit->document(); // 文本对象
+    int cnt = doc->blockCount();//内部是按块存储文本的,块的数量
+    QIcon icon(":/images/aim.ico");
+    ui->combobox->clear();
+    for(int i = 0; i < vny ; i++)
+    {
+        QTextBlock text = doc->findBlockByNumber(i);//获取某块文字对象
+        QString str = text.text(); // 转为string对象
+        ui->combobox->addItem(icon,str); // 添加项
+    }
+}
 ```
 
 常见的槽函数如下。
@@ -2401,7 +2852,9 @@ void undoAvailable(bool available);
 void updateRequest(const QRect &rect, int dy);
 ```
 
-以只读方式使用QPlainTextEdit时，键绑定仅限于导航，只能使用鼠标选择文本。
+QPlainTextEdit还自带右键快捷菜单，可以实现常见的编辑功能。
+
+如果是以只读方式使用QPlainTextEdit时，以下的操作是可行的。
 
 ```c++
 Qt::UpArrow // Moves one line up.
