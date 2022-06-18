@@ -177,7 +177,11 @@ SLOT
 
 #### 2.1.1 元对象系统和编译器
 
+##### 2.1.1.1 Q_OBJECT
+
 Qt本身其实是用C++开发的库，但是它具备Qt自己的属性，也就是信号与槽机制、对象属性等，这些并不属于C++的范畴，所以需要一个预处理过程。**Qt元对象编译器也就是MOC是一个预处理器，在源程序编译前先转换为标准C++兼容的形式**，即对信号和槽的代码进行宏替换，这也是为何必须添加Q_OBJECT宏的原因。
+
+##### 2.1.1.2 QObject
 
 QtCore是Qt的核心，Qt为c++语言增加的特性就是在此模块实现，扩展特性主要有信号与槽机制、属性系统、动态类型转换等，它们共同作为Qt的**元对象系统**。
 
@@ -193,7 +197,7 @@ MOC工具读取C++源文件时发现类的定义有Q_OBJECT时就会为这个类
 
 4、OObject的一些成员函数功能
 
-metaObject可以返回其控件的类型
+metaObject可以返回其控件的类型。
 
 ```c++
 QObject * obj = new QPushButton;
@@ -228,6 +232,8 @@ QVariant property(const char *name) const;
 关于属性，在下一小节说明，即[属性系统](#属性系统)。
 
 #### 2.1.2 属性系统
+
+##### 2.1.2.1 Q_PROPERTY
 
 什么是属性？Qt提供了Q_PROPERTY()宏定义属性，基于元对象系统实现与C++编译器无关。
 
@@ -288,6 +294,8 @@ std::cout<<age<<"\n"; // 18.5
 
 总之，属性是动态的被添加进类，更多的用法在以后会讲解。
 
+##### 2.1.2.2 Q_CLASSINFO
+
 属性信息还包括类的信息，级通过宏Q_CLASSINFO()来为类的元对象定义"名称--值"信息，例如
 
 ```c++
@@ -305,6 +313,8 @@ class QMyClass : public QObject
 #### 2.1.3 信号与槽
 
 信号与槽是对象进行通信的机制，也需要由Qt的元对象系统支持才能实现。
+
+##### 2.1.3.1 connect
 
 connect函数是其中的关键，它最常见的几个定义如下。
 
@@ -351,6 +361,8 @@ enum ConnectionType {
 };
 ```
 
+##### 2.1.3.2 sender
+
 还可以使用QObject::sender()获得信号发射者。例如槽函数里得到指向发射者的指针后，如果已知类型，再用之前提到的qobject_cast投射为确定的类型，就可以使用这个类的接口函数了。
 
 ```c++
@@ -360,6 +372,8 @@ void on_valueChanged(int) // QSpinBox的某个槽函数
     spinbox->func();// ...可以使用spinbox操作信号发射者,访问它的一些属性等
 }
 ```
+
+##### 2.1.3.2 signals&slots
 
 自定义信号类，需要3个部分组成。第一个是声明Q_OBJECT具备信号与槽的机制；其次使用signals声明为信号函数，信号函数可以带参数，但是不能有返回值；然后其他函数可以依据条件emit信号函数。至于信号是否绑定了槽函数与信号类无关。
 
@@ -646,6 +660,8 @@ void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  se
 
 ### 2.2 Qt全局定义
 
+#### 2.2.1 QtGlobal
+
 涉及的头文件和宏定义主要是：
 
 ```c++
@@ -712,6 +728,8 @@ int qrand();//标准C++的rand()线程安全型版本,[0,RAND_MAX]
 void qsrand(uint seed);//随机种子
 ```
 
+#### 2.2.2 QtMath
+
 其他的就是在<QtMath>定义的基础数学运算函数，如三角运算、弧度与角度转换等。
 
 宏定义，如Qt版本是Qt5.9.1，则QT_VERSION=0x050901，这个宏就是用于控制条件编译使用的，根据版本的不同编译不同的代码段，例如
@@ -767,6 +785,8 @@ void mainWindow::on_imagedSaved(int id, const QString &filenname)
 }
 ```
 
+#### 2.2.3 foreach&forever
+
 foreach(variable,containter) 用于容器遍历。
 
 ```c++
@@ -781,6 +801,8 @@ forever{
     ...
 }
 ```
+
+#### 2.2.4 qDebug
 
 qDebug 用于在debugger窗体显示信息，其他的类似的还有qWaring,qCritical,qFatal,qInfo。
 
@@ -802,6 +824,8 @@ Qt还提供了foreach宏用于遍历容器内的所有数据项。
 
 主要包括QList、QLinkedList、QVector、QStack和QQueue。
 
+##### 2.3.1.1 QList
+
 **QList：**最常用的容器类，但是以数组列表实现的线性列表，而不是链表，可以使用下标索引访问数据项，但是头插和尾插数据非常快。
 
 常用函数。
@@ -819,11 +843,17 @@ removeLast(); // 尾删
 isEmpty(); // 是否为空
 ```
 
+##### 2.3.1.2 QLinkedList
+
 **QLinkedList：**是链表，基于迭代器访问数据项，不能使用下标索引，插入和删除数据项的操作时间相同。
 
 其它的接口函数和QList很像，基本一致。
 
+##### 2.3.1.3 QVector
+
 **QVector：**提供动态数组的功能，可以以下标索引访问数据，函数接口也与QList基本相同。区别是QVector效率更高，因为数据项是连续存储的，其风格就是STL的vector，QList则更像Java。
+
+##### 2.3.1.4 QStack
 
 **QStack：**堆栈的后入先出LIFO数据类型，push()和pop()是主要的接口函数。
 
@@ -835,6 +865,8 @@ stack.push(30);
 while(!stack.isEmpty())
 	cout<<stack.pop()<<endl;
 ```
+
+##### 2.3.1.5 QQueue
 
 **QQueue：**先入先出FIFO的数据类型，enqueue()和dequeue()是主要的接口函数，用于入列和出列。
 
@@ -855,6 +887,8 @@ QMultiMap和QMultiHash支持1个键关联多个值。
 
 QSet、QHash、QMultiHash底层是哈希散列函数进行查找，速度比较快，类似于STL的unordered_map和unordered_set。
 
+##### 2.3.2.1 QSet
+
 **QSet：**基于散列表的集合模板类，存储数据顺序不固定查找值的速度很快，内部使用QHash实现。
 
 具备Java的风格，例如contains函数，其实STL的set不包含。
@@ -867,7 +901,9 @@ if (!set.contains("cat")){
 }
 ```
 
-**QMap：**<Key，T>，提供关联数组(字典)，一个键映射到一个值，**内部是有序的按照键的顺序**，如果不在乎存储顺序，使用QHash更快。如果查找没找到指定的键会返回一个缺省构造值，例如键是字符串类型，就会返回空字符串。所以可以用**value()函数查找键值时可以指定1个缺省的返回值**。
+##### 2.3.2.2 QMap
+
+QMap：**<Key，T>，提供关联数组(字典)，一个键映射到一个值，**内部是有序的按照键的顺序**，如果不在乎存储顺序，使用QHash更快。如果查找没找到指定的键会返回一个缺省构造值，例如键是字符串类型，就会返回空字符串。所以可以用**value()函数查找键值时可以指定1个缺省的返回值**。
 
 ```c++
 QMap<QString,int> map;
@@ -881,7 +917,9 @@ int num2 = map.value("two");
 int timeout = map.value("TIMEOUT",-1); // 表示如果找到TIMEOUT就返回关联的值否则返回-1
 ```
 
-**QMultiMap：**多值映射，是QMap的子类，继承了QMap的大部分函数接口，有些函数略有区别，例如**QMultiMap::insert()等价于QMap::insertMulti()，QMultiMap::replace()等价于QMap::insert()**。QMap一般不允许多值映射，除非使用了函数QMap::insertMulti()添加键值对。
+##### 2.3.2.3 QMultiMap
+
+QMultiMap：**多值映射，是QMap的子类，继承了QMap的大部分函数接口，有些函数略有区别，例如**QMultiMap::insert()等价于QMap::insertMulti()，QMultiMap::replace()等价于QMap::insert()**。QMap一般不允许多值映射，除非使用了函数QMap::insertMulti()添加键值对。
 
 另外QMultiMap不像QMap提供[]操作符，只能使用value()函数来获取值，如果希望获取1个键对应的所有值可以使用values()函数，返回值是QList<T>类型。
 
@@ -891,9 +929,13 @@ for (int i = 0; i < values.size(); ++i)
     cout << values.at(i) << endl;
 ```
 
+##### 2.3.2.4 QHash
+
 **QHash：**基于散列表实现字典功能的模板类<Key，T>，和QMap用法类似。
 
 区别是QHash的查找速度更快，数据项是无序的，不像QMap数据项安装键排序。QMap的键必须提供"<"运算符，QHash则是提供"=="运算符和一个名称为qHash()的全局散列函数。
+
+##### 2.3.2.5 QMultiHash
 
 **QMultiHash**：是QHash的子类，支持多值映射，用法类似于QMultiMap。
 
@@ -916,7 +958,9 @@ for (int i = 0; i < values.size(); ++i)
 
 QList、QLinkedList和QSet的迭代器用法相同，QMap和QHash用法相同，这里以QList和QMap进行说明。
 
-**QList的Java型迭代器：**
+##### 2.3.3.1 Java型迭代器
+
+QList的Java型迭代器：**
 
 ```c++
 // 只读迭代器QListIterator<<T>
@@ -969,6 +1013,8 @@ QMutableMapIterator<QString,QString> iter(map);
 while (iter.findNext("2")) // 还有findPrevious,查找下1个或上1个值,删除值为2的所有数据项
     iter.remove(); // "two"和"two1"2个会被删除
 ```
+
+##### 2.3.3.2 c++型迭代器
 
 **STL类型的迭代器汇总如下。**
 
@@ -1699,6 +1745,58 @@ int main(int argc, char *argv[])
 }
 ```
 
+```c++
+class Dialog: public QDialog
+{
+	private:
+		QTimer * fTimer; // 定时器
+		QTime fTimeCounter; // 计时器
+	private solots:
+		void on_timer_timeout(); // 超时响应槽函数
+};
+Dialog::Dialog(QWidget * parent) : QDialog(parent),ui(new Ui::Dialog)
+{
+    ui->setupUi(this);
+    fTimer = new QTimer(this);
+    fTimer->stop();
+    fTimer->setInterval(1000);// 设置周期为1000ms
+    connect(fTimer,SIGNAL(timeout()),this,SLOT(on_timer_timeout())); // 连接
+}
+void Dialog::on_timer_timeout()
+{
+    // 定时器中断响应槽函数
+    QTime curTime = QTime::currentTime();//调用静态函数获取当前时间
+    ui->LCDHour->display(curTime.hour()); // ui界面的LCD组件显示小时
+    ui->LCDMin->display(curTime.minute()); // ui界面的LCD组件显示分钟
+    ui->LCDSec->display(curTime.second()); // ui界面的LCD组件显示秒
+    int val = ui->progressBar->value() ;; // 获取进度条值
+    val++; // 进度+1
+    if (val > 100)
+        val = 0;
+    ui->progressBar->setValue(val); // 更新进度条
+}
+void Dialog:: on_btnStart_clicked() // 是QPushButton按钮的槽函数
+{
+    fTimer->start();//定时器开始工作
+    fTimerCounter->start();//计时器开始工作
+    ui->btnStart->setEnabled(false);// 开始按钮的点击使能失效
+    ui->btnSetInv->setEnabled(false);// 初始化按钮的点击使能失效
+    ui->btnStop->setEnabled(true);// 结束按钮的点击使能有效
+}
+void Dialog:: on_btnStop_clicked() // 是QPushButton按钮的槽函数
+{
+    fTimer->stop();//定时器停止工作
+    int msecs = fTimeCounter.elapsed();// 计时器获取上次start()以来流逝的时间,毫秒数
+    int sec = msecs / 1000; // 整数秒
+    int msec = msecs % 1000 ; // 取余,即不到1s的毫秒数
+    QString str = QString::asprintf("elapsed time = %d s, %d ms",sec,msec);
+    ui->LabElapsTime->setText(str);// 1个输出组件显示流过的时间
+    ui->btnStart->setEnabled(true);// 开始按钮的点击使能有效
+    ui->btnSetInv->setEnabled(true);// 初始化按钮的点击使能有效
+    ui->btnStop->setEnabled(false);// 结束按钮的点击使能失效
+}
+```
+
 #### 3.1.6 QDate
 
 QDate类提供日期函数。
@@ -1768,6 +1866,7 @@ QDate fromString(const QString &string, const QString &format);
 dd.MM.yyyy; // 20.07.1969
 ddd MMMM d yy; // Sun July 20 69
 'The day is' dddd; // The day is Sunday
+curDateTime.toString("yyyy年MM月dd日");
 
 bool isLeapYear(int year);
 QString longDayName(int weekday, MonthNameType type = DateFormat); 
@@ -1875,6 +1974,12 @@ QDateTime currentDateTime();
 QDateTime fromString(const QString &string, Qt::DateFormat format = Qt::TextDate);
 QDateTime fromString(const QString &string, const QString &format);
 ```
+
+#### 3.1.7 QIcon
+
+#### 3.1.8 QStringList
+
+#### 3.1.9 QSize
 
 ### 3.2 常见输入组件类
 
@@ -2053,7 +2158,296 @@ enum EchoMode { QLineEdit::Normal, QLineEdit::NoEcho, QLineEdit::Password, QLine
 
 #### 3.2.4 QCombobox
 
+QComboBox是下拉列表框组件，提供1个下拉列表供用户选择，也可以直接当成一个QLineEdit用作输入。
+
+QComboBox的每个列表项还可以关联一个QVariant类型的变量，用于存储一些不可见数据，这些项也可以各自设置一些属性，例如图标、文字等。例如，下方程序就显示UI上的QCombobox组件添加20个项，可以带图标也可以不带。如果只是添加字符串列表项，还可以使用QStringList数据结构，它具备<<的重载函数。也可以借助宏foreach来初始化。
+
+关于QIcon和QStringList数据类型可见[3.1.7 QIcon](#3.1.7 QIcon)和[3.1.8 QStringList](#3.1.8 QStringList)。
+
+```c++
+void Widget::on_btnIniItems_clicked()
+{
+    QIcon icon;
+    icon.addFile(":/images/icons/aim.ico"); // 资源文件
+    ui->comboBox->clear();
+    for(int i = 0; i < 20 ; i++)
+    {
+        ui->comboBox->addItem(icon,QString::asprintf("Item %d",i)); // 带图标
+        // ui->comboBox->addItem(QString::asprintf("Item %d",i)); // 不带图标
+    }
+    
+    // QStringList
+    QStringList strList;
+    strList<<"beijing"<<"shanghai"<<"tianjin"<<"hebei"<<"shandong";
+    ui->comboBox->addItems(strList);
+    
+    // foreach
+    QMap(QString,int)citys;
+    citys.insert("北京",10);
+    citys.insert("上海",21);
+    citys.insert("添加",22);
+    foreach(const QString&key,citys.keys())
+        ui->comboBox->addItem(key,citys.value(key));
+}
+```
+
+需要了解的2个枚举类型如下。
+
+```c++
+ // 下拉项插入新字符串的方式
+enum InsertPolicy { 
+    NoInsert, 
+    InsertAtTop, // 总是从顶部插入
+    InsertAtCurrent,   //当前位置插入
+    InsertAtBottom, // 底部
+    ..., 
+    InsertAlphabetically };
+// 指定在添加新内容或内容更改时QComboBox的大小提示应如何调整
+enum SizeAdjustPolicy { 
+    AdjustToContents,  // 适应文本
+    AdjustToContentsOnFirstShow, // 第一次显示时根据内容调整
+    AdjustToMinimumContentsLength, // 改用AdjustToContents或AdjustToContentsOnFirstShow
+    AdjustToMinimumContentsLengthWithIcon // 调整为图标的最小内容长度加上空间
+};
+```
+
+下拉列表框具备的属性。
+
+```c++
+count : const int // 项个数
+currentData : const QVariant // 当前项数据
+currentIndex : int // 当前项索引
+currentText : QString // 当前项文本
+duplicatesEnabled : bool // 是否可复制
+editable : bool // 可编辑
+frame : bool // 有框架
+iconSize : QSize // 图标大小
+insertPolicy : InsertPolicy // 项插入策略
+maxCount : int // 最大项数
+maxVisibleItems : int // 最大可见项数
+minimumContentsLength : int // 最小文本长度
+modelColumn : int // 项列数
+sizeAdjustPolicy : SizeAdjustPolicy // 调整策略
+59 properties inherited from QWidget
+1 property inherited from QObject 
+```
+
+常见的成员函数，这里主要分为两类，一类是项处理，一类是其他属性。
+
+```c++
+void addItem(const QString &text, const QVariant &userData = QVariant());// 添加项
+void addItem(const QIcon &icon, const QString &text, 
+             const QVariant &userData = QVariant());
+void addItems(const QStringList &texts); 
+void insertItem(int index, const QString &text, const QVariant &userData = QVariant());
+void insertItem(int index, const QIcon &icon, const QString &text, // 插入项
+                const QVariant ;&userData = QVariant());
+void insertItems(int index, const QStringList &list);
+void removeItem(int index);// 移除项
+// 查找文本和数据
+int findData(const QVariant &data, int role = Qt::UserRole, Qt::MatchFlags flags = static_cast<Qt::MatchFlags> ( Qt::MatchExactly | Qt::MatchCaseSensitive )) const；
+int findText(const QString &text, Qt::MatchFlags flags = static_cast<Qt::MatchFlags> ( Qt::MatchExactly | Qt::MatchCaseSensitive )) const；
+
+// 其他属性
+QCompleter *completer() const;
+int count() const；
+QVariant currentData(int role = Qt::UserRole) const；
+int currentIndex() const；
+QString currentText() const；
+bool duplicatesEnabled() const；
+bool hasFrame() const;
+QSize iconSize() const;
+InsertPolicy insertPolicy() const;
+bool isEditable() const;
+QVariant itemData(int index, int role = Qt::UserRole) const;
+QIcon itemIcon(int index) const;
+QString itemText(int index) const;
+QLineEdit *lineEdit() const;
+SizeAdjustPolicy sizeAdjustPolicy() const;
+int maxCount() const;
+int maxVisibleItems() const;
+int minimumContentsLength() const;
+void setDuplicatesEnabled(bool enable);
+void setEditable(bool editable);
+void setFrame(bool);
+void setIconSize(const QSize &size);
+void setInsertPolicy(InsertPolicy policy);
+void setItemData(int index, const QVariant &value, int role = Qt::UserRole);
+void setItemDelegate(QAbstractItemDelegate *delegate);
+void setItemIcon(int index, const QIcon &icon);
+void setItemText(int index, const QString &text);
+void setLineEdit(QLineEdit *edit);
+void setMaxCount(int max);
+void setMaxVisibleItems(int maxItems);
+void setMinimumContentsLength(int characters);
+void setSizeAdjustPolicy(SizeAdjustPolicy policy);
+```
+
+公共槽函数如下。
+
+```c++
+void clear();
+void clearEditText();
+void setCurrentIndex(int index);
+void setCurrentText(const QString &text);
+void setEditText(const QString &text);
+19 public slots inherited from QWidget
+1 public slot inherited from QObject 
+```
+
+主要的信号函数如下。
+
+```c++
+void activated(int index);
+void activated(const QString &text)
+void currentIndexChanged(int index); // 常用
+void currentIndexChanged(const QString &text); // 常用
+void currentTextChanged(const QString &text); // 常用
+void editTextChanged(const QString &text);
+void highlighted(int index);
+void highlighted(const QString &text);
+3 signals inherited from QWidget
+2 signals inherited from QObject 
+```
+
 #### 3.4.5 QPlainTextEdit
+
+QPlainTextEdit是一个多行文本编辑器，相比于QLineEdit可以编辑和显示多行文本。
+
+涉及的枚举类型。
+
+```c++
+enum LineWrapMode { NoWrap, WidgetWidth };
+// NoWrap,不做任何处理，此时每加入一行就按一行显示，超出窗口边界会自动显示水平滑条
+// WidgetWidth,默认设置，一行超出窗口时会自动换行显示，不显示水平滑条
+```
+
+具备的主要性质如下。
+
+```c++
+backgroundVisible : bool
+blockCount : const int
+centerOnScroll : bool
+cursorWidth : int
+documentTitle : QString
+lineWrapMode : LineWrapMode
+maximumBlockCount : int
+overwriteMode : bool
+placeholderText : QString
+plainText : QString
+readOnly : bool
+tabChangesFocus : bool
+tabStopWidth : int
+textInteractionFlags : Qt::TextInteractionFlags
+undoRedoEnabled : bool
+wordWrapMode : QTextOption::WrapMode
+```
+
+常见的成员函数，不常见的已忽略显示。
+
+```c++
+QPlainTextEdit(const QString &text, QWidget *parent = Q_NULLPTR);
+bool backgroundVisible() const;
+QTextCharFormat currentCharFormat() const;
+QTextDocument *document() const;
+QString documentTitle() const;
+bool isReadOnly() const;
+bool isUndoRedoEnabled() const;
+LineWrapMode lineWrapMode() const;
+void setBackgroundVisible(bool visible);
+void setCenterOnScroll(bool enabled);
+void setCurrentCharFormat(const QTextCharFormat &format);
+void setCursorWidth(int width);
+void setDocument(QTextDocument *document);
+void setDocumentTitle(const QString &title);
+void setLineWrapMode(LineWrapMode mode);
+void setReadOnly(bool ro);
+setTextCursor(const QTextCursor &cursor);
+void setUndoRedoEnabled(bool enable);
+void setWordWrapMode(QTextOption::WrapMode policy);
+...
+```
+
+常见的槽函数如下。
+
+```c++
+void appendHtml(const QString &html);
+void appendPlainText(const QString &text);
+void centerCursor();
+void clear();
+void copy();
+void cut();
+void insertPlainText(const QString &text);
+void paste();
+void redo();
+void selectAll();
+void setPlainText(const QString &text);
+void undo();
+void zoomIn(int range = 1);
+void zoomOut(int range = 1);
+```
+
+自带的主要信号函数如下。
+
+```c++
+void blockCountChanged(int newBlockCount);
+void copyAvailable(bool yes);
+void cursorPositionChanged();
+void modificationChanged(bool changed);
+void redoAvailable(bool available);
+void selectionChanged();
+void textChanged();
+void undoAvailable(bool available);
+void updateRequest(const QRect &rect, int dy);
+```
+
+以只读方式使用QPlainTextEdit时，键绑定仅限于导航，只能使用鼠标选择文本。
+
+```c++
+Qt::UpArrow // Moves one line up.
+Qt::DownArrow // Moves one line down.
+Qt::LeftArrow // Moves one character to the left.
+Qt::RightArrow // Moves one character to the right.
+PageUp // Moves one (viewport) page up.
+PageDown // Moves one (viewport) page down.
+Home // Moves to the beginning of the text.
+End // Moves to the end of the text.
+Alt+Wheel // Scrolls the page horizontally (the Wheel is the mouse wheel).
+Ctrl+Wheel // Zooms the text.
+Ctrl+A // Selects all text.
+```
+
+如果是可写的方式，那么以下绑定的键盘和鼠标快捷键有效。
+
+```c++
+Backspace // Deletes the character to the left of the cursor.
+Delete // Deletes the character to the right of the cursor.
+Ctrl+C // Copy the selected text to the clipboard.
+Ctrl+Insert // Copy the selected text to the clipboard.
+Ctrl+K // Deletes to the end of the line.
+Ctrl+V // Pastes the clipboard text into text edit.
+Shift+Insert // Pastes the clipboard text into text edit.
+Ctrl+X // Deletes the selected text and copies it to the clipboard.
+Shift+Delete // Deletes the selected text and copies it to the clipboard.
+Ctrl+Z // Undoes the last operation.
+Ctrl+Y // Redoes the last operation.
+LeftArrow // Moves the cursor one character to the left.
+Ctrl+LeftArrow // Moves the cursor one word to the left.
+RightArrow // Moves the cursor one character to the right.
+Ctrl+RightArrow // Moves the cursor one word to the right.
+UpArrow // Moves the cursor one line up.
+Ctrl+UpArrow // Moves the cursor one word up.
+DownArrow // Moves the cursor one line down.
+Ctrl+Down Arrow // Moves the cursor one word down.
+PageUp // Moves the cursor one page up.
+PageDown // Moves the cursor one page down.
+Home // Moves the cursor to the beginning of the line.
+Ctrl+Home // Moves the cursor to the beginning of the text.
+End // Moves the cursor to the end of the line.
+Ctrl+End // Moves the cursor to the end of the text.
+Alt+Wheel // Scrolls the page horizontally (the Wheel is the mouse wheel).
+Ctrl+Wheel // Zooms the text.
+```
 
 ### 3.3 常见输出组件类
 
@@ -2123,15 +2517,15 @@ void linkHovered(const QString &link);
 
 ```c++
 alignment : Qt::Alignment
-format : QString
-invertedAppearance : bool
-maximum : int
-minimum : int
-orientation : Qt::Orientation
-text : const QString
-textDirection : Direction
-textVisible : bool
-value : int
+format : QString // 文字格式,"%p%"显示百分比(默认),"%v"显示当前值,"%m"显示总步数
+invertedAppearance : bool // 是否反转
+maximum : int // 进度条最小值
+minimum : int // 进度条最大值
+orientation : Qt::Orientation // 水平垂直方向
+text : const QString // 文字
+textDirection : Direction  // 文字方向
+textVisible : bool // 是否显示文字,一般是百分比进度
+value : int // 当前显示值
 59 properties inherited from QWidget
 1 property inherited from QObject 
 ```
@@ -2243,22 +2637,22 @@ QDateEdit(const QDate &date, QWidget *parent = Q_NULLPTR);
 常见的性质如下。
 
 ```c++
-calendarPopup : bool
-currentSection : Section
-currentSectionIndex : int
-date : QDate
-dateTime : QDateTime
-displayFormat : QString
-displayedSections : const Sections
-maximumDate : QDate
-maximumDateTime : QDateTime
-maximumTime : QTime
+calendarPopup : bool // 是否允许弹出1个日历选择框,对QTimeEdit无效
+currentSection : Section // 当前的输入光标所在日期时间段,参考枚举类型QDateTimeEdit::Section
+currentSectionIndex : int // 序号表示的输入光标所在的段
+sectionCount : const int // 段的数量
+displayedSections : const Sections // 显示的段
+date : QDate // 日期
+time : QTime // 时间
+dateTime : QDateTime  // 日期时间
+maximumDate : QDate // 设置范围
 minimumDate : QDate
-minimumDateTime : QDateTime
+maximumTime : QTime
 minimumTime : QTime
-sectionCount : const int
-time : QTime
-timeSpec : Qt::TimeSpec
+maximumDateTime : QDateTime
+minimumDateTime : QDateTime
+displayFormat : QString // 显示格式,例如"yyyy-MM-dd HH:mm:ss"
+timeSpec : Qt::TimeSpec // 时间规范
 12 properties inherited from QAbstractSpinBox
 59 properties inherited from QWidget
 1 property inherited from QObject 
@@ -2349,6 +2743,7 @@ dateEdit->setDisplayFormat("yyyy.MM.dd"); // 应用格式20220501
 需要知道的枚举类型。
 
 ```c++
+// 时间段部分
 enum QDateTimeEdit::Section = {
     QDateTimeEdit::NoSection 0x0000
     QDateTimeEdit::AmPmSection 0x0001
@@ -2360,6 +2755,13 @@ enum QDateTimeEdit::Section = {
     QDateTimeEdit::MonthSectio 0x0200
     QDateTimeEdit::YearSection 0x0400
 }
+// 时间规范
+enum Qt::TimeSpec{
+    Qt::LocalTime = 0,// 取决于语言环境的时间（时区和夏令时）
+    Qt::UTC = 1, // 格林威治标准时间
+    Qt::OffsetFromUTC = 2,//以秒为单位的与协调世界时的偏移量。
+	Qt::TimeZone = 3 // 使用一组特定的夏令时规则的指定时区
+}；
 ```
 
 ### 3.5 常见表格文字类
