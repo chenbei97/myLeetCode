@@ -2404,15 +2404,323 @@ painter.end();                         // painting done
 
 #### 3.1.14 QMatrix
 
+QMatrix类指定坐标系的二维变换。
+矩阵指定如何平移、缩放、剪切或旋转坐标系，通常在渲染图形时使用。QMatrix与QTransform不同，它不允许透视变换。QTransform是Qt中推荐的转换类。
+可以使用**setMatrix()、scale()、rotate()、translate()和shear()函数构建QMatrix对象**。或者，可以通过应用基本矩阵运算来构建它。矩阵也可以在构造时定义，并且可以使用**reset()函数将其重置为单位矩阵**（默认值）。
+QMatrix类支持图形原语的映射：可以使用**map()函数将给定的点、线、多边形、区域或绘制路径映射到此矩阵定义的坐标系**。对于矩形，可以使用mapRect()函数转换其坐标。还可以使用mapToPolygon（）函数将矩形转换为多边形（映射到此矩阵定义的坐标系）。
+QMatrix提供**isIdentity()函数，如果矩阵是单位矩阵，则返回true**；如果矩阵是**非奇异矩阵（即AB=BA=i），则提供isInvertible()**，则返回true。inverted()函数的作用是：如果该矩阵是可逆的，则返回该矩阵的反向副本（否则返回单位矩阵）。此外，QMatrix提供了返**回矩阵行列式的determinate()函数**。
+最后，QMatrix类支持矩阵乘法，该类的对象可以进行流式处理和比较。
 
+常见的成员函数如下。
+
+```c++
+qreal m11() const; // 返回水平比例因子
+qreal m12() const; // 返回垂直剪切因子
+qreal m21() const; // 返回水平剪切因子
+qreal m22() const; // 返回垂直比例因子
+qreal QMatrix::determinant() const ;// 返回矩阵的行列式
+qreal dx() const; // 返回水平平移因子返回垂直平移因子。
+qreal dy() const; // 返回垂直平移因子
+QMatrix inverted(bool *invertible = Q_NULLPTR) const; // 返回此矩阵的反转副本
+bool isIdentity() const; // 如果矩阵是单位矩阵，则返回 true，否则返回 false
+bool isInvertible() const;// 如果矩阵可逆则返回真，否则返回假
+void map(qreal x, qreal y, qreal *tx, qreal *ty) const; // 将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中。结果值分别放在 *tx 和 *ty 中将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中
+void map(int x, int y, int *tx, int *ty) const;// 将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中。结果值分别放在 *tx 和 *ty 中。请注意，转换后的坐标四舍五入到最接近的整数。
+QPoint map(const QPoint &point) const;// 创建并返回一个 QPoint 对象，该对象是给定点的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QPointF map(const QPointF &point) const;// 创建并返回一个 QPointF 对象，该对象是给定点的副本，映射到此矩阵定义的坐标系中
+QLine map(const QLine &line) const;// 创建并返回一个 QLine 对象，该对象是给定线的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QLineF map(const QLineF &line) const;// 创建并返回一个 QLineF 对象，它是给定线的副本，映射到此矩阵定义的坐标系中
+QPolygonF map(const QPolygonF &polygon) const;// 创建并返回一个 QPolygonF 对象，该对象是给定多边形的副本，映射到此矩阵定义的坐标系中
+QPolygon map(const QPolygon &polygon) const;// 创建并返回一个 QPolygon 对象，该对象是给定多边形的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QRegion map(const QRegion &region) const;// 创建并返回一个 QRegion 对象，该对象是给定区域的副本，映射到此矩阵定义的坐标系中。如果使用旋转或剪切，调用此方法可能会相当昂贵
+QPainterPath map(const QPainterPath &path) const;// 创建并返回一个 QPainterPath 对象，它是给定路径的副本，映射到此矩阵定义的坐标系中
+QRectF mapRect(const QRectF &rectangle) const;// 创建并返回一个 QRectF 对象，该对象是给定矩形的副本，映射到此矩阵定义的坐标系中
+QRect mapRect(const QRect &rectangle) const; // 创建并返回一个 QRect 对象，该对象是给定矩形的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QPolygon mapToPolygon(const QRect &rectangle) const;// 创建并返回给定矩形的 QPolygon 表示，映射到此矩阵定义的坐标系
+void reset();// 将矩阵重置为单位矩阵，即所有元素都设置为零，除了设置为 1 的 m11 和 m22（指定比例）
+QMatrix &rotate(qreal degrees);// 将坐标系逆时针旋转给定度数。返回对矩阵的引用
+QMatrix &scale(qreal sx, qreal sy);// 通过 sx 水平和 sy 垂直缩放坐标系，并返回对矩阵的引用
+void setMatrix(qreal m11, qreal m12, qreal m21, qreal m22, qreal dx, qreal dy);// 请注意，此函数将替换以前的值。 QMatrix 提供 translate()、rotate()、scale() 和shear() 方便的函数来根据当前定义的坐标系来操作各种矩阵元素
+QMatrix &shear(qreal sh, qreal sv);// 通过 sh 水平和 sv 垂直剪切坐标系，并返回对矩阵的引用
+QMatrix &translate(qreal dx, qreal dy);// 沿 x 轴移动坐标系 dx，沿 y 轴移动 dy，并返回对矩阵的引用
+```
+
+可能的示例代码。
+
+```c++
+void SimpleTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.rotate(45);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QMatrix");
+}
+
+void CombinedTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    QMatrix matrix;
+    matrix.translate(50, 50);
+    matrix.rotate(45);
+    matrix.scale(0.5, 1.0);
+    painter.setMatrix(matrix); // 利用QPainter具有的QMatrix属性
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QMatrix");
+}
+
+void BasicOperations::paintEvent(QPaintEvent *)
+{
+    double pi = 3.14;
+
+    double a    = pi/180 * 45.0;
+    double sina = sin(a);
+    double cosa = cos(a);
+ 
+    QMatrix translationMatrix(1, 0, 0, 1, 50.0, 50.0);
+    QMatrix rotationMatrix(cosa, sina, -sina, cosa, 0, 0);
+    QMatrix scalingMatrix(0.5, 0, 0, 1.0, 0, 0);
+
+    QMatrix matrix; // 矩阵变换
+    matrix =  scalingMatrix * rotationMatrix * translationMatrix;
+
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.setMatrix(matrix);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QMatrix");
+}
+```
 
 #### 3.1.15 QTransform
 
+QTransform 类指定坐标系的二维变换。转换指定如何平移、缩放、剪切、旋转或投影坐标系，通常在渲染图形时使用。**QTransform 与 QMatrix 的不同之处在于它是一个真正的 3x3 矩阵，允许透视变换。** QTransform 的 **toAffine() 方法允许将 QTransform 转换为 QMatrix**。如果在矩阵上指定了透视变换，则该变换将导致数据丢失。QTransform 是 Qt 中推荐的转换类。可以使用 setMatrix()、scale()、rotate()、translate() 和 Shear() 函数**构建 QTransform 对象**。或者，它可以通过应用基本的矩阵运算来构建。
 
+矩阵也可以在构造时定义，并且可以使用 reset() 函数将其重置为单位矩阵（默认）。QTransform 类支持图形基元的映射：给定的点、线、多边形、区域或画家路径可以使用 map() 函数映射到此矩阵定义的坐标系。如果是矩形，可以使用 mapRect() 函数转换其坐标。也可以使用 mapToPolygon() 函数将矩形转换为多边形（映射到此矩阵定义的坐标系）。QTransform 提供了 isIdentity() 函数，如果矩阵是单位矩阵，则返回 true；如果矩阵是非奇异矩阵（即 AB = BA = I），则返回 true 的 isInvertible() 函数。如果它是可逆的，则inverted() 函数返回该矩阵的反转副本（否则它返回单位矩阵），并且 adjoint() 返回矩阵的经典伴随矩阵。此外，QTransform 提供了返回矩阵行列式的determinant()函数。最后，QTransform 类支持矩阵乘法、加法和减法，并且该类的对象可以流式传输和比较。
+
+需要知道的枚举类型如下。
+
+```c++
+enum TransformationType { TxNone，TxTranslate，TxScale，TxRotate，TxShear，TxProject };
+```
+
+```c++
+QTransform(); // 构造函数系列
+QTransform(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33 = 1.0);
+QTransform(qreal m11, qreal m12, qreal m21, qreal m22, qreal dx, qreal dy);
+QTransform(const QMatrix &matrix);
+QTransform(QTransform &&other);
+QTransform(const QTransform &other);
+
+qreal m11() const
+qreal m12() const
+qreal m13() const
+qreal m21() const
+qreal m22() const
+qreal m23() const
+qreal m31() const
+qreal m32() const
+qreal m33() const
+QTransform adjoint() const
+qreal determinant() const
+qreal dx() const
+qreal dy() const
+QTransform inverted(bool *invertible = Q_NULLPTR) const
+bool isAffine() const
+bool isIdentity() const
+bool isInvertible() const
+bool isRotating() const
+bool isScaling() const
+bool isTranslating() const
+void map(qreal x, qreal y, qreal *tx, qreal *ty) const
+QPointF map(const QPointF &p) const
+QLine map(const QLine &l) const
+QLineF map(const QLineF &line) const
+QPolygonF map(const QPolygonF &polygon) const
+QPolygon map(const QPolygon &polygon) const
+QRegion map(const QRegion &region) const
+QPainterPath map(const QPainterPath &path) const
+void map(int x, int y, int *tx, int *ty) const
+QPoint map(const QPoint &point) const
+QRectF mapRect(const QRectF &rectangle) const
+QRect mapRect(const QRect &rectangle) const
+QPolygon mapToPolygon(const QRect &rectangle) const
+void reset()
+QTransform &rotate(qreal angle, Qt::Axis axis = Qt::ZAxis)
+QTransform &rotateRadians(qreal angle, Qt::Axis axis = Qt::ZAxis)
+QTransform &scale(qreal sx, qreal sy)
+void setMatrix(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33)QTransform &shear(qreal sh, qreal sv)
+const QMatrix &toAffine() const
+QTransform &translate(qreal dx, qreal dy)
+QTransform transposed() const
+TransformationType type() constoperator QVariant() const
+bool operator!=(const QTransform &matrix) const
+QTransform operator*(const QTransform &matrix) const
+QTransform &operator*=(const QTransform &matrix)
+QTransform &operator*=(qreal scalar)
+QTransform &operator+=(qreal scalar)
+QTransform &operator-=(qreal scalar)
+QTransform &operator/=(qreal scalar)
+QTransform &operator=(QTransform &&other)
+QTransform &operator=(const QTransform &matrix)
+bool operator==(const QTransform &matrix) const
+```
+
+5个静态函数如下。
+
+```c++
+QTransform fromScale(qreal sx, qreal sy);
+QTransform fromTranslate(qreal dx, qreal dy);
+bool quadToQuad(const QPolygonF &one, const QPolygonF &two, QTransform &trans);
+bool quadToSquare(const QPolygonF &quad, QTransform &trans);
+bool squareToQuad(const QPolygonF &quad, QTransform &trans);
+```
+
+示例代码。
+
+```c++
+void SimpleTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.rotate(45);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QTransform");
+}
+
+void CombinedTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    QTransform transform;
+    transform.translate(50, 50);
+    transform.rotate(45);
+    transform.scale(0.5, 1.0);
+    painter.setTransform(transform);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QTransform");
+}
+
+void BasicOperations::paintEvent(QPaintEvent *)
+{
+    double pi = 3.14;
+
+    double a    = pi/180 * 45.0;
+    double sina = sin(a);
+    double cosa = cos(a);
+
+    QTransform translationTransform(1, 0, 0, 1, 50.0, 50.0);
+    QTransform rotationTransform(cosa, sina, -sina, cosa, 0, 0);
+    QTransform scalingTransform(0.5, 0, 0, 1.0, 0, 0);
+
+    QTransform transform;
+    transform = scalingTransform * rotationTransform * translationTransform;
+
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.setTransform(transform);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QTransform");
+}
+```
 
 #### 3.1.16 QPainter
 
+QPainter 类在小部件和其他绘画设备上执行低级绘画。
+QPainter 提供了高度优化的功能来完成大多数绘图 GUI 程序所需的工作。它可以绘制从简单的线条到复杂的形状（如馅饼和弦）的所有内容。它还可以绘制对齐的文本和像素图。通常，它在“自然”坐标系中绘制，但它也可以进行视图和世界变换。 QPainter 可以对任何继承 QPaintDevice 类的对象进行操作。
+QPainter 的常见用途是在小部件的绘制事件中：构造和自定义（例如设置钢笔或画笔）画家。然后画。记得在绘制后销毁 QPainter 对象。例如：
 
+```c++
+void SimpleExampleWidget::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(Qt::blue);
+    painter.setFont(QFont("Arial", 30));
+    painter.drawText(rect(), Qt::AlignCenter, "Qt");
+}
+```
+
+QPainter 的核心功能是绘图，但该类还提供了一些功能，允许您自定义 QPainter 的设置及其渲染质量，以及启用剪辑的其他功能。此外，您可以通过指定画家的合成模式来控制不同形状的合并方式。
+isActive() 函数指示画家是否处于活动状态。画家由 begin() 函数和接受 QPaintDevice 参数的构造函数激活。 end() 函数和析构函数将其停用。与 QPaintDevice 和 QPaintEngine 类一起，QPainter 构成了 Qt 绘画系统的基础。 QPainter 是用于执行绘图操作的类。 QPaintDevice 表示可以使用 QPainter 绘制的设备。 QPaintEngine 提供了画家用来在不同类型的设备上绘制的接口。如果painter 处于活动状态，device() 返回painter 在其上绘制的绘制设备，paintEngine() 返回painter 当前正在操作的绘制引擎。有关详细信息，请参阅绘制系统。有时需要让其他人在不寻常的 QPaintDevice 上绘画。 QPainter 支持一个静态函数来执行此操作，setRedirected()。警告：当paintdevice 是一个widget 时，QPainter 只能在paintEvent() 函数内部或由paintEvent() 调用的函数中使用。
+
+枚举类型还挺多的，不过这个用于绘画时可以仔细研究一番。
+
+```c++
+class PixmapFragment;
+enum CompositionMode { CompositionMode_SourceOver, CompositionMode_DestinationOver, CompositionMode_Clear, CompositionMode_Source, ..., RasterOp_SourceOrNotDestination };
+enum PixmapFragmentHint { OpaqueHint };
+flags PixmapFragmentHints;
+enum RenderHint { Antialiasing, TextAntialiasing, SmoothPixmapTransform, HighQualityAntialiasing, NonCosmeticDefaultPen, Qt4CompatiblePainting };
+flags RenderHints;
+```
+
+成员函数也非常多，这里只列出最常见的画图函数，重载版本不提供，只提供1个。
+
+```c++
+const QBrush &background() const;
+Qt::BGMode backgroundMode() const;
+const QBrush &brush() const;
+void drawArc(const QRectF &rectangle, int startAngle, int spanAngle);
+void drawChord(const QRectF &rectangle, int startAngle, int spanAngle);
+void drawConvexPolygon(const QPointF *points, int pointCount);
+void drawEllipse(const QRectF &rectangle);
+void drawGlyphRun(const QPointF &position, const QGlyphRun &glyphs);
+void drawImage(const QRectF &target, const QImage &image, const QRectF &source, Qt::ImageConversionFlags flags = Qt::AutoColor);
+void drawLine(const QLineF &line);
+void drawLines(const QLineF *lines, int lineCount);
+void drawPath(const QPainterPath &path);
+void drawPicture(const QPointF &point, const QPicture &picture);
+drawPicture(const QPoint &point, const QPicture &picture)
+void drawPie(const QRectF &rectangle, int startAngle, int spanAngle);
+void drawPixmap(const QRectF &target, const QPixmap &pixmap, const QRectF &source);
+void drawPoints(const QPointF *points, int pointCount)
+void drawPolygon(const QPointF *points, int pointCount, Qt::FillRule fillRule = Qt::OddEvenFill);
+void drawPolyline(const QPointF *points, int pointCount);
+void drawRect(const QRectF &rectangle);
+void drawStaticText(const QPointF &topLeftPosition, const QStaticText &staticText);
+void drawText(const QPointF &position, const QString &text);
+void eraseRect(const QRectF &rectangle);
+void fillRect(const QRectF &rectangle, const QBrush &brush);
+const QFont &font() const;
+QFontInfo fontInfo() const;
+const QPen &pen() const;
+void resetTransform();
+void restore();
+void rotate(qreal angle);
+void save();
+void scale(qreal sx, qreal sy);
+void setBackground(const QBrush &brush);
+void setBackgroundMode(Qt::BGMode mode);
+void setBrush(const QBrush &brush)
+void setPen(const QPen &pen);
+void setWindow(const QRect &rectangle);
+const QTransform &transform() const;
+```
 
 ### 3.2 常见输入组件类
 
@@ -3221,21 +3529,450 @@ enum Qt::TimeSpec{
 
 #### 3.5.1 QListWidget
 
+QListWidget 是一个方便的类，它提供类似于 QListView 提供的列表视图，但具有用于添加和删除项目的经典基于项目的界面。 QListWidget 使用内部模型来管理列表中的每个 QListWidgetItem。
+要获得更灵活的列表视图小部件，请将 QListView 类与标准模型一起使用。
+
+需要知道的属性值有3个。
+
+```c++
+count : const int // 此属性表示列表中的项目数，包括任何隐藏项目。
+currentRow : int // 此属性表示当前项目的所在行。根据当前的选择模式，也可以选择行。
+sortingEnabled : bool // 该属性表示是否启用排序。如果该属性为true，则为列表启用排序；如果该属性为 false，则不启用排序。默认值为假。
+```
+
+常见的公共成员函数如下，也就是对项的处理函数。
+
+```c++
+void addItem(const QString &label);
+void addItem(QListWidgetItem *item);
+void addItems(const QStringList &labels);
+int count() const;
+QListWidgetItem *currentItem() const;
+int currentRow() const;
+void editItem(QListWidgetItem *item);
+QList<QListWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags) const;
+void insertItem(int row, QListWidgetItem *item);
+void insertItem(int row, const QString &label);
+void insertItems(int row, const QStringList &labels);
+bool isSortingEnabled() const;
+QListWidgetItem *item(int row) const;
+QListWidgetItem *itemAt(const QPoint &p) const;
+QListWidgetItem *itemAt(int x, int y) const;
+QWidget *itemWidget(QListWidgetItem *item) const;
+void openPersistentEditor(QListWidgetItem *item);
+void removeItemWidget(QListWidgetItem *item);
+int row(const QListWidgetItem *item) const;
+QList<QListWidgetItem *> selectedItems() const;
+void setCurrentItem(QListWidgetItem *item);
+void setCurrentItem(QListWidgetItem *item,
+                    QItemSelectionModel::SelectionFlags command);
+void setCurrentRow(int row);
+void setCurrentRow(int row, QItemSelectionModel::SelectionFlags command);
+void setItemWidget(QListWidgetItem *item, QWidget *widget);
+void setSortingEnabled(bool enable);
+void sortItems(Qt::SortOrder order = Qt::AscendingOrder);
+QListWidgetItem *takeItem(int row);
+QRect visualItemRect(const QListWidgetItem *item) const;
+```
+
+主要的槽函数有2个。
+
+```c++
+void clear();
+void scrollToItem(const QListWidgetItem *item, QAbstractItemView::ScrollHint hint = EnsureVisible);// 必要时滚动视图以确保项目可见,提示指定操作后项目应位于的位置。
+```
+
+主要的信号如下。
+
+```c++
+void currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);// 常用
+void currentRowChanged(int currentRow);// 常用
+void currentTextChanged(const QString &currentText);// 常用
+void itemActivated(QListWidgetItem *item);
+void itemChanged(QListWidgetItem *item);// 常用
+void itemClicked(QListWidgetItem *item);// 常用
+void itemDoubleClicked(QListWidgetItem *item); // 常用
+void itemEntered(QListWidgetItem *item);
+void itemPressed(QListWidgetItem *item);
+void itemSelectionChanged();// 常用
+```
+
+示例代码。
+
+```c++
+QListWidgetItem *newItem = new QListWidgetItem;
+newItem->setText(itemText);
+listWidget->insertItem(row, newItem);
+```
+
 #### 3.5.2 QTreeWidget
 
+QTreeWidget 类是一个方便的类，它提供了一个标准的树小部件，它具有类似于 Qt 3 中 QListView 类所使用的基于项目的经典界面。这个类基于 Qt 的模型/视图架构，并使用默认模型来保存项目，每一个都是一个QTreeWidgetItem。不需要模型/视图框架的灵活性的开发人员可以使用这个类非常容易地创建简单的分层列表。一种更灵活的方法是将 QTreeView 与标准项目模型结合起来。这允许数据的存储与其表示分离。
+
+示例代码。
+
+```c++
+QTreeWidget *treeWidget = new QTreeWidget();
+treeWidget->setColumnCount(1);
+QList<QTreeWidgetItem *> items;
+for (int i = 0; i < 10; ++i)
+    items.append(new QTreeWidgetItem((QTreeWidget*)0, QStringList(QString("item: %1").arg(i))));
+treeWidget->insertTopLevelItems(0, items);
+```
+
+2个主要性质。
+
+```c++
+columnCount : int // 此属性保存树小部件中显示的列数,默认情况下，此属性的值为1
+topLevelItemCount : const int // 此属性保存顶级项目的数量,默认情况下，此属性的值为0
+```
+
+常见的成员函数如下。
+
+```c++
+void addTopLevelItem(QTreeWidgetItem *item);
+void addTopLevelItems(const QList<QTreeWidgetItem *> &items);
+void closePersistentEditor(QTreeWidgetItem *item, int column = 0);
+int columnCount() const;
+int currentColumn() const;
+QTreeWidgetItem *currentItem() const;
+void editItem(QTreeWidgetItem *item, int column = 0);
+QList<QTreeWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags, int column = 0) const;
+QTreeWidgetItem *headerItem() const;
+int indexOfTopLevelItem(QTreeWidgetItem *item) const;
+void insertTopLevelItem(int index, QTreeWidgetItem *item);
+void insertTopLevelItems(int index, const QList<QTreeWidgetItem *> &items);
+QTreeWidgetItem *invisibleRootItem() const;
+bool isFirstItemColumnSpanned(const QTreeWidgetItem *item) const;
+QTreeWidgetItem *itemAbove(const QTreeWidgetItem *item) const;
+QTreeWidgetItem *itemAt(const QPoint &p) const;
+QTreeWidgetItem *itemAt(int x, int y) const;
+QTreeWidgetItem *itemBelow(const QTreeWidgetItem *item) const;
+QWidget *itemWidget(QTreeWidgetItem *item, int column) const;
+void openPersistentEditor(QTreeWidgetItem *item, int column = 0);
+void removeItemWidget(QTreeWidgetItem *item, int column);
+QList<QTreeWidgetItem *> selectedItems() const;
+void setColumnCount(int columns);
+void setCurrentItem(QTreeWidgetItem *item);
+void setCurrentItem(QTreeWidgetItem *item, int column);
+void setCurrentItem(QTreeWidgetItem *item, int column, QItemSelectionModel::SelectionFlags command);
+void setFirstItemColumnSpanned(const QTreeWidgetItem *item, bool span;)
+void setHeaderItem(QTreeWidgetItem *item);
+void setHeaderLabel(const QString &label);
+void setHeaderLabels(const QStringList &labels);
+void setItemWidget(QTreeWidgetItem *item, int column, QWidget *widget);
+int sortColumn() const;
+void sortItems(int column, Qt::SortOrder order);
+QTreeWidgetItem *takeTopLevelItem(int index);
+QTreeWidgetItem *topLevelItem(int index) const;
+int topLevelItemCount() const;
+QRect visualItemRect(const QTreeWidgetItem *item) const;
+```
+
+主要的槽函数。
+
+```c++
+void clear(); // 清除项目
+void collapseItem(const QTreeWidgetItem *item);// 关闭项目,该项目的子项的树被折叠
+void expandItem(const QTreeWidgetItem *item); // 展开项目,项目的子项的树被扩展。
+void scrollToItem(const QTreeWidgetItem *item, QAbstractItemView::ScrollHint hint = EnsureVisible); // 确保项目可见，必要时使用指定的提示滚动视图
+```
+
+主要的信号如下。
+
+```c++
+void currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous); // 常用
+void itemActivated(QTreeWidgetItem *item, int column);
+void itemChanged(QTreeWidgetItem *item, int column);// 常用
+void itemClicked(QTreeWidgetItem *item, int column);// 常用
+void itemCollapsed(QTreeWidgetItem *item);
+void itemDoubleClicked(QTreeWidgetItem *item, int column);// 常用
+void itemEntered(QTreeWidgetItem *item, int column);
+void itemExpanded(QTreeWidgetItem *item);
+void itemPressed(QTreeWidgetItem *item, int column);
+void itemSelectionChanged();// 常用
+```
+
 #### 3.5.3 QTableWidget
+
+表格小部件为应用程序提供标准表格显示设施。 QTableWidget 中的项目由 QTableWidgetItem 提供。
+如果你想要一个使用你自己的数据模型的表，你应该使用 QTableView 而不是这个类。
+可以使用所需的行数和列数构建表格小部件。
+
+```c++
+tableWidget = new QTableWidget(12, 3, this);
+
+tableWidget = new QTableWidget(this);
+tableWidget->setRowCount(10);
+tableWidget->setColumnCount(5);
+
+QTableWidgetItem *newItem = new QTableWidgetItem(tr("%1").arg(
+    (row+1)*(column+1)));
+tableWidget->setItem(row, column, newItem);
+
+QTableWidgetItem *cubesHeaderItem = new QTableWidgetItem(tr("Cubes"));
+cubesHeaderItem->setIcon(QIcon(QPixmap(":/Images/cubed.png")));
+cubesHeaderItem->setTextAlignment(Qt::AlignVCenter);
+```
+
+2个性质。
+
+```c++
+columnCount : int
+rowCount : int
+```
+
+常见的成员函数。
+
+```c++
+int column(const QTableWidgetItem *item) const;
+int columnCount() const;
+int currentColumn() const;
+QTableWidgetItem *currentItem() cons
+int currentRow() const;
+void editItem(QTableWidgetItem *item);
+QList<QTableWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags) const;
+QTableWidgetItem *item(int row, int column) const;
+QTableWidgetItem *itemAt(const QPoint &point) const;
+QTableWidgetItem *itemAt(int ax, int ay) const;
+int row(const QTableWidgetItem *item) const;
+int rowCount() const;
+void setColumnCount(int columns);
+void setCurrentItem(QTableWidgetItem *item);
+void setItem(int row, int column, QTableWidgetItem *item);
+void setRowCount(int rows);
+void sortItems(int column, Qt::SortOrder order = Qt::AscendingOrder);
+QTableWidgetItem *takeItem(int row, int column);
+```
+
+常见的槽函数。
+
+```c++
+void clear();
+void clearContents();
+void insertColumn(int column);
+void insertRow(int row);
+void removeColumn(int column);
+void removeRow(int row);
+void scrollToItem(const QTableWidgetItem *item, QAbstractItemView::ScrollHint hint = EnsureVisible);
+```
+
+常见的信号。
+
+```c++
+
+void cellActivated(int row, int column); // 常用
+void cellChanged(int row, int column); // 常用 
+void cellClicked(int row, int column); // 常用
+void cellDoubleClicked(int row, int column); // 常用
+void cellEntered(int row, int column);
+void cellPressed(int row, int column);
+void currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn); // 常用
+void currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);// 常用
+void itemActivated(QTableWidgetItem *item);// 常用
+void itemChanged(QTableWidgetItem *item);// 常用
+void itemClicked(QTableWidgetItem *item);// 常用
+void itemDoubleClicked(QTableWidgetItem *item);// 常用
+void itemEntered(QTableWidgetItem *item);
+void itemPressed(QTableWidgetItem *item);
+void itemSelectionChanged();// 常用
+```
 
 ### 3.6 常见按钮类
 
 #### 3.6.1 QPushButton
 
+QPushButton 小部件提供了一个命令按钮。按钮或命令按钮可能是任何图形用户界面中最常用的小部件。按下（单击）按钮以命令计算机执行某些操作或回答问题。典型的按钮是确定、应用、取消、关闭、是、否和帮助。命令按钮是矩形的，通常显示一个描述其操作的文本标签。
+
+常见的性质如下。
+
+```c++
+autoDefault : bool // 此属性保存按钮是否为自动默认按钮。如果此属性设置为 true，则按钮为自动默认按钮。在某些 GUI 样式中，默认按钮的绘制周围有一个额外的框架，最多 3 个像素或更多。 Qt 会自动在自动默认按钮周围保留此空间，即自动默认按钮可能有稍大的尺寸提示。
+default : bool // 此属性保存按钮是否为默认按钮 默认和自动默认按钮决定当用户在对话框中按下回车时会发生什么。将此属性设置为 true 的按钮（即对话框的默认按钮）将在用户按下 Enter 时自动按下，但有一个例外：如果 autoDefault 按钮当前具有焦点，则按下 autoDefault 按钮。当对话框有 autoDefault 按钮但没有默认按钮时，按 enter 将按下当前具有焦点的 autoDefault 按钮，或者如果没有按钮具有焦点，则按下焦点链中的下一个 autoDefault 按钮。
+flat : bool // 此属性保存按钮边框是否凸起此属性的默认值为 false。如果设置了这个属性，大多数样式不会绘制按钮背景，除非按钮被按下。 setAutoFillBackground() 可用于确保使用 QPalette::Button 画笔填充背景。
+```
+
+常见的公共成员函数如下。
+
+```c++
+QPushButton(QWidget *parent = Q_NULLPTR);
+QPushButton(const QString &text, QWidget *parent = Q_NULLPTR);
+QPushButton(const QIcon &icon, const QString &text, QWidget *parent = Q_NULLPTR);
+bool autoDefault() const;
+boolisDefault() const;
+bool isFlat() const;
+QMenu *menu() const;
+void setAutoDefault(bool);
+void setDefault(bool);
+void setFlat(bool);
+void setMenu(QMenu *menu);
+```
+
+常见的槽函数如下。
+
+```c++
+void showMenu();
+```
+
+示例代码。
+
+```c++
+QPushButton *button = new QPushButton("&Download", this);
+```
+
 #### 3.6.2 QRadioButton
+
+QRadioButton 小部件提供带有文本标签的单选按钮。
+￼ QRadioButton 是一个选项按钮，可以打开（选中）或关闭（未选中）。单选按钮通常为用户提供“多选一”的选择。在一组单选按钮中，一次只能选中一个单选按钮；如果用户选择另一个按钮，则先前选择的按钮将关闭。
+默认情况下，单选按钮是自动排他的。如果启用了自动排他，则属于同一父窗口小部件的单选按钮的行为就像它们是同一排他按钮组的一部分一样。如果您需要属于同一个父窗口小部件的单选按钮的多个独占按钮组，请将它们放入 QButtonGroup。
+每当打开或关闭按钮时，它都会发出 toggled() 信号。如果您想在每次按钮更改状态时触发操作，请连接到此信号。使用 isChecked() 查看是否选择了特定按钮。
+
+常见的公共成员函数如下。
+
+```c++
+QRadioButton(QWidget *parent = Q_NULLPTR);
+QRadioButton(const QString &text, QWidget *parent = Q_NULLPTR);
+```
+
+就像 QPushButton 一样，单选按钮显示文本，以及可选的小图标。使用 setIcon() 设置图标。文本可以在构造函数中设置，也可以使用 setText() 设置。可以通过在文本中在首选字符前加上 &amp; 符号来指定快捷键。例如。
+
+```c++
+QRadioButton *button = new QRadioButton("Search from the &cursor", this);
+```
 
 #### 3.6.3 QToolButton
 
+QToolButton 类为命令或选项提供了一个快速访问按钮，通常在 QToolBar 中使用。
+工具按钮是一种特殊按钮，可提供对特定命令或选项的快速访问。与普通命令按钮不同，工具按钮通常不显示文本标签，而是显示图标。
+当使用 QToolBar::addAction() 创建新的 QAction 实例或使用 QToolBar::addAction() 将现有操作添加到工具栏时，通常会创建工具按钮。也可以以与任何其他小部件相同的方式构建工具按钮，并将它们与布局中的其他小部件一起排列。
+工具按钮的一个经典用途是选择工具。例如，绘图程序中的“钢笔”工具。这将通过使用 QToolButton 作为切换按钮来实现（参见 setCheckable()）。
+QToolButton 支持自动升起。在自动升起模式下，仅当鼠标指向按钮时，按钮才会绘制 3D 帧。当在 QToolBar 中使用按钮时，该功能会自动打开。用 setAutoRaise() 改变它。
+工具按钮的图标设置为 QIcon。这使得为禁用和活动状态指定不同的像素图成为可能。当按钮的功能不可用时，使用禁用的像素图。当鼠标指针悬停在按钮上时，将显示活动像素图。
+按钮的外观和尺寸可通过 setToolButtonStyle() 和 setIconSize() 进行调整。当在 QMainWindow 的 QToolBar 中使用时，按钮会自动调整为 QMainWindow 的设置（参见 QMainWindow::setToolButtonStyle() 和 QMainWindow::setIconSize()）。除了图标，工具按钮还可以显示箭头符号，由 arrowType 指定。
+工具按钮可以在弹出菜单中提供额外的选择。可以使用 setMenu() 设置弹出菜单。使用 setPopupMode() 为带有菜单集的工具按钮配置可用的不同模式。默认模式是 DelayedPopupMode，有时与 Web 浏览器中的“返回”按钮一起使用。按住按钮一会儿后，会弹出一个菜单，显示可能跳转到的页面列表。超时取决于样式，请参阅 QStyle::SH_ToolButton_PopupDelay。
+
+需要了解的枚举类型如下。
+
+```c++
+enum ToolButtonPopupMode { 
+    DelayedPopup, // 按住工具按钮一段时间后将显示菜单
+    MenuButtonPopup, // 在这种模式下，工具按钮会显示一个特殊的箭头，表示存在菜单
+    InstantPopup // 当按下工具按钮时，菜单会立即显示。在这种模式下，按钮自身的动作不会被触发
+};
+```
+
+常见的性质如下。
+
+```c++
+arrowType : Qt::ArrowType // 这个属性保存按钮是否显示一个箭头而不是一个普通的图标 这显示一个箭头作为 QToolButton 的图标。默认情况下，此属性设置为 Qt::NoArrow。
+autoRaise : bool // 此属性保存是否启用自动提升。默认为禁用（即 false）。使用 QMacStyle 时，当前在 macOS 上忽略此属性。
+popupMode : ToolButtonPopupMode // 描述弹出菜单与工具按钮一起使用的方式 默认情况下，此属性设置为 DelayedPopup。
+toolButtonStyle : Qt::ToolButtonStyle // 描述弹出菜单与工具按钮一起使用的方式 默认情况下，此属性设置为 DelayedPopup。
+```
+
+常见的公共成员函数如下。
+
+```c++
+Qt::ArrowType arrowType() const;
+bool autoRaise() const;
+QAction *defaultAction() const;
+QMenu *menu() const;
+ToolButtonPopupMode popupMode() const;
+void setArrowType(Qt::ArrowType type);
+void setAutoRaise(bool enable);
+void setMenu(QMenu *menu);
+void setPopupMode(ToolButtonPopupMode mode);
+Qt::ToolButtonStyle toolButtonStyle() const;
+```
+
+常见的槽函数如下。
+
+```c++
+void setDefaultAction(QAction *action);
+void setToolButtonStyle(Qt::ToolButtonStyle style);
+void showMenu();
+```
+
+常见的信号如下。
+
+```c++
+void triggered(QAction *action);
+```
+
 #### 3.6.4 QCheckBox
 
+QCheckBox 小部件提供了一个带有文本标签的复选框。
+￼QCheckBox 是一个选项按钮，可以打开（选中）或关闭（未选中）。复选框通常用于表示应用程序中可以启用或禁用而不影响其他功能的功能。可以实现不同类型的行为。例如，QButtonGroup 可用于对复选按钮进行逻辑分组，允许独占复选框。但是，QButtonGroup 不提供任何可视化表示。
+每当检查或清除复选框时，它都会发出信号statechanged()。如果您想在每次复选框更改状态时触发操作，请连接到此信号。您可以使用 isChecked() 来查询是否选中了复选框。
+除了通常的选中和未选中状态之外，QCheckBox 还可以选择提供第三种状态来指示“没有变化”。当您需要为用户提供既不选中也不取消选中复选框的选项时，这很有用。如果您需要这第三种状态，请使用 setTristate() 启用它，并使用 checkState() 查询当前切换状态。
+
+常见的性质如下。
+
+```c++
+tristate : bool // 该属性保存复选框是否为三态复选框，默认为 false，即复选框只有两种状态。
+```
+
+常见的公共成员函数如下。
+
+```c++
+QCheckBox(const QString &text, QWidget *parent = Q_NULLPTR)；
+Qt::CheckState checkState() const；
+bool isTristate() const；
+void setCheckState(Qt::CheckState state)；
+void setTristate(bool y = true)；
+```
+
+常见的槽函数如下。
+
+```c++
+void stateChanged(int state)；
+```
+
+就像 QPushButton 一样，复选框显示文本，以及可选的小图标。使用 setIcon() 设置图标。文本可以在构造函数中设置，也可以使用 setText() 设置。可以通过在首选字符前加上 &amp; 符号来指定快捷键。例如。
+
+```c++
+QCheckBox *checkbox = new QCheckBox("C&ase sensitive", this);
+```
+
 ### 3.7 其他类
+
+需要了解的枚举类型如下。
+
+```c++
+
+```
+
+常见的性质如下。
+
+```c++
+
+```
+
+常见的公共成员函数如下。
+
+```c++
+
+```
+
+常见的槽函数如下。
+
+```c++
+
+```
+
+常见的信号如下。
+
+```c++
+
+```
+
+示例代码。
+
+```c++
+
+```
+
+
 
 这些类不再赘述，自行查看Qt文档。
 
