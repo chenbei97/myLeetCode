@@ -2371,3 +2371,22 @@ Microsoft Office无法启动， 出现 0x426 - 0x0 错误代码
 
 
 
+### profile.ps1文件无法加载
+
+无法加载文件 C:\Users\Lenovo\Documents\WindowsPowerShell\profile.ps1，因为在此系统上禁止运行脚本。
+
+![profile.ps1](profile.ps1.png)
+
+首先win+r打开，**输入PowerShell**，记得不要直接enter而是要**ctrl+shift+enter进入**，这样才能以管理员权限打开PowerShell终端。然后输入命令**get-ExecutionPolicy**，回复Restricted，表示状态是禁止的。
+
+```powershell
+get-ExecutionPolicy // 回复Restricted
+```
+
+此时输入命令，并再次获取状态，回复RemoteSigned，重启终端即可。
+
+```powershell
+set-ExecutionPolicy RemoteSigned
+get-ExecutionPolicy // 回复RemoteSigned
+```
+
