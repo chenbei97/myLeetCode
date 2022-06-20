@@ -762,6 +762,16 @@ Typora现在不免费，可以在微信公众号：软件智库找到下载。
 
 无广告，无尿点的解压软件。
 
+## 安装copytranslator
+
+下载地址：[CopyTranslator](https://copytranslator.github.io/download/#在线交流与反馈)。
+
+推荐下载v9.0.0版本，比较完整。
+
+推荐的设置如下。
+
+![copy_translator](copy_translator.png)
+
 ## 安装Graphviz
 
 这个是tensorflow-board绘制图的时候可能需要用的插件，如果没有，就会提示错误。
@@ -1036,6 +1046,24 @@ if __name__ == '__main__':
 [1.ComputerVision/python配置环境.md at main · chenbei97/ComputerVision (github.com)](https://github.com/chenbei97/ComputerVision/blob/main/markdown/配置环境相关/python配置环境.md)
 
 [2.pycharm+QT5+python3安装与环境配置](https://www.cnblogs.com/cthon/p/9379883.html)
+
+## 安装Visio
+
+下载地址：[Visio 2021中文版32/64位下载](http://www.zhanshaoyi.com/17197.html)。
+
+注意：最好下载2021版本，因为2019版本该公众号说需要每半年重新破解一次比较麻烦，2021版本没有此问题。
+
+安装教程可见：[Visio 2021中文版64位安装教程](http://www.zhanshaoyi.com/15427.html)。
+
+笔者安装的是office365-2021-x64版本，且是win11系统，安装此版本的Visio提示错误，所以没有安装成功。
+
+**建议office版本和visio版本一致，2019版本可能比较兼容**，否则会出错。
+
+## 安装Matlab
+
+下载地址：[MATLAB 2022a中文版64位下载|兼容WIN11|](http://www.zhanshaoyi.com/17900.html)。
+
+
 
 ## VSCode配置
 
@@ -2274,6 +2302,10 @@ Times passed in seconds: 0.7416 ms
 #### 参考链接
 
 [1.使用VS编译opencv](https://blog.csdn.net/qq_33389308/article/details/88063918)。
+
+## ubuntu配置
+
+
 
 ## 其它
 

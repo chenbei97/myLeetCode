@@ -20,6 +20,8 @@
     vs配置qt
     qtcreator
     pycharm配置qt
+安装Visio
+安装Matlab
 VSCode配置
     Python环境配置
     C++配置
@@ -36,6 +38,7 @@ opencv4.5.5配置
     编译选项设定
     Mingw编译
     VS编译
+ubuntu配置
 其它
     如何查看cpu核数以及线程数
     cmd对文件改名
