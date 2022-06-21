@@ -1,7 +1,7 @@
 /*
  * @Author: chenbei
  * @Date: 2022-06-21 08:22:09
- * @LastEditTime: 2022-06-21 14:13:12
+ * @LastEditTime: 2022-06-21 14:58:58
  * @FilePath: \\myLeetCode\\STLTestCode\\struct_memory_align.cpp
  * @Description: 
  * @Signature: A boy without dreams
@@ -25,6 +25,10 @@ int main()
     // &a(int) = 000000fbdf3ffb2a, &b(char) = 000000fbdf3ffb2e int低位,char高位
     printf("&a(int) = %p, &b(char) = %p",&ss.a,&ss.b);
     return -1;
+    int a1=1,a2=2,a3=3;
+    int *a[]={&a1,&a2,&a3};
+    int **p1 = a;
+    int *(*p2)[3] = &a;
 }
 /*
 g++ struct_memory_align.cpp -o struct_memory_align
