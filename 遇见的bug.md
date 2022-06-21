@@ -1007,3 +1007,149 @@ pair<const K, V>* dictionaryArray<K, V>::find(const K& theKey) const
 }
 ```
 
+## 14. 结构体字节对齐
+
+**结构体的大小一定要为有效对齐值的整数倍，当没有明确指明时，以结构体中最长的成员的长度来对齐**。
+
+STU1中，最长的是a，按4字节对齐，所以char b实际占据了4个字节，只是有3个字节为空；
+
+STU2中，同理最长的是stu，占据8字节，这8个字节可以容纳char b和int a，所以16个字节是ok的；
+
+STU3、STU5和STU4的结果不同就在于int a在前/后边还是在中间。int在中间会导致前后的char都需要按照4字节对齐，从而各自导致3个空字节的存在，需要12个字节；
+
+典型的例子。
+
+```c++
+#include <stdio.h>
+int main()
+{
+    printf("sizeof(char) = %d, sizeof(int) = %d\n",
+            sizeof(char),sizeof(int)); // 1 and 4字节
+    struct STU1{
+        char b = 'b'; // 1字节,3字节空
+        int a = 1; // 4字节
+    } stu1;
+    printf("sizeof(stu1) = %d\n",sizeof(stu1)); // 8字节而非5字节
+    struct STU2{
+        char b = 'b'; // 1字节,3字节空
+        int a = 1; // 4字节
+        STU1 stu; // 8字节
+    } stu2;
+    printf("sizeof(stu2) = %d\n",sizeof(stu2)); // 16字节
+    struct STU3{
+        int a = 1; // 4字节
+        char b = 'b'; // 1字节
+        char c = 'c'; // 1字节
+    } stu3;
+    printf("sizeof(stu3) = %d\n",sizeof(stu3)); // 8字节
+    struct STU4{
+        char b = 'b'; // 1字节，3字节空
+        int a = 1; // 4字节
+        char c = 'c'; // 1字节,3字节空
+    } stu4;
+    printf("sizeof(stu4) = %d\n",sizeof(stu4)); // 12字节
+    struct STU5{
+        char b = 'b'; // 1字节
+        char c = 'c'; // 1字节,2字节空
+        int a = 1; // 4字节
+    } stu5;
+    printf("sizeof(stu5) = %d\n",sizeof(stu5)); // 8字节
+    return -1;
+}
+```
+
+当用**#pragma pack(n)指定时，以n和最长成员中长度较小的值来对齐**，这里n是字节数。
+
+同样的代码，只需要在最开头加上指定字节数对齐，结果变得不同。
+
+```c++
+#pragma pack(2) // 2字节对齐,比任何STUx结构体的最长成员长度都小
+int main()
+{
+    ...
+    return -1;
+}
+// 输出结果
+sizeof(char) = 1, sizeof(int) = 4 // ok
+sizeof(stu1) = 6 // char b占据2字节,1字节空,int a占据4字节
+sizeof(stu2) = 12 // char b占据2字节,int a占据4字节,STU1 stu占据6字节
+sizeof(stu3) = 6 // char b和char c占据2字节,int a占据4字节
+sizeof(stu4) = 8 // char b占据2字节，int a占据4字节,char c占据2字节
+sizeof(stu5) = 6 // int a占据4字节,char b和char c占据2字节
+```
+
+如果指定**__ attribute __((aligned(n)))**分配字节也是可以的。
+
+```c++
+printf("-----------------------------------\n");
+struct __attribute__((aligned(8)))STU1{
+    char b = 'b'; // 高位1+3
+    int a = 1;  // 低位4字节
+} stu1;
+printf("&stu1.b = %p &stu1.a = %p &stu1 = %p\n",&stu1.a,&stu1.b,&stu1);
+printf("sizeof(stu1) = %d\n",sizeof(stu1)); // 8字节
+struct __attribute__((aligned(8)))STU2{
+    char b = 'b'; 
+    int a = 1; 
+    STU1 stu; 
+} stu2;
+printf("&stu2.b = %p &stu2.a = %p &stu2.stu = %p &stu2 = %p\n",&stu2.a,&stu2.b,&stu2.stu,&stu2);
+printf("sizeof(stu2) = %d\n",sizeof(stu2)); // 16字节
+struct __attribute__((aligned(8)))STU3{
+    int a = 1; 
+    char b = 'b'; 
+    char c = 'c'; 
+} stu3;
+printf("&stu3.a = %p &stu3.b = %p &stu3.c = %p &stu3 = %p\n",&stu3.a,&stu3.b,&stu3.c,&stu3);
+printf("sizeof(stu3) = %d\n",sizeof(stu3)); // 8字节
+struct __attribute__((aligned(8)))STU4{
+    char b = 'b'; 
+    int a = 1; 
+    char c = 'c'; 
+} stu4;
+printf("&stu4.b = %p &stu4.a = %p &stu4.c = %p &stu4 = %p\n",&stu4.b,&stu4.a,&stu4.c,&stu4);
+printf("sizeof(stu4) = %d\n",sizeof(stu4)); // 16字节
+struct __attribute__((aligned(8)))STU5{
+    char b = 'b'; 
+    char c = 'c'; 
+    int a = 1; 
+} stu5;
+printf("&stu5.b = %p &stu5.c = %p &stu5.a = %p &stu5 = %p\n",&stu5.b,&stu5.c,&stu5.a,&stu5);
+printf("sizeof(stu5) = %d\n",sizeof(stu5)); // 8字节
+
+/*
+  某次输出结果如下:
+    &stu1.b = 0000006e5a9ffd6c &stu1.a = 0000006e5a9ffd68 &stu1 = 0000006e5a9ffd68
+    sizeof(stu1) = 8
+    char,int结构,地址依次是d6c,d68,d68->d6c(int4字节),d6c(char1+3空字节),共分配8字节
+    
+    &stu2.b = 0000006e5a9ffd54 &stu2.a = 0000006e5a9ffd50 &stu2.stu = 0000006e5a9ffd58 &stu2 = 0000006e5a9ffd50
+    sizeof(stu2) = 16
+    char,int,stu1结构地址依次是d50,d54,d58,d50->d54(int4字节),d54->d68(char1+3空字节),stu1(8字节),共分配16字节
+    
+    &stu3.a = 0000006e5a9ffd48 &stu3.b = 0000006e5a9ffd4c &stu3.c = 0000006e5a9ffd4d &stu3 = 0000006e5a9ffd48
+    sizeof(stu3) = 8
+    int,char,char结构,地址依次是d48,d4c,d4d,d48->d4c(int4字节),d4c->d4d(char1字节)+d4d(char1+2空字节),共8字节
+    
+    &stu4.b = 0000006e5a9ffd30 &stu4.a = 0000006e5a9ffd34 &stu4.c = 0000006e5a9ffd38 &stu4 = 0000006e5a9ffd30
+    sizeof(stu4) = 16
+    char,int,char结构,地址依次是d30,d34,d38,d30->d34(char1+3空字节),d34->d38(int4字节),d38(char1+7空字节),共16字节
+    
+    &stu5.b = 0000006e5a9ffd28 &stu5.c = 0000006e5a9ffd29 &stu5.a = 0000006e5a9ffd2c &stu5 = 0000006e5a9ffd28
+    sizeof(stu5) = 8
+    char,char,int结构,地址依次是d28,d29,d2c,d28->d29(char1字节)+d29(char1+2空字节),d2c(int4字节),共8字节
+*/
+
+// 如果还结合了#pragma pack(2),略去结构体地址,某次输出结果如下
+&stu1.b = 0000004538fffcda &stu1.a = 0000004538fffcd8
+sizeof(stu1) = 8 
+&stu2.b = 0000004538fffcc2 &stu2.a = 0000004538fffcc0 &stu2.stu = 0000004538fffcc6
+sizeof(stu2) = 16 
+&stu3.a = 0000004538fffcb8 &stu3.b = 0000004538fffcbc &stu3.c = 0000004538fffcbd
+sizeof(stu3) = 8
+&stu4.b = 0000004538fffcb0 &stu4.a = 0000004538fffcb2 &stu4.c = 0000004538fffcb6
+sizeof(stu4) = 8
+&stu5.b = 0000004538fffca8 &stu5.c = 0000004538fffca9 &stu5.a = 0000004538fffcaa
+sizeof(stu5) = 8
+```
+
