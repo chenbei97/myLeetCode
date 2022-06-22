@@ -1055,15 +1055,95 @@ if __name__ == '__main__':
 
 安装教程可见：[Visio 2021中文版64位安装教程](http://www.zhanshaoyi.com/15427.html)。
 
-笔者安装的是office365-2021-x64版本，且是win11系统，安装此版本的Visio提示错误，所以没有安装成功。
+笔者安装的是office365-2021-x64版本，win11系统，安装2019版本的会出错，可能自带的office是2021版本。
 
 **建议office版本和visio版本一致，2019版本可能比较兼容**，否则会出错。
+
+激活过程，注意**关闭Windows安全中心的病毒和威胁防护、防火墙和网络保护**。防火墙注意**专用网络、域网络和公用网络**都关掉。
+
+![windows-defender](windows-defender.png)
+
+如果顺利的话直接就激活成功，可以使用了。
+
+如果激活过程提示你的**office不是VL版本无法使用KMS激活(win11可能出现的问题)**，请使用**win+r+ctrl+shift+enter(管理员权限打开不要直接enter)**打开PowerShell。
+
+参考解决链接：[KMS一键激活Windows所有版本、office所有版本、一句命令激活WINDOWS](https://www.kms.pub/index.html)
+
+执行以下命令会弹出窗口，提示激活成功。
+
+```powershell
+slmgr /skms win.kms.pub
+slmgr /ato
+```
+
+![visio-kms-failed-powershell](visio-kms-failed-powershell.png)
+
+再次激活，这个时间比较长，可能10分钟左右，结果显示激活成功。
+
+![visio-kms](visio-kms.png)
+
+不过好像没激活成功。。。kms工具显示激活状态都是office2016的，明天试试visio2016版本？
+
+2022/6/22
 
 ## 安装Matlab
 
 下载地址：[MATLAB 2022a中文版64位下载|兼容WIN11|](http://www.zhanshaoyi.com/17900.html)。
 
+安装指导：[MATLAB 2022a中文版安装教程](http://www.zhanshaoyi.com/17901.html)
 
+核心就是**选择文件安装密匙**，密码是
+
+```powershell
+50874-33247-14209-37962-45495-25133-28159-33348-18070-60881-29843-35694-31780-18077-36759-35464-51270-19436-54668-35284-27811-01134-26918-26782-54088
+```
+
+然后找到R2022A_Crack文件夹，**找到license_standalone.lic文件**即可。
+
+安装结束后要把**R2022A_Crack文件夹下的R2022a文件夹下的bin文件夹复制到安装路径文件夹**下，也就是替换。
+
+安装建议不放在C盘，全部选择安装的话大约32个G，同时安装路径不要有中文。
+
+这里我选择的安装路径是。
+
+```powershell
+E:\Matlab2022a
+```
+
+![matlab-install](matlab-install.jpg)
+
+安装结束后可能会提示安装编译器，网址为：[Compilers for MATLAB](https://ww2.mathworks.cn/support/requirements/supported-compilers.html)。
+
+![matlab-mingw](matlab-mingw.jpg)
+
+在这个网址下直接下载，**打开以后就是附加功能管理器**，会显示已经按照的产品。
+
+![matlab-mingw64](matlab-mingw64.png)
+
+然后在命令行输入依次以下命令。
+
+```matlab
+mex -setup
+mex -setup C++ 
+%% 以下任选一个作为编译器即可
+mex -setup:E:\Matlab2022a\bin\win64\mexopts\mingw64_g++.xml C++
+mex -setup:E:\Matlab2022a\bin\win64\mexopts\mingw64_g++_sdk10+.xml C++
+mex -setup:E:\Matlab2022a\bin\win64\mexopts\msvcpp2022.xml C++
+```
+
+从图片输出消息可以看出，**附加安装管理包实际安装在了用户文件夹下Appdata/Roaming下**。
+
+```powershell
+C:\Users\Lenovo\AppData\Roaming\MathWorks\MATLAB\R2022a
+```
+
+![matlab-mex-setup](matlab-mex-setup.png)
+
+还可以在**预设-常规-初始工作文件夹**，设置自己喜欢的工作文件夹，否则默认在C盘的文档创建Matlab文件夹作为工作文件夹。**预设-工程**也可以更改**新建工程的默认路径**，这里我都设为D盘下。
+
+```powershell
+D:\MatlabProjects
+```
 
 ## VSCode配置
 
