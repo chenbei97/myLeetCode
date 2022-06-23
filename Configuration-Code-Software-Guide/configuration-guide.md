@@ -1057,7 +1057,7 @@ if __name__ == '__main__':
 
 笔者安装的是office365-2021-x64版本，win11系统，安装2019版本的会出错，可能自带的office是2021版本。
 
-**建议office版本和visio版本一致，2019版本可能比较兼容**，否则会出错。
+**建议office版本和visio版本一致**。
 
 激活过程，注意**关闭Windows安全中心的病毒和威胁防护、防火墙和网络保护**。防火墙注意**专用网络、域网络和公用网络**都关掉。
 
@@ -1082,9 +1082,24 @@ slmgr /ato
 
 ![visio-kms](visio-kms.png)
 
+2022/6/22
+
 不过好像没激活成功。。。kms工具显示激活状态都是office2016的，明天试试visio2016版本？
 
-2022/6/22
+2022/6/23
+
+2016版本其实也是不行的，公司那台电脑安装成功是因为office没有安装，如果安装了office21全家桶，再装2016版本是不兼容的，所以我想到了一个办法。
+
+。。。那就是去淘宝搜21版本的visio，RMB 8元解决，输入密匙就可以直接激活了。
+
+```powershell
+关于您购买的订单号：1597875709375873177 请接收
+密钥：YVHJ9-NCWF3-79KYP-6RKP4-K4WQ2
+visio2021安装包下载链接：
+64位下载链接：https://officeall.lanzoui.com/igSLEwj03gf
+32位下载链接：https://officeall.lanzoui.com/iUL58wj039i
+安装激活步骤：https://mp.weixin.qq.com/s/cBNiKKFr_JLsMqzr_cYqwA
+```
 
 ## 安装Matlab
 
