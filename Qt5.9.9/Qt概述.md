@@ -4240,23 +4240,23 @@ void rootPathChanged(const QString &newPath);
 
 标准的基于项数据的数据模型类，每个项可以是任何数据类型。
 
-#### 4.1.3 QStringListModel
+#### 4.1.4 QStringListModel
 
 用于处理字符串列表数据的数据模型类。
 
-#### 4.1.4 QSortFilterProxyModel
+#### 4.1.5 QSortFilterProxyModel
 
 与其他数据模型结合，提供排序和过滤功能的数据模型类。
 
-#### 4.1.5 QSqlQuieryModel
+#### 4.1.6 QSqlQuieryModel
 
 用于数据库SQL查询结果的数据模型类。
 
-#### 4.1.6 QSqlTableModel
+#### 4.1.7 QSqlTableModel
 
 用于数据库的一个数据表的数据模型类。
 
-#### 4.1.7 QSqlRelationalTableModel
+#### 4.1.8 QSqlRelationalTableModel
 
 用于关系型数据表的数据模型类。
 
