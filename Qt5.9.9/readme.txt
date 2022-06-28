@@ -13,3 +13,5 @@
 2. MetaObjectTest 元对象的测试实例
 
 3. TestListTreeTabWidget 前四章的各类组件集中总结
+
+4. TestFileSystemModel 在QListView上的应用,视图组件<=>数据模型的关系
