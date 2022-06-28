@@ -2003,6 +2003,8 @@ enum State { Off, On };
 
 ![QIcon_Enum](QIcon_Enum.jpg)
 
+​																		图1 QIcon各枚举类型和状态的组合
+
 常见的成员函数如下，静态成员函数不太常用不再列举。
 
 ```c++
@@ -4002,16 +4004,16 @@ QCheckBox *checkbox = new QCheckBox("C&ase sensitive", this);
 
 View是视图，视图组件有QListView、QTreeView和QTableView，而之前的QListWidget、QTreeWidget和QTableWidget是这3个类的遍历类，它们**不使用数据模型**，而是直接**把数据存储到组件的每个项中**。而View只是借助模型类关联数据，能够将**界面组件和编辑的数据隔离开**。
 
-Model是模型，它是视图与原始数据之间的接口，常用的模型类有QStringListModel、QStandardItemModel，QSqlTableModel等，后边会分别介绍。
+Model是模型，它是**视图与原始数据之间的接口**，常用的模型类有QStringListModel、QStandardItemModel，QSqlTableModel等，后边会分别介绍。
 
-数据是实际的数据，例如数据库的数据表或者SQL查询结果，内存中的一个StringList湖泊磁盘文件结构等。视图组件可以从数据模型获取每个数据项的索引，数据项的索引可以找到数据。数据模型可以在不同的视图中展示，也可以不修改数据模型下设计特殊的视图组件。
+数据是实际的数据，例如数据库的数据表或者SQL查询结果，内存中的一个StringList、磁盘文件结构等。视图组件可以从数据模型获取每个数据项的索引，数据项的索引可以找到数据。数据模型可以在不同的视图中展示，也可以不修改数据模型下设计特殊的视图组件。
 
-Model/View还提供了代理功能，可以让用户定制数据的界面显示和编辑方式。代理功能可以显示一个数据，数据被编辑时，代理通过模型索引与数据模型通信，并为编辑数据提供一个编辑器，一般是个QLineEdit。
+Model/View还提供了代理功能，可以让用户定制数据的界面显示和编辑方式。代理功能可以显示一个数据，数据被编辑时，代理通过模型索引与数据模型通信，并为编辑数据提供一个编辑器，一般是个QLineEdit。QAbstractItemDelegate是所有代理类的基类，它的一个子类是**QStyledItemDelegate，是Qt的视图组件缺省使用的代理类**。对于特殊的数据编辑要求，例如只允许输入整数，可能使用QSpinBox而不是QLineEdit更合适，如果是下拉选择则是使用QComboBox，这时可以继承QStyledItemDelegate创建自定义代理类。
 
 模型、视图、代理之间使用信号和槽通信。源数据发生变化时，数据模型发射信号通知视图组件；用户界面在视图上操作数据时，视图组件会发送信号显示操作信息，数据模型的槽函数进行响应。编辑数据时，代理发射信号告知数据模型和视图组件编辑器的状态。
 
 ```mermaid
-graph TD
+graph LR
 数据 --> 数据模型
 数据模型 --> 数据
 数据模型 -->|显示| 视图组件
@@ -4021,11 +4023,281 @@ graph TD
 视图组件 -->|反馈| 代理
 ```
 
+### 4.1 数据模型
 
+所有基于项的数据模型都是基于共同抽象类**QAbstractItemModel**衍生，主要的类层次结构如下所示。注意：带有Abstract的类都是抽象类不能直接使用，所以实际能够使用的只有**7个**，在流程图中已经加粗显示。如果已定义的无法满足需求，可以自行继承3个子抽象类定义自己的数据模型类。
 
+```mermaid
+graph LR
+QAbstractItemModel-->QAbstractListModel
+QAbstractItemModel-->QAbstractProxyModel
+QAbstractItemModel-->QAbstractTableModel
+QAbstractItemModel==>QStandardItemModel
+QAbstractItemModel==>QFileSystemModel
 
+QAbstractListModel==>QStringListModel
+QAbstractProxyModel==>QSortFilterProxyModel
+QAbstractTableModel==>QSqlQueryModel
+QSqlQueryModel==>QSqlTableModel
+QSqlTableModel==>QSqlRelationalTableModel
+```
 
+```mermaid
+graph LR
+抽象模型-->列表模型
+抽象模型-->代理模型
+抽象模型-->表格模型
+抽象模型==>标准项模型
+抽象模型==>文件系统模型
 
+列表模型==>字符串列表模型
+代理模型==>排序筛选器代理模型
+表格模型==>SQL查询模型
+SQL查询模型==>SQL表格模型
+SQL表格模型==>SQL关联表格模型
+```
+
+常见的数据模型表现形式如下，它们都会一个顶层项，List只有1列，Table有多列且对齐，Tree则是自由定义。
+
+![data_model](data_model.jpg)
+
+​																		图2 常见数据模型的表现形式
+
+数据模型虽然基本形式是用行和列定义的表格数据，但不意味着底层是用二维数据存储的，使用行列只是一种为了交互方便的规定，使用模型索引的行号和列号就可以获取数据。
+
+提到了数据模型，就必须提到模型索引，这是访问数据的媒介，模型索引专门定义了一个类QModelIndex，模型索引可以提供给数据存储的一个临时指针，用于通过数据模型修改和提取数据，由于模型内部组织数据的结构随时可能更改，所以模型索引是临时的。如果需要持久性的模型索引，需要使用QPersistentModelIndex类。
+
+数据模型的每个项也是一个对应的类，例如标准项模型QStandardItemModel的数据类是QStandardItem，它有个静态函数可以设置数据，对应的获取数据也要先指定角色。
+
+```c++
+void QStandardItem::setData(const QVariant &value, int role = Qt::UserRole+1);
+Qvariant QStandardItem::data(int role = Qt::UserRole+1) const;
+```
+
+value可以是任何数据类型的数据，role是设置数据的角色，一个项可以存在不同角色的数据用于不同场合。对于用户角色，由开发人员决定使用哪些类型，并确保组件在访问和设置数据时使用正确的类型。role可以使用枚举值Qt::ItemDataRole来定义，其完整的定义和含义如下。
+
+```c++
+Qt::UserRole = 0x0100 // 第一个可用于特定于应用程序的角色
+enum Qt::ItemDataRole {
+    // 通用型角色
+    Qt::DisplayRole = 0, // 以文本形式呈现的关键数据(默认),QString
+    Qt::DecorationRole = 1, // 以图标形式呈现的数据,QColor,QIcon,QPixmap
+    Qt::EditRolec = 2, // 以适合在编辑器中编辑的形式显示的数据,QString
+    Qt::ToolTipRole = 3, // 项目工具提示中显示的数据,QString
+    Qt::StatusTipRole = 4, // 状态栏中显示的数据,QString
+    Qt::WhatsThisRole = 5, // "What's This?"中显示的项目数据模式,QString
+    Qt::SizeHintRole = 13, // 将提供给视图的项目的大小提示,QSize
+    // 描述外观和元数据的角色(具有关联类型)
+    Qt::FontRole = 6, // 使用默认委托呈现的项目的字体,QFont
+	Qt::TextAlignmentRole = 7, // 使用默认委托呈现的项目的文本对齐方式,Qt::Alignment
+	Qt::BackgroundRole = 8, // 使用默认代理渲染的项目的背景笔刷QBrush
+	Qt::BackgroundColorRole = 8, // 此角色已过时,改用BackgroundRole
+	Qt::ForegroundRole = 9, //使用默认代理渲染的项目的前景笔刷(文本颜色),QBrush
+	Qt::TextColorRole = 9,// 此角色已过时,改用ForegroundRol。
+	Qt::CheckStateRole = 10,//此角色用于获取项目的已检查状态,Qt::CheckState
+	Qt::InitialSortOrderRole = 14, // 此角色用于获取标题视图节的初始排序顺序,Qt::SortOrder,Qt4.8中引入
+    // 辅助功能角色(具有关联类型)
+    Qt::AccessibleTextRole = 11,// 可访问性扩展和插件(如屏幕阅读器)使用的文本,QString
+    Qt::AccessibleDescriptionRole = 12 // 用于辅助功能的项目描述,QString
+}
+```
+
+#### 4.1.1 QModelIndex
+
+要获得一个模型索引，必须提供3个参数：行号、列号和顶层项的模型索引。例如针对图2中Table Model的3个数据A、B、C，获取它们的索引代码如下。对于**List和Table模式的数据模型顶层节点总是用QModelIndex()表示**。
+
+```c++
+QModelIndex idxA = model->index(0,0,QModelIndex());
+QModelIndex idxB = model->index(1,1,QModelIndex());
+QModelIndex idxC = model->index(2,1,QModelIndex());
+```
+
+如果是在Tree模式的顶层节点可能就比较复杂，因为这个顶层节点也可以是其它节点的子节点。
+
+对于A、C的父节点都是顶层节点QModelIndex()，而B的顶层节点是idxA，故代码如下所示。
+
+```c++
+QModelIndex idxA = model->index(0,0,QModelIndex());
+QModelIndex idxA = model->index(1,0,idxA);
+QModelIndex idxC = model->index(2,1,QModelIndex());
+```
+
+对于QModelIndex的公共成员函数有以下几个。
+
+```c++
+// 返回索引的行、列、顶层节点、数据、标志位
+int column() const;
+int row() const;
+QModelIndex parent() const;
+QVariant data(int role = Qt::DisplayRole) const;
+Qt::ItemFlags flags() const;
+quintptr internalId() const; // 返回模型用于将索引与内部数据结构关联的quintptr
+void *internalPointer() const; // 返回模型用于将索引与内部数据结构关联的void*指针
+bool isValid() const; // 如果此模型索引有效，则返回true；否则返回false
+const QAbstractItemModel *model() const; // 返回指向包含此索引引用的项的模型的指针
+```
+
+#### 4.1.2 QFileSystemModel
+
+计算机上文件系统的数据模型类，是个可以访问本机文件系统的数据模型。
+
+QFileSystemModel和QTreeView结合使用就可以使用目录树的形式显示本机上的文件系统，如同Windows的资源管理器一样。
+
+获取本机文件系统需要使用setRootPath()函数设置根目录；
+
+可以使用静态函数QDir::currentPath()获取应用程序的当前路径；
+
+用于获取磁盘文件目录的数据模型类还有QDirModel，功能和QFileSystemModel类似，但是QFileSystemModel采用单独的线程获取，不会阻碍主线程，所以推荐使用QFileSystemModel。
+
+一个简单的例子。
+
+```c++
+QFileSystemModel *model = new QFileSystemModel;
+model->setRootPath(QDir::currentPath()); // 文件系统模型的根目录
+QTreeView *tree = new QTreeView(splitter);
+tree->setModel(model); // 树状展示
+tree->setRootIndex(model->index(QDir::currentPath()));// 用返回的给定路径和列的模型项索引去设置树结构的根目录索引
+```
+
+此类需要了解的枚举值类型如下。
+
+```c++
+enum Roles { 
+    FileIconRole, // Qt::DecorationRole
+    FilePathRole, // Qt::UserRole + 1
+    FileNameRole, // Qt::UserRole + 2
+    FilePermissions // Qt::UserRole + 3
+}
+```
+
+主要具备3个属性。
+
+```c++
+nameFilterDisables : bool // 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件,默认情况下，此属性为true
+readOnly : bool // 此属性保存目录模型是否允许写入文件系统,如果此属性设置为false，则目录模型将允许重命名、复制和删除文件和目录。默认情况下，此属性为true
+resolveSymlinks : bool // 此属性保存目录模型是否应解析符号链接,这仅与Windows相关,默认情况下，此属性为true
+```
+
+常见的公共成员函数如下。
+
+```c++
+// 获取模型索引指向文件的图标、信息、名称、路径
+QIcon fileIcon(const QModelIndex &index) const;
+QFileInfo fileInfo(const QModelIndex &index) const;
+QString fileName(const QModelIndex &index) const;
+QString filePath(const QModelIndex &index) const;
+QDir rootDirectory() const; // 当前设置的目录
+QString rootPath() const; // 当前设置的路径
+
+QDir::Filters filter() const; // 返回为目录模型指定的筛选器。
+QFileIconProvider *iconProvider() const; // 返回此目录模型的文件图标提供程序
+QStringList nameFilters() const; // 返回应用于模型中名称的筛选器列表
+// 这是一个重载函数，返回给定路径和列的模型项索引
+QModelIndex index(const QString &path, int column = 0) const;
+// 返回上次修改索引的日期和时间
+QDateTime lastModified(const QModelIndex &index) const;
+// 使用父模型索引中的名称创建目录
+QModelIndex mkdir(const QModelIndex &parent, const QString &name);
+// 返回项目“我的电脑”在给定角色下存储的数据
+QVariant myComputer(int role = Qt::DisplayRole) const;
+//返回 QFile::Permission的组合
+QFile::Permissions permissions(const QModelIndex &index) const;
+
+bool isDir(const QModelIndex &index) const;// 判断模型索引指向的文件是否为目录
+bool isReadOnly() const; // 此属性保存目录模型是否允许写入文件系统
+bool resolveSymlinks() const; // 此属性保存目录模型是否应解析符号链接，仅与Windows相关
+bool nameFilterDisables() const;// 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件
+// 删除与文件系统模型中的模型项索引相对应的目录，并从文件系统中删除相应的目录，如果成功，则返回true。如果无法删除目录，则返回false
+bool remove(const QModelIndex &index);
+bool rmdir(const QModelIndex &index); 
+
+void setFilter(QDir::Filters filters);// 将目录模型的筛选器设置为筛选器指定的筛选器
+void setIconProvider(QFileIconProvider *provider);// 设置文件图标的提供程序
+void setNameFilterDisables(bool enable);
+void setNameFilters(const QStringList &filters);// 设置要对现有文件应用的名称过滤器
+void setReadOnly(bool enable); // 设置只读
+void setResolveSymlinks(bool enable);// 此属性保存目录模型是否应解析符号链接
+qint64 size(const QModelIndex &index) const; // 如果节点是文件，返回文件大小(字节)，文件不存在返回0
+QString type(const QModelIndex &index) const;// 返回文件索引的类型，目录"Directory"、硬盘符"Drive"，文件夹"File Folder"，文件"txt File"、"exe File"、"pdf File"、"JPEG file"等
+// 通过在模型上安装文件系统监视程序，将其监视的目录设置为newPath。对此目录中的文件和目录所做的任何更改都将反映在模型中
+QModelIndex setRootPath(const QString &newPath);
+```
+
+信号函数。
+
+```c++
+// gatherer线程完成加载路径时，会发出此信号
+void directoryLoaded(const QString &path);
+// 每当使用旧名称的文件成功重命名为新名称时，就会发出此信号  
+static void QFileSystemModel::fileRenamed(const QString &path, 
+                                   const QString &oldName, 
+                                   const QString &newName);
+// 只要根路径更改为新路径，就会发出此信号
+void rootPathChanged(const QString &newPath);
+```
+
+#### 4.1.3 QStandardItemModel
+
+标准的基于项数据的数据模型类，每个项可以是任何数据类型。
+
+#### 4.1.3 QStringListModel
+
+用于处理字符串列表数据的数据模型类。
+
+#### 4.1.4 QSortFilterProxyModel
+
+与其他数据模型结合，提供排序和过滤功能的数据模型类。
+
+#### 4.1.5 QSqlQuieryModel
+
+用于数据库SQL查询结果的数据模型类。
+
+#### 4.1.6 QSqlTableModel
+
+用于数据库的一个数据表的数据模型类。
+
+#### 4.1.7 QSqlRelationalTableModel
+
+用于关系型数据表的数据模型类。
+
+### 4.2 视图组件
+
+视图组件统一存在一个函数setModel()，即可设置一个数据模型，视图组件上的修改将自动保存到关联的数据模型，一个数据模型可以同时在多个视图组件显示数据。
+
+视图组件类的关联关系表示如下，可以看出之前提到的3种类只是个派生类，它们的项可以用来存储部分小型数据。
+
+```mermaid
+graph LR
+QAbstractItemView-->QListView
+QAbstractItemView-->QTreeView
+QAbstractItemView-->QTableView
+QAbstractItemView-->QColumnView
+QAbstractItemView-->QHeaderView
+
+QListView==>QListWidget
+QTableView==>QTableWidget
+QTreeView==>QTreeWidget
+```
+
+#### 4.2.1 QListView
+
+用于显示单列的列表数据，适用于一维数据的操作。
+
+#### 4.2.2 QTreeView
+
+用于显示树状结构数据，适用于树状结构数据的操作。
+
+#### 4.2.3 QTableView
+
+用于显示表格状数据，适用于二维表格型数据的操作。
+
+#### 4.2.4 QColumnView
+
+用多个QListView显示树状层次结构，树状结构的一层用一个QListView显示。
+
+#### 4.2.5 QHeaderView
+
+提供行表头或列表头的视图组件，如QTable的行表头和列表头。
 
 
 
