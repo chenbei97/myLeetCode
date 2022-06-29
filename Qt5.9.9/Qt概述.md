@@ -2768,6 +2768,7 @@ QString suffix() const;
 void setPrefix(const QString &prefix);
 void setSuffix(const QString &suffix);
 void setSingleStep(int val);//设置获取调整步长
+void setButtonSymbols(QAbstractSpinBox::NoButtons);//设置倒立三角的风格为没有
 int singleStep() const
 int value() const;// 获取当前值
 // 其他的函数还有继承而来的
@@ -4301,15 +4302,82 @@ QTreeView==>QTreeWidget
 
 
 
+### 其它
 
+### 串口通信
 
+需要包含2个头文件，并在.pro工程文件配置。
 
+```c++
+QT       += serialport
+#include  <QtSerialPort/QSerialPort>
+#include  <QtSerialPort/QSerialPortInfo>
+```
 
+### QtSerialPort/QSerialPort
 
+QtSerialPort/QSerialPort类提供访问串行端口的功能，QtSerialPort/QSerialPortInfo可以获取有关可用串行端口的信息，该类允许枚举系统中的所有串行端口，你可以通过获取串口的名称来使用这个串口。
 
+将QSerialPortInfo类的对象作为参数传递给setPort()或setPortName()方法，以分配所需的串行设备。设置端口后，可以使用open()方法以只读（r/o）、只读（w/o）或读写（r/w）模式打开端口。注意：串行端口始终以独占访问方式打开（即，其他进程或线程都无法访问已打开的串行端口）。然后可以使用close()方法关闭端口并取消I/O操作。成功打开后，QSerialPort尝试确定端口的当前配置并初始化自身。可以使用setBaudRate()、setDataBits()、setParity()、SetTopBits()和setFlowControl()方法将端口重新配置为所需的设置。
+有两个属性可用于引脚输出信号，即：QSerialPort::dataTerminalReady、QSerialPort::requestToSend。也可以使用pinoutSignals()方法查询当前的pinout信号集。
+一旦知道端口已准备好读或写，就可以使用read()或write()方法。或者，也可以调用readLine()和readAll()便利方法。如果不是一次读取所有数据，那么当新的传入数据附加到QSerialPort的内部读取缓冲区时，剩余的数据将可供以后使用。您可以使用setReadBufferSize()限制读取缓冲区的大小。QSerialPort提供了一组函数，这些函数在发出特定信号之前挂起调用线程。
 
+这些功能可用于实现阻塞串行端口：
 
+waitForReadyRead()会阻止调用，直到有新数据可读取为止。
+waitForBytesWrite()会阻止调用，直到一个有效负载的数据写入串行端口。
 
+如果waitForReadyRead()返回false，则表示连接已关闭或发生错误。在任何时间点发生错误，QSerialPort将发出errorOccurred()信号。您还可以调用**error()来查找上次发生的错误类型**。使用**阻塞串行端口编程与使用非阻塞串行端口编程完全不同**。**阻塞串行端口不需要事件循环**，通常会导致代码更简单。然而，在GUI应用程序中，阻塞串行端口只能在非GUI线程中使用，以避免冻结用户界面。
+
+一个例子如下。
+
+```c++
+int numRead = 0, numReadTotal = 0;
+char buffer[50];
+
+for (;;) {
+    numRead  = serial.read(buffer, 50);
+
+    // Do whatever with the array
+
+    numReadTotal += numRead;
+    if (numRead == 0 && !serial.waitForReadyRead())
+        break; // 如果读取的数据为0或者串口没有准备好读取
+}
+```
+
+有关这些方法的更多详细信息，请参阅示例应用程序。QSerialPort类还可以与QTextStream和QDataStream的流操作符（操作符<<（）和操作符>>（））一起使用。不过，有一个问题需要注意：在尝试使用操作符>>（）重载操作符读取之前，请确保有足够的数据可用。
+
+### QtSerialPort/QSerialPortInfo
+
+此类提供有关现有串行端口的信息。可以使用静态函数生成QSerialPortInfo对象的列表。列表中的每个QSerialPortInfo对象表示一个串行端口，可以查询端口名称、系统位置、描述和制造商。QSerialPortInfo类还可以用作QSerialPort类的setPort()方法的输入参数。
+
+常见的成员函数和静态函数如下。
+
+```c++
+// 构造函数和析构函数
+QSerialPortInfo()
+QSerialPortInfo(const QSerialPort &port);
+QSerialPortInfo(const QString &name);
+QSerialPortInfo(const QSerialPortInfo &other);
+QSerialPortInfo &operator=(const QSerialPortInfo &other);
+void swap(QSerialPortInfo &other);
+~QSerialPortInfo();
+QString description() const; // 串口描述信息
+QString systemLocation() const; // 返回串行端口的系统位置
+bool hasProductIdentifier() const; // 如果存在有效的16位产品编号，则返回true；否则返回false。
+bool hasVendorIdentifier() const;// 如果存在有效的16位供应商编号，则返回true；否则返回false。
+quint16 productIdentifier() const; // 返回16位产品编号
+quint16 vendorIdentifier() const; // 返回16位供应商编号
+bool isBusy() const; // 如果串行端口忙，则返回true；否则返回false。
+bool isNull() const; // 此QSerialPortInfo对象是否保存串行端口定义
+QString manufacturer() const;// 返回串行端口的制造商字符串（如果可用）；否则返回空字符串
+
+QString portName() const; // 返回串口名称
+QString serialNumber() const; // 返回串口编号
+static QList<qint32> QSerialPortInfo::standardBaudRates();// 返回平台支持的可用标准波特率列表
+static QList<QSerialPortInfo> QSerialPortInfo::availablePorts();// 返回系统可用串行端口列表
+```
 
 
 
