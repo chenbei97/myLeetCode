@@ -4300,9 +4300,7 @@ QTreeView==>QTreeWidget
 
 提供行表头或列表头的视图组件，如QTable的行表头和列表头。
 
-
-
-### 其它
+## 其它
 
 ### 串口通信
 
@@ -4314,7 +4312,7 @@ QT       += serialport
 #include  <QtSerialPort/QSerialPortInfo>
 ```
 
-### QtSerialPort/QSerialPort
+#### QtSerialPort/QSerialPort
 
 QtSerialPort/QSerialPort类提供访问串行端口的功能，QtSerialPort/QSerialPortInfo可以获取有关可用串行端口的信息，该类允许枚举系统中的所有串行端口，你可以通过获取串口的名称来使用这个串口。
 
@@ -4348,7 +4346,7 @@ for (;;) {
 
 有关这些方法的更多详细信息，请参阅示例应用程序。QSerialPort类还可以与QTextStream和QDataStream的流操作符（操作符<<（）和操作符>>（））一起使用。不过，有一个问题需要注意：在尝试使用操作符>>（）重载操作符读取之前，请确保有足够的数据可用。
 
-### QtSerialPort/QSerialPortInfo
+#### QtSerialPort/QSerialPortInfo
 
 此类提供有关现有串行端口的信息。可以使用静态函数生成QSerialPortInfo对象的列表。列表中的每个QSerialPortInfo对象表示一个串行端口，可以查询端口名称、系统位置、描述和制造商。QSerialPortInfo类还可以用作QSerialPort类的setPort()方法的输入参数。
 
