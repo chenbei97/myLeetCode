@@ -1,15 +1,22 @@
 #include "testserialport.h"
 #include "ui_testserialport.h"
 #include  <QDebug>
-#include <QList>
+#include <QStringList>
+#include <QIODevice>
+#include <QMessageBox>
 TestSerialPort::TestSerialPort(QWidget *parent)
   : QMainWindow(parent)
   , ui(new Ui::TestSerialPort)
 {
   ui->setupUi(this);
+
+  this->volPort = this->portFactory.createPort();
+  connect(this->volPort,&QSerialPort::readyRead,this,&TestSerialPort::receive_volPort_data);
   ui->statusbar->showMessage("当前运行模式为：xx模式");
+
   this->initialize_spinBox_component();
-  this->initialize_serial_port();
+
+
 }
 void TestSerialPort::initialize_spinBox_component() // 初始化spinbox组件
 {
@@ -64,49 +71,71 @@ void TestSerialPort::initialize_spinBox_component() // 初始化spinbox组件
   ui->RInput->setValue(0.00);
   ui->ROuputEL->setValue(0.00);
   ui->ROuputPS->setValue(0.00);
+
+  // 2. 初始化串口名称和波特率的2个spinbox组件
+  const QList<QSerialPortInfo> infos = QSerialPortInfo::availablePorts();
+  foreach (QSerialPortInfo info , infos){
+       ui->serialNameBox->addItem(info.portName());
+  }
+ QList<qint32> baudrates = QSerialPortInfo::standardBaudRates();
+ for(const qint32& baudrate : baudrates){
+    ui->serialBaudRateBox->addItem(QString::asprintf("%d",baudrate));
+   }
+ ui->serialNameBox->setCurrentText("COM6");
+ ui->serialBaudRateBox->setCurrentText("9600");
 }
 
 TestSerialPort::~TestSerialPort()
 {
   delete ui;
 }
-void TestSerialPort::initialize_serial_port()
-{
-   this->port = new QSerialPort(this);
 
-  const QList<QSerialPortInfo> infos = QSerialPortInfo::availablePorts();
-  // qDebug()<<infos.empty();
-  for (const QSerialPortInfo &info : infos){
-      // qDebug()<<info.portName();
-      ui->serialNameBox->addItem(info.portName());
-    }
- QList<qint32> baudrates = QSerialPortInfo::standardBaudRates();
- for(const qint32& baudrate : baudrates){
-    // qDebug()<<baudrate;
-     ui->serialBaudRateBox->addItem(QString::asprintf("%d",baudrate));
-   }
-}
-void TestSerialPort::print_serial_port_info() // 用于调试用的
-{
-  qDebug()<<this->port->portName();
-  qDebug()<<this->port->baudRate();
-}
 
 void TestSerialPort::on_serialNameBox_currentIndexChanged(const QString &arg1)
 {
-  this->port->setPortName(arg1);
-// print_serial_port_info();
+
+  this->volPort->setPortName(arg1);
 }
 
 
 void TestSerialPort::on_serialBaudRateBox_currentIndexChanged(const QString &arg1)
 {
-    this->port->setBaudRate(arg1.toInt());
-   // print_serial_port_info();
+    this->volPort->setBaudRate(arg1.toInt());
 }
 
-
+void TestSerialPort::receive_volPort_data()
+{
+  if (!this->volPort->isOpen()) this->volPort->open(QIODevice::ReadWrite);
+  if (this->volPort->bytesAvailable()) {
+      qDebug()<<"数据不为空,可以读取";
+      QByteArray dataBytes = this->volPort->readAll();
+      double data = dataBytes.toDouble();
+      ui->volOuput->setValue(data);
+    }
+//  else{
+//      QMessageBox::critical(this,"错误","缓存区没有数据!");
+//    }
+}
 void TestSerialPort::on_volInput_valueChanged(double arg1)
 {
-    qDebug()<<arg1;
+    if (!this->volPort->isOpen()) {
+        volPort->open(QIODevice::ReadWrite);
+        if (this->volPort->isOpen())
+           qDebug()<<volPort->portName()<<" opened successful, baudRate is "<<volPort->baudRate();
+        else qDebug()<<"The serial port opened failed!";
+    } else {
+        qDebug()<<"The serial port is already open.";
+    }
+    const char * arg = QString::number(arg1,'f',2).toStdString().c_str();
+   //  qDebug()<<arg;
+    quint64 byteSize = this->volPort->write(arg);
+    Q_UNUSED(byteSize);
+
+
+    // this->volPort->close(); 要注释掉,否则收不到消息,串口的关闭会在串口管理类的析构函数自行关闭
+}
+
+void TestSerialPort::on_flushdata_clicked()
+{
+   receive_volPort_data();
 }

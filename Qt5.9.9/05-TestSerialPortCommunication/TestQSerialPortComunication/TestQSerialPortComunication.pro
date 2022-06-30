@@ -17,9 +17,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
+    manageserialport.cpp \
     testserialport.cpp
 
 HEADERS += \
+    manageserialport.h \
     testserialport.h
 
 FORMS += \

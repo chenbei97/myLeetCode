@@ -40,7 +40,7 @@ public:
     QLabel *label_13;
     QComboBox *serialBaudRateBox;
     QLabel *label_14;
-    QWidget *widget;
+    QWidget *layoutWidget;
     QHBoxLayout *horizontalLayout_12;
     QVBoxLayout *verticalLayout_4;
     QHBoxLayout *horizontalLayout;
@@ -79,6 +79,7 @@ public:
     QHBoxLayout *horizontalLayout_11;
     QLabel *label_11;
     QDoubleSpinBox *ROuputPS;
+    QPushButton *flushdata;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -118,24 +119,24 @@ public:
         label_14 = new QLabel(centralwidget);
         label_14->setObjectName(QStringLiteral("label_14"));
         label_14->setGeometry(QRect(680, 320, 131, 21));
-        widget = new QWidget(centralwidget);
-        widget->setObjectName(QStringLiteral("widget"));
-        widget->setGeometry(QRect(40, 20, 856, 112));
-        horizontalLayout_12 = new QHBoxLayout(widget);
+        layoutWidget = new QWidget(centralwidget);
+        layoutWidget->setObjectName(QStringLiteral("layoutWidget"));
+        layoutWidget->setGeometry(QRect(40, 20, 856, 112));
+        horizontalLayout_12 = new QHBoxLayout(layoutWidget);
         horizontalLayout_12->setObjectName(QStringLiteral("horizontalLayout_12"));
         horizontalLayout_12->setContentsMargins(0, 0, 0, 0);
         verticalLayout_4 = new QVBoxLayout();
         verticalLayout_4->setObjectName(QStringLiteral("verticalLayout_4"));
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
-        label = new QLabel(widget);
+        label = new QLabel(layoutWidget);
         label->setObjectName(QStringLiteral("label"));
         label->setMinimumSize(QSize(120, 30));
         label->setMaximumSize(QSize(120, 30));
 
         horizontalLayout->addWidget(label);
 
-        volInput = new QDoubleSpinBox(widget);
+        volInput = new QDoubleSpinBox(layoutWidget);
         volInput->setObjectName(QStringLiteral("volInput"));
         volInput->setMinimumSize(QSize(80, 30));
         volInput->setMaximumSize(QSize(80, 30));
@@ -147,14 +148,14 @@ public:
 
         horizontalLayout_2 = new QHBoxLayout();
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
-        label_2 = new QLabel(widget);
+        label_2 = new QLabel(layoutWidget);
         label_2->setObjectName(QStringLiteral("label_2"));
         label_2->setMinimumSize(QSize(120, 30));
         label_2->setMaximumSize(QSize(120, 30));
 
         horizontalLayout_2->addWidget(label_2);
 
-        volOuput = new QDoubleSpinBox(widget);
+        volOuput = new QDoubleSpinBox(layoutWidget);
         volOuput->setObjectName(QStringLiteral("volOuput"));
         volOuput->setMinimumSize(QSize(80, 30));
         volOuput->setMaximumSize(QSize(80, 30));
@@ -171,14 +172,14 @@ public:
         verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
         horizontalLayout_3 = new QHBoxLayout();
         horizontalLayout_3->setObjectName(QStringLiteral("horizontalLayout_3"));
-        label_3 = new QLabel(widget);
+        label_3 = new QLabel(layoutWidget);
         label_3->setObjectName(QStringLiteral("label_3"));
         label_3->setMinimumSize(QSize(120, 30));
         label_3->setMaximumSize(QSize(120, 30));
 
         horizontalLayout_3->addWidget(label_3);
 
-        curInput = new QDoubleSpinBox(widget);
+        curInput = new QDoubleSpinBox(layoutWidget);
         curInput->setObjectName(QStringLiteral("curInput"));
         curInput->setMinimumSize(QSize(80, 30));
         curInput->setMaximumSize(QSize(80, 30));
@@ -190,14 +191,14 @@ public:
 
         horizontalLayout_4 = new QHBoxLayout();
         horizontalLayout_4->setObjectName(QStringLiteral("horizontalLayout_4"));
-        label_4 = new QLabel(widget);
+        label_4 = new QLabel(layoutWidget);
         label_4->setObjectName(QStringLiteral("label_4"));
         label_4->setMinimumSize(QSize(120, 30));
         label_4->setMaximumSize(QSize(120, 30));
 
         horizontalLayout_4->addWidget(label_4);
 
-        curOuputEL = new QDoubleSpinBox(widget);
+        curOuputEL = new QDoubleSpinBox(layoutWidget);
         curOuputEL->setObjectName(QStringLiteral("curOuputEL"));
         curOuputEL->setMinimumSize(QSize(80, 30));
         curOuputEL->setMaximumSize(QSize(80, 30));
@@ -209,14 +210,14 @@ public:
 
         horizontalLayout_5 = new QHBoxLayout();
         horizontalLayout_5->setObjectName(QStringLiteral("horizontalLayout_5"));
-        label_5 = new QLabel(widget);
+        label_5 = new QLabel(layoutWidget);
         label_5->setObjectName(QStringLiteral("label_5"));
         label_5->setMinimumSize(QSize(120, 30));
         label_5->setMaximumSize(QSize(120, 30));
 
         horizontalLayout_5->addWidget(label_5);
 
-        curOuputPS = new QDoubleSpinBox(widget);
+        curOuputPS = new QDoubleSpinBox(layoutWidget);
         curOuputPS->setObjectName(QStringLiteral("curOuputPS"));
         curOuputPS->setMinimumSize(QSize(80, 30));
         curOuputPS->setMaximumSize(QSize(80, 30));
@@ -233,12 +234,12 @@ public:
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
         horizontalLayout_6 = new QHBoxLayout();
         horizontalLayout_6->setObjectName(QStringLiteral("horizontalLayout_6"));
-        label_6 = new QLabel(widget);
+        label_6 = new QLabel(layoutWidget);
         label_6->setObjectName(QStringLiteral("label_6"));
 
         horizontalLayout_6->addWidget(label_6);
 
-        powInput = new QDoubleSpinBox(widget);
+        powInput = new QDoubleSpinBox(layoutWidget);
         powInput->setObjectName(QStringLiteral("powInput"));
         powInput->setMinimumSize(QSize(80, 30));
         powInput->setMaximumSize(QSize(80, 30));
@@ -250,12 +251,12 @@ public:
 
         horizontalLayout_7 = new QHBoxLayout();
         horizontalLayout_7->setObjectName(QStringLiteral("horizontalLayout_7"));
-        label_7 = new QLabel(widget);
+        label_7 = new QLabel(layoutWidget);
         label_7->setObjectName(QStringLiteral("label_7"));
 
         horizontalLayout_7->addWidget(label_7);
 
-        powOuputEL = new QDoubleSpinBox(widget);
+        powOuputEL = new QDoubleSpinBox(layoutWidget);
         powOuputEL->setObjectName(QStringLiteral("powOuputEL"));
         powOuputEL->setMinimumSize(QSize(80, 30));
         powOuputEL->setMaximumSize(QSize(80, 30));
@@ -267,12 +268,12 @@ public:
 
         horizontalLayout_8 = new QHBoxLayout();
         horizontalLayout_8->setObjectName(QStringLiteral("horizontalLayout_8"));
-        label_8 = new QLabel(widget);
+        label_8 = new QLabel(layoutWidget);
         label_8->setObjectName(QStringLiteral("label_8"));
 
         horizontalLayout_8->addWidget(label_8);
 
-        powOuputPS = new QDoubleSpinBox(widget);
+        powOuputPS = new QDoubleSpinBox(layoutWidget);
         powOuputPS->setObjectName(QStringLiteral("powOuputPS"));
         powOuputPS->setMinimumSize(QSize(80, 30));
         powOuputPS->setMaximumSize(QSize(80, 30));
@@ -289,12 +290,12 @@ public:
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
         horizontalLayout_9 = new QHBoxLayout();
         horizontalLayout_9->setObjectName(QStringLiteral("horizontalLayout_9"));
-        label_9 = new QLabel(widget);
+        label_9 = new QLabel(layoutWidget);
         label_9->setObjectName(QStringLiteral("label_9"));
 
         horizontalLayout_9->addWidget(label_9);
 
-        RInput = new QDoubleSpinBox(widget);
+        RInput = new QDoubleSpinBox(layoutWidget);
         RInput->setObjectName(QStringLiteral("RInput"));
         RInput->setMinimumSize(QSize(80, 30));
         RInput->setMaximumSize(QSize(80, 30));
@@ -306,12 +307,12 @@ public:
 
         horizontalLayout_10 = new QHBoxLayout();
         horizontalLayout_10->setObjectName(QStringLiteral("horizontalLayout_10"));
-        label_10 = new QLabel(widget);
+        label_10 = new QLabel(layoutWidget);
         label_10->setObjectName(QStringLiteral("label_10"));
 
         horizontalLayout_10->addWidget(label_10);
 
-        ROuputEL = new QDoubleSpinBox(widget);
+        ROuputEL = new QDoubleSpinBox(layoutWidget);
         ROuputEL->setObjectName(QStringLiteral("ROuputEL"));
         ROuputEL->setMinimumSize(QSize(80, 30));
         ROuputEL->setMaximumSize(QSize(80, 30));
@@ -323,12 +324,12 @@ public:
 
         horizontalLayout_11 = new QHBoxLayout();
         horizontalLayout_11->setObjectName(QStringLiteral("horizontalLayout_11"));
-        label_11 = new QLabel(widget);
+        label_11 = new QLabel(layoutWidget);
         label_11->setObjectName(QStringLiteral("label_11"));
 
         horizontalLayout_11->addWidget(label_11);
 
-        ROuputPS = new QDoubleSpinBox(widget);
+        ROuputPS = new QDoubleSpinBox(layoutWidget);
         ROuputPS->setObjectName(QStringLiteral("ROuputPS"));
         ROuputPS->setMinimumSize(QSize(80, 30));
         ROuputPS->setMaximumSize(QSize(80, 30));
@@ -341,10 +342,13 @@ public:
 
         horizontalLayout_12->addLayout(verticalLayout_2);
 
+        flushdata = new QPushButton(centralwidget);
+        flushdata->setObjectName(QStringLiteral("flushdata"));
+        flushdata->setGeometry(QRect(650, 440, 241, 71));
         TestSerialPort->setCentralWidget(centralwidget);
         menubar = new QMenuBar(TestSerialPort);
         menubar->setObjectName(QStringLiteral("menubar"));
-        menubar->setGeometry(QRect(0, 0, 996, 28));
+        menubar->setGeometry(QRect(0, 0, 996, 25));
         TestSerialPort->setMenuBar(menubar);
         statusbar = new QStatusBar(TestSerialPort);
         statusbar->setObjectName(QStringLiteral("statusbar"));
@@ -375,6 +379,7 @@ public:
         label_9->setText(QApplication::translate("TestSerialPort", "\345\206\205\351\230\273\350\256\276\347\275\256\357\274\232", Q_NULLPTR));
         label_10->setText(QApplication::translate("TestSerialPort", "\345\206\205\351\230\273\345\233\236\350\257\273(EL)", Q_NULLPTR));
         label_11->setText(QApplication::translate("TestSerialPort", "\345\206\205\351\230\273\345\233\236\350\257\273(PS)", Q_NULLPTR));
+        flushdata->setText(QApplication::translate("TestSerialPort", "\346\211\213\345\212\250\345\210\267\346\226\260\345\233\236\350\257\273\345\200\274", Q_NULLPTR));
     } // retranslateUi
 
 };

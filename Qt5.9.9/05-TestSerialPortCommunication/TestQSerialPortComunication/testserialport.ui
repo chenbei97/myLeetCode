@@ -121,7 +121,7 @@
      <string>可用波特率</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>40</x>
@@ -506,6 +506,19 @@
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="flushdata">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>440</y>
+      <width>241</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>手动刷新回读值</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -513,7 +526,7 @@
      <x>0</x>
      <y>0</y>
      <width>996</width>
-     <height>28</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

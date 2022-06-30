@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include  <QtSerialPort/QSerialPort>
 #include  <QtSerialPort/QSerialPortInfo>
+#include  <QList>
+#include "manageserialport.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class TestSerialPort; }
 QT_END_NAMESPACE
@@ -19,14 +21,15 @@ private slots:
   void on_serialNameBox_currentIndexChanged(const QString &arg1);
   void on_serialBaudRateBox_currentIndexChanged(const QString &arg1);
   void on_volInput_valueChanged(double arg1);
+  void receive_volPort_data();
+  void on_flushdata_clicked();
 
 private:
   void initialize_spinBox_component();
-  void initialize_serial_port();
-  void print_serial_port_info();
+
 private:
   Ui::TestSerialPort *ui;
-  QSerialPort * port;
-  QSerialPortInfo * portInfo;
+  manageSerialPort  portFactory;
+  QSerialPort * volPort;
 };
 #endif // TESTSERIALPORT_H
