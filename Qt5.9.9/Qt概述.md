@@ -4304,6 +4304,194 @@ QTreeView==>QTreeWidget
 
 ### 串口通信
 
+#### QIODevice
+
+它继承自QObject。
+
+QIODevice 类是 Qt 中所有 I/O 设备的基接口类。
+QIODevice 为支持读写数据块的设备提供通用实现和抽象接口，例如 QFile、QBuffer 和 QTcpSocket。 QIODevice 是抽象的，不能被实例化，但是通常使用它定义的接口来提供与设备无关的 I/O 特性。例如，Qt 的 XML 类对 QIODevice 指针进行操作，允许它们与各种设备（如文件和缓冲区）一起使用。
+
+在访问设备之前，**必须调用 open() 来设置正确的 OpenMode（例如 ReadOnly 或 ReadWrite）**。然后，您可以使用 write() 或 putChar() 写入设备，并通过调用 read()、readLine() 或 readAll() 进行读取。完成设备后调用 close()。
+QIODevice 区分两种类型的设备：随机访问设备和顺序设备。
+随机访问设备支持使用 seek() 搜索任意位置。文件中的当前位置可通过调用 pos() 获得。 QFile 和 QBuffer 是随机访问设备的示例。顺序设备不支持寻找任意位置。必须一次性读取数据。函数 pos() 和 size() 不适用于顺序设备。 您可以使用 isSequential() 来确定设备的类型。
+
+**当有新数据可供读取时，QIODevice 会发出 readyRead()**；例如，如果新数据已到达网络，或者是否将其他数据附加到您正在读取的文件中。**您可以调用 bytesAvailable() 来确定当前可供读取的字节数**。在使用诸如 QTcpSocket 之类的异步设备进行编程时，通常将 bytesAvailable() 与 readyRead() 信号一起使用，其中数据片段可以到达任意时间点。**每次将数据的有效负载写入设备时，QIODevice 都会发出 bytesWritten() 信号**。使用 **bytesToWrite() 确定当前等待写入的数据量**。
+
+QIODevice 的某些子类，例如 QTcpSocket 和 QProcess，是异步的。这意味着诸如 write() 或 read() 之类的 I/O 函数总是立即返回，而当控制返回事件循环时，可能会发生与设备本身的通信。 QIODevice 提供的功能允许您强制立即执行这些操作，同时阻塞调用线程并且不进入事件循环。**这允许在没有事件循环的情况下使用 QIODevice 子类，或者在单独的线程中使用**：
+
+waitForReadyRead() - 此函数暂停调用线程中的操作，直到有新数据可供读取。
+waitForBytesWritten() - 此函数暂停调用线程中的操作，直到一个有效负载数据已写入设备。
+waitFor....() - QIODevice 的子类为特定于设备的操作实现阻塞功能。例如，QProcess 有一个名为 waitForStarted() 的函数，它暂停调用线程中的操作，直到进程启动。
+
+从主 GUI 线程调用这些函数可能会导致您的用户界面冻结。例子：
+
+```c++
+QProcess gzip;
+gzip.start("gzip", QStringList() << "-c");
+if (!gzip.waitForStarted())
+    return false;
+
+gzip.write("uncompressed data");
+
+QByteArray compressed;
+while (gzip.waitForReadyRead())
+    compressed += gzip.readAll();
+```
+
+通过继承 QIODevice，您可以为您自己的 I/O 设备提供相同的接口。 **QIODevice 的子类只需要实现受保护的 readData() 和 writeData() 函数**。 QIODevice 使用这些函数来实现它所有的便利函数，**例如 getChar()、readLine() 和 write()**。 QIODevice 还为您处理访问控制，因此如果**调用 writeData()，您可以放心地假设设备以写入模式打开**。
+
+一些子类，例如 QFile 和 QTcpSocket，是使用内存缓冲区实现的，用于中间存储数据。这减少了所需的设备访问调用的数量，这些调用通常非常慢。缓冲使 getChar() 和 putChar() 之类的函数变得更快，因为它们可以在内存缓冲区上操作，而不是直接在设备本身上操作。但是，某些 I/O 操作不适用于缓冲区。例如，如果几个用户打开同一个设备并逐个字符地读取它，当他们打算分别读取一个单独的块时，他们最终可能会读取相同的数据。因此，QIODevice 允许您通过将 Unbuffered 标志传递给 open() 来绕过任何缓冲。子类化 QIODevice 时，请记住绕过设备在无缓冲模式下打开时可能使用的任何缓冲区。
+
+通常，来自异步设备的传入数据流是分段的，并且数据块可以到达任意时间点。要处理数据结构的不完整读取，请使用 QIODevice 实现的事务机制。有关详细信息，请参阅 startTransaction() 和相关函数。
+一些顺序设备支持通过多个通道进行通信。这些通道代表具有独立排序传递特性的独立数据流。打开设备后，您可以通过调用 readChannelCount() 和 writeChannelCount() 函数来确定通道数。要在频道之间切换，请分别调用 setCurrentReadChannel() 和 setCurrentWriteChannel()。 QIODevice 还提供额外的信号来处理基于每个通道的异步通信。
+
+目前为止2022/6/30，对于串口通信需要了解的东西。
+
+##### 枚举类型
+
+**定义的唯一枚举类型。**
+
+```c++
+flags QIODevice::OpenMode;
+enum QIODevice::OpenModeFlag{
+    QIODevice::NotOpen = 0x0000, // 设备没打开
+    QIODevice::ReadOnly = 0x0001, // 只读
+    QIODevice::WriteOnly = 0x0002，// 只写
+    QIODevice::ReadWrite = ReadOnly | WriteOnly， // 可读可写
+    QIODevice::Append = 0x0004，// 设备以追加模式打开，以便将所有数据写入文件末尾
+    QIODevice::Truncate = 0x0008，// 如果可能，设备会在打开之前被截断。设备的所有早期内容都将丢失
+    QIODevice::Text = 0x0010，// 读取时，行尾终止符被转换为'\n'。写入时，行尾终止符被转换为本地编码，例如Win32的'\r\n';
+    QIODevice::Unbuffered = 0x0020 // 绕过设备中的任何缓冲区
+};
+```
+
+##### 成员虚函数
+
+**成员函数，被串口通信类继承使用的一些函数。**
+
+```c++
+virtual bool atEnd() const; // 是否为数据的结尾
+virtual qint64 bytesAvailable() const; // 返回等待读取的传入字节数
+virtual qint64 bytesToWrite() const; // 返回等待写入的字节数
+virtual bool canReadLine() const; // 能否读取一行
+virtual void close();// 关闭设备
+virtual bool open(OpenMode mode);//打开设备
+virtual bool isSequential() const;// 是否顺序设备
+
+qint64 read(char *data, qint64 maxSize); // 读取指定字节数据并依据情况返回整数
+QByteArray read(qint64 maxSize); // 读取指定字节数据返回字节数组,无法报错
+QByteArray readAll(); //读取全部数据,无法报错
+qint64 write(const char *data, qint64 maxSize);// 最多将数据中的 maxSize 字节数据写入设备。返回实际写入的字节数，如果发生错误，则返回 -1
+qint64 write(const char *data); // 这是一个过载功能,将数据从 8 位字符的零终止字符串写入设备。返回实际写入的字节数，如果发生错误，则返回 -1。这相当于QIODevice::write(data, qstrlen(data));
+qint64 write(const QByteArray &byteArray);// 这是一个过载功能,将 byteArray 的内容写入设备。返回实际写入的字节数，如果发生错误，则返回 -1
+pure virtual protected qint64 QIODevice::writeData(const char *data, qint64 maxSize);//内部调用,最多将数据中的 maxSize 字节写入设备。返回写入的字节数，如果发生错误，则返回 -1。
+
+qint64 readLine(char *data, qint64 maxSize); // 读取一行数据返回整数
+QByteArray readLine(qint64 maxSize = 0); // 读取一行数据返回字节数组,无法报错
+virtual protected qint64 QIODevice::readLineData(char *data, qint64 maxSize);//内部调用的
+
+virtual bool reset();
+virtual bool seek(qint64 pos);
+virtual qint64 size() const;
+virtual qint64 pos() const;
+
+virtual bool waitForBytesWritten(int msecs); // 
+virtual bool waitForReadyRead(int msecs);
+```
+
+**readLine函数**；从设备中读取一行 ASCII 字符，**最大为 maxSize - 1 个字节**，将字符存储在数据中，并返回读取的字节数。**如果无法读取一行但没有发生错误，则此函数返回 0**。如果发生错误，**此函数返回可读取内容的长度**，如果**未读取任何内容，则返回 -1**。**终止的 &#39;\0&#39; 字节总是附加到数据中，因此 maxSize 必须大于 1**。读取数据直到满足以下任一条件： 读取第一个 &#39;\n&#39; 字符。maxSize - 读取 1 个字节。检测到设备数据的结束。
+
+换行符 (&#39;\n&#39;) 包含在缓冲区中。如果在读取 maxSize - 1 个字节之前没有遇到换行符，则不会将换行符插入缓冲区。在 Windows 上，换行符被替换为 &#39;\n&#39;。此函数调用 readLineData()，它是通过重复调用 getChar() 来实现的。您可以通过在自己的子类中重新实现 readLineData() 来提供更有效的实现。
+
+重载版本也是从设备读取一行，但不超过 maxSize 个字符，并将结果作为字节数组返回。该功能无法报错；返回一个空的 QByteArray 可能意味着当前没有数据可供读取，或者发生了错误。
+
+一个使用的案例代码。
+
+```c++
+QFile file("box.txt");
+if (file.open(QFile::ReadOnly)) {
+    char buf[1024];
+    qint64 lineLength = file.readLine(buf, sizeof(buf));
+    if (lineLength != -1) {
+        // the line is available in buf
+    }
+}
+```
+
+**reset函数**：寻找随机存取设备的输入开始。成功返回true；否则返回 false（例如，如果设备未打开）。请注意，当在 QFile 上使用 QTextStream 时，在 QFile 上调用 reset() 不会得到预期的结果，因为 QTextStream 会缓冲文件。请改用 QTextStream::seek() 函数。
+
+**seek函数**：对于随机访问设备，此函数将当前位置设置为 pos，成功时返回 true，如果发生错误则返回 false。对于顺序设备，默认行为是产生警告并返回 false。当子类化 QIODevice 时，您必须在函数开始时调用QIODevice::seek() 以确保与 QIODevice 的内置缓冲区的完整性。
+
+**size函数**：对于开放式随机访问设备，此函数返回设备的大小。对于打开的顺序设备，返回 bytesAvailable()。
+如果设备关闭，返回的尺寸将不会反映设备的实际尺寸。
+
+**pos函数：**对于随机访问设备，此函数返回数据写入或读取的位置。对于没有“当前位置”概念的顺序设备或封闭设备，返回 0。
+
+**waitForBytesWritten函数：**对于缓冲设备，此函数会等待，直到缓冲写入数据的有效负载已写入设备并且已发出 **bytesWritten()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。对于无缓冲的设备，它会立即返回。如果数据的有效负载已写入设备，则返回 true；否则返回 false（即，如果操作超时，或者如果发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 bytesWritten() 信号的槽中调用，则不会重新发送 bytesWritten()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
+
+**waitForReadyRead函数**：阻塞，直到有新数据可供读取并且发出了 **readyRead()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。如果有新数据可供读取，则返回 true；否则返回 false（如果操作超时或发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 readyRead() 信号的插槽中调用，则不会重新发送 readyRead()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
+
+##### 成员非虚函数
+
+**成员函数，可能暂时不怎么使用的函数。**
+
+```c++
+int currentReadChannel() const;
+int currentWriteChannel() const;
+int readChannelCount() const;
+int writeChannelCount() const;
+void setCurrentReadChannel(int channel);
+void setCurrentWriteChannel(int channel);
+
+QString errorString() const;
+
+bool getChar(char *c);
+void ungetChar(char c);
+bool putChar(char c);
+
+bool isTextModeEnabled() const;
+void setTextModeEnabled(bool enabled);
+
+bool isTransactionStarted() const;
+void commitTransaction();
+void rollbackTransaction();
+void startTransaction();
+
+qint64 peek(char *data, qint64 maxSize);
+QByteArray peek(qint64 maxSize);
+
+OpenMode openMode() const;//打开模式
+bool isOpen() const;//是打开状态
+bool isReadable() const;//可读？
+bool isWritable() const;//可写？
+```
+
+##### 信号函数
+
+最常用的是**bytesWritten和readyRead**信号，也是串口通信类继承的信号。
+
+```c++
+// 当设备即将关闭时发出此信号。如果您有需要在设备关闭之前执行的操作（例如，如果您在单独的缓冲区中有数据需要写入设备），请连接此信号
+void aboutToClose();
+
+// 每次将数据的有效负载写入设备的当前写入通道时，都会发出此信号。 bytes 参数设置为写入此有效负载的字节数。bytesWritten() 不是递归发出的；如果您重新进入事件循环或在连接到 bytesWritten() 信号的插槽内调用 waitForBytesWritten()，则不会重新发送该信号（尽管 waitForBytesWritten() 仍可能返回 true）。
+void bytesWritten(qint64 bytes);
+
+// 每次将数据的有效负载写入设备时都会发出此信号。 bytes 参数设置为此有效负载中写入的字节数，而 channel 是它们写入的通道。与 bytesWritten() 不同，无论当前写入通道如何，都会发出它。channelBytesWritten() 可以递归地发出 - 即使对于同一个通道。
+void channelBytesWritten(int channel, qint64 bytes);
+
+// 当新数据可用于从设备读取时，会发出此信号。通道参数设置为数据到达的读取通道的索引。与 readyRead() 不同的是，无论当前读取通道如何，都会发出它。channelReadyRead() 可以递归地发出 - 即使对于同一个通道。
+void channelReadyRead(int channel);
+
+// 此信号在此设备中关闭输入（读取）流时发出。一旦检测到关闭就会发出它，这意味着可能仍有数据可用于使用 read() 读取。
+void readChannelFinished();
+
+// 每次有新数据可用于从设备的当前读取通道读取时，都会发出一次此信号。它只会在新数据可用时再次发出，例如当新的网络数据有效负载到达您的网络套接字时，或者当新的数据块已附加到您的设备时。readyRead() 不会递归发出；如果您重新进入事件循环或在连接到 readyRead() 信号的插槽内调用 waitForReadyRead()，则不会重新发送该信号（尽管 waitForReadyRead() 仍可能返回 true）。实现从 QIODevice 派生的类的开发人员注意：当新数据到达时，您应该始终发出 readyRead() （不要仅仅因为缓冲区中还有数据要读取而发出它）。不要在其他条件下发出 readyRead()。
+void readyRead();
+```
+
+#### QtSerialPort/QSerialPort
+
 需要包含2个头文件，并在.pro工程文件配置。
 
 ```c++
@@ -4312,13 +4500,11 @@ QT       += serialport
 #include  <QtSerialPort/QSerialPortInfo>
 ```
 
-#### QtSerialPort/QSerialPort
-
 QtSerialPort/QSerialPort类提供访问串行端口的功能，QtSerialPort/QSerialPortInfo可以获取有关可用串行端口的信息，该类允许枚举系统中的所有串行端口，你可以通过获取串口的名称来使用这个串口。
 
-将QSerialPortInfo类的对象作为参数传递给setPort()或setPortName()方法，以分配所需的串行设备。设置端口后，可以使用open()方法以只读（r/o）、只读（w/o）或读写（r/w）模式打开端口。注意：串行端口始终以独占访问方式打开（即，其他进程或线程都无法访问已打开的串行端口）。然后可以使用close()方法关闭端口并取消I/O操作。成功打开后，QSerialPort尝试确定端口的当前配置并初始化自身。可以使用setBaudRate()、setDataBits()、setParity()、SetTopBits()和setFlowControl()方法将端口重新配置为所需的设置。
+将QSerialPortInfo类的对象作为参数传递给setPort()或setPortName()方法，以分配所需的串行设备。设置端口后，可以使用**open()方法以只读（r/o）、只读（w/o）或读写（r/w）模式打开端口**。注意：串行端口始终以独占访问方式打开（即，其他进程或线程都无法访问已打开的串行端口）。然后可以使用close()方法关闭端口并取消I/O操作。成功打开后，QSerialPort尝试确定端口的当前配置并初始化自身。可以使用**setBaudRate()、setDataBits()、setParity()、SetTopBits()和setFlowControl()方法将端口重新配置为所需的设置**。
 有两个属性可用于引脚输出信号，即：QSerialPort::dataTerminalReady、QSerialPort::requestToSend。也可以使用pinoutSignals()方法查询当前的pinout信号集。
-一旦知道端口已准备好读或写，就可以使用read()或write()方法。或者，也可以调用readLine()和readAll()便利方法。如果不是一次读取所有数据，那么当新的传入数据附加到QSerialPort的内部读取缓冲区时，剩余的数据将可供以后使用。您可以使用setReadBufferSize()限制读取缓冲区的大小。QSerialPort提供了一组函数，这些函数在发出特定信号之前挂起调用线程。
+一旦知道端口已准备好读或写，就可以**使用read()或write()方法。或者，也可以调用readLine()和readAll()**便利方法。如果不是一次读取所有数据，那么当新的传入数据附加到QSerialPort的内部读取缓冲区时，剩余的数据将可供以后使用。您可以使用setReadBufferSize()限制读取缓冲区的大小。QSerialPort提供了一组函数，这些函数在发出特定信号之前挂起调用线程。
 
 这些功能可用于实现阻塞串行端口：
 
@@ -4345,6 +4531,363 @@ for (;;) {
 ```
 
 有关这些方法的更多详细信息，请参阅示例应用程序。QSerialPort类还可以与QTextStream和QDataStream的流操作符（操作符<<（）和操作符>>（））一起使用。不过，有一个问题需要注意：在尝试使用操作符>>（）重载操作符读取之前，请确保有足够的数据可用。
+
+##### 枚举类型
+
+需要了解的枚举类型有8个。
+
+**第一个是波特率**，波特率关联一个性质QSerialPort::baudRate。
+
+要设置波特率，请使用枚举QSerialPort::BaudRate或任何正qint32值。
+
+如果设置成功或在打开端口之前设置，则返回true；否则，返回false并设置一个错误代码，该错误代码可以通过访问QSerialPort::error属性的值获得。注意：如果在打开端口之前设置了该设置，则在成功打开端口之后，实际的串行端口设置将在QSerialPort::open()方法中自动完成。
+警告：所有平台都支持设置AllDirections标志，Windows仅支持此模式。
+警告：在Windows上，在任何方向返回相等的波特率。
+默认值为Baud9600，即每秒9600位。
+
+```c++
+// 波特率枚举值
+enum QSerialPort::BaudRate {
+    QSerialPort::Baud1200 = 1200,
+    QSerialPort::Baud2400 = 2400,
+    QSerialPort::Baud4800 = 4800,
+    QSerialPort::Baud9600 = 9600,
+    QSerialPort::Baud19200 = 19200,
+    QSerialPort::Baud38400 = 38400,
+    QSerialPort::Baud57600 = 57600,
+    QSerialPort::Baud115200 = 115200,
+    QSerialPort::UnknownBaud = -1,
+};
+// 关联的性质是
+QSerialPort::baudRate;
+// 关联的2个函数为获取和设置波特率
+qint32 baudRate(QSerialPort::Directions directions = AllDirections) const;
+bool setBaudRate(qint32 baudRate, QSerialPort::Directions directions = AllDirections);
+// 信号函数,波特率改变时自动发射
+void baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
+```
+
+**第2个是使用方向枚举值**，表明串口是输入和输出还是连个都存在，因为有组合值还涉及flags。
+
+```c++
+enum QSerialPort::Direction{
+    QSerialPort::Input = 1,
+    QSerialPort::Output = 2,
+    QSerialPort::AllDirections = Input | Output
+};
+flags QSerialPort::Directions{
+    QSerialPort::Input = 1,
+    QSerialPort::Output = 2,
+    QSerialPort::AllDirections = Input | Output
+};
+```
+
+**第3个是数据位**，此枚举值描述使用的数据位数。
+
+```c++
+enum QSerialPort::DataBits {
+    QSerialPort::Data5 = 5, // 每个字符中的数据位数为5,用于Baudot代码,通常只用于旧设备如打字机
+    QSerialPort::Data6 = 6, // 每个字符中的数据位数为6,它很少使用
+    QSerialPort::Data7 = 7, // 每个字符中的数据位数为7,用于真正的ASCII,通常只用于旧设备如打字机
+    QSerialPort::Data8 = 8, // 每个字符中的数据位数为8,它用于大多数类型的数据，因为此大小与字节大小匹配。它几乎普遍用于较新的应用程序中
+    QSerialPort::UnknownDataBits = -1 // 位数未知,此值已过时。提供它是为了保持旧的源代码正常工作,强烈建议不要在新代码中使用它
+};
+```
+
+**第4个是停止位**，此枚举描述使用的停止位数。
+
+```c++
+enum QSerialPort::StopBits{
+    QSerialPort::OneStop=1, // 1个停止位
+    QSerialPort::OneAndHalfStop=3, // 1.5个停止位,只支持windows
+    QSerialPort::TwoStop=2, // 2个停止位
+    QSerialPort::UnknownStopBits=-1 // 未知数量的停止位,同样已经过时不要在新代码中使用
+};
+```
+
+**第5个是流控制**，这个枚举描述了使用的流控制。
+
+```c++
+enum QSerialPort::FlowControl {	
+    QSerialPort::NoFlowControl = 0,// 没有流控制
+    QSerialPort::HardwareControl = 1,// 硬件流控制 (RTS/CTS)
+    QSerialPort::SoftwareControl = 2,// 软件流控制 (XON/XOFF)
+    QSerialPort::UnknownFlowControl=-1// 不知道的流控制,已过时尽量不要使用
+}
+// 关联的函数是
+FlowControl flowControl() const;
+bool setFlowControl(FlowControl flowControl);
+// 信号函数
+void flowControlChanged(QSerialPort::FlowControl flow);
+```
+
+**第6个是奇偶性校验**，这个枚举描述了使用的奇偶校验方案。
+
+```c++
+enum QSerialPort::Parity {
+    QSerialPort::NoParity = 0, //没有发送奇偶校验位,是最常见的奇偶校验设置,错误检测由通信协议处理
+    QSerialPort::EvenParity = 2,//每个字符中1的位数(包括奇偶校验位)始终为偶数
+    QSerialPort::OddParity = 3,//每个字符中1的位数,包括奇偶校验位,总是奇数.它确保在每个字符中至少发生一个状态转换
+    QSerialPort::SpaceParity = 4,//空间平价,奇偶校验位在空间信号条件下发送,它不提供错误检测信息
+    QSerialPort::MarkParity = 5,//标记平价,奇偶校验位始终设置为标记信号条件(逻辑1),它不提供错误检测信息。
+    QSerialPort::UnknownParity = -1// 不知道的奇偶性验证,已过时尽量不要使用
+}
+```
+
+**第7个是引脚信号**，此枚举值描述了可能的 RS-232 引脚分配信号。
+
+```c++
+flags QSerialPort::PinoutSignals;
+enum QSerialPort::PinoutSignal {
+    QSerialPort::NoSignal = 0x00,//没有线路活动
+    QSerialPort::TransmittedDataSignal = 0x01,//TxD（传输数据),此值已过时
+    QSerialPort::ReceivedDataSignal = 0x02,//RxD(接收数据),此值已过时
+    QSerialPort::DataTerminalReadySignal = 0x04,//DTR(数据终端就绪)
+    QSerialPort::DataCarrierDetectSignal = 0x08,//DCD(数据载波检测）
+    QSerialPort::DataSetReadySignal = 0x10,//DSR(数据集就绪)
+    QSerialPort::RingIndicatorSignal = 0x20,//RNG(环形指示器)
+    QSerialPort::RequestToSendSignal = 0x40,//RTS(请求发送)
+    QSerialPort::ClearToSendSignal = 0x80,//CTS(清除发送)
+    QSerialPort::SecondaryTransmittedDataSignal = 0x100,//STD(二次传输数据)
+    QSerialPort::SecondaryReceivedDataSignal = 0x200//SRD(二次接收数据)
+}
+// 涉及的关联函数和属性如下
+PinoutSignals pinoutSignals(); // 以位图格式返回线路信号的状态
+QSerialPort::dataTerminalReady;
+bool isDataTerminalReady();
+bool setDataTerminalReady(bool set);
+void dataTerminalReadyChanged(bool set);//信号函数
+QSerialPort::requestToSend;
+```
+
+**第8个是串口错误类型**，此枚举描述了 QSerialPort::error 属性可能包含的错误。
+
+```c++
+enum QSerialPort::SerialPortErro{  
+    QSerialPort::NoError = 0,//没有发生错误
+    QSerialPort::DeviceNotFoundError = 1，// 尝试打开不存在的设备时出错
+    QSerialPort::PermissionError = 2，//用户尝试通过另一个进程或没有权限打开已打开的设备时发生错误
+    QSerialPort::OpenError = 3,//尝试打开此对象中已打开的设备时出错
+    QSerialPort::NotOpenError = 13,//只有设备打开的情况下才能成功执行的操作会出现此错误
+    QSerialPort::ParityError = 4,//硬件在读取数据时检测到奇偶校验错误,此值已过时
+    QSerialPort::FramingError = 5,//读取数据时硬件检测到帧错误,此值已过时。
+    QSerialPort::BreakConditionError = 6,//输入线上的硬件检测到的中断条件,此值已过时
+    QSerialPort::WriteError = 7,//写入数据时发生 I/O 错误
+    QSerialPort::ReadError = 8,//读取数据时发生 I/O 错误
+    QSerialPort::ResourceError = 9,//当资源不可用时发生 I/O 错误，例如当设备意外从系统中移除时
+    QSerialPort::UnsupportedOperationError = 10,//正在运行的操作系统不支持或禁止请求的设备操作
+    QSerialPort::TimeoutError = 12,//发生超时错误
+    QSerialPort::UnknownError = 11 //发生不明错误
+}；
+// 关联的属性和函数
+QSerialPort::error;
+SerialPortError error() const;
+void clearError();
+```
+
+##### 属性值
+
+一共9个属性，其中8个属性在枚举类型已经提到过，不再赘述。
+
+breakEnabled属性值，返回传输线在 break 时的状态 成功时返回 true，否则返回 false。
+
+如果标志为真，**则传输线处于中断状态；否则处于非中断状态**。
+注意：在尝试设置或获取此属性之前，必须打开串口；否则返回 false 并设置 **NotOpenError 错误代码**。
+
+与类的常规 Qt 属性设置相比，这有点不寻常。但是，这是一个特殊的用例，因为该属性是通过与内核和硬件的交互来设置的。因此，这两种情况不能完全相互比较。这个属性是在 Qt 5.5 中引入的。
+
+```c++
+baudRate : qint32
+dataBits : DataBits
+dataTerminalReady : bool
+error : SerialPortError
+flowControl : FlowControl
+parity : Parity
+requestToSend : bool
+stopBits : StopBits
+
+breakEnabled : bool
+```
+
+##### 成员函数
+
+基本的成员函数，不赘述其含义。
+
+```c++
+QSerialPort(QObject *parent = nullptr);
+QSerialPort(const QString &name, QObject *parent = nullptr);
+QSerialPort(const QSerialPortInfo &serialPortInfo, QObject *parent = nullptr);
+virtual ~QSerialPort();
+```
+
+属性值相关的成员函数，这一类函数不再赘述其含义。
+
+```c++
+qint32 baudRate(Directions directions = AllDirections) const;
+bool setBaudRate(qint32 baudRate, Directions directions = AllDirections);
+
+void clearError()DataBits ;
+SerialPortError error() const;
+
+dataBits() const;
+bool setDataBits(DataBits dataBits);
+FlowControl flowControl() const;
+
+bool setFlowControl(FlowControl flowControl);
+
+bool isDataTerminalReady();
+bool setDataTerminalReady(bool set);
+
+bool isRequestToSend();
+bool setRequestToSend(bool set);
+
+Parity parity() const;
+bool setParity(Parity parity);
+
+bool setStopBits(StopBits stopBits);
+StopBits stopBits() const;
+
+bool isBreakEnabled() const;
+bool setBreakEnabled(bool set = true);
+
+PinoutSignals pinoutSignals();
+```
+
+类其它自定义的函数，需要说明其含义。
+
+**clear**函数：**根据给定的方向，丢弃输出或输入缓冲区中的所有字符**。这包括清除内部类缓冲区和 UART（驱动程序）缓冲区。同时终止挂起的读取或写入操作。**如果成功，则返回 true；否则返回false**。在尝试清除任何缓冲数据之前，**必须打开串行端口**；**否则返回 false 并设置 NotOpenError 错误代码**。
+
+**flush**函数：该函数**尽可能多地从内部写缓冲区写入底层串口而不阻塞**。如果**写入了任何数据，则此函数返回 true；否则返回false**。**调用此函数将缓冲的数据立即发送到串口**。成功写入的字节数取决于操作系统。在大多数情况下，不需要调用此函数，因为一旦控制权返回到事件循环，QSerialPort 类将自动开始发送数据。在没有事件循环的情况下，请改为调用 **waitForBytesWritten()**。注意：在尝试刷新任何缓冲数据之前，**必须打开串口**；否则**返回 false 并设置 NotOpenError 错误代码**。
+
+**setReadBufferSize**和**readBufferSize**函数：**setReadBufferSize函数将QSerialPort 的内部读取缓冲区的大小设置为 size 字节**。如果缓冲区大小被限制在某个大小，QSerialPort 将不会缓冲超过这个大小的数据。缓冲区大小为 0 的特殊情况意味着读取缓冲区是无限的，并且所有传入的数据都被缓冲。这是默认设置。如果仅在特定时间点读取数据（例如在实时流应用程序中），或者如果串行端口应防止接收过多数据，则此选项很有用，这可能最终导致应用程序用尽内存。**readBufferSize返回内部读取缓冲区的大小**。这限制了客户端在调用 **read()或readAll()**方法之前可以接收的数据量。读取缓冲区大小为 0（默认值）意味着缓冲区没有大小限制，确保不会丢失数据。
+
+**handle**函数：如果平台支持且串口打开，则返回本机串口句柄，否则返回 -1。警告：此功能仅供专家使用；需要您自担风险使用它。此外，此函数在次要 Qt 版本之间没有兼容性承诺。
+
+**sendBreak**函数：**此功能已弃用**。如果终端正在使用异步串行数据，则在以毫秒为单位的指定时间段内发送连续的零位流。如果成功，则返回 true；否则返回假。如果持续时间为零，则传输零位至少 0.25 秒，但不超过 0.5 秒。如果持续时间不为零，则根据实现在特定时间段内传输零位。注意：在尝试发送中断持续时间之前，必须打开串口；否则返回 false 并设置 NotOpenError 错误代码。另请参见 setBreakEnabled()。
+
+```c++
+bool clear(Directions directions = AllDirections);
+bool flush();
+void setReadBufferSize(qint64 size);
+qint64 readBufferSize() const;
+
+QString portName() const; // 获取串口名
+void setPort(const QSerialPortInfo &serialPortInfo);//通过串口信息对象设置串口
+void setPortName(const QString &name);//通过名称设置串口
+
+// 不常用的函数
+(deprecated) bool sendBreak(int duration = 0);
+Handle handle() const;
+```
+
+##### 重实现的继承函数
+
+**atEnd函数**：如果当前没有更多数据可读取，则返回true,否则返回假。该函数在循环从串口读取数据时最常用。
+
+```c++
+// This slot is connected to QSerialPort::readyRead()
+void QSerialPortClass::readyReadSlot()
+{
+    while (!port.atEnd()) { // 如果还有可以读的即继续读
+        QByteArray data = port.read(100);
+        ....
+    }
+}
+```
+
+**waitForBytesWritten**函数：此**函数会一直阻塞，直到至少一个字节已写入串行端口**并且已发出 **bytesWritten() 信号**。该函数将在 msecs 毫秒后超时；默认超时为 30000 毫秒。如果 msecs 为 -1，则此函数不会超时。
+**如果发出 bytesWritten() 信号，则该函数返回 true；否则返回 false**(如果发生错误或操作超时)。
+
+**waitForReadyRead**函数：此函数会阻塞，直到有新数据可供读取并且已发出 **readyRead()** 信号。该函数将在 msecs 毫秒后超时；默认超时为 30000 毫秒。如果 msecs 为 -1，则此函数不会超时。**如果发出了 readyRead() 信号并且有新数据可供读取，则该函数返回 true；否则返回 false**（如果发生错误或操作超时）。
+
+```c++
+// 3个最常用的函数
+virtual void close(); // 串行端口必须在尝试关闭之前打开；否则设置 NotOpenError 错误代码
+virtual bool open(OpenMode mode);
+virtual bool atEnd() const;
+
+
+virtual qint64 bytesAvailable() const; // 返回等待读取的传入字节数
+virtual qint64 bytesToWrite() const; // 返回等待写入的字节数。当控制返回事件循环或调用 flush()时写入字节
+virtual bool canReadLine() const; // 如果可以从串口读取一行数据，则返回 true；否则返回 false
+virtual bool isSequential() const;// 总是返回true，串口是顺序设备
+
+virtual bool waitForBytesWritten(int msecs = 30000);
+signal void QIODevice::bytesWritten(qint64 bytes); // 信号函数
+virtual bool waitForReadyRead(int msecs = 30000);
+signal void QIODevice::readyRead();// 信号函数
+```
+
+继承自QIODevice可以直接使用的函数。
+
+**read**函数：从设备读取最多 maxSize 个字节，并将读取的数据作为 QByteArray 返回。该功能无法报错；返回一个空的 QByteArray 可能意味着当前没有数据可供读取，或者发生了错误。
+
+重载版本，最多从设备读取 maxSize 个字节到数据中，并返回读取的字节数。如果发生错误，例如尝试从以 WriteOnly 模式打开的设备进行读取时，此函数将返回 -1。当没有更多数据可供读取时，返回 0。但是，超过流末尾的读取被认为是错误的，因此在这些情况下（即在关闭的套接字上读取或在进程终止后读取）此函数返回 -1。
+
+**readAll**函数：从设备中读取所有剩余数据，并将其作为字节数组返回。该功能无法报错；返回一个空的 QByteArray 可能意味着当前没有数据可供读取，或者发生了错误。
+
+```c++
+QByteArray QIODevice::read(qint64 maxSize);
+qint64 QIODevice::read(char *data, qint64 maxSize);
+QByteArray QIODevice::readAll();
+```
+
+还有一些是继承**QIODevice**的保护虚函数，用户不能使用。
+
+```c++
+virtual protected qint64 QSerialPort::readData(char *data, qint64 maxSize);
+virtual protected qint64 QSerialPort::readLineData(char *data, qint64 maxSize);
+virtual protected qint64 QSerialPort::writeData(const char *data, qint64 maxSize);
+```
+
+##### 信号函数
+
+分为自定义的信号和继承而来的信号。
+
+```c++
+void baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
+void breakEnabledChanged(bool set);
+void dataBitsChanged(QSerialPort::DataBits dataBits);
+void dataTerminalReadyChanged(bool set);
+void errorOccurred(QSerialPort::SerialPortError error);
+void flowControlChanged(QSerialPort::FlowControl flow);
+void parityChanged(QSerialPort::Parity parity);
+void requestToSendChanged(bool set);
+void stopBitsChanged(QSerialPort::StopBits stopBits);
+
+// 还有2个主要用到的继承自QIODevice信号
+void bytesWritten(qint64 bytes);
+void readyRead();
+```
+
+使用信号的例子。
+
+```c++
+// https://www.bbsmax.com/A/B0zqvnmQJv/
+QSerialPort *serial = new QSerialPort();
+QObject::connect(serial, SIGNAL(readyRead()), this, SLOT(recSerialData())); // 连接串口收到数据事件与读取数据函数
+// 串口的初始化
+serial->setPortName("COM3");
+serial->setBaudRate(QSerialPort::Baud9600);
+serial->setParity(QSerialPort::NoParity);
+serial->setDataBits(QSerialPort::Data8);
+serial->setStopBits(QSerialPort::OneStop);
+serial->setFlowControl(QSerialPort::NoFlowControl);
+if (serial->open(QIODevice::ReadWrite)) {
+    qDebug()<<"open success";
+} else {
+    qDebug()<<"open failed";
+}
+// 写入数据
+serial->write("test");
+// 接收数据
+void MySerial::recSerialData()
+{
+    QByteArray ba;
+    ba = serial->readAll();
+    display(ba);
+}
+```
 
 #### QtSerialPort/QSerialPortInfo
 
