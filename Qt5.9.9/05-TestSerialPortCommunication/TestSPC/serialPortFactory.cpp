@@ -1,12 +1,12 @@
-#include "manageserialport.h"
+#include "serialPortFactory.h"
 
-manageSerialPort::manageSerialPort()
+serialPortFactory::serialPortFactory()
 {
 
 }
-QSerialPort* manageSerialPort::createPort(const QString &name,qint32 baudRate,QSerialPort::Directions direction,
-                                          QSerialPort::Parity parity,QSerialPort::DataBits databit,QSerialPort::StopBits stopbit,
-                                          QSerialPort::FlowControl flowcontrol)
+QSerialPort* serialPortFactory::createPort(const QString &name, qint32 baudRate, QSerialPort::Directions direction,
+                                           QSerialPort::Parity parity, QSerialPort::DataBits databit, QSerialPort::StopBits stopbit,
+                                           QSerialPort::FlowControl flowcontrol)
 {
    QSerialPort * port= new QSerialPort();
    port->setBaudRate(baudRate,direction);//默认9600,双向串口
@@ -15,21 +15,22 @@ QSerialPort* manageSerialPort::createPort(const QString &name,qint32 baudRate,QS
    port->setDataBits(databit); // 设置数据位为8位,大多数时候都是8bit
    port->setStopBits(stopbit);// 设置停止位数量1个
    port->setFlowControl(flowcontrol); // 没有硬件流控制
-   port->setReadBufferSize(128);
+   port->setReadBufferSize(12800);
    ports.append(port);
   return port;
 }
 
-manageSerialPort::~manageSerialPort()
+serialPortFactory::~serialPortFactory()
 {
   foreach(QSerialPort*  port, this->ports){
       if (port->isOpen()){
-          printf("serial port is closing...\n");
+          printf("All serial ports that have not been closed have been closed successfully...\n");
           port->close();
       }
       if (port != nullptr){
           delete  port;
-          printf("clear serial resource...\n");
+          printf("All serial port resources have been successfully cleaned up......\n");
       }
     }
 }
+

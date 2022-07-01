@@ -17,15 +17,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
-    manageserialport.cpp \
-    testserialport.cpp
+    serialPortCommunication.cpp \
+    serialPortFactory.cpp \
+    spctime.cpp
 
 HEADERS += \
-    manageserialport.h \
-    testserialport.h
+    serialPortCommunication.h \
+    serialPortFactory.h \
+    spctime.h
 
 FORMS += \
-    testserialport.ui
+    serialPortCommunication.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
