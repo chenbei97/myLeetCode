@@ -1751,10 +1751,10 @@ ssh -T git@github.com
 git@github.com: Permission denied (publickey)
 ```
 
-输入以下命令解决。
+输入以下命令解决，记得是反斜杠，如果是苹果电脑\斜杠可能识别不了。
 
 ```powershell
-cd C:\Users\Lenovo\.ssh // cd到你的.ssh文件夹
+cd C:/Users/Lenovo/.ssh // cd到你的.ssh文件夹
 ssh-agent -s
 ssh-add id_rsa // 把密匙加入
 ssh -T git@github.com // 再次验证
@@ -1768,13 +1768,13 @@ ssh -T git@github.com // 再次验证
 Hi chenbei97! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
-如果出现的下方这样的消息：
+如果出现的下方这样的消息（苹果电脑可能会出现）：
 
 ```powershell
 Could not open a connection to your authentication agent
 ```
 
-可以输入下方命令解决。
+**可以输入下方命令解决**。
 
 ```powershell
 ssh-agent bash
@@ -2485,3 +2485,10 @@ set-ExecutionPolicy RemoteSigned
 get-ExecutionPolicy // 回复RemoteSigned
 ```
 
+### win系统重装
+
+参考链接：http://iknow.lenovo.com.cn/detail/dc_199249.html
+
+具体的安装过程，只要下载好系统后，使用U盘启动。
+
+对于联想电脑应该是按Fn+F10或者Fn+F11就可以选择启动模式，选择U盘启动即可。
