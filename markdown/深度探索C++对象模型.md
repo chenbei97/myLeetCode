@@ -333,11 +333,276 @@ C++最初不考虑任何间接性，基类实例的成员直接放在了派生�
 
 ### 1.3 对象的差异
 
+C++支持三种模型，程序模型(procedural)、抽象数据类型模型ADT(abstract data type,也称为OB)、面向对象模型OO(obejct-oriented)。
 
+String类就是一个OB设计，它不支持拓展，可以展示封装的非多态性形式，提供一个public接口和private实现品，包括数据和算法。OB设计比OO设计速度更快且更紧凑，因为编译期就可以解析完成，没有虚函数机制引入的负担和内存对齐问题，但是也失去了弹性。
+
+支持多态的方式有以下方法：
+
+1、经过一组隐式的转化操作，如将一个派生类指针转换为一个指向基类的指针。
+
+```c++
+shape * ps = new circle(); // shape是基类
+```
+
+2、经过虚函数机制。
+
+```c++
+ps->rotate(); // 基类指针可以指向子类对象,调用子类方法
+```
+
+3、经过向下转换，即dynamic_cast和typeid运算符号。基类对象指针（或引用）转换到派生类指针，并具有类型检查的功能，如果不能转换会返回空指针。
+
+```c++
+if (circle * pc = dynamic_cast<circle*>(ps)).. //如果ps可以转化为circle指针则返回值不为空
+```
+
+多态可以体现在一个共同的接口被定义在基类，子类无需再写出对继承体系中所有类型共同的行为。
+
+```c++
+// 假定Z是X的子类型
+void rotate(X data,const X* pointer,const X & ref){
+    (*pointer).rotate(); // 依据传入的实际类型决定
+    ref.rotate();// 依据传入的实际类型决定
+    data.rotate();// 总是调用X的函数
+}
+Z z;
+rotate(z,&z,z);
+```
+
+指针本身的大小是固定的，只是指向的地址解释的方式不同。例如一个指向位置1000的int指针，其在32位机器上地址空间为1000-1003(4字节)；String则是传统的8字节(4字节字符指针和表示字符串长度的整数)，那么地址为1000-1015；而一个指向地址1000的void * 指针只能持有1个地址，但是不能操作所指对象。
+
+转换(cast)大部分情况不会改变指针真正的地址，只是改变了所指内存大小和内容的解释方式。
+
+一个基类对象被直接初始化一个派生类对象时，派生类对象会被切割以塞入较小的基类字节内存中。
 
 ## 二、构造函数语义学
 
+implicit：暗中的、隐式的
 
+explicit：显式的
+
+trival：没有用的
+
+nontrival：有用的
+
+memberwise：对每一个member施以
+
+bitwise：对每一个bit施以
+
+semantics：语义
+
+隐式转换的问题，如果希望禁止隐式转换可以引入explicit。
+
+```c++
+// 对cin事先重载了operator int()函数
+cin << intVal; // 本应该是cout << intVal
+// 等价于
+int temp = cin.operator int ();
+temp << int Val;//所以实际上做的是移位运算
+```
+
+### 2.1 默认构造函数的实现
+
+编译期会默认构造函数、默认拷贝构造函数，默认赋值运算函数、析构函数，C++11之后还会提供默认移动函数和赋值移动函数。
+
+如果是带有虚函数的类，无论是继承而来的还是自己声明的，如果它有子类，那么子类在构造时编译期会采取2个行动。
+
+第一是将虚函数表生成，存放了类的虚函数地址；
+
+第二是每一个类的对象中，一个额外的指针成员会被编译期合成出来，内涵相关的类虚函数表的地址。
+
+为了让虚函数发生效用，编译器会给每个Widget或派生类的object的vptr设定初值，放置适当的virtual table地址。对于class定义的每个constructor都会安插一些代码做这些事。对于那些没有声明任何constructor的classes，编译器会合成一个default constructor，以正确初始化每一个class object的vptr。
+
+```c++
+class Widget{
+	public:
+    	virtual void flip() = 0;
+    //...
+};
+void flip(const Widget & widget){widget.flip()}
+
+// 假设2个子类A、B都继承自Widget
+A a;
+B b;
+flip(a);
+flip(b);
+// 编译期实际扩张时可能是这样
+(*widget.vptr[1])(&widget);
+// [1]表示flip在virtual table的固定索引
+// &widget是代表要交给被调用的某个flip函数实例的this指针
+```
+
+合成的default  constructor只有基类的子对象成分以及成员类对象会被初始化，其它非静态成员变量不会被初始化，需要程序员自己提供。
+
+### 2.2  复制构造函数的实现
+
+调用复制构造函数的3种情况。
+
+第一、显示的赋值运算和构造。
+
+```c++
+class X;
+X x1;
+X x2 = x1;
+X x3(x2);
+```
+
+第二、把对象当成参数进行值传递。
+
+```c++
+void foo(X x);
+foo(x3);
+```
+
+第三、发生在值传递返回值。
+
+```c++
+X ren_foo(){
+	X x;
+	// ...
+	return x;
+}
+```
+
+一个类不展现出bitwise copy semantics的3种情况。
+
+1、class含有一个class obejct member，且后者class声明有一个copy constructor，无论是否有显示声明，例如String，就不会展现出按位复制的语义。
+
+2、class继承自一个基类，且基类带有copy constructor，无论是不是explict，同样不会按位复制。
+
+3、class声明了虚函数或者继承了带有虚函数的类，也不会按位复制。
+
+### 2.3 程序转换语义学
+
+1、显示的初始化操作。
+
+```c++
+X x0;
+X x1(x0);
+X x2 = x0;
+X x3 = X(x0);
+// 实际编译期可能替换为
+X x1;
+X x2;
+X x3;
+x1.X::X(x0); // 等价于X::X(const X& xx);
+X2.x::X(x0);
+X3.x::X(x0);
+```
+
+2、参数的初始化。
+
+```c++
+void foo(X x0);
+X xx;
+f00(xx); 
+
+// 实际可能替换为
+X _temp;
+_temp.X::X(xx);//临时对象
+foo(_temp);
+```
+
+3、返回值初始化。
+
+```c++
+X bar(){
+    X xx; 
+    //...
+	return xx;
+}
+
+// 编译器可能的行为
+void bar(X& _res)
+{
+    X xx;
+    xx.X::X(); // 等同于 default constructor
+    
+    //...
+    
+    _res .X::XX(xx);//等同于copy constructor
+    return;
+}
+
+// 外部调用bar时
+X xx  bar();
+
+// 实际转换为
+X xx;
+bar(xx); //bar因为是引用传递,所以xx的值可以被改变
+```
+
+4、使用者层面做优化
+
+```c++
+X bar(const T&y,const T&z){
+    X xx;
+    // ...以y和z处理xx
+    return xx;
+}
+ // 转换如下
+X bar(const T&y,const T&z)
+{
+    return X(y,z);//效率更高
+}
+// 等同于
+void bar(X&_res){
+    _res.X::X(y,z);
+    return;
+}
+```
+
+5、编译器层面做优化。
+
+如果是聚合对象，例如3个点类，默认提供的已经是最好的选择，不要显示提供构造函数。
+
+```c++
+class Point3d
+{
+	public:
+    	Point3d(float x, float y, float z);//无需显示提供，默认会按位复制
+    	Point3d(const Point3d&rhs){
+            // _x = rhs._x;
+            // _y = rhs._y;
+            // _z = rhs._Z;
+            memcpy(this,&rhs,sizeof(Point3d));//更有效率
+        }
+    private:
+    	float _x,_y,_z;
+}
+```
+
+6、成员列表初始化
+
+1、当初始化1个引用成员；
+
+2、初始化一个const 成员；
+
+3、调用一个基类的构造函数，而它拥有一组参数；
+
+4、调用一个成员的类构造函数，而它拥有一组参数；
+
+可以使用列表初始化，虽然按位但是效率不高，因为并不是初始化操作而是复制操作。
+
+```c++
+class W{
+    String name;
+    int val;
+    public:
+    	Word(){
+            name = 0; // name实际是赋值操作而不是初始化操作
+            val = 0;
+        }
+    
+    	// 列表初始化更好
+    	Word():name(0){
+            val = 0;
+        }
+}
+```
+
+2022/7/2/10:13，下次不知道啥时候接着看了，隔了快三个月。
 
 ## 三、Data语义学
 
