@@ -14,8 +14,10 @@
 
 3. TestListTreeTabWidget 前四章的各类组件集中总结
 
-4. TestFileSystemModel 在QListView上的应用,视图组件<=>数据模型的关系
+4. TestFileSystemModel 在QTreeView上的应用,视图组件<=>数据模型的关系
 
 5. TestSerialPortCommunication 公司上位机的串口通信简单测试程序
 
 6. TestQStringListModel 在QListView上的应用,视图组件<=>数据模型的关系
+
+7. TestQStandardItemModel 在QTableView上的应用,视图组件<=>数据模型的关系
