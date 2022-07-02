@@ -2057,26 +2057,28 @@ QStringList继承自QList。与QList一样，QStringList也是隐式共享的。
 常见的成员函数如下。
 
 ```c++
+// 构造函数
 QStringList(const QString &str);
 QStringList(const QList<QString> &other);
 QStringList(QList<QString> &&other);
-QStringList(std::initializer_list<QString> args);
-bool contains(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+QStringList(std::initializer_list<QString> args); // QStringList list = {"123","456","readme.txt"}
+bool contains(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;//lst.contains("str",Qt::CaseInsensitive);设置大小写不敏感
 QStringList filter(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
 QStringListfilter(const QRegExp &rx) const;
-QStringList filter(const QRegularExpression &re) const;
-int indexOf(const QRegExp &rx, int from = 0) const;
-int indexOf(QRegExp &rx, int from = 0) const;
+QStringList filter(const QRegularExpression &re) const; // 找到含有指定的字符串的字符串
+int indexOf(const QRegExp &rx, int from = 0) const; // 
+int indexOf(QRegExp &rx, int from = 0) const; // 找到第1个满足条件的字符串
 int indexOf(const QRegularExpression &re, int from = 0) const;
 QString join(const QString &separator) const;
+//QStringList lst = {"python","C++"} ;QString h = lst.join(",");
 QString join(QLatin1String separator) const;
 QString join(QChar separator) const;
 int lastIndexOf(const QRegExp &rx, int from = -1) const;
-int lastIndexOf(QRegExp &rx, int from = -1) const;
+int lastIndexOf(QRegExp &rx, int from = -1) const;//找到最后1个满足条件的字符串
 int lastIndexOf(const QRegularExpression &re, int from = -1) cons
-int removeDuplicates();
+int removeDuplicates(); // 移除重复项
 QStringList &replaceInStrings(const QString &before, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
-QStringList &replaceInStrings(const QRegExp &rx, const QString &after);
+QStringList &replaceInStrings(const QRegExp &rx, const QString &after); // 用字符替换指定字符
 QStringList &replaceInStrings(const QRegularExpression &re, const QString &after
 void sort(Qt::CaseSensitivity cs = Qt::CaseSensitive);
 
@@ -4259,6 +4261,31 @@ Widget :: Widget(QWidget * parent): QWidget(parent),ui(new Ui::Widget)
     ui->listview->setEditTriggers(QAbstractItemView::DoubleClicked |QAbstractItemView::SelectedClicked );
     //视图组件通过双击或者选中单击进行触发,可以把数据传递给this->model
 }
+```
+
+自定义的成员函数只有2个，也就是设置字符串列表和读取字符串列表。
+
+```c++
+QStringListModel(const QStringList &strings, QObject *parent = Q_NULLPTR);
+void setStringList(const QStringList &strings);
+QStringList stringList() const;
+```
+
+继承而来的有6个函数是需要关注的，其它函数不需要再单独列出。
+
+```c++
+// 将计数行插入模型,从给定行开始
+virtual bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
+// 移除给定行,从给定行开始
+virtual bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
+// 返回模型中的行数,此值对应于模型内部字符串列表中的项目数
+virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+// 将模型中具有给定索引的项目中指定角色的数据设置为提供的值
+virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+// 继承自QAbstractItemModel::sort(),按给定顺序按列对模型进行排序
+virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
+// 返回由给定行、列和父索引指定的模型中项目的索引
+virtual QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const;
 ```
 
 
