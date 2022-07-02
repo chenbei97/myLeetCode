@@ -2054,6 +2054,16 @@ void MyWidget::drawIcon(QPainter *painter, QPoint pos)
 QStringList类提供字符串列表。
 QStringList继承自QList。与QList一样，QStringList也是隐式共享的。它提供了基于索引的快速访问以及快速插入和删除。将字符串列表作为值参数传递既快速又安全。QList的所有功能也适用于QStringList。例如，可以使用isEmpty()测试列表是否为空，还可以调用append()、prepend()、insert()、replace()、removeAll()、removeAt()、removeFirst()、removeast()和removeOne()等函数来修改QStringList。此外，QStringList还提供了一些方便的函数，使字符串列表的处理更加容易。
 
+split函数可以指定按照指定分隔符将QString分割成QStringList
+
+```c++
+QString str = "a,,b,c";
+QStringList list1 = str.split(',');
+// list1: [ "a", "", "b", "c" ]
+QStringList list2 = str.split(',', QString::SkipEmptyParts);
+// list2: [ "a", "b", "c" ]
+```
+
 常见的成员函数如下。
 
 ```c++
@@ -2081,7 +2091,7 @@ QStringList &replaceInStrings(const QString &before, const QString &after, Qt::C
 QStringList &replaceInStrings(const QRegExp &rx, const QString &after); // 用字符替换指定字符
 QStringList &replaceInStrings(const QRegularExpression &re, const QString &after
 void sort(Qt::CaseSensitivity cs = Qt::CaseSensitive);
-
+                              
 QStringList &operator<<(const QString &str); // 注意这个重载版本,使得可以直接用<<拼接字符串
 QStringList &operator<<(const QStringList &other);
 QStringList &operator<<(const QList<QString> &other);
@@ -4026,7 +4036,54 @@ graph LR
 视图组件 -->|反馈| 代理
 ```
 
-### 4.1 数据模型
+### 4.1 基础模型
+
+#### 4.1.1 QModelIndex
+
+要获得一个模型索引，必须提供3个参数：行号、列号和顶层项的模型索引。例如针对图2中Table Model的3个数据A、B、C，获取它们的索引代码如下。对于**List和Table模式的数据模型顶层节点总是用QModelIndex()表示**。
+
+```c++
+QModelIndex idxA = model->index(0,0,QModelIndex());
+QModelIndex idxB = model->index(1,1,QModelIndex());
+QModelIndex idxC = model->index(2,1,QModelIndex());
+```
+
+如果是在Tree模式的顶层节点可能就比较复杂，因为这个顶层节点也可以是其它节点的子节点。
+
+对于A、C的父节点都是顶层节点QModelIndex()，而B的顶层节点是idxA，故代码如下所示。
+
+```c++
+QModelIndex idxA = model->index(0,0,QModelIndex());
+QModelIndex idxA = model->index(1,0,idxA);
+QModelIndex idxC = model->index(2,1,QModelIndex());
+```
+
+对于QModelIndex的公共成员函数有以下几个。
+
+```c++
+// 返回索引的行、列、顶层节点、数据、标志位
+int column() const;
+int row() const;
+QModelIndex parent() const;
+QVariant data(int role = Qt::DisplayRole) const;
+Qt::ItemFlags flags() const;
+quintptr internalId() const; // 返回模型用于将索引与内部数据结构关联的quintptr
+void *internalPointer() const; // 返回模型用于将索引与内部数据结构关联的void*指针
+bool isValid() const; // 如果此模型索引有效，则返回true；否则返回false
+const QAbstractItemModel *model() const; // 返回指向包含此索引引用的项的模型的指针
+```
+
+#### 4.1.2 QItemSelectionModel 
+
+**用于监控鼠标是否指向表格项或者改变指向。**
+
+QItemSelectionModel 类跟踪视图的选定项。
+QItemSelectionModel 跟踪视图中的选定项目，或同一模型的多个视图中的选定项。它还跟踪视图中当前选定的项目。
+QItemSelectionModel 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。
+所选项目使用范围存储。每当您想修改选定的项目时，请使用 select() 并提供 QItemSelection 或 QModelIndex 和 QItemSelectionModel::SelectionFlag。
+QItemSelectionModel 采用两层方法进行选择管理，处理已提交的选定项和当前选择的一部分。当前选定的项目是当前交互式选择的一部分（例如，使用橡皮筋选择或键盘移位选择）。要更新当前选定的项目，请使用 QItemSelectionModel::Current 和任何其他 SelectionFlags 的按位或。如果省略 QItemSelectionModel::Current 命令，将创建一个新的当前选择，并将前一个添加到整个选择中。所有功能都在两层上运行；例如， selecteditems() 将从两个层返回项目。
+
+### 4.2 Model模型
 
 所有基于项的数据模型都是基于共同抽象类**QAbstractItemModel**衍生，主要的类层次结构如下所示。注意：带有Abstract的类都是抽象类不能直接使用，所以实际能够使用的只有**7个**，在流程图中已经加粗显示。如果已定义的无法满足需求，可以自行继承3个子抽象类定义自己的数据模型类。
 
@@ -4105,46 +4162,13 @@ enum Qt::ItemDataRole {
 }
 ```
 
-#### 4.1.1 QModelIndex
 
-要获得一个模型索引，必须提供3个参数：行号、列号和顶层项的模型索引。例如针对图2中Table Model的3个数据A、B、C，获取它们的索引代码如下。对于**List和Table模式的数据模型顶层节点总是用QModelIndex()表示**。
 
-```c++
-QModelIndex idxA = model->index(0,0,QModelIndex());
-QModelIndex idxB = model->index(1,1,QModelIndex());
-QModelIndex idxC = model->index(2,1,QModelIndex());
-```
-
-如果是在Tree模式的顶层节点可能就比较复杂，因为这个顶层节点也可以是其它节点的子节点。
-
-对于A、C的父节点都是顶层节点QModelIndex()，而B的顶层节点是idxA，故代码如下所示。
-
-```c++
-QModelIndex idxA = model->index(0,0,QModelIndex());
-QModelIndex idxA = model->index(1,0,idxA);
-QModelIndex idxC = model->index(2,1,QModelIndex());
-```
-
-对于QModelIndex的公共成员函数有以下几个。
-
-```c++
-// 返回索引的行、列、顶层节点、数据、标志位
-int column() const;
-int row() const;
-QModelIndex parent() const;
-QVariant data(int role = Qt::DisplayRole) const;
-Qt::ItemFlags flags() const;
-quintptr internalId() const; // 返回模型用于将索引与内部数据结构关联的quintptr
-void *internalPointer() const; // 返回模型用于将索引与内部数据结构关联的void*指针
-bool isValid() const; // 如果此模型索引有效，则返回true；否则返回false
-const QAbstractItemModel *model() const; // 返回指向包含此索引引用的项的模型的指针
-```
-
-#### 4.1.2 QFileSystemModel
+#### 4.2.1 QFileSystemModel
 
 计算机上文件系统的数据模型类，是个可以访问本机文件系统的数据模型。
 
-QFileSystemModel和QTreeView结合使用就可以使用目录树的形式显示本机上的文件系统，如同Windows的资源管理器一样。
+QFileSystemModel和**QTreeView结合使用**就可以使用目录树的形式显示本机上的文件系统，如同Windows的资源管理器一样。
 
 获取本机文件系统需要使用setRootPath()函数设置根目录；
 
@@ -4239,13 +4263,17 @@ static void QFileSystemModel::fileRenamed(const QString &path,
 void rootPathChanged(const QString &newPath);
 ```
 
-#### 4.1.3 QStandardItemModel
+#### 4.2.2 QStandardItemModel
 
 标准的基于项数据的数据模型类，每个项可以是任何数据类型。
 
-#### 4.1.4 QStringListModel
+这个模型**一般是和QTableView结合的，适合处理二维数组**。
 
-用于处理字符串列表数据的数据模型类，它可以作为QListView的数据模型，在界面上显示和编辑字符串列表。它关联的数据结构是[3.1.8 QStringList](#3.1.8 QStringList)。
+
+
+#### 4.2.3 QStringListModel
+
+用于处理字符串列表数据的数据模型类，它可以作为**QListView的数据模型**，在界面上显示和编辑字符串列表。它关联的数据结构是[3.1.8 QStringList](#3.1.8 QStringList)。
 
 QListView的任何操作都会反馈至QStringListModel，前提是后台程序中，这个视图组件使用setModel设定为该模型。
 
@@ -4290,23 +4318,23 @@ virtual QModelIndex index(int row, int column = 0, const QModelIndex &parent = Q
 
 
 
-#### 4.1.5 QSortFilterProxyModel
+#### 4.2.4 QSortFilterProxyModel
 
 与其他数据模型结合，提供排序和过滤功能的数据模型类。
 
-#### 4.1.6 QSqlQuieryModel
+#### 4.2.5 QSqlQuieryModel
 
 用于数据库SQL查询结果的数据模型类。
 
-#### 4.1.7 QSqlTableModel
+#### 4.2.6 QSqlTableModel
 
 用于数据库的一个数据表的数据模型类。
 
-#### 4.1.8 QSqlRelationalTableModel
+#### 4.2.7 QSqlRelationalTableModel
 
 用于关系型数据表的数据模型类。
 
-### 4.2 视图组件
+### 4.3 视图组件
 
 视图组件统一存在一个函数setModel()，即可设置一个数据模型，视图组件上的修改将自动保存到关联的数据模型，一个数据模型可以同时在多个视图组件显示数据。
 
@@ -4325,23 +4353,23 @@ QTableView==>QTableWidget
 QTreeView==>QTreeWidget
 ```
 
-#### 4.2.1 QListView
+#### 4.3.1 QListView
 
 用于显示单列的列表数据，适用于一维数据的操作。
 
-#### 4.2.2 QTreeView
+#### 4.3.2 QTreeView
 
 用于显示树状结构数据，适用于树状结构数据的操作。
 
-#### 4.2.3 QTableView
+#### 4.3.3 QTableView
 
 用于显示表格状数据，适用于二维表格型数据的操作。
 
-#### 4.2.4 QColumnView
+#### 4.3.4 QColumnView
 
 用多个QListView显示树状层次结构，树状结构的一层用一个QListView显示。
 
-#### 4.2.5 QHeaderView
+#### 4.3.5 QHeaderView
 
 提供行表头或列表头的视图组件，如QTable的行表头和列表头。
 
