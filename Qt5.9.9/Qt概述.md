@@ -4243,7 +4243,25 @@ void rootPathChanged(const QString &newPath);
 
 #### 4.1.4 QStringListModel
 
-用于处理字符串列表数据的数据模型类。
+用于处理字符串列表数据的数据模型类，它可以作为QListView的数据模型，在界面上显示和编辑字符串列表。它关联的数据结构是[3.1.8 QStringList](#3.1.8 QStringList)。
+
+QListView的任何操作都会反馈至QStringListModel，前提是后台程序中，这个视图组件使用setModel设定为该模型。
+
+```c++
+Widget :: Widget(QWidget * parent): QWidget(parent),ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+    QStringList strlist;//数据模型
+    strlist<<"北京"<<"上海"<<"河北";
+    this->model = new QStringListModel(this);
+    this->model->setStringList(strlist);//字符串模型把字符串加进来
+    ui->listview->setModel(this->model);//设置模型
+    ui->listview->setEditTriggers(QAbstractItemView::DoubleClicked |QAbstractItemView::SelectedClicked );
+    //视图组件通过双击或者选中单击进行触发,可以把数据传递给this->model
+}
+```
+
+
 
 #### 4.1.5 QSortFilterProxyModel
 
