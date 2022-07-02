@@ -17,3 +17,5 @@
 4. TestFileSystemModel 在QListView上的应用,视图组件<=>数据模型的关系
 
 5. TestSerialPortCommunication 公司上位机的串口通信简单测试程序
+
+6. TestQStringListModel 在QListView上的应用,视图组件<=>数据模型的关系
