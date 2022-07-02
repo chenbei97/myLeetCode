@@ -1,12 +1,13 @@
 #include "teststringlistmodel.h"
 #include "ui_teststringlistmodel.h"
-
+#include <QDebug>
 TestStringListModel::TestStringListModel(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TestStringListModel)
 {
     ui->setupUi(this);
     this->initilize();
+    this->test();
 }
 
 TestStringListModel::~TestStringListModel()
@@ -104,4 +105,52 @@ void TestStringListModel::on_btnTextImport_clicked()
 void TestStringListModel::on_listView_clicked(const QModelIndex &index)
 {
     this->displayModelIndex(); // 显示当前鼠标的索引
+}
+
+void TestStringListModel::test()
+{
+     // 初始化列表构造测试
+    QStringList list = {"123","456","readme.txt","789",
+                        "sTR","12sS","r*.txt","123"};
+    qDebug()<<list;
+
+    // contains,是否包含指定字符串,默认区分大小写
+    // 关联的枚举类型枚举 Qt::CaseSensitivity
+    qDebug()<<list.contains("str",Qt::CaseInsensitive); //设置大小写不敏感
+
+    // filters 返回包含指定字符串的字符串列表
+    // 还可以返回与正则表达式匹配的字符串
+    // 2个重载版本 filter(const QRegExp &rx) const,filter(const QRegularExpression &re)
+    qDebug()<<list.filter("12");
+
+    // indexOf(const QRegExp &amp;rx, int from = 0) const
+    // 返回列表中第一个精确匹配的正则表达式 rx的索引位置
+    //从索引位置from开始向前搜索,如果没有匹配的项目,则返回 -1。
+    // lastIndexOf是返回最后1个匹配的字符串,默认从from=-1开始寻找
+    qDebug()<<list.indexOf("123",0);
+    qDebug()<<list.lastIndexOf("123",-1);
+
+    // join,将所有字符串列表的字符串连接成一个字符串,每个元素由给定的分隔符分隔,可以是空字符串
+    QStringList lst = {"python","C++"} ;
+    QString h = lst.join(",");
+    qDebug()<<h;//"python,C++"
+
+    // 删除重复项
+    int num = list.removeDuplicates();
+    qDebug()<<list<<"  "<<num;
+
+    // 替换指定字符为指定字符
+    QStringList list1;
+     list1 << "alpha" << "betA" << "gamma" << "epsilon";
+     list1.replaceInStrings("a", "o",Qt::CaseInsensitive);
+     qDebug()<<list1;
+
+      // sort 按升序对字符串列表进行排序,借助STL::sort完成
+     list1.sort(Qt::CaseInsensitive);
+     qDebug()<<list1;
+
+     // index获取指定行的父目录下的
+     for(int i = 0; i <9;i++)
+        qDebug()<<this->viewModel->index(i,0,QModelIndex()).data()<<" "<<this->viewModel->index(i).row();
+
 }

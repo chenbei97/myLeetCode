@@ -16,6 +16,7 @@ public:
     ~TestStringListModel();
 
 private:
+    void test();
     void initilize();
     void displayModelIndex();//显示项索引
 private slots:
