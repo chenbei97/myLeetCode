@@ -2763,58 +2763,6 @@ qint64 applicationPid();//返回应用程序的当前进程 ID
 QString applicationVersion();//此属性保存此应用程序的版本
 ```
 
-#### 3.1.18 QDir
-
-常用的成员函数。
-
-```c++
-QString QDir::absoluteFilePath(const QString &fileName) const;// 返回目录中文件的绝对路径名
-QString QDir::absolutePath() const;//返回绝对路径（以“/”或驱动器规范开头的路径），它可能包含符号链接，但绝不包含多余的“.”、“..”或多个分隔符
-uint QDir::count() const;//返回目录中目录和文件的总数
-QString QDir::dirName() const;//返回目录的名称；这与路径不同，例如名称为“mail”的目录可能具有路径“/var/spool/mail”。如果目录没有名称（例如它是根目录），则返回一个空字符串
-
-bool exists(const QString &name) const;//如果名为 name 的文件存在，则返回 true；否则返回 false
-bool exists() const;//如果目录存在则返回真；否则返回假。 （如果找到同名文件，此函数将返回 false）
-QString QDir::filePath(const QString &fileName) const;//返回目录中文件的路径名。不检查文件是否确实存在于目录中
-
-bool mkdir(const QString &dirName) const;//创建一个名为 dirName 的子目录
-
-QString path() const;//返回路径。这可能包含符号链接，但绝不包含多余的“.”、“..”或多个分隔符
-
-
-bool rename(const QString &oldName, const QString &newName);//重命名
-```
-
-常用的静态函数。
-
-```c++
-void addSearchPath(const QString &prefix, const QString &path);// 将路径添加到前缀的搜索路径
-void setSearchPaths(const QString &prefix, const QStringList &searchPaths);//设置前缀搜索路径
-QStringList searchPaths(const QString &prefix);//返回前缀的搜索路径
-
-QString cleanPath(const QString &path);//返回目录分隔符归一化（转换为“/”）并删除冗余的路径，并解析“.”和“..”（尽可能）
-
-QDir root(); // 返回根目录
-QString rootPath(); // 返回根目录的绝对路径
-QDir home();//返回用户的主目录
-QString homePath();//返回用户主目录的绝对路径
-QDir current();//返回应用程序的当前目录
-bool setCurrent(const QString &path);//将应用程序的当前工作目录设置为路径。如果目录更改成功，则返回 true；否则返回假。
-QString currentPath();//返回应用程序当前目录的绝对路径。当前目录是使用 QDir::setCurrent() 设置的最后一个目录，或者，如果从未调用过，则为父进程启动此应用程序的目录
-
-QFileInfoList drives();//返回此系统上的根目录列表
-
-bool isAbsolutePath(const QString &path);//是绝对路径？
-bool isRelativePath(const QString &path);//是相对路径？
-
-// 如果文件名与通配符（glob）模式过滤器匹配，则返回 true；否则返回 false
-bool match(const QString &filter, const QString &fileName);
-bool match(const QStringList &filters, const QString &fileName)
-    
-QDir temp();//返回系统的临时目录
-QString tempPath();// 返回系统临时目录的绝对路径
-```
-
 
 
 ### 3.2 常见输入组件类
@@ -4269,8 +4217,6 @@ void merge(const QItemSelection &other, QItemSelectionModel::SelectionFlags comm
 void select(const QModelIndex &topLeft, const QModelIndex &bottomRight);//将范围内的项目添加到列表中，该范围从由 topLeft 索引指定的左上角模型项到由 bottomRight 指定的右下角项
 ```
 
-
-
 #### 4.1.4 QAbstractItemView
 
 QAbstractItemView 类为项目视图类提供了基本功能。
@@ -4690,6 +4636,389 @@ QTreeView==>QTreeWidget
 #### 4.3.5 QHeaderView
 
 提供行表头或列表头的视图组件，如QTable的行表头和列表头。
+
+## 文件操作
+
+### QFileDialog
+
+QFileDialog 类提供了一个允许用户选择文件或目录的对话框。
+QFileDialog 类使用户能够遍历文件系统以选择一个或多个文件或目录。
+创建 QFileDialog 最简单的方法是使用静态函数。
+
+```c++
+fileName = QFileDialog::getOpenFileName(this,
+      tr("Open Image"), "/home/jana", tr("Image Files (*.png *.jpg *.bmp)"));
+```
+
+在上面的示例中，模态 QFileDialog 是使用静态函数创建的。该对话框最初显示"/home/jana"目录的内容，并显示与字符串"Image Files (*.png *.jpg *.bmp)"中给出的模式匹配的文件。文件对话框的父级设置为此，窗口标题设置为"打开图像"。
+如果要使用多个过滤器，请用两个分号分隔每个过滤器。例如：
+
+```c++
+ "Images (*.png *.xpm *.jpg);;Text files (*.txt);;XML files (*.xml)"
+```
+
+您可以在不使用静态函数的情况下创建自己的 QFileDialog。通过调用 setFileMode()，您可以指定用户必须在对话框中选择的内容：
+
+```c++
+QFileDialog dialog(this);
+```
+
+在上面的例子中，文件对话框的模式设置为 AnyFile，这意味着用户可以选择任何文件，甚至可以指定一个不存在的文件。此模式对于创建"另存为"文件对话框很有用。如果用户必须选择现有文件，请使用 ExistingFile；如果只能选择目录，请使用 Directory。有关模式的完整列表，请参阅 QFileDialog::FileMode 枚举。fileMode 属性包含对话框的操作模式；这表明用户应该选择什么类型的对象。使用 setNameFilter() 设置对话框的文件过滤器。例如
+
+```c++
+dialog.setFileMode(QFileDialog::AnyFile); 
+dialog.setNameFilter(tr("Images (*.png *.xpm *.jpg)"));
+```
+
+在上面的示例中，过滤器设置为"Images (*.png *.xpm *.jpg)"，这意味着只有扩展名为 png、xpm 或 jpg 的文件才会显示在 QFileDialog 中。您可以使用 setNameFilters() 应用多个过滤器。使用 selectNameFilter() 选择您提供的过滤器之一作为文件对话框的默认过滤器。
+
+fileMode 属性包含对话框的操作模式；这表明用户应该选择什么类型的对象。使用 setNameFilter() 设置对话框的文件过滤器。例如：
+
+```c++
+dialog.setViewMode(QFileDialog::Detail);
+```
+
+文件对话框有两种查看模式：列表和详细信息。 List 将当前目录的内容显示为文件和目录名称的列表。详细信息还显示文件和目录名称列表，但在每个名称旁边提供附加信息，例如文件大小和修改日期。使用 setViewMode() 设置模式：
+
+创建自己的文件对话框时需要使用的最后一个重要函数是 selectedFiles()。
+
+```c++
+QStringList fileNames;
+if (dialog.exec())
+    fileNames = dialog.selectedFiles();
+```
+
+在上面的示例中，创建并显示了一个模态文件对话框。如果用户单击确定，他们选择的文件将放入 fileName。可以使用 setDirectory() 设置对话框的工作目录。可以使用 selectFile() 函数选择当前目录中的每个文件。标准对话框示例展示了如何使用 QFileDialog 以及其他内置 Qt 对话框。默认情况下，如果平台有一个平台原生文件对话框，则将使用它。在这种情况下，用于构造对话框的小部件将不会被实例化，因此相关的访问器（例如 layout() 和 itemDelegate() 将返回 null。您可以设置 DontUseNativeDialog 选项以确保将使用基于小部件的实现而不是本机对话框。
+
+常见的枚举类型。
+
+```c++
+enum QFileDialog::AcceptMode = { 
+    QFileDialog::AcceptOpen,//接受打开
+    QFileDialog::AcceptSave//接受保存
+}
+```
+
+```c++
+enum QFileDialog::DialogLabel = {
+    QFileDialog::LookIn，//查看
+    QFileDialog::FileName，//文件名
+    QFileDialog::FileType，//文件类型
+    QFileDialog::Accept，//接受
+    QFileDialog::Reject//拒绝
+}
+```
+
+此枚举用于指示用户可以在文件对话框中选择什么；即如果用户单击确定，对话框将返回什么。
+
+```c++
+enum QFileDialog::FileMode = {  
+    QFileDialog::AnyFile,//文件的名称，无论它是否存在
+    QFileDialog::ExistingFile,//单个现有文件的名称
+    QFileDialog::Directory,//目录的名称。显示文件和目录。但是，本机 Windows 文件对话框不支持在目录选择器中显示文件
+    QFileDialog::ExistingFiles,//零个或多个现有文件的名称
+	QFileDialog::DirectoryOnly//改用 Directory 和 setOption(ShowDirsOnly, true)
+}
+```
+
+```c++
+enum QFileDialog::Option = {   
+    QFileDialog::ShowDirsOnly,//仅在文件对话框中显示目录。默认情况下，文件和目录都会显示。（仅在目录文件模式下有效）
+    QFileDialog::DontResolveSymlinks,//不要在文件对话框中解析符号链接。默认情况下，符号链接已解析
+    QFileDialog::DontConfirmOverwrite,//如果选择了现有文件，请不要要求确认。默认情况下要求确认
+    QFileDialog::DontUseNativeDialog,//不要使用本机文件对话框。默认情况下，使用本地文件对话框，除非您使用包含 Q_OBJECT 宏的 QFileDialog 的子类，或者平台没有您需要的类型的本地对话框。
+    QFileDialog::ReadOnly,//表示模型是只读的
+    QFileDialog::HideNameFilterDetails,//指示文件名过滤器详细信息是否隐藏。
+    QFileDialog::DontUseSheet,//在以前的 Qt 版本中，如果静态函数被赋予父级，则静态函数将默认创建一个工作表。这在 Qt 4.5 中不再受支持并且不执行任何操作，静态函数将始终是应用程序模式对话框。如果要使用工作表，请改用 QFileDialog::open() 
+    QFileDialog::DontUseCustomDirectoryIcons//始终使用默认目录图标。一些平台允许用户设置不同的图标。自定义图标查找会对网络或可移动驱动器造成很大的性能影响。设置此项将启用
+}
+```
+
+这个枚举描述了文件对话框的视图模式；即将显示有关每个文件的哪些信息。
+
+```c++
+enum QFileDialog::ViewMode = {
+    QFileDialog::Detail，//显示目录中每个项目的图标、名称和详细信息
+    QFileDialog::List//仅显示目录中每个项目的图标和名称
+}
+```
+
+常见的成员函数。
+
+```c++
+void setAcceptMode(AcceptMode mode);
+void setDefaultSuffix(const QString &suffix);
+void setDirectory(const QString &directory);
+void setDirectory(const QDir &directory);
+void setDirectoryUrl(const QUrl &directory);
+void setFileMode(FileMode mode);;
+void setFilter(QDir::Filters filters);
+void open(QObject *receiver, const char *member);
+AcceptMode acceptMode() const;
+QString defaultSuffix() const;
+QDir directory() const;
+```
+
+信号函数。
+
+```c++
+void currentChanged(const QString &path);
+void currentUrlChanged(const QUrl &url);
+void directoryEntered(const QString &directory);
+void directoryUrlEntered(const QUrl &directory);
+void fileSelected(const QString &file)
+void filesSelected(const QStringList &selected);
+void filterSelected(const QString &filter);
+void urlSelected(const QUrl &url);
+void urlsSelected(const QList<QUrl> &urls);
+```
+
+静态成员函数。
+
+```c++
+// 这是一个方便的静态函数，它将返回用户选择的现有目录。此函数使用给定的父窗口小部件创建一个模式文件对话框。如果 parent 不为 0，则对话框将显示在父小部件的中心。对话框的工作目录设置为 dir，标题设置为标题。其中任何一个都可能是空字符串，在这种情况下，将分别使用当前目录和默认标题。options 参数包含有关如何运行对话框的各种选项，请参阅 QFileDialog::Option 枚举以获取有关您可以传递的标志的更多信息。为确保原生文件对话框，必须设置 ShowDirsOnly。
+QString getExistingDirectory(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), Options options = ShowDirsOnly);
+// 这是一个方便的静态函数，它将返回用户选择的现有目录。如果用户按下取消，它会返回一个空的 url。该函数的使用与QFileDialog::getExistingDirectory() 类似。特别是 parent、caption、dir 和 options 的使用方式完全相同。
+QUrl getExistingDirectoryUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), Options options = ShowDirsOnly, const QStringList &supportedSchemes = QStringList());
+// 这是一个方便的静态函数，它返回用户选择的现有文件。如果用户按下取消，它会返回一个空字符串
+QString getOpenFileName(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options());
+//这是一个方便的静态函数，它将返回用户选择的一个或多个现有文件。
+QStringList getOpenFileNames(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options());
+//这是一个方便的静态函数，它返回用户选择的现有文件。如果用户按下取消，它会返回一个空的 url。
+QUrl getOpenFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options(), const QStringList &supportedSchemes = QStringList());
+//这是一个方便的静态函数，它将返回用户选择的一个或多个现有文件。如果用户按下取消，它会返回一个空列表
+QList<QUrl> getOpenFileUrls(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options(), const QStringList &supportedSchemes = QStringList());
+//这是一个方便的静态函数，它将返回用户选择的文件名。该文件不必存在。
+QString getSaveFileName(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options());
+//这是一个方便的静态函数，它返回用户选择的文件。该文件不必存在。如果用户按下取消，它会返回一个空的 url。
+QUrl getSaveFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options(), const QStringList &supportedSchemes = QStringList());
+```
+
+
+
+### QTextStream
+
+QTextStream 类为读写文本提供了一个方便的接口。
+QTextStream 可以对 QIODevice、QByteArray 或 QString 进行操作。使用 QTextStream 的流式操作符，您可以方便地读写单词、行和数字。对于生成文本，QTextStream 支持字段填充和对齐的格式选项，以及数字的格式。例子：
+
+```c++
+QFile data("output.txt");
+if (data.open(QFile::WriteOnly | QFile::Truncate)) {
+    QTextStream out(&data);
+    out << "Result: " << qSetFieldWidth(10) << left << 3.14 << 2.7;
+    // writes "Result: 3.14      2.7       "
+}
+```
+
+使用 QTextStream 读取控制台输入和写入控制台输出也很常见。 QTextStream 是区域感知的，并且会使用正确的编解码器自动解码标准输入。例子：
+
+```c++
+QTextStream stream(stdin);
+QString line;
+while (stream.readLineInto(&line)) {
+    ...
+}
+```
+
+除了使用 QTextStream 的构造函数外，您还可以通过调用 setDevice() 或 setString() 来设置 QTextStream 操作的设备或字符串。你可以通过调用 seek() 来寻找一个位置，当没有数据要读取时，atEnd() 将返回 true。如果调用flush()，QTextStream 会将其写入缓冲区中的所有数据清空到设备中，并在设备上调用flush()。在内部，QTextStream 使用基于 Unicode 的缓冲区，QTextStream 使用 QTextCodec 来自动支持不同的字符集。默认情况下，QTextCodec::codecForLocale() 用于读写，但您也可以通过调用 setCodec() 来设置编解码器。还支持自动 Unicode 检测。启用此功能时（默认行为），QTextStream 将检测 UTF-16 或 UTF-32 BOM（字节顺序标记）并在读取时切换到适当的 UTF 编解码器。 QTextStream 默认不写入 BOM，但您可以通过调用 setGenerateByteOrderMark(true) 来启用它。当 QTextStream 直接对 QString 进行操作时，编解码器被禁用。
+
+读取文本文件时使用 QTextStream 的一般方法有 3 种：**逐块**，调用 readLine() 或 readAll()；**逐词地**， QTextStream 支持流式传输到 QStrings、QByteArrays 和 char* 缓冲区。单词由空格分隔，并且自动跳过前导空格。
+逐个字符，通过流式传输到 QChar 或 char 类型。这种方法通常用于在解析文件时方便的输入处理，独立于字符编码和行尾语义。要跳过空白，请调用 skipWhiteSpace()。由于文本流使用缓冲区，因此不应使用超类的实现从流中读取。
+
+例如，如果您有一个 QFile 并直接使用 QFile::readLine() 从它读取而不是使用流，则文本流的内部位置将与文件的位置不同步。默认情况下，当从文本流中读取数字时，QTextStream 会自动检测数字的基本表示。例如，如果数字以"Ox"开头，则假定为十六进制形式。如果它以数字 1-9 开头，则假定为十进制形式，依此类推。您可以通过调用 setIntegerBase() 设置整数基数，从而禁用自动检测。例子：
+
+```c++
+QTextStream in("0x50 0x20");
+int firstNumber, secondNumber;
+
+in >> firstNumber;             // firstNumber == 80
+in >> dec >> secondNumber;     // secondNumber == 0
+
+char ch;
+in >> ch;                      // ch == 'x'
+```
+
+QTextStream 支持许多用于生成文本的格式化选项。您可以通过调用 setFieldWidth() 和 setPadChar() 来设置字段宽度和填充字符。使用 setFieldAlignment() 设置每个字段内的对齐方式。对于实数，调用 setRealNumberNotation() 和 setRealNumberPrecision() 来设置生成数字的表示法（SmartNotation、ScientificNotation、FixedNotation）和精度。一些额外的数字格式选项也可以通过 setNumberFlags() 获得。
+
+此外，Qt 提供了三个带参数的全局操纵器：qSetFieldWidth()、qSetPadChar() 和 qSetRealNumberPrecision()。
+
+常用的枚举类型。
+
+此枚举指定当字段比占据它的文本更宽时如何对齐字段中的文本。
+
+```c++
+enum QTextStream::FieldAlignment = { 
+    QTextStream::AlignLeft,
+    QTextStream::AlignRight,
+    QTextStream::AlignCenter,
+    QTextStream::AlignAccountingStyle//与 AlignRight 相同，只是数字的符号向左对齐
+}
+```
+
+此枚举指定可以设置以影响整数、浮点数和双精度数的输出的各种标志。
+
+```c++
+// enum QTextStream::NumberFlag = {
+    QTextStream::ShowBase，// 此枚举指定可以设置以影响整数、浮点数和双精度数的输出的各种标志
+    QTextStream::ForcePoint，//始终将小数分隔符放在数字中，即使没有小数
+    QTextStream::ForceSign，//始终将符号输入数字，即使是正数
+    QTextStream::UppercaseBase，//使用大写版本的基本前缀（“0X”、“0B”）。
+    QTextStream::UppercaseDigits//使用大写字母代替小写字母来表示 10 到 35 的数字
+}
+```
+
+此枚举指定用于将浮点数和双精度数表示为字符串的符号。
+
+```c++
+enum QTextStream::RealNumberNotation = { 
+    QTextStream::ScientificNotation,//科学记数法（printf() 的 %e 标志）
+    QTextStream::FixedNotation,//定点表示法（printf() 的 %f 标志
+    QTextStream::SmartNotation// 科学或定点表示法，取决于哪个最有意义（printf() 的 %g 标志）
+}
+```
+
+这个枚举描述了文本流的当前状态。
+
+```c++
+enum QTextStream::Status = {   
+    QTextStream::Ok,//文本流运行正常
+    QTextStream::ReadPastEnd,//文本流已读取到底层设备中数据的末尾
+    QTextStream::ReadCorruptData,//文本流已读取损坏的数据
+    QTextStream::WriteFailed//文本流无法写入底层设备
+}
+```
+
+常用的成员函数如下。
+
+```c++
+bool atEnd() const;
+void flush();
+
+qint64 pos() const;//返回与流的当前位置对应的设备位置，如果发生错误，则返回 -1（例如，如果没有设备或字符串，或者如果存在设备错误）
+QString read(qint64 maxlen);
+QString readAll();
+QString readLine(qint64 maxlen = 0);
+
+void reset();// 重置 QTextStream 的格式化选项，使其恢复到原来的构造状态。设备、字符串和任何缓冲数据保持不变。
+void resetStatus();//重置状态
+
+void setStatus(Status status);//将文本流的状态设置为给定的状态
+void setString(QString *string, QIODevice::OpenMode openMode = QIODevice::ReadWrite);// 使用给定的 openMode 将当前字符串设置为字符串。如果一个设备已经被分配，QTextStream 将在替换它之前调用flush()
+void skipWhiteSpace();// 从流中读取并丢弃空格，直到检测到非空格字符，或者直到 atEnd() 返回 true。此函数在逐字符读取流时很有用。
+Status status() const;// 返回文本流的状态
+QString *string() const;//返回分配给 QTextStream 的当前字符串，如果没有分配字符串，则返回 0
+```
+
+
+
+### QDir
+
+QDir 类提供对目录结构及其内容的访问。
+QDir 用于操作路径名、访问有关路径和文件的信息以及操作底层文件系统。它也可以用来访问Qt的资源系统。
+Qt 使用"/"作为通用目录分隔符，就像在 URL 中使用"/"作为路径分隔符一样。如果您总是使用"/"作为目录分隔符，Qt 将转换您的路径以符合底层操作系统。
+QDir 可以使用相对路径或绝对路径指向文件。绝对路径以目录分隔符开头（在 Windows 下可选地以驱动器规范开头）。相对文件名以目录名或文件名开头，并指定相对于当前目录的路径。
+
+绝对和相对路径的用法。
+
+```c++
+QDir("/home/user/Documents");
+QDir("C:/Documents and Settings");
+QDir("images/landscape.png");
+```
+
+可以使用 path() 函数获取目录的路径，并使用 setPath() 函数设置新路径。通过调用 absolutePath() 可以找到目录的绝对路径。使用 dirName() 函数可以找到目录的名称。这通常返回指定目录位置的绝对路径中的最后一个元素。但是，它也可以返回"."。
+
+```c++
+QDir("Documents/Letters/Applications").dirName(); // "Applications"
+QDir().dirName();
+```
+
+也可以使用 cd() 和 cdUp() 函数更改目录的路径，这两个函数都像熟悉的 shell 命令一样运行。当使用现有目录的名称调用 cd() 时，QDir 对象会更改目录，以便它表示该目录。 cdUp() 函数改变 QDir 对象的目录，使其引用其父目录；即 cd(&quot;..&quot;) 等价于 cdUp()。
+目录可以用 mkdir() 创建，用 rename() 重命名，用 rmdir() 删除。
+您可以使用exists() 测试具有给定名称的目录是否存在，并且可以使用isReadable()、isAbsolute()、isRelative() 和isRoot() 测试目录的属性。
+refresh() 函数从磁盘重新读取目录的数据。
+
+常用的成员函数。
+
+```c++
+QString QDir::absoluteFilePath(const QString &fileName) const;// 返回目录中文件的绝对路径名
+QString QDir::absolutePath() const;//返回绝对路径（以“/”或驱动器规范开头的路径），它可能包含符号链接，但绝不包含多余的“.”、“..”或多个分隔符
+uint QDir::count() const;//返回目录中目录和文件的总数
+QString QDir::dirName() const;//返回目录的名称；这与路径不同，例如名称为“mail”的目录可能具有路径“/var/spool/mail”。如果目录没有名称（例如它是根目录），则返回一个空字符串
+
+bool exists(const QString &name) const;//如果名为 name 的文件存在，则返回 true；否则返回 false
+bool exists() const;//如果目录存在则返回真；否则返回假。 （如果找到同名文件，此函数将返回 false）
+QString QDir::filePath(const QString &fileName) const;//返回目录中文件的路径名。不检查文件是否确实存在于目录中
+
+bool mkdir(const QString &dirName) const;//创建一个名为 dirName 的子目录
+
+QString path() const;//返回路径。这可能包含符号链接，但绝不包含多余的“.”、“..”或多个分隔符
+
+bool QDir::cdUp(); //返回到上一级目录
+bool QDir::cd(const QString &dirName);//下级目录
+bool rename(const QString &oldName, const QString &newName);//重命名
+```
+
+常用的静态函数。
+
+```c++
+void addSearchPath(const QString &prefix, const QString &path);// 将路径添加到前缀的搜索路径
+void setSearchPaths(const QString &prefix, const QStringList &searchPaths);//设置前缀搜索路径
+QStringList searchPaths(const QString &prefix);//返回前缀的搜索路径
+
+QString cleanPath(const QString &path);//返回目录分隔符归一化（转换为“/”）并删除冗余的路径，并解析“.”和“..”（尽可能）
+
+QDir root(); // 返回根目录
+QString rootPath(); // 返回根目录的绝对路径
+QDir home();//返回用户的主目录
+QString homePath();//返回用户主目录的绝对路径
+QDir current();//返回应用程序的当前目录
+bool setCurrent(const QString &path);//将应用程序的当前工作目录设置为路径。如果目录更改成功，则返回 true；否则返回假。
+QString currentPath();//返回应用程序当前目录的绝对路径。当前目录是使用 QDir::setCurrent() 设置的最后一个目录，或者，如果从未调用过，则为父进程启动此应用程序的目录
+
+QFileInfoList drives();//返回此系统上的根目录列表
+
+bool isAbsolutePath(const QString &path);//是绝对路径？
+bool isRelativePath(const QString &path);//是相对路径？
+
+// 如果文件名与通配符（glob）模式过滤器匹配，则返回 true；否则返回 false
+bool match(const QString &filter, const QString &fileName);
+bool match(const QStringList &filters, const QString &fileName)
+    
+QDir temp();//返回系统的临时目录
+QString tempPath();// 返回系统临时目录的绝对路径
+```
+
+关于各种路径的对比如下。
+
+```c++
+QCoreApplication::applicationDirPath(); //返回包含应用程序可执行文件的目录
+QCoreApplication::applicationFilePath();返回应用程序可执行文件的文件路径
+QCoreApplication::applicationName();、、此属性包含此应用程序的名称
+QDir::home();//返回用户的主目录
+QDir::homePath();//返回用户主目录的绝对路径
+QDir:::current();//返回应用程序的当前目录
+QDir::currentPath();//返回应用程序当前目录的绝对路径
+QDir::root();//返回根目录 
+QDir::rootPath();//返回根目录的绝对路径
+QDir::temp();//返回系统的临时目录
+QDir::tempPath();//返回系统临时目录的绝对路径
+
+qDebug()<<QCoreApplication::applicationDirPath();
+ "C:/Users/chenbei/Documents/build-TestQStandardItemModel-Desktop_Qt_5_9_9_MSVC2017_64bit-Debug/debug"
+qDebug()<<QCoreApplication::applicationFilePath();
+"C:/Users/chenbei/Documents/build-TestQStandardItemModel-Desktop_Qt_5_9_9_MSVC2017_64bit-Debug/debug/TestQStandardItemModel.exe"
+qDebug()<<QCoreApplication::applicationName();
+"TestQStandardItemModel"
+qDebug()<<QDir::currentPath();
+"C:/Users/chenbei/Documents/build-TestQStandardItemModel-Desktop_Qt_5_9_9_MSVC2017_64bit-Debug"
+qDebug()<<QDir::homePath();
+"C:/Users/chenbei"
+qDebug()<<QDir::rootPath();
+"C:/"
+qDebug()<<QDir::tempPath();
+"C:/Users/chenbei/AppData/Local/Temp" 
+```
 
 ## 其它
 
