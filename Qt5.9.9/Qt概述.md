@@ -1,6 +1,6 @@
 ## 1. 认识Qt和GUI应用程序基础
 
-1-2章关于Qt的安装和简单复习可见[hello_world](hello_world)的内容，其运行结果图片可见[](hello_world/app.png)。
+1-2章关于Qt的安装和简单复习可见[01-hello_world](01-hello_world)的内容，其运行结果图片可见[](01-hello_world/app.png)。
 
 主要的笔记如下。
 
@@ -2736,6 +2736,87 @@ void setWindow(const QRect &rectangle);
 const QTransform &transform() const;
 ```
 
+#### 3.1.17 QCoreApplication
+
+成员函数3个。
+
+```c++
+void installNativeEventFilter(QAbstractNativeEventFilter *filterObj);//为应用程序在主线程中接收到的所有本机事件安装事件过滤器 filterObj
+virtual bool notify(QObject *receiver, QEvent *event);//向接收者发送事件：receiver-&gt;event(event)。返回从接收者的事件处理程序返回的值。请注意，对于发送到任何线程中的任何对象的所有事件，都会调用此函数。
+void removeNativeEventFilter(QAbstractNativeEventFilter *filterObject);//从此对象中移除事件 filterObject。如果尚未安装此类事件过滤器，则忽略该请求
+```
+
+一对信号和槽函数。
+
+```c++
+static slot void QCoreApplication::quit();//告诉应用程序退出并返回代码0(成功)。相当于调用 QCoreApplication::exit(0)
+void aboutToQuit();//当应用程序即将退出主事件循环时发出此信号，例如当事件循环级别降至零时。这可能发生在从应用程序内部调用 quit()之后或当用户关闭整个桌面会话时
+```
+
+常用的静态函数。
+
+```c++
+QString applicationDirPath();//返回包含应用程序可执行文件的目录
+QString applicationFilePath();//返回应用程序可执行文件的文件路径
+QString applicationName();//此属性包含此应用程序的名称
+qint64 applicationPid();//返回应用程序的当前进程 ID
+QString applicationVersion();//此属性保存此应用程序的版本
+```
+
+#### 3.1.18 QDir
+
+常用的成员函数。
+
+```c++
+QString QDir::absoluteFilePath(const QString &fileName) const;// 返回目录中文件的绝对路径名
+QString QDir::absolutePath() const;//返回绝对路径（以“/”或驱动器规范开头的路径），它可能包含符号链接，但绝不包含多余的“.”、“..”或多个分隔符
+uint QDir::count() const;//返回目录中目录和文件的总数
+QString QDir::dirName() const;//返回目录的名称；这与路径不同，例如名称为“mail”的目录可能具有路径“/var/spool/mail”。如果目录没有名称（例如它是根目录），则返回一个空字符串
+
+bool exists(const QString &name) const;//如果名为 name 的文件存在，则返回 true；否则返回 false
+bool exists() const;//如果目录存在则返回真；否则返回假。 （如果找到同名文件，此函数将返回 false）
+QString QDir::filePath(const QString &fileName) const;//返回目录中文件的路径名。不检查文件是否确实存在于目录中
+
+bool mkdir(const QString &dirName) const;//创建一个名为 dirName 的子目录
+
+QString path() const;//返回路径。这可能包含符号链接，但绝不包含多余的“.”、“..”或多个分隔符
+
+
+bool rename(const QString &oldName, const QString &newName);//重命名
+```
+
+常用的静态函数。
+
+```c++
+void addSearchPath(const QString &prefix, const QString &path);// 将路径添加到前缀的搜索路径
+void setSearchPaths(const QString &prefix, const QStringList &searchPaths);//设置前缀搜索路径
+QStringList searchPaths(const QString &prefix);//返回前缀的搜索路径
+
+QString cleanPath(const QString &path);//返回目录分隔符归一化（转换为“/”）并删除冗余的路径，并解析“.”和“..”（尽可能）
+
+QDir root(); // 返回根目录
+QString rootPath(); // 返回根目录的绝对路径
+QDir home();//返回用户的主目录
+QString homePath();//返回用户主目录的绝对路径
+QDir current();//返回应用程序的当前目录
+bool setCurrent(const QString &path);//将应用程序的当前工作目录设置为路径。如果目录更改成功，则返回 true；否则返回假。
+QString currentPath();//返回应用程序当前目录的绝对路径。当前目录是使用 QDir::setCurrent() 设置的最后一个目录，或者，如果从未调用过，则为父进程启动此应用程序的目录
+
+QFileInfoList drives();//返回此系统上的根目录列表
+
+bool isAbsolutePath(const QString &path);//是绝对路径？
+bool isRelativePath(const QString &path);//是相对路径？
+
+// 如果文件名与通配符（glob）模式过滤器匹配，则返回 true；否则返回 false
+bool match(const QString &filter, const QString &fileName);
+bool match(const QStringList &filters, const QString &fileName)
+    
+QDir temp();//返回系统的临时目录
+QString tempPath();// 返回系统临时目录的绝对路径
+```
+
+
+
 ### 3.2 常见输入组件类
 
 #### 3.2.1 QSpinBox
@@ -4077,11 +4158,246 @@ const QAbstractItemModel *model() const; // 返回指向包含此索引引用的
 
 **用于监控鼠标是否指向表格项或者改变指向。**
 
-QItemSelectionModel 类跟踪视图的选定项。
-QItemSelectionModel 跟踪视图中的选定项目，或同一模型的多个视图中的选定项。它还跟踪视图中当前选定的项目。
-QItemSelectionModel 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。
-所选项目使用范围存储。每当您想修改选定的项目时，请使用 select() 并提供 QItemSelection 或 QModelIndex 和 QItemSelectionModel::SelectionFlag。
-QItemSelectionModel 采用两层方法进行选择管理，处理已提交的选定项和当前选择的一部分。当前选定的项目是当前交互式选择的一部分（例如，使用橡皮筋选择或键盘移位选择）。要更新当前选定的项目，请使用 QItemSelectionModel::Current 和任何其他 SelectionFlags 的按位或。如果省略 QItemSelectionModel::Current 命令，将创建一个新的当前选择，并将前一个添加到整个选择中。所有功能都在两层上运行；例如， selecteditems() 将从两个层返回项目。
+1个枚举类型需要知道，这个枚举描述了**选择模型的更新方式**。
+
+```c++
+enum QItemSelectionModel::SelectionFlag = {  
+    QItemSelectionModel::NoUpdate,//不会进行任何选择
+    QItemSelectionModel::Clear,// 完整的选择将被清除
+    QItemSelectionModel::Select,// 将选择所有指定的索引
+    QItemSelectionModel::Deselect,// 所有指定的索引将被取消选择
+    QItemSelectionModel::Toggle,// 将根据当前状态选择或取消选择所有指定的索引
+    QItemSelectionModel::Current,// 当前选择将被更新
+    QItemSelectionModel::Rows,// 所有索引都将扩展为跨行
+    QItemSelectionModel::Columns,// 所有索引都将扩展为跨列
+    QItemSelectionModel::SelectCurrent,// 为方便起见，结合了 Select 和 Current
+    QItemSelectionModel::ToggleCurrent,// 为方便起见，结合了 Toggle 和 Current
+    QItemSelectionModel::ClearAndSelect// 为方便起见，结合了清除和选择
+}
+```
+
+主要的成员函数如下，其它继承自QObject。
+
+```c++
+// 1.设置模型,从抽象项模型派生的各类Model都可以设置
+void setModel(QAbstractItemModel *model);
+// 2.获取当前鼠标指向的单元格索引
+QModelIndex currentIndex() const;
+
+// 3.如果在具有给定父项的列中选择了任何项目，则返回 true
+bool columnIntersectsSelection(int column, const QModelIndex &parent) const;
+// 4.如果选择模型包含任何选择范围，则返回 true；否则返回 false
+bool hasSelection() const;
+// 5.如果在具有给定父项的列中选择了所有项目，则返回 true
+bool isColumnSelected(int column, const QModelIndex &parent) const;
+// 6.如果在具有给定父项的行中选择了所有项目，则返回 true
+bool isRowSelected(int row, const QModelIndex &parent) const;
+// 7.如果选择了给定的模型项索引，则返回 true
+bool isSelected(const QModelIndex &index) const;
+// 8.如果在具有给定父项的行中选择了任何项目，则返回 true
+bool rowIntersectsSelection(int row, const QModelIndex &parent) const;
+
+// 9.返回存储在选择模型中的选择范围
+const QItemSelection selection() const;
+
+// 10.返回选择模型所操作的项目模型
+const QAbstractItemModel *model() const;
+QAbstractItemModel *model();
+
+// 11.返回给定行中所有行都被选中的列的索引
+QModelIndexList selectedColumns(int row = 0) const;
+// 12.返回给定列中所有列都被选中的行的索引
+QModelIndexList selectedRows(int column = 0) const;
+// 13.返回所有选定模型项索引的列表。该列表不包含重复项，并且未排序
+QModelIndexList selectedIndexes() const;
+```
+
+具备的槽函数如下。
+
+```c++
+// 1.清除选择模型,发出 selectionChanged() 和 currentChanged()
+virtual void clear();
+// 2.清除当前索引,发出 currentChanged()
+virtual void clearCurrentIndex();
+// 3.清除选择模型中的选择,发出 selectionChanged()
+void clearSelection();
+// 4.清除选择模型,不发出任何信号
+virtual void reset();
+// 5.使用指定的命令选择模型项索引,并发出 selectionChanged()
+virtual void select(const QModelIndex &index, QItemSelectionModel::SelectionFlags command);
+// 6.使用指定的命令选择项目选择,并发出 selectionChanged()
+virtual void select(const QItemSelection &selection, QItemSelectionModel::SelectionFlags command);
+// 7.将模型项索引设置为当前项，并发出 currentChanged()
+virtual void setCurrentIndex(const QModelIndex &index, QItemSelectionModel::SelectionFlags command);
+```
+
+具备的信号函数如下。
+
+```c++
+// 1.每当当前项目更改时，都会发出此信号。之前的模型项索引被当前索引替换为选择的当前项
+void currentChanged(const QModelIndex &current, const QModelIndex &previous);
+// 2.如果当前项目发生变化并且其列与前一个当前项目的列不同，则发出此信号
+void currentColumnChanged(const QModelIndex &current, const QModelIndex &previous);
+// 3.如果当前项目发生变化并且其行与前一个当前项目的行不同，则发出此信号
+void currentRowChanged(const QModelIndex &current, const QModelIndex &previous);
+// 4.使用 setModel() 成功设置模型时发出此信号
+void modelChanged(QAbstractItemModel *model);
+// 5.每当选择改变时，就会发出该信号,选择的变化表示为取消选择的项目的项目选择和选定项目的项目选择
+void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+```
+
+#### 4.1.3 QItemSelection
+
+QItemSelection 类管理有关模型中**选定项目的信息**。
+QItemSelection 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。
+可以构建和初始化项目选择以包含现有模型中的一系列项目。下面的示例构造一个选择，其中包含来自给定模型的一系列项目，从 topLeft 开始，到 bottomRight 结束。
+
+```c++
+QItemSelection *selection = new QItemSelection(topLeft, bottomRight);
+// 等价于
+QItemSelection *selection = new QItemSelection();
+selection->select(topLeft, bottomRight);
+```
+
+成员函数主要有5个，其他全部继承自QList。
+
+```c++
+QItemSelection::QItemSelection(const QModelIndex &topLeft, const QModelIndex &bottomRight);//构造一个从左上角模型项（由 topLeft 索引指定）延伸到右下角项（由 bottomRight 指定）的项选择
+bool contains(const QModelIndex &index) const;//是否包含指定索引
+QModelIndexList indexes() const;//返回区域包含的所有项索引
+void merge(const QItemSelection &other, QItemSelectionModel::SelectionFlags command);//使用给定的命令将其他选择与此 QItemSelection 合并，此方法保证没有范围重叠
+void select(const QModelIndex &topLeft, const QModelIndex &bottomRight);//将范围内的项目添加到列表中，该范围从由 topLeft 索引指定的左上角模型项到由 bottomRight 指定的右下角项
+```
+
+
+
+#### 4.1.4 QAbstractItemView
+
+QAbstractItemView 类为项目视图类提供了基本功能。
+QAbstractItemView 类是每个使用 QAbstractItemModel 的标准视图的基类，是QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类。 QAbstractItemView 是一个抽象类，本身不能被实例化。它提供了一个标准接口，用于通过信号和槽机制与模型进行互操作，使子类能够随着模型的更改而保持最新。
+
+##### 枚举类型
+
+**描述视图可以操作的各种拖放事件**。默认情况下视图不支持拖放NoDragDrop。
+
+```c++
+enum QAbstractItemView::DragDropMode = { 
+    QAbstractItemView::NoDragDrop,//不支持拖拽
+    QAbstractItemView::DragOnly,//视图支持拖动自己的项目
+    QAbstractItemView::DropOnly,//视图接受drop
+    QAbstractItemView::DragDrop//视图支持拖放
+    QAbstractItemView::InternalMove//视图仅接受来自其自身的移动而非复制操作
+}
+```
+
+**此枚举描述将启动项目编辑的操作**。
+
+```c++
+enum QAbstractItemView::EditTrigger = {
+    QAbstractItemView::NoEditTriggers,//无法编辑
+    QAbstractItemView::CurrentChanged,//当前项目更改时开始编辑
+    QAbstractItemView::DoubleClicked,//双击项目时开始编辑
+    QAbstractItemView::SelectedClicked,//单击已选择的项目时开始编辑
+    QAbstractItemView::EditKeyPressed,//在项目上按下平台编辑键时开始编辑
+    QAbstractItemView::AnyKeyPressed,//在项目上按下任意键时开始编辑
+    QAbstractItemView::AllEditTriggers//以上所有操作都可以开启
+}
+```
+
+**滚动提示的枚举值**。
+
+```c++
+enum QAbstractItemView::ScrollHint{   
+    QAbstractItemView::EnsureVisible,//滚动以确保项目可见
+    QAbstractItemView::PositionAtTop,//滚动以将项目定位在视口的顶部
+    QAbstractItemView::PositionAtBottom,//滚动以将项目定位在视口的底部
+    QAbstractItemView::PositionAtCenter//滚动以将项目定位在视口的中心
+}
+```
+
+**描述滚动条的行为方式**。将滚动模式设置为 ScrollPerPixel 时，单步大小将自动调整，除非使用 setSingleStep() 显式设置，可以通过将单步长设置为-1来恢复自动调整。
+
+```c++
+enum QAbstractItemView::ScrollMode = {  
+    QAbstractItemView::ScrollPerItem,//视图将一次滚动一项内容
+    QAbstractItemView::ScrollPerPixel//视图将一次滚动一个像素的内容
+}
+```
+
+这个枚举类型决定了**鼠标点击单元格时是只选中单元格，还是这一行单元格还是这一列**。
+
+```c++
+enum QAbstractItemView::SelectionBehavior{ 
+    QAbstractItemView::SelectItems,//选择单个项目
+    QAbstractItemView::SelectRows,//仅选择行
+    QAbstractItemView::SelectColumns//仅选择列
+}
+```
+
+此枚举**指示视图如何响应用户选择**，最常用的模式是 SingleSelection 和 ExtendedSelection。
+
+```c++
+enum QAbstractItemView::SelectionMode = {
+QAbstractItemView::SingleSelection,//只能选中1个项,单击别的就会取消选择
+QAbstractItemView::ContiguousSelection,//可以使用shift选择连续区域
+QAbstractItemView::ExtendedSelection,//可以使用ctrl选中多个分开的项,使用shift的区别是不能选择非连续的项,会自动包含
+QAbstractItemView::MultiSelection,// 不用使用ctrl或者shift才能选择多个区域,鼠标点击别的区域不会取消已有的区域,只能通过鼠标移动取消
+QAbstractItemView::NoSelection // 无法选择项目
+}
+```
+
+##### 成员函数
+
+给出常见的成员函数。
+
+```c++
+QModelIndex currentIndex() const; //获取选中项的索引
+void setDragDropMode(DragDropMode behavior);//设置拖放模式
+void setEditTriggers(EditTriggers triggers);//设置启动编辑的触发模式
+virtual void setModel(QAbstractItemModel *model); // 设置模型
+void setSelectionBehavior(QAbstractItemView::
+SelectionBehavior behavior);// 设置选中单元格的行为
+void setSelectionMode(QAbstractItemView::SelectionMode mode);//设置选中模式
+virtual void setSelectionModel(QItemSelectionModel *selectionModel);// 将当前选择模型设置为给定的 selectionModel
+```
+
+##### 槽函数
+
+给出常见槽函数。
+
+```c++
+void clearSelection();//取消选择所有选定的项目。当前索引不会改变
+void edit(const QModelIndex &index);//如果它是可编辑的，则开始编辑与给定索引对应的项目
+virtual void reset();//重置视图的内部状态
+void scrollToBottom();//将视图滚动到底部
+void scrollToTop();//将视图滚动到顶部
+virtual void selectAll();//选择视图中的所有项目。此功能将在选择时使用视图上设置的选择行为
+void setCurrentIndex(const QModelIndex &index);//将当前项目设置为索引处的项目
+virtual void setRootIndex(const QModelIndex &index);//将根项设置为给定索引处的项
+void update(const QModelIndex &index);//更新给定索引占用的区域
+
+// 继承的槽函数
+// 当新项目成为当前项目时，将调用此插槽。上一个当前项由上一个索引指定，新项由当前索引指定
+virtual void currentChanged(const QModelIndex &current, const QModelIndex &previous);
+//插入行时调用此插槽。新行是从头到尾包含在给定父级下的行。基类实现在模型上调用 fetchMore() 以检查更多数据
+virtual void rowsInserted(const QModelIndex &parent, int start, int end);
+// 更改选择时调用此插槽。先前的选择（可能为空）由取消选择指定，新选择由选择指定
+virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected;
+```
+
+##### 信号函数
+
+```c++
+void activated(const QModelIndex &index);//当用户激活 index 指定的项目时，会发出此信号。如何激活取决于平台,例通过单击或双击项目，或在项目为当前时按 Return 或 Enter 键。
+void clicked(const QModelIndex &index);//当鼠标左键单击时发出此信号。鼠标点击的项目由索引指定。该信号仅在索引有效时发出
+void doubleClicked(const QModelIndex &index);//双击鼠标按钮时会发出此信号。鼠标双击的项目由索引指定。仅在索引有效时发出信号
+void entered(const QModelIndex &index);//当鼠标光标进入 index 指定的项目时发出此信号。需要启用鼠标跟踪才能使用此功能
+void iconSizeChanged(const QSize &size);//此属性保存项目图标的大小,当视图可见时设置此属性将导致项目重新布局
+void pressed(const QModelIndex &index);//按下鼠标按钮时会发出此信号。鼠标按下的项目由索引指定。仅在索引有效时发出信号
+void viewportEntered();//当鼠标光标进入视口时发出此信号。需要启用鼠标跟踪才能使用此功能
+```
+
+
 
 ### 4.2 Model模型
 
@@ -4335,6 +4651,8 @@ virtual QModelIndex index(int row, int column = 0, const QModelIndex &parent = Q
 用于关系型数据表的数据模型类。
 
 ### 4.3 视图组件
+
+QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类是QAbstractItemView。
 
 视图组件统一存在一个函数setModel()，即可设置一个数据模型，视图组件上的修改将自动保存到关联的数据模型，一个数据模型可以同时在多个视图组件显示数据。
 
