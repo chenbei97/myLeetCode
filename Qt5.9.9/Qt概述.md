@@ -5020,6 +5020,173 @@ qDebug()<<QDir::tempPath();
 "C:/Users/chenbei/AppData/Local/Temp" 
 ```
 
+## 线程操作
+
+### QThread
+
+QThread 类提供了一种独立于平台的方式来管理线程。
+QThread 对象管理程序中的一个控制线程。 QThreads 在 run() 中开始执行。默认情况下，run() 通过调用 exec() 启动事件循环，并在线程内运行 Qt 事件循环。
+您可以通过使用 QObject::moveToThread() 将工作对象移动到线程来使用它们。
+
+一个使用的例子如下。Worker 插槽内的代码将在单独的线程中执行。但是，您可以自由地将 Worker 的插槽连接到来自任何对象、任何线程中的任何信号。由于一种称为队列连接的机制，跨不同线程连接信号和槽是安全的。
+
+```c++
+ class Worker : public QObject
+  {
+      Q_OBJECT
+
+  public slots:
+      void doWork(const QString &parameter) {
+          QString result;
+          /* ... here is the expensive or blocking operation ... */
+          emit resultReady(result);
+      }
+
+  signals:
+      void resultReady(const QString &result);
+  };
+
+  class Controller : public QObject
+  {
+      Q_OBJECT
+      QThread workerThread;// 1个线程
+  public:
+      Controller() {
+          Worker *worker = new Worker; // new1个worker实例
+          worker->moveToThread(&workerThread);//实例调用移动至线程去执行
+          // 连接线程的结束和worker实例的析构
+          connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+          // 连接this的operate信号和worker实例的doWork函数
+          connect(this, &Controller::operate, worker, &Worker::doWork);
+          // 连接work的信号等待结果和this的处理结果函数
+          connect(worker, &Worker::resultReady, this, &Controller::handleResults);
+          workerThread.start();
+      }
+      ~Controller() {
+          workerThread.quit(); // 停止线程
+          workerThread.wait(); // 等待开启
+      }
+  public slots:
+      void handleResults(const QString &); // 和resultReady信号连接
+  signals:
+      void operate(const QString &); // 信号连接doWork
+  };
+```
+
+使代码在单独的线程中运行的另一种方法是继承 QThread 并重新实现 run()。在该示例中，线程将在 run 函数返回后退出。除非您调用 exec()，否则线程中不会运行任何事件循环。重要的是要记住 QThread 实例存在于实例化它的旧线程中，而不是调用 run() 的新线程中。这意味着 QThread 的所有排队槽都将在旧线程中执行。因此，希望在新线程中调用槽的开发人员必须使用工作对象方法；不应将新插槽直接实现到子类 QThread 中。
+子类化 QThread 时，请记住构造函数在旧线程中执行，而 run() 在新线程中执行。如果两个函数都访问一个成员变量，则该变量是从两个不同的线程访问的。检查这样做是否安全。
+
+```c++
+class WorkerThread : public QThread
+  {
+      Q_OBJECT
+      void run() override {
+          QString result;
+          /* ... here is the expensive or blocking operation ... */
+          emit resultReady(result);
+      }
+  signals:
+      void resultReady(const QString &s);
+  };
+
+  void MyObject::startWorkInAThread()
+  {
+      WorkerThread *workerThread = new WorkerThread(this);
+      // 检测到resultReady信号后MyObject就会调用handleResults处理
+      connect(workerThread, &WorkerThread::resultReady, this, &MyObject::handleResults);
+      // 检测到线程结束后,就析构线程
+      connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
+      workerThread->start(); // 线程开始
+  }
+```
+
+注意：跨不同线程与对象交互时必须小心。有关详细信息，请参阅同步线程。
+
+
+
+QThread 会在线程started() 和finished() 时通过信号通知你，或者你可以使用isFinished() 和isRunning() 来查询线程的状态。
+您可以通过调用exit() 或quit() 来停止线程。在极端情况下，您可能希望强制terminate（）正在执行的线程。然而，这样做是危险的和不鼓励的。有关详细信息，请阅读 terminate() 和 setTerminationEnabled() 的文档。
+从 Qt 4.8 开始，可以通过将 finished() 信号连接到 QObject::deleteLater() 来释放刚刚结束的线程中的对象。
+使用 wait() 阻塞调用线程，直到另一个线程完成执行（或直到经过指定的时间）。
+
+QThread 还提供静态的、平台独立的睡眠函数：sleep()、msleep() 和 usleep() 分别允许整秒、毫秒和微秒分辨率。这些函数在 Qt 5.0 中公开。
+注意：通常不需要 wait() 和 sleep() 函数，因为 Qt 是一个事件驱动的框架。考虑监听finished() 信号，而不是wait()。考虑使用 QTimer，而不是 sleep() 函数。
+
+静态函数 currentThreadId() 和 currentThread() 返回当前执行线程的标识符。前者返回线程的平台特定 ID；后者返回一个 QThread 指针。要选择线程的名称（例如，在 Linux 上由命令 ps -L 标识），您可以在启动线程之前调用 setObjectName()。如果您不调用 setObjectName()，则为线程指定的名称将是线程对象的运行时类型的类名（例如，在 Mandelbrot 示例中为“RenderThread”，因为这是QThread 子类）。请注意，这目前不适用于 Windows 上的发布版本。
+
+#### 枚举值
+
+此枚举类型指示操作系统应如何调度新创建的线程。
+
+```c++
+enum QThread::Priority = {
+    QThread::IdlePriority,// 仅在没有其他线程运行时调度
+    QThread::LowestPriority,// 安排的频率低于 LowPriority
+    QThread::LowPriority,//安排的频率低于 NormalPriority
+    QThread::NormalPriority,//操作系统的默认优先级
+    QThread::HighPriority,//比 NormalPriority 更频繁地安排
+    QThread::HighestPriority,//比 HighPriority 更频繁地安排
+    QThread::TimeCriticalPriority,//尽可能经常安排
+    QThread::InheritPriority//使用与创建线程相同的优先级。这是默认设置
+}
+```
+
+#### 成员函数
+
+```c++
+QAbstractEventDispatcher *eventDispatcher() const;//返回指向线程的事件分派器对象的指针。如果线程不存在事件分派器，则此函数返回 0
+void setEventDispatcher(QAbstractEventDispatcher *eventDispatcher);
+
+void exit(int returnCode = 0);// 进入事件循环并等待直到 exit() 被调用，返回传递给 exit() 的值。如果通过 quit() 调用 exit()，则返回值为 0。此函数旨在从 run() 中调用。需要调用此函数来启动事件处理。
+
+bool isFinished() const; // 如果线程完成则返回真；否则返回 false
+bool isRunning() const;//如果线程正在运行，则返回 true；否则返回 false
+
+bool isInterruptionRequested() const;//如果应该停止在此线程上运行的任务，则返回 true。 requestInterruption() 可以请求中断。此功能可用于使长时间运行的任务完全可中断。永远不要检查或操作此函数返回的值是安全的，但是建议在长时间运行的函数中定期这样做。注意不要经常调用它，以保持低开销。
+void requestInterruption();//请求中断线程。该请求是建议性的，由线程上运行的代码决定是否以及如何根据此类请求采取行动。此函数不会停止线程上运行的任何事件循环，也不会以任何方式终止它。
+
+int loopLevel() const;//返回线程的当前事件循环级别。注意：这只能在线程本身内调用，即当它是当前线程时
+Priority priority() const;//返回正在运行的线程的优先级。如果线程没有运行，这个函数返回 InheritPriority
+void setPriority(Priority priority);
+
+void setStackSize(uint stackSize);//将线程的最大堆栈大小设置为 stackSize。如果 stackSize 大于零，则将最大堆栈大小设置为 stackSize 字节，否则最大堆栈大小由操作系统自动确定
+uint stackSize() const;//
+
+bool wait(unsigned long time = ULONG_MAX);//阻塞线程，直到满足以下任一条件： 与此 QThread 对象关联的线程已完成执行（即，当它从 run() 返回时）。如果线程已完成，此函数将返回 true。如果线程尚未启动，它也会返回 true。time 毫秒已经过去。如果时间为 ULONG_MAX（默认值），则等待永远不会超时（线程必须从 run() 返回）。如果等待超时，此函数将返回 false。这提供了与 POSIX pthread_join() 函数类似的功能。
+```
+
+#### 信号和槽函数
+
+```c++
+void quit();//告诉线程的事件循环以返回码 0（成功）退出。相当于调用 QThread::exit(0)。如果线程没有事件循环，这个函数什么也不做
+void start(Priority priority = InheritPriority);// 通过调用 run() 开始执行线程。操作系统会根据优先级参数调度线程。如果线程已经在运行，这个函数什么也不做。优先级参数的效果取决于操作系统的调度策略。特别是，在不支持线程优先级的系统上，优先级将被忽略（例如在 Linux 上，有关更多详细信息，请参阅 sched_setscheduler 文档）。
+void terminate();//终止线程的执行。线程可能会或可能不会立即终止，具体取决于操作系统的调度策略。可以肯定的是，在 terminate() 之后使用 QThread::wait()。当线程终止时，所有等待线程结束的线程都会被唤醒。警告：此功能很危险，不鼓励使用。线程可以在其代码路径中的任何位置终止。修改数据时可以终止线程。线程没有机会自行清理、解锁任何持有的互斥锁等。简而言之，只有在绝对必要时才使用此功能。可以通过调用 QThread::setTerminationEnabled() 显式启用或禁用终止。在终止被禁用时调用此函数会导致终止被延迟，直到重新启用终止。有关更多信息，请参阅 QThread::setTerminationEnabled() 的文档。
+void finished();// 该信号在完成执行之前从关联线程发出。当这个信号发出时，事件循环已经停止运行。除了延迟删除事件外，线程中不会再处理任何事件。该信号可以连接到 QObject::deleteLater()，以释放该线程中的对象。注意：如果关联线程是使用 terminate() 终止的，则未定义从哪个线程发出此信号。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出。
+void started();// 在调用 run() 函数之前，该信号从关联线程开始执行时发出。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出
+```
+
+#### 静态函数
+
+```c++
+QThread *currentThread();//返回一个指向管理当前执行线程的 QThread 的指针
+Qt::HANDLE currentThreadId();//返回当前执行线程的线程句柄
+int idealThreadCount();//返回可以在系统上运行的理想线程数。这是通过查询系统中实际和逻辑处理器核心的数量来完成的。如果无法检测到处理器内核数，此函数返回 -1
+void msleep(unsigned long msecs);//强制当前线程休眠 msecs 毫秒
+void sleep(unsigned long secs);//强制当前线程休眠 secs 秒
+void usleep(unsigned long usecs);//强制当前线程休眠 usecs 微秒
+void yieldCurrentThread();//将当前线程的执行交给另一个可运行线程（如果有）。请注意，操作系统决定切换到哪个线程
+```
+
+#### 保护权限函数
+
+```c++
+int exec();//进入事件循环并等待直到 exit() 被调用，返回传递给 exit() 的值。如果通过 quit() 调用 exit()，则返回值为 0。此函数旨在从 run() 中调用。需要调用这个函数来启动事件处理
+
+virtual void run();//告诉线程的事件循环以返回码退出。调用此函数后，线程离开事件循环并从对 QEventLoop::exec() 的调用返回。 QEventLoop::exec() 函数返回returnCode。按照惯例，returnCode 为 0 表示成功，任何非零值表示错误。请注意，与同名的 C 库函数不同，此函数确实返回给调用者——它是事件处理停止。在再次调用 QThread::exec() 之前，此线程中不会再启动 QEventLoops。如果 QThread::exec() 中的事件循环没有运行，那么对 QThread::exec() 的下一次调用也将立即返回。
+
+[static protected] void QThread::setTerminationEnabled(bool enabled = true);//根据 enabled 参数启用或禁用当前线程的终止。该线程必须已由 QThread 启动。当 enabled 为 false 时，终止被禁用。未来对 QThread::terminate() 的调用将立即返回而没有效果。相反，终止被推迟到启用终止为止。如果 enabled 为 true，则启用终止。未来对 QThread::terminate() 的调用将正常终止线程。如果终止已被推迟（即 QThread::terminate() 被禁用终止被调用），此函数将立即终止调用线程。请注意，此函数在这种情况下不会返回。
+```
+
 ## 其它
 
 ### 串口通信
