@@ -1,0 +1,17 @@
+INPUT(
+./debug\auxiliaryFunction.o
+./debug\fixedQueryThread.o
+./debug\main.o
+./debug\mediationFunction.o
+./debug\serialCommandReceiver.o
+./debug\serialCommandSender.o
+./debug\serialPortCommunication.o
+./debug\serialPortFactory.o
+./debug\spctime.o
+./debug\threadFactory.o
+./debug\uiInitialize.o
+./debug\uiSignalReceiver.o
+./debug\moc_fixedQueryThread.o
+./debug\moc_serialPortCommunication.o
+./debug\moc_threadFactory.o
+);
