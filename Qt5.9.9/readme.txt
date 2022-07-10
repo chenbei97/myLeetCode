@@ -21,3 +21,5 @@
 6. TestQStringListModel 在QListView上的应用,视图组件<=>数据模型的关系
 
 7. TestQStandardItemModel 在QTableView上的应用,视图组件<=>数据模型的关系
+
+8. TestQThread 线程的简单使用
