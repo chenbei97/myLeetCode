@@ -5020,7 +5020,7 @@ qDebug()<<QDir::tempPath();
 "C:/Users/chenbei/AppData/Local/Temp" 
 ```
 
-## 线程操作
+## 13. 多线程
 
 ### QThread
 
@@ -5102,8 +5102,6 @@ class WorkerThread : public QThread
 
 注意：跨不同线程与对象交互时必须小心。有关详细信息，请参阅同步线程。
 
-
-
 QThread 会在线程started() 和finished() 时通过信号通知你，或者你可以使用isFinished() 和isRunning() 来查询线程的状态。
 您可以通过调用exit() 或quit() 来停止线程。在极端情况下，您可能希望强制terminate（）正在执行的线程。然而，这样做是危险的和不鼓励的。有关详细信息，请阅读 terminate() 和 setTerminationEnabled() 的文档。
 从 Qt 4.8 开始，可以通过将 finished() 信号连接到 QObject::deleteLater() 来释放刚刚结束的线程中的对象。
@@ -5114,7 +5112,7 @@ QThread 还提供静态的、平台独立的睡眠函数：sleep()、msleep() �
 
 静态函数 currentThreadId() 和 currentThread() 返回当前执行线程的标识符。前者返回线程的平台特定 ID；后者返回一个 QThread 指针。要选择线程的名称（例如，在 Linux 上由命令 ps -L 标识），您可以在启动线程之前调用 setObjectName()。如果您不调用 setObjectName()，则为线程指定的名称将是线程对象的运行时类型的类名（例如，在 Mandelbrot 示例中为“RenderThread”，因为这是QThread 子类）。请注意，这目前不适用于 Windows 上的发布版本。
 
-#### 枚举值
+#### 枚举类型
 
 此枚举类型指示操作系统应如何调度新创建的线程。
 
@@ -5131,13 +5129,13 @@ enum QThread::Priority = {
 }
 ```
 
-#### 成员函数
+#### 子类函数
 
 ```c++
 QAbstractEventDispatcher *eventDispatcher() const;//返回指向线程的事件分派器对象的指针。如果线程不存在事件分派器，则此函数返回 0
 void setEventDispatcher(QAbstractEventDispatcher *eventDispatcher);
 
-void exit(int returnCode = 0);// 进入事件循环并等待直到 exit() 被调用，返回传递给 exit() 的值。如果通过 quit() 调用 exit()，则返回值为 0。此函数旨在从 run() 中调用。需要调用此函数来启动事件处理。
+void exit(int returnCode = 0);// 退出事件循环,0表示成功退出,exit(0)等价于quit()
 
 bool isFinished() const; // 如果线程完成则返回真；否则返回 false
 bool isRunning() const;//如果线程正在运行，则返回 true；否则返回 false
@@ -5158,11 +5156,12 @@ bool wait(unsigned long time = ULONG_MAX);//阻塞线程，直到满足以下任
 #### 信号和槽函数
 
 ```c++
-void quit();//告诉线程的事件循环以返回码 0（成功）退出。相当于调用 QThread::exit(0)。如果线程没有事件循环，这个函数什么也不做
-void start(Priority priority = InheritPriority);// 通过调用 run() 开始执行线程。操作系统会根据优先级参数调度线程。如果线程已经在运行，这个函数什么也不做。优先级参数的效果取决于操作系统的调度策略。特别是，在不支持线程优先级的系统上，优先级将被忽略（例如在 Linux 上，有关更多详细信息，请参阅 sched_setscheduler 文档）。
-void terminate();//终止线程的执行。线程可能会或可能不会立即终止，具体取决于操作系统的调度策略。可以肯定的是，在 terminate() 之后使用 QThread::wait()。当线程终止时，所有等待线程结束的线程都会被唤醒。警告：此功能很危险，不鼓励使用。线程可以在其代码路径中的任何位置终止。修改数据时可以终止线程。线程没有机会自行清理、解锁任何持有的互斥锁等。简而言之，只有在绝对必要时才使用此功能。可以通过调用 QThread::setTerminationEnabled() 显式启用或禁用终止。在终止被禁用时调用此函数会导致终止被延迟，直到重新启用终止。有关更多信息，请参阅 QThread::setTerminationEnabled() 的文档。
-void finished();// 该信号在完成执行之前从关联线程发出。当这个信号发出时，事件循环已经停止运行。除了延迟删除事件外，线程中不会再处理任何事件。该信号可以连接到 QObject::deleteLater()，以释放该线程中的对象。注意：如果关联线程是使用 terminate() 终止的，则未定义从哪个线程发出此信号。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出。
-void started();// 在调用 run() 函数之前，该信号从关联线程开始执行时发出。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出
+void quit();// 公共槽函数,相当于调用 QThread::exit(0)
+void start(Priority priority = InheritPriority);// 公共槽函数,内部调用run()执行线程。操作系统会根据优先级参数调度线程。如果线程已经在运行，这个函数什么也不做
+void terminate();//公共槽函数,终止线程的执行。线程可能会或可能不会立即终止，具体取决于操作系统的调度策略。在 terminate()之后应使用wait()
+
+void finished();// 该信号在完成执行之前从关联线程发出。该信号可以连接到QObject::deleteLater()，以释放该线程中的对象。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出。
+void started();// 在调用 run()函数之前，该信号从关联线程开始执行时发出。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出
 ```
 
 #### 静态函数
@@ -5177,38 +5176,42 @@ void usleep(unsigned long usecs);//强制当前线程休眠 usecs 微秒
 void yieldCurrentThread();//将当前线程的执行交给另一个可运行线程（如果有）。请注意，操作系统决定切换到哪个线程
 ```
 
-#### 保护权限函数
+#### 继承函数
 
 ```c++
-int exec();//进入事件循环并等待直到 exit() 被调用，返回传递给 exit() 的值。如果通过 quit() 调用 exit()，则返回值为 0。此函数旨在从 run() 中调用。需要调用这个函数来启动事件处理
+int exec();//进入事件循环并等待直到exit()被调用
 
-virtual void run();//告诉线程的事件循环以返回码退出。调用此函数后，线程离开事件循环并从对 QEventLoop::exec() 的调用返回。 QEventLoop::exec() 函数返回returnCode。按照惯例，returnCode 为 0 表示成功，任何非零值表示错误。请注意，与同名的 C 库函数不同，此函数确实返回给调用者——它是事件处理停止。在再次调用 QThread::exec() 之前，此线程中不会再启动 QEventLoops。如果 QThread::exec() 中的事件循环没有运行，那么对 QThread::exec() 的下一次调用也将立即返回。
+virtual void run();// start()调用此函数执行线程任务,线程离开事件循环调用QEventLoop::exec()返回。
 
-[static protected] void QThread::setTerminationEnabled(bool enabled = true);//根据 enabled 参数启用或禁用当前线程的终止。该线程必须已由 QThread 启动。当 enabled 为 false 时，终止被禁用。未来对 QThread::terminate() 的调用将立即返回而没有效果。相反，终止被推迟到启用终止为止。如果 enabled 为 true，则启用终止。未来对 QThread::terminate() 的调用将正常终止线程。如果终止已被推迟（即 QThread::terminate() 被禁用终止被调用），此函数将立即终止调用线程。请注意，此函数在这种情况下不会返回。
+[static protected] void QThread::setTerminationEnabled(bool enabled = true);//根据 enabled 参数启用或禁用当前线程的终止
 ```
 
-## 其它
 
-### 串口通信
 
-#### QIODevice
+### QMutex
+
+
+
+## 串口通信
+
+### QIODevice
 
 它继承自QObject。
 
 QIODevice 类是 Qt 中所有 I/O 设备的基接口类。
-QIODevice 为支持读写数据块的设备提供通用实现和抽象接口，例如 QFile、QBuffer 和 QTcpSocket。 QIODevice 是抽象的，不能被实例化，但是通常使用它定义的接口来提供与设备无关的 I/O 特性。例如，Qt 的 XML 类对 QIODevice 指针进行操作，允许它们与各种设备（如文件和缓冲区）一起使用。
+QIODevice 为支持读写数据块的设备提供通用实现和抽象接口，例如 **QFile、QBuffer 和 QTcpSocket**。 QIODevice 是抽象的，**不能被实例化**，但是通常使用它定义的接口来提供与设备无关的 I/O 特性。例如，Qt 的 XML 类对 QIODevice 指针进行操作，允许它们与各种设备（如文件和缓冲区）一起使用。
 
-在访问设备之前，**必须调用 open() 来设置正确的 OpenMode（例如 ReadOnly 或 ReadWrite）**。然后，您可以使用 write() 或 putChar() 写入设备，并通过调用 read()、readLine() 或 readAll() 进行读取。完成设备后调用 close()。
+在访问设备之前，**必须调用 open() 来设置正确的 OpenMode（例如 ReadOnly 或 ReadWrite）**。然后，您可以使用 **write() 或 putChar() 写入设备，并通过调用 read()、readLine() 或 readAll() 进行读取**。完成设备后调用 close()。
 QIODevice 区分两种类型的设备：随机访问设备和顺序设备。
-随机访问设备支持使用 seek() 搜索任意位置。文件中的当前位置可通过调用 pos() 获得。 QFile 和 QBuffer 是随机访问设备的示例。顺序设备不支持寻找任意位置。必须一次性读取数据。函数 pos() 和 size() 不适用于顺序设备。 您可以使用 isSequential() 来确定设备的类型。
+随机访问设备支持使用 seek() 搜索任意位置。文件中的当前位置可通过调用 pos() 获得。 **QFile 和 QBuffer 是随机访问设备的示例**。顺序设备不支持寻找任意位置。必须一次性读取数据。函数 pos() 和 size() 不适用于顺序设备。 您可以使用 isSequential() 来确定设备的类型。
 
 **当有新数据可供读取时，QIODevice 会发出 readyRead()**；例如，如果新数据已到达网络，或者是否将其他数据附加到您正在读取的文件中。**您可以调用 bytesAvailable() 来确定当前可供读取的字节数**。在使用诸如 QTcpSocket 之类的异步设备进行编程时，通常将 bytesAvailable() 与 readyRead() 信号一起使用，其中数据片段可以到达任意时间点。**每次将数据的有效负载写入设备时，QIODevice 都会发出 bytesWritten() 信号**。使用 **bytesToWrite() 确定当前等待写入的数据量**。
 
 QIODevice 的某些子类，例如 QTcpSocket 和 QProcess，是异步的。这意味着诸如 write() 或 read() 之类的 I/O 函数总是立即返回，而当控制返回事件循环时，可能会发生与设备本身的通信。 QIODevice 提供的功能允许您强制立即执行这些操作，同时阻塞调用线程并且不进入事件循环。**这允许在没有事件循环的情况下使用 QIODevice 子类，或者在单独的线程中使用**：
 
-waitForReadyRead() - 此函数暂停调用线程中的操作，直到有新数据可供读取。
-waitForBytesWritten() - 此函数暂停调用线程中的操作，直到一个有效负载数据已写入设备。
-waitFor....() - QIODevice 的子类为特定于设备的操作实现阻塞功能。例如，QProcess 有一个名为 waitForStarted() 的函数，它暂停调用线程中的操作，直到进程启动。
+**waitForReadyRead() - 此函数暂停调用线程中的操作，直到有新数据可供读取**。
+**waitForBytesWritten() - 此函数暂停调用线程中的操作，直到一个有效负载数据已写入设备**。
+waitFor....() - QIODevice 的子类为特定于设备的操作**实现阻塞功能**。例如，QProcess 有一个名为 waitForStarted() 的函数，它暂停调用线程中的操作，直到进程启动。
 
 从主 GUI 线程调用这些函数可能会导致您的用户界面冻结。例子：
 
@@ -5234,7 +5237,7 @@ while (gzip.waitForReadyRead())
 
 目前为止2022/6/30，对于串口通信需要了解的东西。
 
-##### 枚举类型
+#### 枚举类型
 
 **定义的唯一枚举类型。**
 
@@ -5252,7 +5255,7 @@ enum QIODevice::OpenModeFlag{
 };
 ```
 
-##### 成员虚函数
+#### 继承函数
 
 **成员函数，被串口通信类继承使用的一些函数。**
 
@@ -5318,7 +5321,7 @@ if (file.open(QFile::ReadOnly)) {
 
 **waitForReadyRead函数**：阻塞，直到有新数据可供读取并且发出了 **readyRead()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。如果有新数据可供读取，则返回 true；否则返回 false（如果操作超时或发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 readyRead() 信号的插槽中调用，则不会重新发送 readyRead()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
 
-##### 成员非虚函数
+#### 子类函数
 
 **成员函数，可能暂时不怎么使用的函数。**
 
@@ -5353,7 +5356,7 @@ bool isReadable() const;//可读？
 bool isWritable() const;//可写？
 ```
 
-##### 信号函数
+#### 信号函数
 
 最常用的是**bytesWritten和readyRead**信号，也是串口通信类继承的信号。
 
@@ -5377,7 +5380,7 @@ void readChannelFinished();
 void readyRead();
 ```
 
-#### QtSerialPort/QSerialPort
+### QtSerialPort/QSerialPort
 
 需要包含2个头文件，并在.pro工程文件配置。
 
@@ -5419,7 +5422,7 @@ for (;;) {
 
 有关这些方法的更多详细信息，请参阅示例应用程序。QSerialPort类还可以与QTextStream和QDataStream的流操作符（操作符<<（）和操作符>>（））一起使用。不过，有一个问题需要注意：在尝试使用操作符>>（）重载操作符读取之前，请确保有足够的数据可用。
 
-##### 枚举类型
+#### 枚举类型
 
 需要了解的枚举类型有8个。
 
@@ -5572,7 +5575,7 @@ SerialPortError error() const;
 void clearError();
 ```
 
-##### 属性值
+根据枚举类型，串口类还定义了需要属性。
 
 一共9个属性，其中8个属性在枚举类型已经提到过，不再赘述。
 
@@ -5596,7 +5599,7 @@ stopBits : StopBits
 breakEnabled : bool
 ```
 
-##### 成员函数
+#### 子类函数
 
 基本的成员函数，不赘述其含义。
 
@@ -5667,7 +5670,7 @@ void setPortName(const QString &name);//通过名称设置串口
 Handle handle() const;
 ```
 
-##### 重实现的继承函数
+#### 继承函数
 
 **atEnd函数**：如果当前没有更多数据可读取，则返回true,否则返回假。该函数在循环从串口读取数据时最常用。
 
@@ -5727,7 +5730,7 @@ virtual protected qint64 QSerialPort::readLineData(char *data, qint64 maxSize);
 virtual protected qint64 QSerialPort::writeData(const char *data, qint64 maxSize);
 ```
 
-##### 信号函数
+#### 信号函数
 
 分为自定义的信号和继承而来的信号。
 
@@ -5776,7 +5779,7 @@ void MySerial::recSerialData()
 }
 ```
 
-#### QtSerialPort/QSerialPortInfo
+### QtSerialPort/QSerialPortInfo
 
 此类提供有关现有串行端口的信息。可以使用静态函数生成QSerialPortInfo对象的列表。列表中的每个QSerialPortInfo对象表示一个串行端口，可以查询端口名称、系统位置、描述和制造商。QSerialPortInfo类还可以用作QSerialPort类的setPort()方法的输入参数。
 
