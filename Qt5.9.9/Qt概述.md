@@ -4970,20 +4970,29 @@ QItemDelegate 类是模型/视图类之一，是 Qt 模型/视图框架的一部
 
 详见Qt文档。
 
-## 文件操作
+## 5. 对话框与多窗体设计
 
-### QFileDialog
+### 5.1 常见的对话框
 
-QFileDialog 类提供了一个允许用户选择文件或目录的对话框。
+#### 5.1.1 QFileDialog
+
+QFileDialog 类是一个文件对话框。
 QFileDialog 类使用户能够遍历文件系统以选择一个或多个文件或目录。
 创建 QFileDialog 最简单的方法是使用静态函数。
 
 ```c++
 fileName = QFileDialog::getOpenFileName(this,
       tr("Open Image"), "/home/jana", tr("Image Files (*.png *.jpg *.bmp)"));
+
+QString curPath=QDir::currentPath();//获取系统当前目录
+//  QString  curPath=QCoreApplication::applicationDirPath(); //获取应用程序的路径
+QString dlgTitle="选择一个文件"; //对话框标题
+QString filter="文本文件(*.txt);;图片文件(*.jpg *.gif *.png);;所有文件(*.*)"; //文件过滤器
+
+QString aFileName=QFileDialog::getOpenFileName(this,dlgTitle,curPath,filter);
 ```
 
-在上面的示例中，模态 QFileDialog 是使用静态函数创建的。该对话框最初显示"/home/jana"目录的内容，并显示与字符串"Image Files (*.png *.jpg *.bmp)"中给出的模式匹配的文件。文件对话框的父级设置为此，窗口标题设置为"打开图像"。
+在上面的示例中，模态 QFileDialog 是使用静态函数创建的。**该对话框最初显示"/home/jana"目录的内容**，并显示与字符串"Image Files (*.png *.jpg *.bmp)"中给出的模式匹配的文件。文件对话框的父级设置为此，窗口标题设置为"打开图像"。
 如果要使用多个过滤器，请用两个分号分隔每个过滤器。例如：
 
 ```c++
@@ -4996,7 +5005,7 @@ fileName = QFileDialog::getOpenFileName(this,
 QFileDialog dialog(this);
 ```
 
-在上面的例子中，文件对话框的模式设置为 AnyFile，这意味着用户可以选择任何文件，甚至可以指定一个不存在的文件。此模式对于创建"另存为"文件对话框很有用。如果用户必须选择现有文件，请使用 ExistingFile；如果只能选择目录，请使用 Directory。有关模式的完整列表，请参阅 QFileDialog::FileMode 枚举。fileMode 属性包含对话框的操作模式；这表明用户应该选择什么类型的对象。使用 setNameFilter() 设置对话框的文件过滤器。例如
+文件对话框的模式可以设置为 **AnyFile**，这意味着用户可以选择任何文件，甚至可以指定一个不存在的文件。此模式对于创建"另存为"文件对话框很有用。如果用户必须选择现有文件，请使用 **ExistingFile**；如果只能选择目录，请使用 **Directory**。有关模式的完整列表，请参阅 **QFileDialog::FileMode 枚举**。fileMode 属性包含对话框的操作模式；这表明用户应该选择什么类型的对象。使用 setNameFilter() 设置对话框的文件过滤器。例如
 
 ```c++
 dialog.setFileMode(QFileDialog::AnyFile); 
@@ -5005,13 +5014,11 @@ dialog.setNameFilter(tr("Images (*.png *.xpm *.jpg)"));
 
 在上面的示例中，过滤器设置为"Images (*.png *.xpm *.jpg)"，这意味着只有扩展名为 png、xpm 或 jpg 的文件才会显示在 QFileDialog 中。您可以使用 setNameFilters() 应用多个过滤器。使用 selectNameFilter() 选择您提供的过滤器之一作为文件对话框的默认过滤器。
 
-fileMode 属性包含对话框的操作模式；这表明用户应该选择什么类型的对象。使用 setNameFilter() 设置对话框的文件过滤器。例如：
+文件对话框有两种查看模式：列表和详细信息。 List 将当前目录的内容显示为**文件和目录名称的列表**。详细信息还显示文件和目录名称列表，但在每个名称旁边**提供附加信息**，例如文件大小和修改日期。
 
 ```c++
 dialog.setViewMode(QFileDialog::Detail);
 ```
-
-文件对话框有两种查看模式：列表和详细信息。 List 将当前目录的内容显示为文件和目录名称的列表。详细信息还显示文件和目录名称列表，但在每个名称旁边提供附加信息，例如文件大小和修改日期。使用 setViewMode() 设置模式：
 
 创建自己的文件对话框时需要使用的最后一个重要函数是 selectedFiles()。
 
@@ -5023,7 +5030,9 @@ if (dialog.exec())
 
 在上面的示例中，创建并显示了一个模态文件对话框。如果用户单击确定，他们选择的文件将放入 fileName。可以使用 setDirectory() 设置对话框的工作目录。可以使用 selectFile() 函数选择当前目录中的每个文件。标准对话框示例展示了如何使用 QFileDialog 以及其他内置 Qt 对话框。默认情况下，如果平台有一个平台原生文件对话框，则将使用它。在这种情况下，用于构造对话框的小部件将不会被实例化，因此相关的访问器（例如 layout() 和 itemDelegate() 将返回 null。您可以设置 DontUseNativeDialog 选项以确保将使用基于小部件的实现而不是本机对话框。
 
-常见的枚举类型。
+##### 枚举类型
+
+常见的枚举类型如下。
 
 ```c++
 enum QFileDialog::AcceptMode = { 
@@ -5054,6 +5063,8 @@ enum QFileDialog::FileMode = {
 }
 ```
 
+文件对话框展示的一些属性设置。
+
 ```c++
 enum QFileDialog::Option = {   
     QFileDialog::ShowDirsOnly,//仅在文件对话框中显示目录。默认情况下，文件和目录都会显示。（仅在目录文件模式下有效）
@@ -5076,6 +5087,8 @@ enum QFileDialog::ViewMode = {
 }
 ```
 
+##### 子类函数
+
 常见的成员函数。
 
 ```c++
@@ -5092,6 +5105,8 @@ QString defaultSuffix() const;
 QDir directory() const;
 ```
 
+##### 信号函数
+
 信号函数。
 
 ```c++
@@ -5106,28 +5121,438 @@ void urlSelected(const QUrl &url);
 void urlsSelected(const QList<QUrl> &urls);
 ```
 
+##### 静态函数
+
 静态成员函数。
 
 ```c++
-// 这是一个方便的静态函数，它将返回用户选择的现有目录。此函数使用给定的父窗口小部件创建一个模式文件对话框。如果 parent 不为 0，则对话框将显示在父小部件的中心。对话框的工作目录设置为 dir，标题设置为标题。其中任何一个都可能是空字符串，在这种情况下，将分别使用当前目录和默认标题。options 参数包含有关如何运行对话框的各种选项，请参阅 QFileDialog::Option 枚举以获取有关您可以传递的标志的更多信息。为确保原生文件对话框，必须设置 ShowDirsOnly。
-QString getExistingDirectory(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), Options options = ShowDirsOnly);
-// 这是一个方便的静态函数，它将返回用户选择的现有目录。如果用户按下取消，它会返回一个空的 url。该函数的使用与QFileDialog::getExistingDirectory() 类似。特别是 parent、caption、dir 和 options 的使用方式完全相同。
-QUrl getExistingDirectoryUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), Options options = ShowDirsOnly, const QStringList &supportedSchemes = QStringList());
-// 这是一个方便的静态函数，它返回用户选择的现有文件。如果用户按下取消，它会返回一个空字符串
-QString getOpenFileName(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options());
-//这是一个方便的静态函数，它将返回用户选择的一个或多个现有文件。
-QStringList getOpenFileNames(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options());
-//这是一个方便的静态函数，它返回用户选择的现有文件。如果用户按下取消，它会返回一个空的 url。
-QUrl getOpenFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options(), const QStringList &supportedSchemes = QStringList());
-//这是一个方便的静态函数，它将返回用户选择的一个或多个现有文件。如果用户按下取消，它会返回一个空列表
-QList<QUrl> getOpenFileUrls(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options(), const QStringList &supportedSchemes = QStringList());
-//这是一个方便的静态函数，它将返回用户选择的文件名。该文件不必存在。
-QString getSaveFileName(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QString &dir = QString(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options());
-//这是一个方便的静态函数，它返回用户选择的文件。该文件不必存在。如果用户按下取消，它会返回一个空的 url。
-QUrl getSaveFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &dir = QUrl(), const QString &filter = QString(), QString *selectedFilter = Q_NULLPTR, Options options = Options(), const QStringList &supportedSchemes = QStringList());
+QString getExistingDirectory();// 选择1个已有的目录
+QUrl getExistingDirectoryUrl();// 选择1个已有的目录,用户按下取消会返回一个空的url
+QString getOpenFileName();// 选择打开1个文件，用户按下取消会返回一个空字符串
+QStringList getOpenFileNames();// 选择打开多个文件
+QUrl getOpenFileUrl();// 选择打开1个文件,可选择远程网络文件,用户按下取消会返回一个空的url
+QList<QUrl> getOpenFileUrls();//  选择打开多个文件,可选择远程网络文件,用户按下取消会返回一个空列表
+QString getSaveFileName();// 选择保存1个文件,它将返回用户选择的文件名,该文件不必存在
+QUrl getSaveFileUrl();// 选择保存1个文件,如果用户按下取消，它会返回一个空的url
 ```
 
+#### 5.1.2 QColorDialog
 
+颜色对话框。
+
+例子如下。
+
+```c++
+QPalette pal=ui->plainTextEdit->palette(); //获取现有 palette
+QColor  iniColor=pal.color(QPalette::Text); //现有的文字颜色
+
+// 以现有的颜色打开颜色对话框
+QColor color=QColorDialog::getColor(iniColor,this,"选择颜色");
+if (color.isValid()) //选择有效
+{
+    pal.setColor(QPalette::Text,color); //palette 设置选择的颜色
+    ui->plainTextEdit->setPalette(pal); //设置 palette
+}
+```
+
+枚举类型。
+
+```c++
+enum ColorDialogOption { 
+    ShowAlphaChannel, //允许用户选择颜色的 alpha 分量
+    NoButtons, //不要显示确定和取消按钮（对于“实时对话”很有用）
+    DontUseNativeDialog //使用 Qt 的标准颜色对话框代替操作系统原生颜色对话框
+};
+```
+
+成员函数。
+
+```c++
+QColor currentColor() const;
+void open(QObject *receiver, const char *member);
+ColorDialogOptions options() const;
+QColor selectedColor() const;
+void setCurrentColor(const QColor &color);
+void setOption(ColorDialogOption option, bool on = true);
+void setOptions(ColorDialogOptions options);
+bool testOption(ColorDialogOption option) const;
+```
+
+信号函数。
+
+```c++
+void colorSelected(const QColor &color);
+void currentColorChanged(const QColor &color);
+```
+
+静态函数。
+
+```c++
+QColor customColor(int index);
+int customCount();
+void setCustomColor(int index, QColor color);
+void setStandardColor(int index, QColor color);
+QColor standardColor(int index);
+
+// 最常用
+QColor getColor(const QColor &initial = Qt::white, QWidget *parent = Q_NULLPTR, const QString &title = QString(), ColorDialogOptions options = ColorDialogOptions());
+```
+
+#### 5.1.3 QFontDialog
+
+字体对话框。
+
+例子如下。
+
+```c++
+QFont iniFont=ui->plainTextEdit->font(); //获取文本框的字体
+bool   ok = false;
+QFont font=QFontDialog::getFont(&ok,iniFont); //选择字体
+if (ok) //选择有效
+    ui->plainTextEdit->setFont(font);
+else
+    ui->plainTextEdit->appendPlainText("设置字体失败!");
+```
+
+枚举类型如下。此枚举指定影响字体对话框外观的各种选项。
+
+```c++
+enum FontDialogOption { 
+    NoButtons, //不要显示确定和取消按钮（对于“实时对话”很有用）
+    DontUseNativeDialog, //在 Mac 上使用 Qt 的标准字体对话框而不是 Apple 的原生字体面板
+    ScalableFonts, //显示可缩放字体
+    NonScalableFonts, //显示不可缩放的字体
+    MonospacedFonts, //显示等宽字体
+    ProportionalFonts //显示比例字体
+};
+```
+
+成员函数。
+
+```c++
+QFont currentFont() const;
+void open(QObject *receiver, const char *member);
+FontDialogOptions options() const;
+QFont selectedFont() const;
+void setCurrentFont(const QFont &font);
+void setOption(FontDialogOption option, bool on = true);
+void setOptions(FontDialogOptions options);
+bool testOption(FontDialogOption option) const;
+```
+
+信号函数。
+
+```c++
+void currentFontChanged(const QFont &font);
+void fontSelected(const QFont &font);
+```
+
+静态函数。
+
+```c++
+QFont getFont(bool *ok, const QFont &initial, QWidget *parent = Q_NULLPTR, const QString &title = QString(), FontDialogOptions options = FontDialogOptions());
+QFont getFont(bool *ok, QWidget *parent = Q_NULLPTR);
+```
+
+#### 5.1.4 QInputDialog
+
+输入对话框。
+
+枚举类型，此枚举指定影响输入对话框外观的各种选项。
+
+```c++
+enum InputDialogOption { 
+    NoButtons, //不显示确定和取消按钮（对“实时对话框”有用）
+    UseListViewForComboBoxItems, //使用 QListView 而不是不可编辑的 QComboBox 来显示使用 setComboBoxItems() 设置的项目
+    UsePlainTextEditForTextInput //使用 QPlainTextEdit 进行多行文本输入
+};
+```
+
+这个枚举描述了可以为对话框选择的不同输入模式。
+
+```c++
+enum QInputDialog::InputMode = {
+    QInputDialog::TextInput, // 用于输入文本字符串
+    QInputDialog::IntInput, // 用于输入整数
+    QInputDialog::DoubleInput //用于输入具有双精度精度的浮点数
+}
+```
+
+成员函数。
+
+```c++
+// 获取属性值
+QString cancelButtonText() const;
+QStringList comboBoxItems() const;
+int doubleDecimals() const;
+double doubleMaximum() const;
+double doubleMinimum() const;
+double doubleValue() const;
+InputMode inputMode() const;
+int intMaximum() const;
+int intMinimum() const;
+int intStep() const;
+int intValue() const;
+bool isComboBoxEditable() const;
+QString labelText() const;
+QString okButtonText() const;
+bool testOption(InputDialogOption option) const;
+QLineEdit::EchoMode textEchoMode() const;
+QString textValue() const;
+// 设置属性值
+void open(QObject *receiver, const char *member);
+InputDialogOptions options() const;
+void setCancelButtonText(const QString &text);
+void setComboBoxEditable(bool editable);
+void setComboBoxItems(const QStringList &items);
+void setDoubleDecimals(int decimals);
+void setDoubleMaximum(double max);
+void setDoubleMinimum(double min);
+void setDoubleRange(double min, double max);
+void setDoubleValue(double value);
+void setInputMode(InputMode mode);
+void setIntMaximum(int max);
+void setIntMinimum(int min);
+void setIntRange(int min, int max);
+void setIntStep(int step);
+void setIntValue(int value);
+void setLabelText(const QString &text);
+void setOkButtonText(const QString &text);
+void setOption(InputDialogOption option, bool on = true)
+void setOptions(InputDialogOptions options);
+void setTextEchoMode(QLineEdit::EchoMode mode);
+void setTextValue(const QString &text);
+```
+
+信号函数。
+
+```c++
+void doubleValueChanged(double value);
+void doubleValueSelected(double value);
+void intValueChanged(int value);
+void intValueSelected(int value);
+void textValueChanged(const QString &text);
+void textValueSelected(const QString &text);
+```
+
+静态函数需要关注，支持5种输入对话框。
+
+```c++
+double getDouble();
+int getInt();
+QString getItem();
+QString getMultiLineText();
+QString getText();
+```
+
+例子如下。
+
+```c++
+QString dlgTitle="输入文字对话框";
+QString txtLabel="请输入文件名";
+QString defaultInput="hello qt!"; // 弹出窗口默认显示的文字
+QLineEdit::EchoMode echoMode=QLineEdit::Normal;//正常文字输入
+//    QLineEdit::EchoMode echoMode=QLineEdit::Password;//密码输入
+
+bool ok=false;
+QString text = QInputDialog::getText(this, dlgTitle,txtLabel, echoMode,defaultInput, &ok);
+if (ok && !text.isEmpty())
+ui->plainTextEdit->appendPlainText(text);
+else
+ui->plainTextEdit->appendPlainText("输入字符串失败!");
+/**************************************************************************/
+QString dlgTitle="输入整数对话框";
+QString txtLabel="设置字体大小";
+int defaultValue=ui->plainTextEdit->font().pointSize(); //现有字体大小
+int minValue=6, maxValue=50,stepValue=1; //规定可以输入的范围，步长
+bool ok=false;
+int inputValue = QInputDialog::getInt(this, dlgTitle,txtLabel,
+                                      defaultValue, minValue,maxValue,stepValue,&ok);
+if (ok) //是否确认输入
+{
+    QFont   font=ui->plainTextEdit->font();
+    font.setPointSize(inputValue);
+    ui->plainTextEdit->setFont(font);
+}
+else
+    ui->plainTextEdit->appendPlainText("输入整型数字失败!");
+/**************************************************************************/
+QString dlgTitle="输入浮点数对话框";
+QString txtLabel="输入一个浮点数";
+float defaultValue=3.13;
+
+float minValue=0, maxValue=10000;  //范围
+int decimals=2;//小数点位数
+
+bool ok=false;
+float inputValue = QInputDialog::getDouble(this, dlgTitle,txtLabel,
+                                           defaultValue, minValue,maxValue,decimals,&ok);
+if (ok) //确认选择
+{
+    QString str=QString::asprintf("输入了一个浮点数:%.2f",inputValue);
+    ui->plainTextEdit->appendPlainText(str);
+}
+else
+    ui->plainTextEdit->appendPlainText("输入浮点数字失败!");
+/**************************************************************************/
+QStringList items; //ComboBox 列表的内容
+items <<"优秀"<<"良好"<<"合格"<<"不合格";
+
+QString dlgTitle="条目选择对话框";
+QString txtLabel="请选择级别";
+int     curIndex=0; //初始选择项
+bool    editable=false; //ComboBox是否可编辑
+bool    ok=false;
+QString text = QInputDialog::getItem(this, dlgTitle,txtLabel,items,curIndex,editable,&ok);
+
+if (ok && !text.isEmpty())
+    ui->plainTextEdit->appendPlainText(text);
+else
+    ui->plainTextEdit->appendPlainText("选择下拉条目失败!");
+```
+
+#### 5.1.5 QMessageBox
+
+消息对话框，有6种类型：question、information、warning、critical、about、aboutQt对话框。
+
+例子如下。
+
+```c++
+QString dlgTitle="Question消息框";
+QString strInfo="文件已被修改，是否保存修改?";
+
+QMessageBox::StandardButton  defaultBtn=QMessageBox::NoButton; //缺省按钮
+
+QMessageBox::StandardButton result;//返回选择的按钮
+result=QMessageBox::question(this, dlgTitle, strInfo,
+                             QMessageBox::Yes|QMessageBox::No |QMessageBox::Cancel,
+                             defaultBtn);
+
+if (result==QMessageBox::Yes)
+    ui->plainTextEdit->appendPlainText("Question消息框: Yes 被选择");
+else if(result==QMessageBox::No)
+    ui->plainTextEdit->appendPlainText("Question消息框: No 被选择");
+else if(result==QMessageBox::Cancel)
+    ui->plainTextEdit->appendPlainText("Question消息框: Cancel 被选择");
+else
+    ui->plainTextEdit->appendPlainText("Question消息框: 无选择");
+```
+
+##### 枚举类型
+
+该枚举描述了可用于描述按钮框中的按钮的角色。这些角色的组合作为用于描述其行为的不同方面的标志。
+
+```c++
+enum QMessageBox::ButtonRole {
+    QMessageBox::InvalidRole,//按钮无效
+    QMessageBox::AcceptRole,//单击按钮会导致对话框被接受（例如确定）
+    QMessageBox::RejectRole,//单击按钮会导致对话框被拒绝（例如取消）
+    QMessageBox::DestructiveRole,//单击按钮会导致破坏性更改（例如丢弃更改）并关闭对话框
+    QMessageBox::ActionRole,//单击按钮会导致对话框中的元素发生变化
+    QMessageBox::HelpRole,//可以单击该按钮以请求帮助
+    QMessageBox::YesRole,//该按钮是一个类似“是”的按钮
+    QMessageBox::NoRole,//该按钮是一个类似“否”的按钮
+    QMessageBox::ApplyRole,//该按钮应用当前更改
+    QMessageBox::ResetRole//该按钮将对话框的字段重置为默认值
+}
+```
+
+此枚举具有以下值。
+
+```c++
+enum QMessageBox::Icon = {
+    QMessageBox::NoIcon,//消息框没有任何图标
+    QMessageBox::Question,//指示消息正在提问的图标
+    QMessageBox::Information,//一个图标，表示该消息没有异常
+    QMessageBox::Warning,//一个图标，表示消息是警告，但可以处理
+    QMessageBox::Critical//指示消息代表严重问题的图标
+}
+```
+
+这些枚举描述标准按钮的标志。每个按钮都有一个已定义的 ButtonRole。
+
+```c++
+enum QMessageBox::StandardButton = {
+    QMessageBox::Ok,//使用 AcceptRole 定义的“确定”按钮
+    QMessageBox::Open,//使用 AcceptRole 定义的“打开”按钮
+    QMessageBox::Save,//使用 AcceptRole 定义的“保存”按钮
+    QMessageBox::Cancel,//使用 RejectRole 定义的“取消”按钮
+    QMessageBox::Close,//使用 RejectRole 定义的“关闭”按钮
+    QMessageBox::Discard,//一个“放弃”或“不保存”按钮，取决于平台，使用 DestructiveRole 定义
+    QMessageBox::Apply,//使用 ApplyRole 定义的“应用”按钮
+    QMessageBox::Reset,//使用 ResetRole 定义的“重置”按钮
+    QMessageBox::RestoreDefaults,//使用 ResetRole 定义的“恢复默认值”按钮
+    QMessageBox::Help,//使用 HelpRole 定义的“帮助”按钮
+    QMessageBox::SaveAll,//使用 AcceptRole 定义的“全部保存”按钮
+    QMessageBox::Yes,//使用 YesRole 定义的“是”按钮
+    QMessageBox: :YesToAll,//使用 YesRole 定义的“全部同意”按钮
+    QMessageBox::No,//使用 NoRole 定义的“否”按钮
+    QMessageBox::NoToAll,//使用 NoRole 定义的“拒绝所有人”按钮
+    QMessageBox::Abort,//使用 RejectRole 定义的“中止”按钮
+    QMessageBox::Retry,//使用 AcceptRole 定义的“重试”按钮
+    QMessageBox::Ignore,//使用 AcceptRole 定义的“忽略”按钮
+    QMessageBox::NoButton//无效的按钮
+}
+```
+
+##### 子类函数
+
+```c++
+void addButton(QAbstractButton *button, ButtonRole role);
+void open(QObject *receiver, const char *member);
+void removeButton(QAbstractButton *button);
+void setCheckBox(QCheckBox *cb);
+void setDefaultButton(QPushButton *button);
+void setDefaultButton(StandardButton button);
+void setDetailedText(const QString &text);
+void setEscapeButton(QAbstractButton *button);
+void setEscapeButton(StandardButton button);
+void setIcon(Icon);
+void setIconPixmap(const QPixmap &pixmap);
+void setInformativeText(const QString &text);
+void setStandardButtons(StandardButtons buttons);
+void setText(const QString &text);
+void setTextFormat(Qt::TextFormat format);
+void setTextInteractionFlags(Qt::TextInteractionFlags flags);
+void setWindowModality(Qt::WindowModality windowModality);
+void setWindowTitle(const QString &title);
+
+QPushButton *addButton(const QString &text, ButtonRole role);
+QPushButton *addButton(StandardButton button);
+QAbstractButton *button(StandardButton which) const;
+ButtonRole buttonRole(QAbstractButton *button) const;
+QList<QAbstractButton *> buttons() const;
+QCheckBox *checkBox() const;
+QAbstractButton *clickedButton() const;
+QPushButton *defaultButton() const;
+QString detailedText() const;
+QAbstractButton *escapeButton() const;
+Icon icon() const;
+QPixmap iconPixmap() const;
+QString informativeText() const;
+StandardButton standardButton(QAbstractButton *button) const;
+StandardButtons standardButtons() const;
+QString text() const;
+Qt::TextFormat textFormat() const;
+Qt::TextInteractionFlags textInteractionFlags() const;
+```
+
+##### 静态函数
+
+```c++
+void about();
+void aboutQt();
+StandardButton critical();
+StandardButton information();
+StandardButton question();
+StandardButton warning();
+```
+
+### 5.2 自定义对话框
+
+
+
+## 文件操作
 
 ### QTextStream
 
