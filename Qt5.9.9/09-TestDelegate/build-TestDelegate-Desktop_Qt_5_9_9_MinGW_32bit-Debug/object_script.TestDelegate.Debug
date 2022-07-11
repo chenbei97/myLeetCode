@@ -1,0 +1,13 @@
+INPUT(
+./debug\comboBoxDelegate.o
+./debug\doubleSpinBoxDelegate.o
+./debug\initializeUi.o
+./debug\main.o
+./debug\spinBoxDelegate.o
+./debug\staticSlot.o
+./debug\testDelegate.o
+./debug\qrc_images.o
+./debug\moc_comboBoxDelegate.o
+./debug\moc_spinBoxDelegate.o
+./debug\moc_testDelegate.o
+);

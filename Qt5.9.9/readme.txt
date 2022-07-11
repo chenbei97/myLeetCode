@@ -23,3 +23,5 @@
 7. TestQStandardItemModel 在QTableView上的应用,视图组件<=>数据模型的关系
 
 8. TestQThread 线程的简单使用
+
+9. TestDelegate 如何改变单元格默认编辑框的代理类,只需要继承和重写4个函数即可,然后使用view模型的setDelegate函数设置
