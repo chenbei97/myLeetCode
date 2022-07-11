@@ -4065,7 +4065,54 @@ graph LR
 视图组件 -->|反馈| 代理
 ```
 
-### 4.1 基础模型
+
+
+常见的数据模型表现形式如下，它们都会一个顶层项，List只有1列，Table有多列且对齐，Tree则是自由定义。
+
+![data_model](C:/Users/chenb/Desktop/myLeetCode/Qt5.9.9/data_model.jpg)
+
+​																		图2 常见数据模型的表现形式
+
+数据模型虽然基本形式是用行和列定义的表格数据，但**不意味着底层是用二维数据存储的**，使用行列只是一种为了交互方便的规定，使用模型索引的行号和列号就可以获取数据。
+
+提到了数据模型，就必须提到模型索引，这是访问数据的媒介，**模型索引专门定义了一个类QModelIndex**，模型索引可以提供给数据存储的一个临时指针，用于通过数据模型修改和提取数据，由于模型内部组织数据的结构随时可能更改，所以模型索引是临时的。**如果需要持久性的模型索引，需要使用QPersistentModelIndex类**。
+
+**数据模型的每个项也是一个对应的类**，例如标准项模型**QStandardItemModel的数据类是QStandardItem**，它有个静态函数setdata可以设置数据，对应的获取数据也要先指定角色role。value可以是任何数据类型的数据，一个项可以存在不同角色的数据用于不同场合。
+
+```c++
+void QStandardItem::setData(const QVariant &value, int role = Qt::UserRole+1);
+Qvariant QStandardItem::data(int role = Qt::UserRole+1) const;
+```
+
+role使用枚举值Qt::ItemDataRole来定义。
+
+```c++
+Qt::UserRole = 0x0100 // 第一个可用于特定于应用程序的角色
+enum Qt::ItemDataRole {
+    // 通用型角色
+    Qt::DisplayRole = 0, // 以文本形式呈现的关键数据(默认),QString
+    Qt::DecorationRole = 1, // 以图标形式呈现的数据,QColor,QIcon,QPixmap
+    Qt::EditRolec = 2, // 以适合在编辑器中编辑的形式显示的数据,QString
+    Qt::ToolTipRole = 3, // 项目工具提示中显示的数据,QString
+    Qt::StatusTipRole = 4, // 状态栏中显示的数据,QString
+    Qt::WhatsThisRole = 5, // "What's This?"中显示的项目数据模式,QString
+    Qt::SizeHintRole = 13, // 将提供给视图的项目的大小提示,QSize
+    // 描述外观和元数据的角色(具有关联类型)
+    Qt::FontRole = 6, // 使用默认委托呈现的项目的字体,QFont
+	Qt::TextAlignmentRole = 7, // 使用默认委托呈现的项目的文本对齐方式,Qt::Alignment
+	Qt::BackgroundRole = 8, // 使用默认代理渲染的项目的背景笔刷QBrush
+	Qt::BackgroundColorRole = 8, // 此角色已过时,改用BackgroundRole
+	Qt::ForegroundRole = 9, //使用默认代理渲染的项目的前景笔刷(文本颜色),QBrush
+	Qt::TextColorRole = 9,// 此角色已过时,改用ForegroundRol。
+	Qt::CheckStateRole = 10,//此角色用于获取项目的已检查状态,Qt::CheckState
+	Qt::InitialSortOrderRole = 14, // 此角色用于获取标题视图节的初始排序顺序,Qt::SortOrder,Qt4.8中引入
+    // 辅助功能角色(具有关联类型)
+    Qt::AccessibleTextRole = 11,// 可访问性扩展和插件(如屏幕阅读器)使用的文本,QString
+    Qt::AccessibleDescriptionRole = 12 // 用于辅助功能的项目描述,QString
+}
+```
+
+### 4.1 基础类
 
 #### 4.1.1 QModelIndex
 
@@ -4102,9 +4149,30 @@ bool isValid() const; // 如果此模型索引有效，则返回true；否则返
 const QAbstractItemModel *model() const; // 返回指向包含此索引引用的项的模型的指针
 ```
 
-#### 4.1.2 QItemSelectionModel 
+#### 4.1.2 QPersistentModelIndex
+
+QPersistentModelIndex 类用于定位数据模型中的数据。QPersistentModelIndex 是一个模型索引，可以由应用程序存储，然后用于访问模型中的信息。**与 QModelIndex 类不同，存储 QPersistentModelIndex 是安全的**，因为模型将确保对项目的引用将继续有效，只要它们可以被模型访问。在使用持久模型索引之前检查它们是否有效是一种很好的做法。
+
+主要的成员函数如下。
+
+```c++
+int column() const; // 行号
+int row() const; // 列号
+QModelIndex parent() const; // 父索引
+bool isValid() const;// 索引是否有效
+QVariant data(int role = Qt::DisplayRole) const;// 返回索引引用的项目的给定角色的数据
+
+Qt::ItemFlags flags() const;// 返回索引引用的项目的标志
+const QAbstractItemModel *model() const; // 返回该索引指向的底层模型
+QModelIndex sibling(int row, int column) const;// 如果此位置没有相邻位置，则返回行和列的兄弟或无效的 QModelIndex
+void swap(QPersistentModelIndex &other); // 交换2个索引
+```
+
+#### 4.1.3 QItemSelectionModel 
 
 **用于监控鼠标是否指向表格项或者改变指向。**
+
+##### 枚举类型
 
 1个枚举类型需要知道，这个枚举描述了**选择模型的更新方式**。
 
@@ -4123,6 +4191,8 @@ enum QItemSelectionModel::SelectionFlag = {
     QItemSelectionModel::ClearAndSelect// 为方便起见，结合了清除和选择
 }
 ```
+
+##### 子类函数
 
 主要的成员函数如下，其它继承自QObject。
 
@@ -4160,6 +4230,8 @@ QModelIndexList selectedRows(int column = 0) const;
 QModelIndexList selectedIndexes() const;
 ```
 
+##### 槽函数
+
 具备的槽函数如下。
 
 ```c++
@@ -4179,6 +4251,8 @@ virtual void select(const QItemSelection &selection, QItemSelectionModel::Select
 virtual void setCurrentIndex(const QModelIndex &index, QItemSelectionModel::SelectionFlags command);
 ```
 
+##### 信号函数
+
 具备的信号函数如下。
 
 ```c++
@@ -4194,17 +4268,18 @@ void modelChanged(QAbstractItemModel *model);
 void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 ```
 
-#### 4.1.3 QItemSelection
+##### QItemSelection
 
-QItemSelection 类管理有关模型中**选定项目的信息**。
-QItemSelection 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。
-可以构建和初始化项目选择以包含现有模型中的一系列项目。下面的示例构造一个选择，其中包含来自给定模型的一系列项目，从 topLeft 开始，到 bottomRight 结束。
+QItemSelection 类管理QItemSelectionModel模型中**选定项目的信息**。
+下面的示例可以选择一个区域以包含选择的项，从 topLeft 开始，到 bottomRight 结束。
 
 ```c++
 QItemSelection *selection = new QItemSelection(topLeft, bottomRight);
 // 等价于
 QItemSelection *selection = new QItemSelection();
 selection->select(topLeft, bottomRight);
+
+const QItemSelection selection() const; //与QItemSelectionModel关联的函数
 ```
 
 成员函数主要有5个，其他全部继承自QList。
@@ -4217,10 +4292,350 @@ void merge(const QItemSelection &other, QItemSelectionModel::SelectionFlags comm
 void select(const QModelIndex &topLeft, const QModelIndex &bottomRight);//将范围内的项目添加到列表中，该范围从由 topLeft 索引指定的左上角模型项到由 bottomRight 指定的右下角项
 ```
 
-#### 4.1.4 QAbstractItemView
+
+
+### 4.2 Model类
+
+所有基于项的数据模型都是基于共同抽象类**QAbstractItemModel**衍生，主要的类层次结构如下所示。注意：带有Abstract的类都是抽象类不能直接使用，所以实际能够使用的只有**7个**，在流程图中已经加粗显示。如果已定义的无法满足需求，可以自行继承3个子抽象类定义自己的数据模型类。
+
+```mermaid
+graph LR
+QAbstractItemModel-->QAbstractListModel
+QAbstractItemModel-->QAbstractProxyModel
+QAbstractItemModel-->QAbstractTableModel
+QAbstractItemModel==>QStandardItemModel
+QAbstractItemModel==>QFileSystemModel
+
+QAbstractListModel==>QStringListModel
+QAbstractProxyModel==>QSortFilterProxyModel
+QAbstractTableModel==>QSqlQueryModel
+QSqlQueryModel==>QSqlTableModel
+QSqlTableModel==>QSqlRelationalTableModel
+```
+
+```mermaid
+graph LR
+抽象模型-->列表模型
+抽象模型-->代理模型
+抽象模型-->表格模型
+抽象模型==>标准项模型
+抽象模型==>文件系统模型
+
+列表模型==>字符串列表模型
+代理模型==>排序筛选器代理模型
+表格模型==>SQL查询模型
+SQL查询模型==>SQL表格模型
+SQL表格模型==>SQL关联表格模型
+```
+
+#### 4.2.1 QAbstractItemModel
+
+QAbstractItemModel 类为项目模型类提供抽象接口。
+QAbstractItemModel 类定义了项目模型必须使用的标准接口，以便能够与模型/视图架构中的其他组件进行互操作。它不应该被直接实例化。相反，您应该将其子类化以创建新模型。
+QAbstractItemModel 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。它可以用作 QML 中的项目视图元素或 Qt Widgets 模块中的项目视图类的底层数据模型。
+如果您需要一个模型与项目视图一起使用，例如 QML 的 List View 元素或 C++ 小部件 QListView 或 QTableView，您应该考虑将 QAbstractListModel 或 QAbstractTableModel 子类化而不是此类。
+底层数据模型作为表的层次结构暴露给视图和委托。如果不使用层次结构，则模型是一个简单的行和列表。每个项目都有一个由 QModelIndex 指定的唯一索引。可以通过模型访问的每一项数据都有一个关联的模型索引。您可以使用 index() 函数获取此模型索引。每个索引可能有一个兄弟（）索引；子项有一个 parent() 索引。
+
+每个项目都有与之关联的数据元素，可以通过为模型的 data() 函数指定一个角色（参见 Qt::ItemDataRole）来检索它们。可以使用 itemData() 函数同时获取所有可用角色的数据。每个角色的数据使用特定的 Qt::ItemDataRole 设置。单个角色的数据使用 setData() 单独设置，或者可以使用 setItemData() 为所有角色设置。
+可以使用 flags() 查询项目（参见 Qt::ItemFlag）以查看它们是否可以被选择、拖动或以其他方式操作。
+如果一个项目有子对象，hasChildren() 为相应的索引返回 true。
+该模型对于层次结构的每个级别都有一个 rowCount() 和一个 columnCount()。可以使用 insertRows()、insertColumns()、removeRows() 和 removeColumns() 插入和删除行和列。
+该模型发出信号以指示变化。例如，只要模型提供的数据项发生更改，就会发出 dataChanged() 。更改模型提供的标头会导致发出 headerDataChanged()。如果底层数据的结构发生变化，模型可以发出 layoutChanged() 以向任何附加视图指示它们应该重新显示显示的任何项目，同时考虑到新结构。可以使用 match() 函数搜索模型中可用的项目以查找特定数据。
+要对模型进行排序，可以使用 sort()。
+
+这个抽象类定义的信号函数可以了解一下。
+
+```c++
+void columnsAboutToBeInserted(const QModelIndex &parent, int first, int last);
+void columnsAboutToBeMoved(const QModelIndex &sourceParent, int sourceStart, int sourceEnd, const QModelIndex &destinationParent, int destinationColumn);
+void columnsAboutToBeRemoved(const QModelIndex &parent, int first, int last);
+void columnsInserted(const QModelIndex &parent, int first, int last);
+void columnsMoved(const QModelIndex &parent, int start, int end, const QModelIndex &destination, int column);
+void columnsRemoved(const QModelIndex &parent, int first, int last);
+void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
+void headerDataChanged(Qt::Orientation orientation, int first, int last);
+void layoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex> (), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
+void layoutChanged(const QList<QPersistentModelIndex> &parents = QList<QPersistentModelIndex> (), QAbstractItemModel::LayoutChangeHint hint = QAbstractItemModel::NoLayoutChangeHint);
+void modelAboutToBeReset();
+void modelReset();
+void rowsAboutToBeInserted(const QModelIndex &parent, int start, int end);
+void rowsAboutToBeMoved(const QModelIndex &sourceParent, int sourceStart, int sourceEnd, const QModelIndex &destinationParent, int destinationRow);
+void rowsAboutToBeRemoved(const QModelIndex &parent, int first, int last);
+void rowsInserted(const QModelIndex &parent, int first, int last);
+void rowsMoved(const QModelIndex &parent, int start, int end, const QModelIndex &destination, int row);
+void rowsRemoved(const QModelIndex &parent, int first, int last);
+```
+
+#### 4.2.2 QFileSystemModel
+
+计算机上文件系统的数据模型类，是个可以访问本机文件系统的数据模型。
+
+QFileSystemModel和**QTreeView结合使用**就可以使用目录树的形式显示本机上的文件系统，如同Windows的资源管理器一样。
+
+获取本机文件系统需要使用setRootPath()函数设置根目录；
+
+可以使用静态函数QDir::currentPath()获取应用程序的当前路径；
+
+用于获取磁盘文件目录的数据模型类还有QDirModel，功能和QFileSystemModel类似，但是QFileSystemModel采用单独的线程获取，不会阻碍主线程，所以推荐使用QFileSystemModel。
+
+一个简单的例子。
+
+```c++
+QFileSystemModel *model = new QFileSystemModel;
+model->setRootPath(QDir::currentPath()); // 文件系统模型的根目录
+QTreeView *tree = new QTreeView(splitter);
+tree->setModel(model); // 树状展示
+tree->setRootIndex(model->index(QDir::currentPath()));// 用返回的给定路径和列的模型项索引去设置树结构的根目录索引
+```
+
+##### 枚举类型
+
+此类需要了解的枚举值类型如下。
+
+```c++
+enum Roles { 
+    FileIconRole, // Qt::DecorationRole
+    FilePathRole, // Qt::UserRole + 1
+    FileNameRole, // Qt::UserRole + 2
+    FilePermissions // Qt::UserRole + 3
+}
+```
+
+主要具备3个属性。
+
+```c++
+nameFilterDisables : bool // 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件,默认情况下，此属性为true
+readOnly : bool // 此属性保存目录模型是否允许写入文件系统,如果此属性设置为false，则目录模型将允许重命名、复制和删除文件和目录。默认情况下，此属性为true
+resolveSymlinks : bool // 此属性保存目录模型是否应解析符号链接,这仅与Windows相关,默认情况下，此属性为true
+```
+
+##### 子类函数
+
+常见的公共成员函数如下。
+
+```c++
+// 获取模型索引指向文件的图标、信息、名称、路径
+QIcon fileIcon(const QModelIndex &index) const;
+QFileInfo fileInfo(const QModelIndex &index) const;
+QString fileName(const QModelIndex &index) const;
+QString filePath(const QModelIndex &index) const;
+QDir rootDirectory() const; // 当前设置的目录
+QString rootPath() const; // 当前设置的路径
+
+QDir::Filters filter() const; // 返回为目录模型指定的筛选器。
+QFileIconProvider *iconProvider() const; // 返回此目录模型的文件图标提供程序
+QStringList nameFilters() const; // 返回应用于模型中名称的筛选器列表
+// 这是一个重载函数，返回给定路径和列的模型项索引
+QModelIndex index(const QString &path, int column = 0) const;
+// 返回上次修改索引的日期和时间
+QDateTime lastModified(const QModelIndex &index) const;
+// 使用父模型索引中的名称创建目录
+QModelIndex mkdir(const QModelIndex &parent, const QString &name);
+// 返回项目“我的电脑”在给定角色下存储的数据
+QVariant myComputer(int role = Qt::DisplayRole) const;
+//返回 QFile::Permission的组合
+QFile::Permissions permissions(const QModelIndex &index) const;
+
+bool isDir(const QModelIndex &index) const;// 判断模型索引指向的文件是否为目录
+bool isReadOnly() const; // 此属性保存目录模型是否允许写入文件系统
+bool resolveSymlinks() const; // 此属性保存目录模型是否应解析符号链接，仅与Windows相关
+bool nameFilterDisables() const;// 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件
+// 删除与文件系统模型中的模型项索引相对应的目录，并从文件系统中删除相应的目录，如果成功，则返回true。如果无法删除目录，则返回false
+bool remove(const QModelIndex &index);
+bool rmdir(const QModelIndex &index); 
+
+void setFilter(QDir::Filters filters);// 将目录模型的筛选器设置为筛选器指定的筛选器
+void setIconProvider(QFileIconProvider *provider);// 设置文件图标的提供程序
+void setNameFilterDisables(bool enable);
+void setNameFilters(const QStringList &filters);// 设置要对现有文件应用的名称过滤器
+void setReadOnly(bool enable); // 设置只读
+void setResolveSymlinks(bool enable);// 此属性保存目录模型是否应解析符号链接
+qint64 size(const QModelIndex &index) const; // 如果节点是文件，返回文件大小(字节)，文件不存在返回0
+QString type(const QModelIndex &index) const;// 返回文件索引的类型，目录"Directory"、硬盘符"Drive"，文件夹"File Folder"，文件"txt File"、"exe File"、"pdf File"、"JPEG file"等
+// 通过在模型上安装文件系统监视程序，将其监视的目录设置为newPath。对此目录中的文件和目录所做的任何更改都将反映在模型中
+QModelIndex setRootPath(const QString &newPath);
+```
+
+##### 信号函数
+
+信号函数。
+
+```c++
+// gatherer线程完成加载路径时，会发出此信号
+void directoryLoaded(const QString &path);
+// 每当使用旧名称的文件成功重命名为新名称时，就会发出此信号  
+static void QFileSystemModel::fileRenamed(const QString &path, 
+                                   const QString &oldName, 
+                                   const QString &newName);
+// 只要根路径更改为新路径，就会发出此信号
+void rootPathChanged(const QString &newPath);
+```
+
+#### 4.2.3 QStandardItemModel
+
+标准的基于项数据的数据模型类，每个项可以是任何数据类型。
+
+这个模型**一般是和QTableView结合的，适合处理二维数组**。
+QStandardItemModel 实现了 QAbstractItemModel 接口，这意味着该模型可用于在任何支持该接口的视图中提供数据（例如 QListView、QTableView 和 QTreeView，以及您自己的自定义视图）。为了性能和灵活性，您可能希望继承 QAbstractItemModel 以支持不同类型的数据存储库。例如，QDirModel 为底层文件系统提供模型接口。当您想要一个列表或树时，通常创建一个空的 QStandardItemModel 并使用 appendRow() 将项目添加到模型中，并使用 item() 访问项目。如果您的模型表示一个表格，您通常会将表格的维度传递给 QStandardItemModel 构造函数并使用 setItem() 将项目定位到表格中。您还可以使用 setRowCount() 和 setColumnCount() 来更改模型的尺寸。要插入项目，请使用 insertRow() 或 insertColumn()，要删除项目，请使用 removeRow() 或 removeColumn()。
+您可以使用 setHorizontalHeaderLabels() 和 setVerticalHeaderLabels() 设置模型的标题标签。
+您可以使用 findItems() 在模型中搜索项目，并通过调用 sort() 对模型进行排序。
+调用 clear() 从模型中删除所有项目。
+使用 QStandardItemModel 创建表的示例：
+
+```c++
+QStandardItemModel model(4, 4);
+for (int row = 0; row < 4; ++row) {
+    for (int column = 0; column < 4; ++column) {
+        QStandardItem *item = new QStandardItem(QString("row %0, column %1").arg(row).arg(column));
+        model.setItem(row, column, item);
+    }
+}
+
+QStandardItemModel model;
+QStandardItem *parentItem = model.invisibleRootItem();
+for (int i = 0; i < 4; ++i) {
+    QStandardItem *item = new QStandardItem(QString("item %0").arg(i));
+    parentItem->appendRow(item);
+    parentItem = item;
+}
+```
+
+##### 子类函数
+
+```c++
+// 单元格的属性设置操作
+void appendColumn(const QList<QStandardItem *> &items);
+void appendRow(const QList<QStandardItem *> &items);
+void appendRow(QStandardItem *item);
+void clear();
+void insertColumn(int column, const QList<QStandardItem *> &items);
+bool insertColumn(int column, const QModelIndex &parent = QModelIndex());
+void insertRow(int row, const QList<QStandardItem *> &items);
+void insertRow(int row, QStandardItem *item);
+bool insertRow(int row, const QModelIndex &parent = QModelIndex());
+void setColumnCount(int columns);
+void setHorizontalHeaderItem(int column, QStandardItem *item);
+void setHorizontalHeaderLabels(const QStringList &labels);
+void setItem(int row, int column, QStandardItem *item);
+void setItem(int row, QStandardItem *item);
+void setItemPrototype(const QStandardItem *item);
+void setItemRoleNames(const QHash<int, QByteArray> &roleNames);
+void setRowCount(int rows);
+void setSortRole(int role);
+void setVerticalHeaderItem(int row, QStandardItem *item);
+void setVerticalHeaderLabels(const QStringList &labels);
+int sortRole() const;
+
+// 单元格的访问操作
+QModelIndex indexFromItem(const QStandardItem *item) const;
+QList<QStandardItem *> findItems(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly, int column = 0) const;
+QList<QStandardItem *> takeColumn(int column);
+QList<QStandardItem *> takeRow(int row);
+QStandardItem *horizontalHeaderItem(int column) const;
+QStandardItem *invisibleRootItem() const;
+QStandardItem *item(int row, int column = 0) const;
+QStandardItem *itemFromIndex(const QModelIndex &index) const;
+const QStandardItem *itemPrototype() const;
+QStandardItem *takeHorizontalHeaderItem(int column)
+QStandardItem *takeItem(int row, int column = 0)
+QStandardItem *takeVerticalHeaderItem(int row)
+QStandardItem *verticalHeaderItem(int row) const
+```
+
+自定义的信号函数如下，其它从抽象模型继承而来。
+
+```c++
+void itemChanged(QStandardItem *item);
+```
+
+其它继承的函数不再赘述。
+
+#### 4.2.4 QStringListModel
+
+用于处理字符串列表数据的数据模型类，它可以作为**QListView的数据模型**，在界面上显示和编辑字符串列表。它关联的数据结构是[3.1.8 QStringList](#3.1.8 QStringList)。
+
+QListView的任何操作都会反馈至QStringListModel，前提是后台程序中，这个视图组件使用setModel设定为该模型。
+
+```c++
+Widget :: Widget(QWidget * parent): QWidget(parent),ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+    QStringList strlist;//数据模型
+    strlist<<"北京"<<"上海"<<"河北";
+    this->model = new QStringListModel(this);
+    this->model->setStringList(strlist);//字符串模型把字符串加进来
+    ui->listview->setModel(this->model);//设置模型
+    ui->listview->setEditTriggers(QAbstractItemView::DoubleClicked |QAbstractItemView::SelectedClicked );
+    //视图组件通过双击或者选中单击进行触发,可以把数据传递给this->model
+}
+```
+
+自定义的成员函数只有2个，也就是设置字符串列表和读取字符串列表。
+
+```c++
+QStringListModel(const QStringList &strings, QObject *parent = Q_NULLPTR);
+void setStringList(const QStringList &strings);
+QStringList stringList() const;
+```
+
+继承而来的有6个函数是需要关注的，其它函数不需要再单独列出。
+
+```c++
+// 将计数行插入模型,从给定行开始
+virtual bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
+// 移除给定行,从给定行开始
+virtual bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
+// 返回模型中的行数,此值对应于模型内部字符串列表中的项目数
+virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+// 将模型中具有给定索引的项目中指定角色的数据设置为提供的值
+virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+// 继承自QAbstractItemModel::sort(),按给定顺序按列对模型进行排序
+virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
+// 返回由给定行、列和父索引指定的模型中项目的索引
+virtual QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const;
+```
+
+#### 4.2.5 QSortFilterProxyModel
+
+与其他数据模型结合，提供排序和过滤功能的数据模型类。
+
+#### 4.2.6 QSqlQuieryModel
+
+用于数据库SQL查询结果的数据模型类。
+
+#### 4.2.7 QSqlTableModel
+
+用于数据库的一个数据表的数据模型类。
+
+#### 4.2.8 QSqlRelationalTableModel
+
+用于关系型数据表的数据模型类。
+
+### 4.3 View类
+
+QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类是**QAbstractItemView**。
+
+视图组件统一存在一个函数setModel()，即可设置一个数据模型，视图组件上的修改将自动保存到关联的数据模型，一个数据模型可以同时在多个视图组件显示数据。
+
+视图组件类的关联关系表示如下，可以看出之前提到的3种类只是个派生类，它们的项可以用来存储部分小型数据。
+
+```mermaid
+graph LR
+QAbstractItemView-->QListView
+QAbstractItemView-->QTreeView
+QAbstractItemView-->QTableView
+QAbstractItemView-->QColumnView
+QAbstractItemView-->QHeaderView
+
+QListView==>QListWidget
+QTableView==>QTableWidget
+QTreeView==>QTreeWidget
+```
+
+#### 4.3.1 QAbstractItemView
 
 QAbstractItemView 类为项目视图类提供了基本功能。
-QAbstractItemView 类是每个使用 QAbstractItemModel 的标准视图的基类，是QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类。 QAbstractItemView 是一个抽象类，本身不能被实例化。它提供了一个标准接口，用于通过信号和槽机制与模型进行互操作，使子类能够随着模型的更改而保持最新。
+QAbstractItemView 类是每个使用 QAbstractItemModel 的标准视图的基类，**是QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类**。 QAbstractItemView 是一个抽象类，本身不能被实例化。它提供了一个标准接口，用于通过信号和槽机制与模型进行互操作，使子类能够随着模型的更改而保持最新。
 
 ##### 枚举类型
 
@@ -4292,7 +4707,7 @@ QAbstractItemView::NoSelection // 无法选择项目
 }
 ```
 
-##### 成员函数
+##### 子类函数
 
 给出常见的成员函数。
 
@@ -4343,299 +4758,217 @@ void pressed(const QModelIndex &index);//按下鼠标按钮时会发出此信号
 void viewportEntered();//当鼠标光标进入视口时发出此信号。需要启用鼠标跟踪才能使用此功能
 ```
 
+#### 4.3.2 QListView
 
+用于显示单列的列表数据，适用于一维数据的操作。参见Qt文档，不赘述。
 
-### 4.2 Model模型
+#### 4.3.3 QTreeView
 
-所有基于项的数据模型都是基于共同抽象类**QAbstractItemModel**衍生，主要的类层次结构如下所示。注意：带有Abstract的类都是抽象类不能直接使用，所以实际能够使用的只有**7个**，在流程图中已经加粗显示。如果已定义的无法满足需求，可以自行继承3个子抽象类定义自己的数据模型类。
+用于显示树状结构数据，适用于树状结构数据的操作。参见Qt文档，不赘述。
 
-```mermaid
-graph LR
-QAbstractItemModel-->QAbstractListModel
-QAbstractItemModel-->QAbstractProxyModel
-QAbstractItemModel-->QAbstractTableModel
-QAbstractItemModel==>QStandardItemModel
-QAbstractItemModel==>QFileSystemModel
+#### 4.3.4 QTableView
 
-QAbstractListModel==>QStringListModel
-QAbstractProxyModel==>QSortFilterProxyModel
-QAbstractTableModel==>QSqlQueryModel
-QSqlQueryModel==>QSqlTableModel
-QSqlTableModel==>QSqlRelationalTableModel
+用于显示表格状数据，适用于二维表格型数据的操作。参见Qt文档，不赘述。
+
+#### 4.3.5 QColumnView
+
+用多个QListView显示树状层次结构，树状结构的一层用一个QListView显示。参见Qt文档，不赘述。
+
+#### 4.3.6 QHeaderView
+
+提供行表头或列表头的视图组件，如QTable的行表头和列表头。参见Qt文档，不赘述。
+
+### 4.4 Delegate类
+
+代理的功能是在视图组件上为编辑数据提供编辑器，例如在单元格项编辑的时候默认使用的是QLineEdit进行编辑。不过有的单元格数据比较特殊，例如它是个浮点数，可能使用QDoubleSpinBox更好；如果是整数，使用QSpinBox；单元格内容只能是枚举值之一，就可以使用QComboBox。
+
+一个子类是QStyledItemDelegate，是Qt的视图组件缺省使用的代理类。QStyledItemDelegate相比于QItemDelegate可以使用当前的样式表设置来绘制组件，因此建议使用QStyledItemDelegate来作为自定义代理组件的基类。
+
+无论怎么定义设计代理组件，都需要实现以下4个功能函数的重载。
+
+```C++
+createEditor(); // 创建用于编辑模型数据的widget组件，如1个spinbox组件或者combobox组件
+setEditorData();// 从数据模型获取数据,供widget组件进行编辑
+setModelData(); // 将widget的数据更新到数据模型
+updateEditorGeometry(); // 给widget组件设置一个合适的大小
 ```
 
-```mermaid
-graph LR
-抽象模型-->列表模型
-抽象模型-->代理模型
-抽象模型-->表格模型
-抽象模型==>标准项模型
-抽象模型==>文件系统模型
-
-列表模型==>字符串列表模型
-代理模型==>排序筛选器代理模型
-表格模型==>SQL查询模型
-SQL查询模型==>SQL表格模型
-SQL表格模型==>SQL关联表格模型
-```
-
-常见的数据模型表现形式如下，它们都会一个顶层项，List只有1列，Table有多列且对齐，Tree则是自由定义。
-
-![data_model](data_model.jpg)
-
-​																		图2 常见数据模型的表现形式
-
-数据模型虽然基本形式是用行和列定义的表格数据，但不意味着底层是用二维数据存储的，使用行列只是一种为了交互方便的规定，使用模型索引的行号和列号就可以获取数据。
-
-提到了数据模型，就必须提到模型索引，这是访问数据的媒介，模型索引专门定义了一个类QModelIndex，模型索引可以提供给数据存储的一个临时指针，用于通过数据模型修改和提取数据，由于模型内部组织数据的结构随时可能更改，所以模型索引是临时的。如果需要持久性的模型索引，需要使用QPersistentModelIndex类。
-
-数据模型的每个项也是一个对应的类，例如标准项模型QStandardItemModel的数据类是QStandardItem，它有个静态函数可以设置数据，对应的获取数据也要先指定角色。
+例如，spinbox的自定义代理类。这些代理类可以用于**view模型的setItemDelegateForColumn函数**去给每列设置代理，使用**setItemDelegateForRow**给每行设置代理，**setItemDelegate**整体设置代理。
 
 ```c++
-void QStandardItem::setData(const QVariant &value, int role = Qt::UserRole+1);
-Qvariant QStandardItem::data(int role = Qt::UserRole+1) const;
-```
-
-value可以是任何数据类型的数据，role是设置数据的角色，一个项可以存在不同角色的数据用于不同场合。对于用户角色，由开发人员决定使用哪些类型，并确保组件在访问和设置数据时使用正确的类型。role可以使用枚举值Qt::ItemDataRole来定义，其完整的定义和含义如下。
-
-```c++
-Qt::UserRole = 0x0100 // 第一个可用于特定于应用程序的角色
-enum Qt::ItemDataRole {
-    // 通用型角色
-    Qt::DisplayRole = 0, // 以文本形式呈现的关键数据(默认),QString
-    Qt::DecorationRole = 1, // 以图标形式呈现的数据,QColor,QIcon,QPixmap
-    Qt::EditRolec = 2, // 以适合在编辑器中编辑的形式显示的数据,QString
-    Qt::ToolTipRole = 3, // 项目工具提示中显示的数据,QString
-    Qt::StatusTipRole = 4, // 状态栏中显示的数据,QString
-    Qt::WhatsThisRole = 5, // "What's This?"中显示的项目数据模式,QString
-    Qt::SizeHintRole = 13, // 将提供给视图的项目的大小提示,QSize
-    // 描述外观和元数据的角色(具有关联类型)
-    Qt::FontRole = 6, // 使用默认委托呈现的项目的字体,QFont
-	Qt::TextAlignmentRole = 7, // 使用默认委托呈现的项目的文本对齐方式,Qt::Alignment
-	Qt::BackgroundRole = 8, // 使用默认代理渲染的项目的背景笔刷QBrush
-	Qt::BackgroundColorRole = 8, // 此角色已过时,改用BackgroundRole
-	Qt::ForegroundRole = 9, //使用默认代理渲染的项目的前景笔刷(文本颜色),QBrush
-	Qt::TextColorRole = 9,// 此角色已过时,改用ForegroundRol。
-	Qt::CheckStateRole = 10,//此角色用于获取项目的已检查状态,Qt::CheckState
-	Qt::InitialSortOrderRole = 14, // 此角色用于获取标题视图节的初始排序顺序,Qt::SortOrder,Qt4.8中引入
-    // 辅助功能角色(具有关联类型)
-    Qt::AccessibleTextRole = 11,// 可访问性扩展和插件(如屏幕阅读器)使用的文本,QString
-    Qt::AccessibleDescriptionRole = 12 // 用于辅助功能的项目描述,QString
-}
-```
-
-
-
-#### 4.2.1 QFileSystemModel
-
-计算机上文件系统的数据模型类，是个可以访问本机文件系统的数据模型。
-
-QFileSystemModel和**QTreeView结合使用**就可以使用目录树的形式显示本机上的文件系统，如同Windows的资源管理器一样。
-
-获取本机文件系统需要使用setRootPath()函数设置根目录；
-
-可以使用静态函数QDir::currentPath()获取应用程序的当前路径；
-
-用于获取磁盘文件目录的数据模型类还有QDirModel，功能和QFileSystemModel类似，但是QFileSystemModel采用单独的线程获取，不会阻碍主线程，所以推荐使用QFileSystemModel。
-
-一个简单的例子。
-
-```c++
-QFileSystemModel *model = new QFileSystemModel;
-model->setRootPath(QDir::currentPath()); // 文件系统模型的根目录
-QTreeView *tree = new QTreeView(splitter);
-tree->setModel(model); // 树状展示
-tree->setRootIndex(model->index(QDir::currentPath()));// 用返回的给定路径和列的模型项索引去设置树结构的根目录索引
-```
-
-此类需要了解的枚举值类型如下。
-
-```c++
-enum Roles { 
-    FileIconRole, // Qt::DecorationRole
-    FilePathRole, // Qt::UserRole + 1
-    FileNameRole, // Qt::UserRole + 2
-    FilePermissions // Qt::UserRole + 3
-}
-```
-
-主要具备3个属性。
-
-```c++
-nameFilterDisables : bool // 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件,默认情况下，此属性为true
-readOnly : bool // 此属性保存目录模型是否允许写入文件系统,如果此属性设置为false，则目录模型将允许重命名、复制和删除文件和目录。默认情况下，此属性为true
-resolveSymlinks : bool // 此属性保存目录模型是否应解析符号链接,这仅与Windows相关,默认情况下，此属性为true
-```
-
-常见的公共成员函数如下。
-
-```c++
-// 获取模型索引指向文件的图标、信息、名称、路径
-QIcon fileIcon(const QModelIndex &index) const;
-QFileInfo fileInfo(const QModelIndex &index) const;
-QString fileName(const QModelIndex &index) const;
-QString filePath(const QModelIndex &index) const;
-QDir rootDirectory() const; // 当前设置的目录
-QString rootPath() const; // 当前设置的路径
-
-QDir::Filters filter() const; // 返回为目录模型指定的筛选器。
-QFileIconProvider *iconProvider() const; // 返回此目录模型的文件图标提供程序
-QStringList nameFilters() const; // 返回应用于模型中名称的筛选器列表
-// 这是一个重载函数，返回给定路径和列的模型项索引
-QModelIndex index(const QString &path, int column = 0) const;
-// 返回上次修改索引的日期和时间
-QDateTime lastModified(const QModelIndex &index) const;
-// 使用父模型索引中的名称创建目录
-QModelIndex mkdir(const QModelIndex &parent, const QString &name);
-// 返回项目“我的电脑”在给定角色下存储的数据
-QVariant myComputer(int role = Qt::DisplayRole) const;
-//返回 QFile::Permission的组合
-QFile::Permissions permissions(const QModelIndex &index) const;
-
-bool isDir(const QModelIndex &index) const;// 判断模型索引指向的文件是否为目录
-bool isReadOnly() const; // 此属性保存目录模型是否允许写入文件系统
-bool resolveSymlinks() const; // 此属性保存目录模型是否应解析符号链接，仅与Windows相关
-bool nameFilterDisables() const;// 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件
-// 删除与文件系统模型中的模型项索引相对应的目录，并从文件系统中删除相应的目录，如果成功，则返回true。如果无法删除目录，则返回false
-bool remove(const QModelIndex &index);
-bool rmdir(const QModelIndex &index); 
-
-void setFilter(QDir::Filters filters);// 将目录模型的筛选器设置为筛选器指定的筛选器
-void setIconProvider(QFileIconProvider *provider);// 设置文件图标的提供程序
-void setNameFilterDisables(bool enable);
-void setNameFilters(const QStringList &filters);// 设置要对现有文件应用的名称过滤器
-void setReadOnly(bool enable); // 设置只读
-void setResolveSymlinks(bool enable);// 此属性保存目录模型是否应解析符号链接
-qint64 size(const QModelIndex &index) const; // 如果节点是文件，返回文件大小(字节)，文件不存在返回0
-QString type(const QModelIndex &index) const;// 返回文件索引的类型，目录"Directory"、硬盘符"Drive"，文件夹"File Folder"，文件"txt File"、"exe File"、"pdf File"、"JPEG file"等
-// 通过在模型上安装文件系统监视程序，将其监视的目录设置为newPath。对此目录中的文件和目录所做的任何更改都将反映在模型中
-QModelIndex setRootPath(const QString &newPath);
-```
-
-信号函数。
-
-```c++
-// gatherer线程完成加载路径时，会发出此信号
-void directoryLoaded(const QString &path);
-// 每当使用旧名称的文件成功重命名为新名称时，就会发出此信号  
-static void QFileSystemModel::fileRenamed(const QString &path, 
-                                   const QString &oldName, 
-                                   const QString &newName);
-// 只要根路径更改为新路径，就会发出此信号
-void rootPathChanged(const QString &newPath);
-```
-
-#### 4.2.2 QStandardItemModel
-
-标准的基于项数据的数据模型类，每个项可以是任何数据类型。
-
-这个模型**一般是和QTableView结合的，适合处理二维数组**。
-
-
-
-#### 4.2.3 QStringListModel
-
-用于处理字符串列表数据的数据模型类，它可以作为**QListView的数据模型**，在界面上显示和编辑字符串列表。它关联的数据结构是[3.1.8 QStringList](#3.1.8 QStringList)。
-
-QListView的任何操作都会反馈至QStringListModel，前提是后台程序中，这个视图组件使用setModel设定为该模型。
-
-```c++
-Widget :: Widget(QWidget * parent): QWidget(parent),ui(new Ui::Widget)
+// .h
+#include    <QStyledItemDelegate>
+class spinBoxDelegate: public QStyledItemDelegate
 {
-    ui->setupUi(this);
-    QStringList strlist;//数据模型
-    strlist<<"北京"<<"上海"<<"河北";
-    this->model = new QStringListModel(this);
-    this->model->setStringList(strlist);//字符串模型把字符串加进来
-    ui->listview->setModel(this->model);//设置模型
-    ui->listview->setEditTriggers(QAbstractItemView::DoubleClicked |QAbstractItemView::SelectedClicked );
-    //视图组件通过双击或者选中单击进行触发,可以把数据传递给this->model
+Q_OBJECT
+public:
+  spinBoxDelegate(QObject *parent=0);
+
+    //自定义代理组件必须继承以下4个函数
+    //创建编辑组件
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
+                          const QModelIndex &index) const Q_DECL_OVERRIDE;
+
+    void setEditorData(QWidget *editor, const QModelIndex &index) const Q_DECL_OVERRIDE;
+    void setModelData(QWidget *editor, QAbstractItemModel *model,
+                      const QModelIndex &index) const Q_DECL_OVERRIDE;
+    void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
+                              const QModelIndex &index) const Q_DECL_OVERRIDE;
+};
+// .cpp
+#include "spinBoxDelegate.h"
+#include <QSpinBox>
+spinBoxDelegate::spinBoxDelegate(QObject *parent):QStyledItemDelegate(parent)
+{
+
+}
+QWidget *spinBoxDelegate::createEditor(QWidget *parent,
+   const QStyleOptionViewItem &option, const QModelIndex &index) const
+{ //创建代理编辑组件
+    Q_UNUSED(option);
+    Q_UNUSED(index);
+
+    QSpinBox *editor = new QSpinBox(parent); //创建一个QSpinBox
+    editor->setFrame(false); //设置为无边框
+    editor->setMinimum(0);
+    editor->setMaximum(10000);
+
+    return editor;  //返回此编辑器
+}
+//从数据模型获取数据，显示到代理组件中
+void spinBoxDelegate::setEditorData(QWidget *editor,
+                      const QModelIndex &index) const
+{
+	//获取数据模型的模型索引指向的单元的数据
+    int value = index.model()->data(index, Qt::EditRole).toInt();
+
+    QSpinBox *spinBox = static_cast<QSpinBox*>(editor);  //强制类型转换
+    spinBox->setValue(value); //设置编辑器的数值
+}
+//将代理组件的数据，保存到数据模型中
+void spinBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+{ 
+    QSpinBox *spinBox = static_cast<QSpinBox*>(editor); //强制类型转换
+    spinBox->interpretText(); //解释数据，如果数据被修改后，就触发信号
+    
+    int value = spinBox->value(); //获取spinBox的值
+    model->setData(index, value, Qt::EditRole); //更新到数据模型
+}
+// 设置代理组件大小
+void spinBoxDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    Q_UNUSED(index);
+    editor->setGeometry(option.rect);
 }
 ```
 
-自定义的成员函数只有2个，也就是设置字符串列表和读取字符串列表。
-
-```c++
-QStringListModel(const QStringList &strings, QObject *parent = Q_NULLPTR);
-void setStringList(const QStringList &strings);
-QStringList stringList() const;
-```
-
-继承而来的有6个函数是需要关注的，其它函数不需要再单独列出。
-
-```c++
-// 将计数行插入模型,从给定行开始
-virtual bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex());
-// 移除给定行,从给定行开始
-virtual bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
-// 返回模型中的行数,此值对应于模型内部字符串列表中的项目数
-virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
-// 将模型中具有给定索引的项目中指定角色的数据设置为提供的值
-virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
-// 继承自QAbstractItemModel::sort(),按给定顺序按列对模型进行排序
-virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
-// 返回由给定行、列和父索引指定的模型中项目的索引
-virtual QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const;
-```
-
-
-
-#### 4.2.4 QSortFilterProxyModel
-
-与其他数据模型结合，提供排序和过滤功能的数据模型类。
-
-#### 4.2.5 QSqlQuieryModel
-
-用于数据库SQL查询结果的数据模型类。
-
-#### 4.2.6 QSqlTableModel
-
-用于数据库的一个数据表的数据模型类。
-
-#### 4.2.7 QSqlRelationalTableModel
-
-用于关系型数据表的数据模型类。
-
-### 4.3 视图组件
-
-QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类是QAbstractItemView。
-
-视图组件统一存在一个函数setModel()，即可设置一个数据模型，视图组件上的修改将自动保存到关联的数据模型，一个数据模型可以同时在多个视图组件显示数据。
-
-视图组件类的关联关系表示如下，可以看出之前提到的3种类只是个派生类，它们的项可以用来存储部分小型数据。
+其它的子类继承结构如下。
 
 ```mermaid
-graph LR
-QAbstractItemView-->QListView
-QAbstractItemView-->QTreeView
-QAbstractItemView-->QTableView
-QAbstractItemView-->QColumnView
-QAbstractItemView-->QHeaderView
-
-QListView==>QListWidget
-QTableView==>QTableWidget
-QTreeView==>QTreeWidget
+graph TD
+QAbstractItemDelegate --> QItemDelegate
+QAbstractItemDelegate --> QStyledItemDelegate
+QItemDelegate --> QSqlRelationalDelegate
 ```
 
-#### 4.3.1 QListView
+#### 4.4.1 QAbstractItemDelegate
 
-用于显示单列的列表数据，适用于一维数据的操作。
+QAbstractItemDelegate 类用于显示和编辑模型中的数据项。
+QAbstractItemDelegate 为模型/视图架构中的委托提供接口和通用功能。代表在视图中显示单个项目，并处理模型数据的编辑。QAbstractItemDelegate 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。
+要以自定义方式呈现项目，您必须实现 paint() 和 sizeHint()。 QItemDelegate 类为这些函数提供了默认实现；如果您不需要自定义渲染，请改为子类化该类。
+我们举一个在items中绘制进度条的例子；在我们的例子中是一个包管理程序。
 
-#### 4.3.2 QTreeView
+我们创建了继承自 QStyledItemDelegate 的 WidgetDelegate 类。我们在 paint() 函数中进行绘图：
 
-用于显示树状结构数据，适用于树状结构数据的操作。
+```c++
+void WidgetDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
+                             const QModelIndex &index) const
+{
+    if (index.column() == 1) {
+        int progress = index.data().toInt();
 
-#### 4.3.3 QTableView
+        QStyleOptionProgressBar progressBarOption;
+        progressBarOption.rect = option.rect;
+        progressBarOption.minimum = 0;
+        progressBarOption.maximum = 100;
+        progressBarOption.progress = progress;
+        progressBarOption.text = QString::number(progress) + "%";
+        progressBarOption.textVisible = true;
 
-用于显示表格状数据，适用于二维表格型数据的操作。
+        QApplication::style()->drawControl(QStyle::CE_ProgressBar,
+                                           &progressBarOption, painter);
+    } 
+    else
+        QStyledItemDelegate::paint(painter, option, index);
+```
 
-#### 4.3.4 QColumnView
+请注意，我们使用 QStyleOptionProgressBar 并初始化其成员。然后我们可以使用当前的 QStyle 来绘制它。
+要提供自定义编辑，可以使用两种方法。第一种方法是创建一个编辑器小部件并将其直接显示在项目的顶部。为此，您必须重新实现 createEditor() 以提供编辑器小部件， setEditorData() 以使用模型中的数据填充编辑器，以及 setModelData() 以便委托可以使用来自编辑器的数据更新模型。
+第二种方法是通过重新实现 editorEvent() 直接处理用户事件。
 
-用多个QListView显示树状层次结构，树状结构的一层用一个QListView显示。
+##### 枚举类型
 
-#### 4.3.5 QHeaderView
+这个枚举描述了委托可以给模型和视图组件的不同提示，以使在模型中编辑数据对用户来说是一种舒适的体验。请注意，自定义视图可能会以不同的方式解释下一个和上一个的概念。以下提示在使用缓存数据的模型时最有用，例如那些在本地操作数据以提高性能或节省网络带宽的模型。尽管模型和视图应该以适当的方式响应这些提示，但如果它们不相关，自定义组件可能会忽略它们中的任何一个或全部。
 
-提供行表头或列表头的视图组件，如QTable的行表头和列表头。
+```c++
+enum QAbstractItemDelegate::EndEditHint = {
+    QAbstractItemDelegate::NoHint,//没有建议执行的操作
+    QAbstractItemDelegate::EditNextItem,//视图应使用委托打开视图中下一项的编辑器
+    QAbstractItemDelegate::EditPreviousItem,//视图应使用委托打开视图中上一项的编辑器
+    QAbstractItemDelegate::SubmitModelCache,//如果模型缓存数据，它应该将缓存数据写入底层数据存储
+    QAbstractItemDelegate::RevertModelCache//如果模型缓存了数据，它应该丢弃缓存的数据，并将其替换为来自底层数据存储的数据
+}
+```
+
+##### 子类函数
+
+```c++
+QAbstractItemDelegate(QObject *parent = Q_NULLPTR);
+virtual ~QAbstractItemDelegate();
+virtual void destroyEditor(QWidget *editor, const QModelIndex &index) const;
+virtual bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
+virtual QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const = 0;
+virtual bool helpEvent(QHelpEvent *event, QAbstractItemView *view, const QStyleOptionViewItem &option, const QModelIndex &index);
+virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const = 0;
+// 自定义代理类必须重定义的4个函数
+virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+virtual void setEditorData(QWidget *editor, const QModelIndex &index) const;
+virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
+virtual void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+```
+
+##### 信号函数
+
+```c++
+void closeEditor(QWidget *editor, QAbstractItemDelegate::EndEditHint hint = NoHint);
+void commitData(QWidget *editor);
+void sizeHintChanged(const QModelIndex &index);
+```
+
+#### 4.4.2 QStyledItemDelegate
+
+QStyledItemDelegate 类为**模型中的数据项提供显示和编辑工具**。
+模型中项目的数据被分配一个ItemDataRole；每个项目都可以为每个角色存储一个 QVariant。 QStyledItemDelegate 实现了用户期望的最常见数据类型的显示和编辑，包括布尔值、整数和字符串。
+数据的绘制方式将根据它们在模型中的角色而有所不同。
+
+编辑器是使用 QItemEditorFactory 创建的； QItemEditorFactory 提供的默认静态实例安装在所有项目委托上。您可以使用 setItemEditorFactory() 设置自定义工厂或使用 QItemEditorFactory::setDefaultFactory() 设置新的默认工厂。编辑的是带有 EditRole 的项目模型中存储的数据。有关项目编辑器工厂的更高级介绍，请参阅 QItemEditorFactory 类。颜色编辑器工厂示例展示了如何使用工厂创建自定义编辑器。
+
+其它的函数主要是继承为主，详见Qt文档。
+
+#### 4.4.3 QItemDelegate
+
+QItemDelegate 类为模型中的数据项提供显示和编辑工具。
+QItemDelegate 可用于为基于 QAbstractItemView 子类的项目视图提供自定义显示功能和编辑器小部件。为此目的使用委托允许独立于模型和视图自定义和开发显示和编辑机制。
+QItemDelegate 类是模型/视图类之一，是 Qt 模型/视图框架的一部分。请注意，QStyledItemDelegate 已经接管了绘制 Qt 项目视图的工作。我们建议在创建新委托时使用 QStyledItemDelegate。
+在标准视图中显示来自自定义模型的项目时，通常只需确保模型为确定项目在视图中的外观的每个角色返回适当的数据就足够了。 Qt 标准视图使用的默认委托使用此角色信息以用户期望的大多数常见形式显示项目。但是，有时需要对项目的外观进行比默认委托所能提供的更多的控制。
+此类提供用于在视图中绘制项目数据和从项目模型编辑数据的函数的默认实现。提供了在 QAbstractItemDelegate 中定义的 paint() 和 sizeHint() 虚函数的默认实现，以确保委托实现视图期望的正确基本行为。您可以在子类中重新实现这些函数以自定义项目的外观。
+在项目视图中编辑数据时，QItemDelegate 提供了一个编辑器小部件，这是一个在进行编辑时放置在视图顶部的小部件。编辑器是使用 QItemEditorFactory 创建的； QItemEditorFactory 提供的默认静态实例安装在所有项目委托上。您可以使用 setItemEditorFactory() 设置自定义工厂或使用 QItemEditorFactory::setDefaultFactory() 设置新的默认工厂。被编辑的是存储在带有 Qt::EditRole 的项目模型中的数据。
+
+其它的函数主要是继承为主，详见Qt文档。
+
+#### 4.4.4 QSqlRelationalDelegate
+
+详见Qt文档。
 
 ## 文件操作
 
