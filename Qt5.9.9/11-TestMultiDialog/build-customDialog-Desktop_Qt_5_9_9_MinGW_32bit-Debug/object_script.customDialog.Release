@@ -1,0 +1,16 @@
+INPUT(
+./release\actSlot.o
+./release\forItemDialog.o
+./release\main.o
+./release\customDialog.o
+./release\signalConnect.o
+./release\signalSlot.o
+./release\tableHeaderDialog.o
+./release\tableItemDialog.o
+./release\tableSizeDialog.o
+./release\qrc_images.o
+./release\moc_customDialog.o
+./release\moc_tableHeaderDialog.o
+./release\moc_tableItemDialog.o
+./release\moc_tableSizeDialog.o
+);
