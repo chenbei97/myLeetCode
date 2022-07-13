@@ -5579,6 +5579,265 @@ QDialog::accept()：调用done()函数，源码为done(Accepted)，隐藏模式�
 
 关于自定义对话框的例子，这里不赘述，可以参见[TestMultiDialog](11-TestMultiDialog)。
 
+### 5.3 多窗体
+
+窗体的继承关系如下，QWidget直接继承于QObject，是QDialog和QMainWindow的父类，其它的还有一些类也继承于QWidget。QWindow也直接继承于QObejct，同时继承于QSurface。
+
+QWidget：没有指定父容器时可作为独立窗口，指定后可以作为父容器的内部组件；
+
+QDialog：用于设计对话框，以独立窗口显示；
+
+QMainWindow：用于设计带有菜单栏、工具栏和状态栏的主窗口，一般以独立窗口显示；
+
+QSplashScreen：用作应用程序启动的窗口，没有边框；
+
+QMdiSubWindow：用于为QMdiArea提供子窗体，用于MDI多文档应用程序的设计；
+
+QDesktopWidget：具有多显卡和多显示器的系统具有多个界面，这个类可以提供用户信息如屏幕个数和大小等；
+
+QWindow：通过底层窗口系统表示1个窗口的类，一般作为父容器的嵌入式窗体，不作为独立窗体。
+
+```mermaid
+graph TD
+QObject --> QWidget
+QObject --> QWindow
+QSurface --> QWindow
+QWidget --> QMainWindow
+QWidget --> QDialog
+QWidget --> QSplashScreen
+QWidget --> QMdiSubWindow
+QWidget --> QDesktopWidget
+```
+
+#### 5.3.1 窗体特性设置
+
+窗体的显示特性可以由setAttribute设置，窗体的运行特性由setWindowFlags设置，窗体状态由setWindowState控制，它们也分别关联了一个枚举类型。
+
+##### 5.3.1.1 setAttribute
+
+这个函数隶属于QWidget类，其函数原型为：
+
+```c++
+void QWidget::setAttribute(Qt::WidgetAttribute attribute, bool on = true);
+```
+
+如果 on 为真，则设置此小部件的属性，否则清除属性。
+
+此函数关联的枚举类型是Qt::WidgetAttribute，此枚举类型用于指定各种小部件属性。属性使用 QWidget::setAttribute() 设置和清除，使用 QWidget::testAttribute() 进行查询，尽管有些具有下面提到的特殊便利功能，定义如下所示。
+
+```c++
+enum Qt::WidgetAttribute {  
+    Qt::WA_AcceptDrops,//允许将来自拖放操作的数据拖放到小部件上
+    Qt::WA_AlwaysShowToolTips,//为非活动窗口启用工具提示
+    Qt::WA_ContentsPropagated,//此枚举值过时,它不再有任何效果
+    Qt::WA_CustomWhatsThis,//在“这是什么？”中表示小部件想要继续正常运行
+    Qt::WA_DeleteOnClose,//当小部件接受关闭事件时，使 Qt 删除此小部件 √
+    Qt::WA_Disabled,//表示小部件已禁用，即它不接收任何鼠标或键盘事件
+    Qt::WA_DontShowOnScreen,//表示小部件已隐藏或不是可视桌面的一部分
+    Qt::WA_ForceDisabled,//表示小部件已显式禁用，即即使其所有祖先都设置为启用状态，它仍将保持禁用状态
+    Qt::WA_ForceUpdatesDisabled,//表示小部件显式禁用更新；即使它的所有祖先设置更新启用，它也保持禁用
+    Qt::WA_GroupLeader,//这个属性已被弃用
+    Qt::WA_Hover,//当鼠标进入或离开小部件时，强制 Qt 生成绘制事件。此功能通常在实现自定义样式时使用
+    Qt::WA_InputMethodEnabled,//启用亚洲语言的输入法。创建自定义文本编辑小部件时必须设置
+    Qt::WA_KeyboardFocusChange,//当用户使用（tab,backyap,shortcut）更改焦点时，在顶层窗口上设置
+    Qt::WA_KeyCompression,//如果设置则启用键事件压缩，如果未设置则禁用它。默认情况下，按键压缩是关闭的，因此小部件每次按键都会收到一个按键事件（或更多，因为自动重复通常是打开的）
+    Qt::WA_LayoutOnEntireRect,//表示widget希望QLayout对整个QWidget::rect()进行操作，而不仅仅是QWidget::contentsRect()
+    Qt::WA_LayoutUsesWidgetRect,//使用 QLayout 布局此小部件时，忽略样式中的布局项 rect
+    Qt::WA_MacNoClickThrough,//当单击具有此属性集的小部件并且其窗口处于非活动状态时，单击将使窗口处于活动状态但小部件不会看到
+    Qt::WA_MacOpaqueSizeGrip,//表示原生 Carbon 大小的夹点应该是不透明的而不是透明的（默认）
+    Qt::WA_MacShowFocusRect,//表示这个小部件应该有一个 QFocusFrame 围绕它。一些小部件绘制自己的焦点晕圈，而不管此属性如何
+    Qt::WA_MacNormalSize,//指示小部件应具有 macOS 中小部件的正常大小
+    Qt::WA_MacSmallSize,//指示小部件应具有 macOS 中小部件的小尺寸
+    Qt::WA_MacMiniSize,//指示小部件应具有 macOS 中小部件的迷你尺寸
+    Qt::WA_MacVariableSize,//指示小部件可以在小部件的替代尺寸之间进行选择以避免剪裁
+    Qt::WA_MacBrushedMetal,//指示小部件应以窗口系统支持的拉丝金属样式绘制
+    Qt::WA_Mapped,//表示小部件已映射到屏幕上。这是由 Qt 内核设置/清除的
+    Qt::WA_MouseNoMask,//使小部件接收整个小部件的鼠标事件，而不管当前设置的掩码如何
+    Qt::WA_MouseTracking,//表示小部件启用了鼠标跟踪
+    Qt::WA_Moved,//指示小部件具有明确的位置
+    Qt::WA_MSWindowsUseDirect3D,//此值已过时且无效
+    Qt::WA_NoBackground,//此值已过时且无效
+    Qt::WA_NoChildEventsForParent,//指示小部件不希望将 ChildAdded 或 ChildRemoved 事件发送到其父级
+    Qt::WA_NoChildEventsFromChildren,//指示小部件不想接收从其子级发送的 ChildAdded 或 ChildRemoved 事件
+    Qt::WA_NoMouseReplay,//用于弹出小部件。指示在弹出窗口小部件关闭时不应重播最近的鼠标按下事件
+    Qt::WA_NoMousePropagation,//禁止将鼠标事件传播到小部件的父级。该属性默认禁用
+    Qt::WA_TransparentForMouseEvents,//启用后，此属性会禁用将鼠标事件传递给小部件及其子级
+    Qt::WA_NoSystemBackground,//表示widget没有背景，即widget收到paint事件时，背景不会自动重绘
+    Qt::WA_OpaquePaintEvent,//指示小部件在接收到绘制事件时绘制其所有像素
+    Qt::WA_OutsideWSRange,//表示小部件超出了窗口系统坐标系的有效范围
+    Qt::WA_PaintOnScreen,//表示小部件想要直接在屏幕上绘制
+    Qt::WA_PaintUnclipped,//使在此小部件上操作的所有画家都未剪辑。此小部件或它前面的其他小部件的子级不会剪切画家可以在其上绘制的区域
+    Qt::WA_PendingMoveEvent,//表示移动事件处于待处理状态，例如，当隐藏的小部件被移动时
+    Qt::WA_PendingResizeEvent,//表示调整大小事件未决，例如，当隐藏小部件调整大小时
+    Qt::WA_QuitOnClose,//当具有属性集的最后一个小部件接受 closeEvent() 时，使 Qt 退出应用程序
+    Qt::WA_Resized,//指示小部件具有明确的大小
+    Qt::WA_RightToLeft,//表示小部件的布局方向是从右到左
+    Qt::WA_SetCursor,//表示小部件有自己的光标
+    Qt::WA_SetFont,//表示小部件有自己的字体
+    Qt::WA_SetPalette,//表示小部件有自己的调色板
+    Qt::WA_SetStyle,//表示小部件有自己的样式
+    Qt::WA_ShowModal,//该属性已被弃用
+    Qt::WA_StaticContents,//表示小部件内容是西北对齐且静态的
+    Qt::WA_StyleSheet,//指示小部件使用样式表设置样式
+    Qt::WA_TabletTracking,//表示小部件已启用平板电脑跟踪
+    Qt::WA_TranslucentBackground,//指示小部件应具有半透明背景
+    Qt::WA_UnderMouse,//表示小部件在鼠标光标下
+    Qt::WA_UpdatesDisabled,//表示更新被阻止，包括系统后台
+    Qt::WA_WindowModified,//表示窗口被标记为已修改
+    Qt::WA_WindowPropagation,//使顶层窗口从其父窗口继承字体、调色板和语言环境
+    Qt::WA_MacAlwaysShowToolWindow,//在 macOS 上，即使应用程序未处于活动状态，也显示工具窗口
+    Qt::WA_SetLocale,//指示应在小部件中考虑区域设置
+    Qt::WA_StyledBackground,//指示应使用样式背景绘制小部件
+    Qt::WA_ShowWithoutActivating,//显示小部件而不使其处于活动状态
+    Qt::WA_NativeWindow,//表示为小部件创建了本机窗口。除非设置了 Qt::WA_DontCreateNativeAncestors ，否则启用此标志还将强制小部件的祖先使用本机窗口
+    Qt::WA_DontCreateNativeAncestors,//表示即使小部件本身是原生的，小部件的祖先也会保持非原生
+    Qt::WA_X11NetWmWindowTypeDesktop,//win11特性
+    Qt::WA_X11NetWmWindowTypeDock,//
+    Qt::WA_X11NetWmWindowTypeToolBar,//
+    Qt::WA_X11NetWmWindowTypeMenu,//
+    Qt::WA_X11NetWmWindowTypeUtility,//
+    Qt::WA_X11NetWmWindowTypeSplash,//
+    Qt::WA_X11NetWmWindowTypeDialog,//
+    Qt::WA_X11NetWmWindowTypeDropDownMenu,//
+    Qt::WA_X11NetWmWindowTypePopupMenu,//
+    Qt::WA_X11NetWmWindowTypeToolTip,//
+    Qt::WA_X11NetWmWindowTypeNotification,//
+    Qt::WA_X11NetWmWindowTypeCombo,//
+    Qt::WA_X11NetWmWindowTypeDND,//
+    Qt::WA_MacFrameworkScaled,//使用 Carbon 时在 Mac 上启用分辨率独立感知模式
+    Qt::WA_AcceptTouchEvents,//允许将触摸事件（参见 QTouchEvent）发送到小部件
+    Qt::WA_TouchPadAcceptSingleTouchEvents,//允许将触摸板单点触摸事件发送到小部件
+    Qt::WA_X11DoNotAcceptFocus,//要求窗口管理器不要将焦点放在这个顶级窗口上
+    Qt::WA_AlwaysStackOnTop//此值强制 QOpenGLWidget 和 QQuickWidget 最后绘制，在其他小部件之上
+};
+```
+
+testAttribute() 函数原型如下，如果在此小部件上设置了属性属性，则返回 true；否则返回 false。
+
+```c++
+bool QWidget::testAttribute(Qt::WidgetAttribute attribute) const;
+```
+
+##### 5.3.1.2 setWindowFlag
+
+窗口标志是一个类型（例如 Qt::Dialog）和零个或多个窗口系统提示（例如 Qt::FramelessWindowHint）的组合。如果小部件具有 Qt::Widget 或 Qt::SubWindow 类型并成为一个窗口（Qt::Window、Qt::Dialog 等），则它被放置在桌面上的位置 (0, 0)。如果窗口小部件是一个窗口并且变成一个 Qt::Widget 或 Qt::SubWindow，它被放置在相对于它的父窗口小部件的位置 (0, 0)。注意：此函数在更改窗口的标志时调用 setParent()，导致窗口小部件被隐藏。您必须调用 show() 使小部件再次可见。
+
+函数原型如下。
+
+```c++
+void QWidget::setWindowFlag(Qt::WindowType flag, bool on = true);
+```
+
+与之关联的枚举类型和标记如下。
+
+```c++
+enum Qt::WindowType
+flags Qt::WindowFlags = {
+    Qt::Widget,//这是 QWidget 的默认类型。这种类型的小部件如果有父小部件则为子小部件，如果它们没有父小部件则为独立窗口。另见 Qt::Window 和 Qt::SubWindow
+    Qt::Window,//表示该小部件是一个窗口，通常带有一个窗口系统框架和一个标题栏，而不管该小部件是否有父级。请注意，如果小部件没有父级，则无法取消设置此标志
+    Qt::Dialog,//指示该小部件是一个应装饰为对话框的窗口（即，通常在标题栏中没有最大化或最小化按钮）。这是 QDialog 的默认类型
+    Qt::Sheet,//表示窗口是 macOS 上的工作表。由于使用工作表意味着窗口模式，因此推荐的方法是使用 QWidget::setWindowModality() 或 QDialog::open()
+    Qt::Drawer,//表示小部件是 macOS 上的抽屉
+    Qt::Popup,//表示该小部件是一个弹出式顶级窗口，即它是模态的，但具有适合弹出式菜单的窗口系统框架
+    Qt::Tool,//表示小部件是一个工具窗口。工具窗口通常是一个小窗口，具有比通常小的标题栏和装饰，通常用于工具按钮的集合
+    Qt::ToolTip,//指示小部件是工具提示。这在内部用于实现工具提示
+    Qt::SplashScreen,//指示窗口是闪屏。这是 QSplashScreen 的默认类型
+    Qt::Desktop,//表示此小部件是桌面。这是 QDesktopWidget 的类型
+    Qt::SubWindow,//指示此小部件是子窗口，例如 QMdiSubWindow 小部件
+    Qt::ForeignWindow,//指示此窗口对象是一个句柄，表示由另一个进程或手动使用本机代码创建的本机平台窗口
+    Qt::CoverWindow,//表示该窗口代表一个覆盖窗口，在某些平台上最小化应用程序时显示
+
+    // 还有许多标志可用于自定义顶级窗口的外观,这些对其他窗口没有影响
+    Qt::MSWindowsFixedSizeDialogHint,//在 Windows 上为窗口提供一个细对话框边框。这种风格传统上用于固定大小的对话框
+    Qt::MSWindowsOwnDC,//在 Windows 上为窗口提供自己的显示上下文
+    Qt::BypassWindowManagerHint,//此标志可用于向平台插件指示应禁用“所有”窗口管理器协议。根据应用程序运行的操作系统和窗口管理器运行的情况，该标志的行为会有所不同。该标志可用于获取未设置配置的本机窗口
+    Qt::X11BypassWindowManagerHint,//完全绕过窗口管理器。这会导致一个完全不受管理的无边框窗口（即，除非您手动调用 QWidget::activateWindow()，否则没有键盘输入）
+    Qt::FramelessWindowHint,//生成无边框窗口。用户不能通过窗口系统移动或调整无边框窗口的大小。在 X11 上，标志的结果取决于窗口管理器及其理解 Motif 和/或 NETWM 提示的能力。大多数现有的现代窗口管理器都可以处理这个问题
+    Qt::NoDropShadowWindowHint//禁用支持平台上的窗口投影
+}
+```
+
+##### 5.3.1.3 setWindowState
+
+函数原型如下。
+
+```c++
+void QWidget::setWindowState(Qt::WindowStates windowState);
+```
+
+将窗口状态设置为 windowState。窗口状态是 Qt::WindowState 的 OR&#39;ed 组合：Qt::WindowMinimized、Qt::WindowMaximized、Qt::WindowFullScreen 和 Qt::WindowActive。
+如果窗口不可见（即 isVisible() 返回 false），则窗口状态将在调用 show() 时生效。对于可见窗口，变化是立竿见影的。例如，要在全屏模式和普通模式之间切换，请使用以下代码：
+
+```c++
+w->setWindowState(w->windowState() ^ Qt::WindowFullScreen);
+```
+
+为了恢复和激活最小化窗口（同时保留其最大化和/或全屏状态），请使用以下命令：
+
+```c++
+w-&gt;setWindowState((w-&gt;windowState() &amp; ~Qt::WindowMinimized) | Qt::WindowActive);
+```
+
+调用此函数将隐藏小部件。您必须调用 show() 使小部件再次可见。
+注意：在某些窗口系统上，Qt::WindowActive 不是立即的，在某些情况下可能会被忽略。
+当窗口状态改变时，小部件会收到一个 QEvent::WindowStateChange 类型的 changeEvent()。
+
+关联的枚举类型如下，WindowStates 类型是 QFlags&lt;WindowState&gt; 的 typedef。它存储 WindowState 值的 OR 组合。
+
+```c++
+enum Qt::WindowState
+flags Qt::WindowStates = {
+    Qt::WindowNoState,//窗口没有设置状态（正常状态）
+    Qt::WindowMinimized,//窗口最小化（即图标化）
+    Qt::WindowMaximized,//窗口最大化，周围有一个框架
+    Qt::WindowFullScreen,//窗口填满整个屏幕，周围没有任何框架
+    Qt::WindowActive,//该窗口是活动窗口，即它具有键盘焦点
+}
+```
+
+##### 5.1.4 setWindowModality
+
+设置窗口的模态，只对窗口类型有用。此属性保存模态小部件阻止哪些窗口此属性仅对窗口有意义。模态小部件可防止其他窗口中的小部件获得输入。此属性的值控制在小部件可见时阻止哪些窗口。在窗口可见时更改此属性无效；您必须先隐藏小部件，然后再显示。默认情况下，该属性是 Qt::NonModal。
+
+函数原型如下。
+
+```c++
+void setWindowModality(Qt::WindowModality windowModality);
+```
+
+关联的枚举类型，此枚举指定模式窗口的行为。模态窗口是阻止输入到其他窗口的窗口。请注意，模式窗口的子窗口不会被阻止。
+
+```c++
+enum Qt::WindowModality {
+    Qt::NonModal,//该窗口不是模态的，不会阻止对其他窗口的输入
+    Qt::WindowModal,//该窗口对单个窗口层次结构是模态的，并阻止对其父窗口、所有祖父窗口及其父窗口和祖父窗口的所有兄弟窗口的输入
+    Qt::ApplicationModal//该窗口对应用程序是模态的，并阻止对所有窗口的输入
+}
+```
+
+##### 5.1.5 setWindowOpacity
+
+用于设置窗口的透明度，函数原型如下。
+
+```c++
+void setWindowOpacity(qreal level);
+```
+
+此属性保存窗口的不透明度级别。不透明度的有效范围是从 1.0（完全不透明）到 0.0（完全透明）。
+默认情况下，此属性的值为 1.0。此功能在支持 Composite 扩展的嵌入式 Linux、macOS、Windows 和 X11 平台上可用。
+
+注意：在 X11 上，您需要运行复合管理器，并且您正在使用的窗口管理器需要支持 X11 特定的 _NET_WM_WINDOW_OPACITY 原子。
+
+警告：将此属性从不透明更改为透明可能会发出一个绘制事件，该事件需要在窗口正确显示之前进行处理。这主要影响 QPixmap::grabWindow() 的使用。另请注意，半透明窗口的更新和调整大小明显慢于不透明窗口。
+
+#### 5.3.2 多窗口设计
+
+### 5.4 MDI多文档
+
+### 5.5 Splash与登录窗口
+
+
+
 ## 文件操作
 
 ### QTextStream

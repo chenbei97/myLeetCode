@@ -1,0 +1,76 @@
+1、能够发送串口命令后，通知bytesWritten，然后底层通知readyRead，然后读取数据
+
+(1)如果超时的话判定失败，如果没超时再判定回复的正不正确
+(2)不超时给了回复，不正确的话同样判定为失败，不过这是2个问题
+
+现在解决的了回复不正确判定为失败，然后恢复之前的状态这一问题
+
+(1)问题可能可以使用4个函数解决
+(1.1)void QIODevice::readyRead()
+每次有新数据可用于从设备的当前读取通道读取时，都会发出一次此信号。
+它只会在新数据可用时再次发出，例如当新的网络数据有效负载到达您的网络套接字时，
+或者当新的数据块已附加到您的设备时。readyRead() 不会递归发出；
+如果您重新进入事件循环或在连接到 readyRead() 信号的槽函数内调用 waitForReadyRead()，则不会重新发送该信号（尽管 waitForReadyRead() 仍可能返回 true）。
+实现从 QIODevice 派生的类的开发人员注意：
+当新数据到达时，您应该始终发出 readyRead()(不要仅仅因为缓冲区中还有数据要读取而发出它)
+不要在其他条件下发出 readyRead()。
+
+(1.2)void QIODevice::bytesWritten(qint64 bytes)
+每次将数据的有效负载写入设备的当前写入通道时，都会发出此信号
+bytes 参数设置为写入此有效负载的字节数
+bytesWritten() 不是递归发出的如果您重新进入事件循环，
+或在连接到 bytesWritten() 信号的槽函数内调用 waitForBytesWritten()
+则不会重新发送该信号（尽管 waitForBytesWritten() 仍可能返回 true）
+
+(1.3)bool QIODevice::waitForBytesWritten(int msecs)
+对于缓冲设备，此函数会等待，直到缓冲写入数据的有效负载已写入设备并且已发出 bytesWritten() 信号
+或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时
+对于无缓冲的设备，它会立即返回。
+如果数据的有效负载已写入设备，则返回 true；否则返回 false（即，如果操作超时，或者如果发生错误）。
+此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。
+如果从连接到 bytesWritten() 信号的槽中调用，则不会重新发送 bytesWritten()。
+重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。
+警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
+
+(1.4)bool QIODevice::waitForReadyRead(int msecs)
+阻塞，直到有新数据可供读取并且发出了 readyRead() 信号，或者直到 msecs 毫秒过去。
+如果 msecs 为 -1，则此函数不会超时。
+如果有新数据可供读取，则返回 true；否则返回 false（如果操作超时或发生错误）。
+此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。
+如果从连接到 readyRead() 信号的槽函数中调用，则不会重新发送 readyRead()。
+重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。
+警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
+
+waitForReadyRead函数应该不需要使用
+整个逻辑是这样的：
+1、打开串口和电源输出
+2、界面的设置操作，是给串口写入设置命令以及确保设置成功的回读命令
+界面设置不需要外部传递写入的命令，用户自己操作点击就可以设置
+所以:waitForBytesWritten不用使用
+如果串口检测到被写入了命令，bytesWritten信号就会发出
+3、bytesWritten是检测到有效数据就会发出，但是有一种情况不会发出
+bytesWritten可以连接槽函数，如果槽函数中调用了waitForBytesWritten函数等待
+信号就不会发出。
+注：因为写入串口数据的命令都是界面操作的，不需要等待，都是即时性的
+所以这2个函数应该都用不到，接下来就是读取串口数据的问题
+4、当串口写入了查询命令后，不论是定时查询还是设置命令的回读
+串口就会存在数据，通知bytesWritten，底层中bytesWritten应该通知了readyRead
+5、readyRead可以连接槽函数
+槽函数也可以调用waitForReadyRead()，但是这个函数也是会产生线程堵塞，不要使用
+能够读取数据，说明字节有效，使用bytesAvailable()检测可能更好，配合while循环
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
