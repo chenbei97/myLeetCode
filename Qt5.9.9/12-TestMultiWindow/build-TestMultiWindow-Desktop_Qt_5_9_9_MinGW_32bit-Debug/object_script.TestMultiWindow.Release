@@ -1,0 +1,16 @@
+INPUT(
+./release\QFormDoc.o
+./release\QFormTable.o
+./release\TestMultiWindowActSlot.o
+./release\TestMultiWindowTabWidgetSlot.o
+./release\main.o
+./release\TestMultiWindow.o
+./release\tableHeaderDialog.o
+./release\tableSizeDialog.o
+./release\qrc_images.o
+./release\moc_QFormDoc.o
+./release\moc_QFormTable.o
+./release\moc_TestMultiWindow.o
+./release\moc_tableHeaderDialog.o
+./release\moc_tableSizeDialog.o
+);

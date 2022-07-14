@@ -5832,6 +5832,8 @@ void setWindowOpacity(qreal level);
 
 #### 5.3.2 多窗口设计
 
+
+
 ### 5.4 MDI多文档
 
 ### 5.5 Splash与登录窗口
@@ -5953,7 +5955,44 @@ Status status() const;// 返回文本流的状态
 QString *string() const;//返回分配给 QTextStream 的当前字符串，如果没有分配字符串，则返回 0
 ```
 
+### QFileInfo 
 
+QFileInfo 类**提供与系统无关的文件信息**。
+QFileInfo 提供有关文件名和文件系统中的位置（路径）、其访问权限以及它是目录还是符号链接等信息。文件的大小和最后修改/读取时间也可用。 QFileInfo 也可用于获取有关 Qt 资源的信息。
+QFileInfo 可以指向具有相对或绝对文件路径的文件。绝对文件路径以目录分隔符“/”开头（或在 Windows 上以驱动器规范开头）。相对文件名以目录名或文件名开头，并指定相对于当前工作目录的路径。绝对路径的一个示例是字符串“/tmp/quartz”。相对路径可能看起来像“src/fatlib”。您可以使用函数 isRelative() 来检查 QFileInfo 是使用相对文件路径还是绝对文件路径。您可以调用函数 makeAbsolute() 将 QFileInfo 的相对路径转换为绝对路径。
+QFileInfo 处理的文件在构造函数中设置或稍后使用 setFile() 设置。使用 exists() 查看文件是否存在，使用 size() 获取其大小。
+文件的类型通过 isFile()、isDir() 和 isSymLink() 获得。 symLinkTarget() 函数提供符号链接指向的文件的名称。
+在 Unix（包括 macOS 和 iOS）上，符号链接与它指向的文件具有相同的 size()，因为 Unix 透明地处理符号链接；同样，使用 QFile 打开符号链接可以有效地打开链接的目标。例如：
+
+```c++
+QFileInfo info1("/home/bob/bin/untabify");
+info1.isSymLink();          // returns true
+info1.absoluteFilePath();   // returns "/home/bob/bin/untabify"
+info1.size();               // returns 56201
+info1.symLinkTarget();      // returns "/opt/pretty++/bin/untabify"
+
+QFileInfo info2(info1.symLinkTarget());
+info2.isSymLink();          // returns false
+info2.absoluteFilePath();   // returns "/opt/pretty++/bin/untabify"
+info2.size();
+```
+
+在 Windows 上，符号链接（快捷方式）是 .lnk 文件。报告的 size() 是符号链接的大小（不是链接的目标），使用 QFile 打开符号链接会打开 .lnk 文件。例如：
+
+```c++
+QFileInfo info1("C:\\Documents and Settings\\Bob\\untabify.lnk");
+info1.isSymLink();          // returns true
+info1.absoluteFilePath();   // returns "C:/Documents and Settings/Bob/untabify.lnk"
+info1.size();               // returns 743
+info1.symLinkTarget();      // returns "C:/Pretty++/untabify"
+
+QFileInfo info2(info1.symLinkTarget());
+info2.isSymLink();          // returns false
+info2.absoluteFilePath();   // returns "C:/Pretty++/untabify"
+info2.size();               // returns 63942
+```
+
+可以使用 path() 和 fileName() 提取文件名的元素。 fileName() 的部分可以用 baseName()、suffix() 或 completeSuffix() 提取。由 Qt 类创建的目录的 QFileInfo 对象将没有尾随文件分隔符。如果您希望在自己的文件信息对象中使用尾随分隔符，只需将一个附加到给构造函数或 setFile() 的文件名。文件的日期由 created()、lastModified() 和 lastRead() 返回。有关文件访问权限的信息是通过 isReadable()、isWritable() 和 isExecutable() 获得的。文件的所有权可从 owner()、ownerId()、group() 和 groupId() 获得。您可以使用 permission() 函数在单个语句中检查文件的权限和所有权。
 
 ### QDir
 

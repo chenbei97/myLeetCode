@@ -1,0 +1,16 @@
+INPUT(
+./debug\QFormDoc.o
+./debug\QFormTable.o
+./debug\TestMultiWindowActSlot.o
+./debug\TestMultiWindowTabWidgetSlot.o
+./debug\main.o
+./debug\TestMultiWindow.o
+./debug\tableHeaderDialog.o
+./debug\tableSizeDialog.o
+./debug\qrc_images.o
+./debug\moc_QFormDoc.o
+./debug\moc_QFormTable.o
+./debug\moc_TestMultiWindow.o
+./debug\moc_tableHeaderDialog.o
+./debug\moc_tableSizeDialog.o
+);
