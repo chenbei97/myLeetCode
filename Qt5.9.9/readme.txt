@@ -16,7 +16,7 @@
 
 4. TestFileSystemModel 在QTreeView上的应用,视图组件<=>数据模型的关系
 
-5. TestSerialPortCommunication 公司上位机的串口通信简单测试程序
+5. TestSerialPortCommunication 上位机的串口通信程序
 
 6. TestQStringListModel 在QListView上的应用,视图组件<=>数据模型的关系
 
@@ -33,8 +33,32 @@
 12. TestMultiWindow 展示了如何定义多窗口，和11的例子一样的，只不过继承自QWidget和QMainWindow而不是QDialog，另外这2类窗口可以被tabWidget添加作为嵌入式显示
 
 
-至今遇见的有价值的问题、技巧等：
-1. 延时功能的实现(使用QTime)
+至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
+4. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
+一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针
+void QFormDoc::closeEvent(QCloseEvent *event)
+{
+    TestMultiWindow * parentWindow = (TestMultiWindow *)parentWidget(); // 获取主窗口
+    parentWindow->setActWidgetEnable(true); // setActWidgetEnable是主窗口提供的公共函数可以被子窗口使用
+
+}
+如果不能获取主窗口,子窗口是个独立的窗口,只能使用信号与槽机制来传递信息而不必获取指针
+void void QFormDoc::closeEvent(QCloseEvent *event)
+{
+    emit isAboutClosed(true); // 主窗口要把setActWidgetEnable从公共函数变成公共槽函数使用
+    Q_UNUSED(event); // 并且主窗口联系好子窗口自定义的isAboutClosed信号和槽函数setActWidgetEnable
+    // 这样当子窗口关闭时发射该信号就会自动执行setActWidgetEnable函数
+}
+
+3. 槽函数中获取信号的发送者
+需要利用静态函数sender(),以及类型转换qobject_cast
+void on_lineEdit_textChanged(const QString &text)
+{
+    //....
+    QLineEdit * lineEdit = qobject_cast<QLineEdit*>(sender()) ;
+}
+
+2. 延时功能的实现(使用QTime)
 QTime t;
 t.start();
 while (condition)
@@ -46,7 +70,8 @@ while (condition)
         t.restart();
     }
 }
-2. 使用waitForReadyRead总是超时（问题已解决）
+
+1. 使用waitForReadyRead总是超时（问题已解决）
 问题场景：
 例如一个QLineEdit输入一串文字,QLineEdit的槽函数内部会往串口写入带有输入文字的某种命令
 输入命令后使用waitForReadyRead等待响应，如果超时就进行重发，且重发次数不能超过5次，代码如下：
