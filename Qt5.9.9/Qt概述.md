@@ -5878,7 +5878,7 @@ QWidget *cornerWidget(Qt::Corner corner = Qt::TopRightCorner) const;
 int count() const;
 int currentIndex() const;
 QWidget *currentWidget() const;
-bool documentMode() const;
+bool documentMode() const; // 设置为文档模式
 Qt::TextElideMode elideMode() const;
 QSize iconSize() const;
 int indexOf(QWidget *w) const;
@@ -5900,7 +5900,7 @@ void setTabShape(TabShape s);
 void setTabText(int index, const QString &label);
 void setTabToolTip(int index, const QString &tip);
 void setTabWhatsThis(int index, const QString &text);
-void setTabsClosable(bool closeable);
+void setTabsClosable(bool closeable);// 设置单页可关闭
 void setUsesScrollButtons(bool useButtons);
 QTabBar *tabBar() const;
 bool tabBarAutoHide() const;
@@ -6093,7 +6093,240 @@ void windowStateChanged(Qt::WindowStates oldState, Qt::WindowStates newState);//
 
 ### 5.5 Splash与登录窗口
 
+如果需要设置SPlash类型，借助枚举值Qt::SplashScreen和setWindowFlags函数即可设置。
 
+```c++
+this->setWindowFlags(Qt::SplashScreen); 
+```
+
+SPlash没有窗口不能像普通窗口那样拖动标题栏实现拖动，所以必须定义自己的鼠标拖动事件。
+
+```c++
+void mousePressEvent(QMouseEvent *event);
+void mouseMoveEvent(QMouseEvent *event);
+void mouseReleaseEvent(QMouseEvent *event);
+```
+
+使用的时候，在主程序中使用。详情可见[14-TestQSplash](14-TestQSplash)。
+
+```c++
+#include "TestQSplash.h"
+#include "LoginDialog.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    LoginDialog * login = new LoginDialog;
+    if (login->exec() == QDialog::Accepted) // 模态方式运行对话框,如果返回了Accepted说明用户名和密码均正确
+    {
+        TestQSplash w;
+        w.show();
+        return a.exec();
+    }
+    else return 0;
+}
+```
+
+其它涉及到的数据类型和组件类型下方说明。
+
+#### QSettings
+
+QSettings 类提供与平台无关的持久应用程序设置。
+用户通常希望应用程序在会话中记住其设置（窗口大小和位置、选项等）。此信息通常存储在 Windows 的系统注册表中，以及 macOS 和 iOS 的属性列表文件中。在 Unix 系统上，在没有标准的情况下，许多应用程序（包括 KDE 应用程序）使用 INI 文本文件。
+QSettings 是围绕这些技术的抽象，使您能够以可移植的方式保存和恢复应用程序设置。它还支持自定义存储格式。QSettings 的 API 基于 QVariant，允许您以最少的工作量保存大多数基于值的类型，例如 QString、QRect 和 QImage。如果您只需要一个基于内存的非持久结构，请考虑改用 QMap&lt;QString, QVariant&gt;。
+
+创建 QSettings 对象时，您必须传递公司或组织的名称以及应用程序的名称。例如，如果您的产品名为 Star Runner，而您的公司名为 MySoft，您将按如下方式构造 QSettings 对象：
+
+```c++
+QSettings settings("MySoft", "Star Runner");
+```
+
+QSettings 对象可以在堆栈或堆上创建（即使用 new）。构造和销毁 QSettings 对象非常快。
+如果您在应用程序的许多地方使用 QSettings，您可能希望使用 QCoreApplication::setOrganizationName() 和 QCoreApplication::setApplicationName() 指定组织名称和应用程序名称，然后使用默认的 QSettings 构造函数：
+
+```c++
+QCoreApplication::setOrganizationName("MySoft");
+QCoreApplication::setOrganizationDomain("mysoft.com");
+QCoreApplication::setApplicationName("Star Runner");
+...
+QSettings settings;
+```
+
+（这里，我们还指定了组织的 Internet 域。设置 Internet 域时，在 macOS 和 iOS 上使用它而不是组织名称，因为 macOS 和 iOS 应用程序通常使用 Internet 域来标识自己。如果没有设置域，一个假域是从组织名称派生的。有关详细信息，请参阅下面的平台特定说明。） QSettings 存储设置。每个设置都由一个指定设置名称（键）的 QString 和一个存储与键关联的数据的 QVariant 组成。要编写设置，请使用 setValue()。例如：
+
+```c++
+settings.setValue("editor/wrapMargin", 68);
+```
+
+如果已经存在具有相同键的设置，则现有值将被新值覆盖。为了提高效率，更改可能不会立即保存到永久存储中。 （您可以随时调用 sync() 来提交您的更改。）您可以使用 value() 取回设置的值：
+
+```c++
+int margin = settings.value(&quot;editor/wrapMargin&quot;).toInt();
+```
+
+如果没有指定名称的设置，QSettings 返回一个空的 QVariant（可以转换为整数 0）。您可以通过将第二个参数传递给 value() 来指定另一个默认值：
+
+```c++
+int margin = settings.value("editor/wrapMargin", 80).toInt();
+```
+
+要测试给定键是否存在，请调用 contains()。要删除与键关联的设置，请调用 remove()。要获取所有键的列表，请调用 allKeys()。要删除所有键，请调用 clear()。
+
+因为 QVariant 是 Qt Core 模块的一部分，所以它不能提供对 QColor、QImage 和 QPixmap 等数据类型的转换功能，这些数据类型是 Qt GUI 的一部分。换句话说，QVariant 中没有 toColor()、toImage() 或 toPixmap() 函数。
+相反，您可以使用 QVariant::value() 或 qVariantValue() 模板函数。例如：
+
+```c++
+QSettings settings("MySoft", "Star Runner");
+QColor color = settings.value("DataPump/bgcolor").value<QColor>();
+```
+
+对于 QVariant 支持的所有数据类型，包括 GUI 相关的类型，反向转换（例如从 QColor 到 QVariant是自动的：
+
+```c++
+QSettings settings("MySoft", "Star Runner");
+QColor color = palette().background().color();
+settings.setValue("DataPump/bgcolor", color);
+```
+
+使用 qRegisterMetaType() 和 qRegisterMetaTypeStreamOperators() 注册的自定义类型可使用QSettings 存储。
+
+设置键可以包含任何 Unicode 字符。 Windows 注册表和 INI 文件使用不区分大小写的键，而 macOS 和 iOS 上的 CFPreferences API 使用区分大小写的键。为避免可移植性问题，请遵循以下简单规则： 始终使用相同的大小写引用相同的密钥。例如，如果您在代码中的某个地方将某个键称为“文本字体”，则不要在其他地方将其称为“文本字体”。除了大小写外，避免使用相同的键名。例如，如果您有一个名为“MainWindow”的键，请不要尝试将另一个键保存为“mainwindow”。不要在节或键名中使用斜杠（&#39;/&#39; 和 &#39;\&#39;）；反斜杠字符用于分隔子键（见下文）。在 Windows 上，&#39;\&#39; 由 QSettings 转换为 &#39;/&#39;，这使得它们相同。
+您可以使用“/”字符作为分隔符来形成分层键，类似于 Unix 文件路径。例如：
+
+```c++
+settings.setValue("mainwindow/size", win->size());
+settings.setValue("mainwindow/fullScreen", win->isFullScreen());
+settings.setValue("outputpanel/visible", panel->isVisible());
+```
+
+如果要保存或恢复许多具有相同前缀的设置，可以使用 beginGroup() 指定前缀并在末尾调用 endGroup()。这里还是同样的例子，但这次使用了组机制：
+
+```c++
+settings.beginGroup("mainwindow");
+settings.setValue("size", win->size());
+settings.setValue("fullScreen", win->isFullScreen());
+settings.endGroup();
+
+settings.beginGroup("outputpanel");
+settings.setValue("visible", panel->isVisible());
+settings.endGroup();
+```
+
+如果使用 beginGroup() 设置组，则大多数函数的行为都会随之改变。组可以递归设置。
+除了组，QSettings 还支持“数组”概念。有关详细信息，请参阅 beginReadArray() 和 beginWriteArray()。
+
+其他更多描述信息参见Qt文档。
+
+##### 枚举类型
+
+此枚举类型指定 QSettings 使用的存储格式。
+
+```c++
+enum QSettings::Format {   
+    QSettings::NativeFormat,
+    QSettings::Registry32Format,
+    QSettings::Registry64Format,
+    QSettings::IniFormat,
+    QSettings::InvalidFormat
+}
+```
+
+此枚举指定设置是特定于用户还是由同一系统的所有用户共享。
+
+```c++
+enum QSettings::Scope { 
+    QSettings::UserScope,
+    QSettings::SystemScope
+}
+```
+
+以下状态值是可能的：
+
+```c++
+enum QSettings::Status  {
+    QSettings::NoError,
+    QSettings::AccessError,
+    QSettings::FormatError
+}
+```
+
+##### 成员函数
+
+```c++
+QStringList allKeys() const;
+QString applicationName() const;
+void beginGroup(const QString &prefix);
+int beginReadArray(const QString &prefix);
+void beginWriteArray(const QString &prefix, int size = -1);
+QStringList childGroups() const;
+QStringList childKeys() const;
+void clear();
+bool contains(const QString &key) const;
+void endArray();
+void endGroup();
+bool fallbacksEnabled() const;
+QString fileName() const;
+Format format() const;
+QString group() const;
+QTextCodec *iniCodec() const;
+bool isWritable() const;
+QString organizationName() const;
+void remove(const QString &key);
+Scope scope() const;
+void setArrayIndex(int i);
+void setFallbacksEnabled(bool b);
+void setIniCodec(QTextCodec *codec);
+void setIniCodec(const char *codecName);
+void setValue(const QString &key, const QVariant &value);
+Status status() const;
+void sync();
+QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+
+static Format defaultFormat();
+static Format registerFormat(const QString &extension, ReadFunc readFunc, WriteFunc writeFunc, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
+static void setDefaultFormat(Format format);
+static void setPath(Format format, Scope scope, const QString &path);
+```
+
+#### QCryptographicHash
+
+QCryptographicHash 类提供了一种生成加密哈希的方法。
+QCryptographicHash 可用于生成二进制或文本数据的加密哈希。
+请参阅 QCryptographicHash::Algorithm 枚举的文档以获取支持的算法列表。
+
+算法枚举值定义如下。
+
+```c++
+enum QCryptographicHash::Algorithm {
+    QCryptographicHash::Md4,
+    QCryptographicHash::Md5,
+    QCryptographicHash::Sha1,
+    QCryptographicHash::Sha224,
+    QCryptographicHash::Sha256,
+    QCryptographicHash::Sha384,
+    QCryptographicHash::Sha512,
+    QCryptographicHash::Sha3_224,
+    QCryptographicHash::Sha3_256,
+    QCryptographicHash::Sha3_384,
+    QCryptographicHash::Sha3_512,
+    QCryptographicHash::Keccak_224,
+    QCryptographicHash::Keccak_256,
+    QCryptographicHash::Keccak_384,
+    QCryptographicHash::Keccak_512,
+}
+```
+
+基本的成员函数。
+
+```c++
+void addData(const char *data, int length);
+void addData(const QByteArray &data);
+bool addData(QIODevice *device);
+void reset();
+QByteArray result() const;
+static QByteArray hash(const QByteArray &data, Algorithm method);
+```
 
 ## 文件操作
 
@@ -6357,6 +6590,45 @@ qDebug()<<QDir::rootPath();
 qDebug()<<QDir::tempPath();
 "C:/Users/chenbei/AppData/Local/Temp" 
 ```
+
+## 布局管理
+
+#### QVBoxLayout
+
+QVBoxLayout 类垂直排列小部件。
+此类用于构造垂直框布局对象。有关详细信息，请参阅 QBoxLayout。
+该类的最简单用法是这样的：首先，我们在布局中创建我们想要的小部件。然后，我们创建 QVBoxLayout 对象并将小部件添加到布局中。最后，我们调用 QWidget::setLayout() 将 QVBoxLayout 对象安装到小部件上。此时，布局中的小部件被重新设置为将窗口作为其父级。
+
+```c++
+QWidget *window = new QWidget;
+QPushButton *button1 = new QPushButton("One");
+QPushButton *button2 = new QPushButton("Two");
+QPushButton *button3 = new QPushButton("Three");
+QPushButton *button4 = new QPushButton("Four");
+QPushButton *button5 = new QPushButton("Five");
+
+QVBoxLayout *layout = new QVBoxLayout;
+layout->addWidget(button1);
+layout->addWidget(button2);
+layout->addWidget(button3);
+layout->addWidget(button4);
+layout->addWidget(button5);
+
+window->setLayout(layout);
+window->show();
+```
+
+另请参阅 QHBoxLayout、QGridLayout、QStackedLayout、布局管理和基本布局示例。
+
+## 事件
+
+### QCloseEvent
+
+
+
+### QMouseEvent
+
+
 
 ## 13. 多线程
 
