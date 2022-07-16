@@ -32,8 +32,60 @@
 
 12. TestMultiWindow 展示了如何定义多窗口，和11的例子一样的，只不过继承自QWidget和QMainWindow而不是QDialog，另外这2类窗口可以被tabWidget添加作为嵌入式显示
 
+13. TestMDI 展示如何创建多文档窗口，区别只是使用QMdiArea代替了QTabWidget
+
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
+7. 文本对话框的使用方式
+QString aFileName=QFileDialog::getOpenFileName(this,tr("打开一个文件"),curPath,
+                "C++文件(*.h *cpp);;文本文件(*.txt);;所有文件(*.*)");
+if (aFileName.isEmpty()) return; //如果未选择文件，退出
+// dosomething
+
+6. 标准的文本文件读取内容的代码（QFile+QTextStream+QFileInfo）
+QFile aFile("file.txt");  //以文件方式读出
+if (aFile.open(QIODevice::ReadOnly | QIODevice::Text)) //以只读文本方式打开文件
+{
+    QTextStream aStream(&aFile); //用文本流读取文件
+    auto text = aStream.readAll(); // 读取文本文件,这里还可以使用readLine等
+    aFile.close();//关闭文件
+
+    QFileInfo   fileInfo(aFileName); //文件信息
+    QString str=fileInfo.fileName(); //去除路径后的文件名
+    // ...dosomething
+}
+
+5. 窗口可以利用的事件类型
+    5.1 closeEvent():窗口关闭触发的事件,例如弹出窗口确认是否关闭
+    void customDialog::closeEvent(QCloseEvent *event)
+    {
+        QMessageBox::StandardButton result=QMessageBox::question(this, "Question", "确定要退出本窗口吗?",
+                            QMessageBox::Yes|QMessageBox::No |QMessageBox::Cancel,
+                            QMessageBox::No);
+
+        if (result==QMessageBox::Yes)
+            event->accept();
+        else
+            event->ignore();
+    }
+    5.2 paintEvent():窗口绘制事件,可以用来加入背景图片
+    void TestMultiWindow::paintEvent(QPaintEvent *event)
+    {
+        Q_UNUSED(event);
+        QPainter painter(this);
+        // void QPainter::drawPixmap(int x, int y, int width, int height, const QPixmap &pixmap);
+        // 使用给定的宽度width和高度height将像素图绘制到位置 (x, y) 的矩形中
+        int x  = 0, y = ui->toolBar->height(), width = this->width(); // 位置在工具栏下方,左上角是(0,0),所以y是工具栏高度,x就是0
+        int height = this->height()-ui->toolBar->height()-ui->statusbar->height(); // 图片的高度就是主窗口高度减去状态栏和工具栏的高度
+        painter.drawPixmap(x,y,width,height, QPixmap(":/images/back2.jpg"));
+    }
+    5.3 showEvent():窗口显示时触发的事件
+    5.4 mouseMoveEvent():鼠标移动事件
+    5.5 mouseReleaseEvent():鼠标键释放事件
+    5.6 mousePressEvent:鼠标键按下事件
+    5.7 keyPressEvent():键盘按键按下事件
+    5.8 keyReleaseEvent():键盘按键释放事件
+
 4. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
 一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针
 void QFormDoc::closeEvent(QCloseEvent *event)

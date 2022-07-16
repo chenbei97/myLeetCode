@@ -5832,9 +5832,264 @@ void setWindowOpacity(qreal level);
 
 #### 5.3.2 多窗口设计
 
+多窗口和多对话框的设计是类似的，只是继承自QWidget和QMainWindow而不是QDialog，例子可见[12-TestMultiWindow](12-TestMultiWindow)。
 
+这里只介绍多窗口设计用到的一个组件类型QTabWidget。
+
+##### 5.3.2.1 QTabWidget
+
+选项卡小部件提供了一个选项卡栏（参见 QTabBar）和一个"页面区域"，用于显示与每个选项卡相关的页面。
+
+默认情况下，标签栏显示在页面区域上方，但可以使用不同的配置（请参阅 TabPosition）。
+调用 addTab() 或 insertTab() 将页面小部件放入选项卡小部件中，选项卡的位置由 tabPosition 定义，它们的形状由 tabShape 定义。当用户选择页面时，会发出信号 currentChanged()。当前页面索引可用作 currentIndex()，当前页面小部件与 currentWidget()。可以使用 widget() 检索具有给定索引的页面小部件的指针，并且可以使用 indexOf() 找到小部件的索引位置。使用 setCurrentWidget() 或 setCurrentIndex() 显示特定页面。
+可以使用 setTabText() 或 setTabIcon() 更改选项卡的文本和图标。可以使用 removeTab() 删除选项卡及其关联的页面。每个选项卡都在任何给定时间启用或禁用（请参阅 setTabEnabled()）。如果启用了选项卡，则会正常绘制选项卡文本，并且用户可以选择该选项卡。如果它被禁用，选项卡将以不同的方式绘制，用户无法选择该选项卡。请注意，即使某个选项卡被禁用，该页面仍然可见，例如，如果所有选项卡碰巧都被禁用。
+选项卡小部件是拆分复杂对话框的好方法。另一种方法是使用 QStackedWidget，您可以为它提供一些在页面之间导航的方法，例如 QToolBar 或 QListWidget。
+QTabWidget 中的大部分功能由 QTabBar（在顶部，提供选项卡）和 QStackedWidget（大部分区域，组织各个页面）提供。
+
+涉及的枚举类型如下。
+
+这个枚举类型定义了 QTabWidget 在哪里绘制标签行。
+
+```c++
+enum QTabWidget::TabPosition {
+    QTabWidget::North,//选项卡绘制在页面上方
+    QTabWidget::South,//选项卡绘制在页面下方
+    QTabWidget::West,//选项卡绘制在页面的左侧
+    QTabWidget::East//选项卡绘制在页面的右侧
+}
+```
+
+此枚举类型定义选项卡的形状。
+
+```c++
+enum QTabWidget::TabShape {  
+    QTabWidget::Rounded,//选项卡以圆形外观绘制。这是默认形状
+    QTabWidget::Triangular//选项卡以三角形外观绘制
+}
+```
+
+主要的公共成员函数如下。
+
+```c++
+int addTab(QWidget *page, const QString &label);
+int addTab(QWidget *page, const QIcon &icon, const QString &label);
+void clear();
+QWidget *cornerWidget(Qt::Corner corner = Qt::TopRightCorner) const;
+int count() const;
+int currentIndex() const;
+QWidget *currentWidget() const;
+bool documentMode() const;
+Qt::TextElideMode elideMode() const;
+QSize iconSize() const;
+int indexOf(QWidget *w) const;
+int insertTab(int index, QWidget *page, const QString &label);
+int insertTab(int index, QWidget *page, const QIcon &icon, const QString &label);
+bool isMovable() const;
+bool isTabEnabled(int index) const;
+void removeTab(int index);
+void setCornerWidget(QWidget *widget, Qt::Corner corner = Qt::TopRightCorner);
+void setDocumentMode(bool set);
+void setElideMode(Qt::TextElideMode);
+void setIconSize(const QSize &size);
+void setMovable(bool movable);
+void setTabBarAutoHide(bool enabled);
+void setTabEnabled(int index, bool enable);
+void setTabIcon(int index, const QIcon &icon);
+void setTabPosition(TabPosition);
+void setTabShape(TabShape s);
+void setTabText(int index, const QString &label);
+void setTabToolTip(int index, const QString &tip);
+void setTabWhatsThis(int index, const QString &text);
+void setTabsClosable(bool closeable);
+void setUsesScrollButtons(bool useButtons);
+QTabBar *tabBar() const;
+bool tabBarAutoHide() const;
+QIcon tabIcon(int index) const;
+TabPosition tabPosition() const;
+TabShape tabShape() const;
+QString tabText(int index) const;
+QString tabToolTip(int index) const;
+QString tabWhatsThis(int index) const;
+bool tabsClosable() const;
+bool usesScrollButtons() const;
+QWidget *widget(int index) const;
+```
+
+公共槽函数。
+
+```c++
+void setCurrentIndex(int index);
+void setCurrentWidget(QWidget *widget);
+```
+
+公共信号函数。
+
+```c++
+void currentChanged(int index);
+void tabBarClicked(int index);
+void tabBarDoubleClicked(int index);
+void tabClos​​eRequested(int index);
+```
+
+涉及的事件函数如下。
+
+```c++
+virtual void changeEvent(QEvent *ev);
+virtual bool event(QEvent *ev);
+virtual void keyPressEvent(QKeyEvent *e);
+virtual void paintEvent(QPaintEvent *event);
+virtual void resizeEvent(QResizeEvent *e);
+virtual void showEvent(QShowEvent *);
+```
 
 ### 5.4 MDI多文档
+
+多文档界面在多窗口设计中利用了tabWidget，就可以实现窗口嵌入式的效果，每个窗口都是一页，而且窗口只有一个QPlainText和一些工具栏。
+
+MDI的区别在于不需要在子窗口定义工具栏，主窗口定义工具栏即可，然后可以对子窗口进行操作（内部应当是自动绑定了信号与槽的机制，所以主窗口可以和子窗口交互）。另外设计MDI要求在主窗口放置一个QMdiArea作为子窗体的容器，也就是代替了tabWidget的效果，只是提供了更加完备的效果，更改MDI的显示模式就可以得到类似的多页组件管理的MDI界面效果。
+
+例子实例可见。
+
+涉及的QMdiArea组件类型和QMdiSubWindow数据类型如下所示。
+
+#### 5.4.1 QMdiArea
+
+QMdiArea 小部件提供了一个显示 MDI 窗口的区域。
+QMdiArea 的功能本质上类似于 MDI 窗口的窗口管理器。例如，它绘制自己管理的窗口，并以层叠或平铺的方式排列它们。 QMdiArea 通常用作 QMainWindow 中的中心小部件来创建 MDI 应用程序，但也可以放置在任何布局中。以下代码将一个区域添加到主窗口：
+
+```c++
+QMainWindow *mainWindow = new QMainWindow;
+mainWindow->setCentralWidget(mdiArea);
+```
+
+与顶级窗口的窗口管理器不同，QMdiArea 支持所有窗口标志（Qt::WindowFlags），只要当前窗口小部件样式支持这些标志。如果样式不支持特定标志（例如，WindowShadeButtonHint），您仍然可以使用 showShaded() 为窗口着色。QMdiArea 中的子窗口是 QMdiSubWindow 的实例。使用 addSubWindow() 将它们添加到 MDI 区域。给这个函数传递一个设置为内部小部件的QWidget是很常见的，但也可以直接传递一个QMdiSubWindow。该类继承了QWidget，您可以使用与普通顶级相同的API编程时的窗口。子窗口在获得键盘焦点或调用 setFocus() 时变为活动状态。用户通过以通常方式移动焦点来激活窗口。当活动窗口发生变化时，MDI 区域发出 subWindowActivated() 信号，activeSubWindow() 函数返回活动子窗口。函数 subWindowList() 返回所有子窗口的列表。例如，此信息可用于包含窗口列表的弹出菜单中。子窗口按当前 WindowOrder 排序。这用于 subWindowList() 以及 activateNextSubWindow() 和 activatePreviousSubWindow()。此外，它在使用 cascadeSubWindows() 和 tileSubWindows() 层叠或平铺窗口时使用。
+
+QMdiArea 为子窗口提供了两种内置的布局策略：cascadeSubWindows() 和 tileSubWindows()。两者都是插槽，很容易连接到菜单条目。
+
+需要了解的枚举类型如下。
+
+此枚举描述了自定义 QMdiArea 行为的选项。
+
+```c++
+enum QMdiArea::AreaOption{
+    QMdiArea::DontMaximizeSubWindowOnActivation//当活动子窗口最大化时，默认行为是最大化下一个激活的子窗口。如果您不希望出现这种行为，请设置此选项
+}
+```
+
+这个枚举描述了区域的视图模式；即如何显示子窗口。
+
+```c++
+enum QMdiArea::ViewMode{
+    QMdiArea::SubWindowView,//显示带有窗口框架的子窗口（默认）
+    QMdiArea::TabbedView//在标签栏中显示带有标签的子窗口
+}
+```
+
+指定用于对 subWindowList() 返回的子窗口列表进行排序的条件。函数 cascadeSubWindows() 和 tileSubWindows() 在排列窗口时遵循此顺序。
+
+```c++
+enum QMdiArea::WindowOrder {
+    QMdiArea::CreationOrder,//窗口按其创建顺序返回
+    QMdiArea::StackingOrder,//窗口按照它们的堆叠顺序返回，最顶部的窗口在列表中的最后一个
+    QMdiArea::ActivationHistoryOrder//窗口按照它们被激活的顺序返回
+}
+```
+
+常见的成员函数如下。
+
+```c++
+WindowOrder activationOrder() const;
+QMdiSubWindow *activeSubWindow() const;
+QMdiSubWindow *addSubWindow(QWidget *widget, Qt::WindowFlags windowFlags = Qt::WindowFlags());
+QBrush background() const;
+QMdiSubWindow *currentSubWindow() const;
+bool documentMode() const;
+void removeSubWindow(QWidget *widget);
+void setActivationOrder(WindowOrder order);
+void setBackground(const QBrush &background);
+void setDocumentMode(bool enabled);
+void setOption(AreaOption option, bool on = true);
+void setTabPosition(QTabWidget::TabPosition position);
+void setTabShape(QTabWidget::TabShape shape);
+void setTabsClosable(bool closable);
+void setTabsMovable(bool movable);
+void setViewMode(ViewMode mode);
+QList<QMdiSubWindow *> subWindowList(WindowOrder order = CreationOrder) const;
+QTabWidget::TabPosition tabPosition() const;
+QTabWidget::TabShape tabShape() const;
+bool tabsClosable() const;
+bool tabsMovable() const;
+bool testOption(AreaOption option) const;
+ViewMode viewMode() const;
+```
+
+公共信号和槽函数如下。
+
+```c++
+// 槽函数
+void activateNextSubWindow();
+void activatePreviousSubWindow();
+void cascadeSubWindows();
+void closeActiveSubWindow();
+void closeAllSubWindows();
+void setActiveSubWindow(QMdiSubWindow *window);
+void tileSubWindows();
+// 信号
+void subWindowActivated(QMdiSubWindow *window);
+```
+
+#### 5.4.2 QMdiSubWindow
+
+QMdiSubWindow 类为 QMdiArea 提供了一个子窗口类。
+QMdiSubWindow 表示 QMdiArea 中的顶级窗口，由带有窗口装饰的标题栏、内部小部件和（取决于当前样式）窗口框架和大小夹点组成。 QMdiSubWindow 有自己的布局，它由标题栏和内部小部件的中心区域组成。
+
+构造 QMdiSubWindow 的最常见方法是调用 QMdiArea::addSubWindow() 并使用内部小部件作为参数。您也可以自己创建一个子窗口，并通过调用 setWidget() 设置一个内部小部件。在子窗口编程时，您使用与常规顶级窗口相同的 API（例如，您可以调用诸如 show()、hide()、showMaximized() 和 setWindowTitle() 等函数）。
+
+QMdiSubWindow 还支持特定于 MDI 区域中子窗口的行为。
+默认情况下，每个 QMdiSubWindow 在移动时在 MDI 区域视口内可见，但也可以指定透明窗口移动和调整大小行为，在这些操作期间仅更新子窗口的轮廓。 setOption() 函数用于启用此行为。
+isShaded() 函数检测子窗口当前是否被着色（即，窗口被折叠以便只有标题栏可见）。要进入着色模式，请调用 showShaded()。只要窗口状态发生变化（例如，当窗口最小化或恢复时），QMdiSubWindow 就会发出 windowStateChanged() 信号。它还在激活之前发出 aboutToActivate()。
+在键盘交互模式下，窗口通过键盘移动和调整大小。您可以通过窗口的系统菜单进入该模式。 keyboardSingleStep 和keyboardPageStep 属性控制小部件为每个按键事件移动或调整大小的距离。当按下 shift 时，使用 page step；否则使用单步。
+您还可以使用键盘更改活动窗口。通过同时按下 control 和 tab 键，下一个（使用当前的 WindowOrder）子窗口将被激活。通过按 control、shift 和 tab，您将激活上一个窗口。这相当于调用 activateNextSubWindow() 和 activatePreviousSubWindow()。请注意，这些快捷方式会覆盖全局快捷方式，但不会覆盖 QMdiAreas 快捷方式。
+
+需要知道的枚举类型。
+
+```c++
+enum QMdiSubWindow::SubWindowOption{
+    QMdiSubWindow::RubberBandResize,//如果启用此选项，则使用橡皮筋控件来表示子窗口的轮廓，并且用户调整其大小而不是子窗口本身。结果，子窗口保持其原始位置和大小，直到调整大小操作完成，此时它将接收单个 QResizeEvent。默认情况下，此选项被禁用。
+	QMdiSubWindow::RubberBandMove//如果启用此选项，则使用橡皮筋控件表示子窗口的轮廓，并且用户移动它而不是子窗口本身。结果，子窗口保持在其原始位置，直到移动操作完成，此时 QMoveEvent 被发送到窗口。默认情况下，此选项被禁用。
+}
+```
+
+主要的成员函数类型。
+
+```c++
+bool isShaded() const;
+int keyboardPageStep() const;
+int keyboardSingleStep() const;
+QMdiArea *mdiArea() const;
+void setKeyboardPageStep(int step);
+void setKeyboardSingleStep(int step);
+void setOption(SubWindowOption option, bool on = true);
+void setSystemMenu(QMenu *systemMenu);
+void setWidget(QWidget *widget);
+QMenu *systemMenu() const;
+bool testOption(SubWindowOption option) const;
+QWidget *widget() const;
+```
+
+公共槽函数。
+
+```c++
+void showShaded();//调用此函数使子窗口进入阴影模式。当子窗口带有阴影时，只有标题栏可见。
+void showSystemMenu();//在标题栏中的系统菜单图标下方显示系统菜单
+```
+
+公共信号。
+
+```c++
+void aboutToActivate(); // 窗口处于激活
+void windowStateChanged(Qt::WindowStates oldState, Qt::WindowStates newState);//窗口状态改变
+```
 
 ### 5.5 Splash与登录窗口
 
