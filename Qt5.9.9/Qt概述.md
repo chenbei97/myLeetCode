@@ -6328,9 +6328,309 @@ QByteArray result() const;
 static QByteArray hash(const QByteArray &data, Algorithm method);
 ```
 
-## 文件操作
+## 6. 文件系统和文件读写
 
-### QTextStream
+文本文件的读取方法有2种，一种是借助QFile的QIODevice功能直接进行读取，一种是和QTextStream配合使用用流的方法进行读取。
+
+二进制文件的读取方法是QFile+QDataStream，但是这里QFile只是提供和IO设备交互的接口，本身不能直接读取二进制文件，只能借助QDataStream来读取。按照保存的文件类型可以分为stm文件和dat文件。stm文件是Qt预定义的编码类型，不仅可以使用qint16、qreal还可以使用QBrush、QColor等，流写入这些数据时用户不知道文件的每个字节怎么存储的，但是知道写入的顺序，就可以按照顺序读取文本，缺点是其它软件例如Matlab不能读取。dat格式是标准编码文件，知道每个字节的含义，通用型格式，别的软件读取也可以使用。
+
+### 6.1 文本文件读取
+
+#### 6.1.1 QIODevice
+
+QIODevice 类是 Qt 中所有 I/O 设备的基接口类。
+QIODevice 为支持读写数据块的设备提供通用实现和抽象接口，例如 **QFile、QBuffer 和 QTcpSocket**。 QIODevice 是抽象的，**不能被实例化**，但是通常使用它定义的接口来提供与设备无关的 I/O 特性。例如，Qt 的 XML 类对 QIODevice 指针进行操作，允许它们与各种设备（如文件和缓冲区）一起使用。
+
+在访问设备之前，**必须调用 open() 来设置正确的 OpenMode（例如 ReadOnly 或 ReadWrite）**。然后，您可以使用 **write() 或 putChar() 写入设备，并通过调用 read()、readLine() 或 readAll() 进行读取**。完成设备后调用 close()。
+QIODevice 区分两种类型的设备：随机访问设备和顺序设备。
+随机访问设备支持使用 seek() 搜索任意位置。文件中的当前位置可通过调用 pos() 获得。 **QFile 和 QBuffer 是随机访问设备的示例**。顺序设备不支持寻找任意位置。必须一次性读取数据。函数 pos() 和 size() 不适用于顺序设备。 您可以使用 isSequential() 来确定设备的类型。
+
+**当有新数据可供读取时，QIODevice 会发出 readyRead()**；例如，如果新数据已到达网络，或者是否将其他数据附加到您正在读取的文件中。**您可以调用 bytesAvailable() 来确定当前可供读取的字节数**。在使用诸如 QTcpSocket 之类的异步设备进行编程时，通常将 bytesAvailable() 与 readyRead() 信号一起使用，其中数据片段可以到达任意时间点。**每次将数据的有效负载写入设备时，QIODevice 都会发出 bytesWritten() 信号**。使用 **bytesToWrite() 确定当前等待写入的数据量**。
+
+QIODevice 的某些子类，例如 QTcpSocket 和 QProcess，是异步的。这意味着诸如 write() 或 read() 之类的 I/O 函数总是立即返回，而当控制返回事件循环时，可能会发生与设备本身的通信。 QIODevice 提供的功能允许您强制立即执行这些操作，同时阻塞调用线程并且不进入事件循环。**这允许在没有事件循环的情况下使用 QIODevice 子类，或者在单独的线程中使用**：
+
+**waitForReadyRead() - 此函数暂停调用线程中的操作，直到有新数据可供读取**。
+**waitForBytesWritten() - 此函数暂停调用线程中的操作，直到一个有效负载数据已写入设备**。
+waitFor....() - QIODevice 的子类为特定于设备的操作**实现阻塞功能**。例如，QProcess 有一个名为 waitForStarted() 的函数，它暂停调用线程中的操作，直到进程启动。
+
+从主 GUI 线程调用这些函数可能会导致您的用户界面冻结。例子：
+
+```c++
+QProcess gzip;
+gzip.start("gzip", QStringList() << "-c");
+if (!gzip.waitForStarted())
+    return false;
+
+gzip.write("uncompressed data");
+
+QByteArray compressed;
+while (gzip.waitForReadyRead())
+    compressed += gzip.readAll();
+```
+
+通过继承 QIODevice，您可以为您自己的 I/O 设备提供相同的接口。 **QIODevice 的子类只需要实现受保护的 readData() 和 writeData() 函数**。 QIODevice 使用这些函数来实现它所有的便利函数，**例如 getChar()、readLine() 和 write()**。 QIODevice 还为您处理访问控制，因此如果**调用 writeData()，您可以放心地假设设备以写入模式打开**。
+
+一些子类，例如 QFile 和 QTcpSocket，是使用内存缓冲区实现的，用于中间存储数据。这减少了所需的设备访问调用的数量，这些调用通常非常慢。缓冲使 getChar() 和 putChar() 之类的函数变得更快，因为它们可以在内存缓冲区上操作，而不是直接在设备本身上操作。但是，某些 I/O 操作不适用于缓冲区。例如，如果几个用户打开同一个设备并逐个字符地读取它，当他们打算分别读取一个单独的块时，他们最终可能会读取相同的数据。因此，QIODevice 允许您通过将 Unbuffered 标志传递给 open() 来绕过任何缓冲。子类化 QIODevice 时，请记住绕过设备在无缓冲模式下打开时可能使用的任何缓冲区。
+
+通常，来自异步设备的传入数据流是分段的，并且数据块可以到达任意时间点。要处理数据结构的不完整读取，请使用 QIODevice 实现的事务机制。有关详细信息，请参阅 startTransaction() 和相关函数。
+一些顺序设备支持通过多个通道进行通信。这些通道代表具有独立排序传递特性的独立数据流。打开设备后，您可以通过调用 readChannelCount() 和 writeChannelCount() 函数来确定通道数。要在频道之间切换，请分别调用 setCurrentReadChannel() 和 setCurrentWriteChannel()。 QIODevice 还提供额外的信号来处理基于每个通道的异步通信。
+
+目前为止2022/6/30，对于串口通信需要了解的东西。
+
+##### 枚举类型
+
+**定义的唯一枚举类型。**
+
+```c++
+flags QIODevice::OpenMode;
+enum QIODevice::OpenModeFlag{
+    QIODevice::NotOpen = 0x0000, // 设备没打开
+    QIODevice::ReadOnly = 0x0001, // 只读
+    QIODevice::WriteOnly = 0x0002，// 只写
+    QIODevice::ReadWrite = ReadOnly | WriteOnly， // 可读可写
+    QIODevice::Append = 0x0004，// 设备以追加模式打开，以便将所有数据写入文件末尾
+    QIODevice::Truncate = 0x0008，// 如果可能，设备会在打开之前被截断。设备的所有早期内容都将丢失
+    QIODevice::Text = 0x0010，// 读取时，行尾终止符被转换为'\n'。写入时，行尾终止符被转换为本地编码，例如Win32的'\r\n';
+    QIODevice::Unbuffered = 0x0020 // 绕过设备中的任何缓冲区
+};
+```
+
+##### 继承函数
+
+**成员函数，被串口通信类继承使用的一些函数。**
+
+```c++
+virtual bool atEnd() const; // 是否为数据的结尾
+virtual qint64 bytesAvailable() const; // 返回等待读取的传入字节数
+virtual qint64 bytesToWrite() const; // 返回等待写入的字节数
+virtual bool canReadLine() const; // 能否读取一行
+virtual void close();// 关闭设备
+virtual bool open(OpenMode mode);//打开设备
+virtual bool isSequential() const;// 是否顺序设备
+
+qint64 read(char *data, qint64 maxSize); // 读取指定字节数据并依据情况返回整数
+QByteArray read(qint64 maxSize); // 读取指定字节数据返回字节数组,无法报错
+QByteArray readAll(); //读取全部数据,无法报错
+qint64 write(const char *data, qint64 maxSize);// 最多将数据中的 maxSize 字节数据写入设备。返回实际写入的字节数，如果发生错误，则返回 -1
+qint64 write(const char *data); // 这是一个过载功能,将数据从 8 位字符的零终止字符串写入设备。返回实际写入的字节数，如果发生错误，则返回 -1。这相当于QIODevice::write(data, qstrlen(data));
+qint64 write(const QByteArray &byteArray);// 这是一个过载功能,将 byteArray 的内容写入设备。返回实际写入的字节数，如果发生错误，则返回 -1
+pure virtual protected qint64 QIODevice::writeData(const char *data, qint64 maxSize);//内部调用,最多将数据中的 maxSize 字节写入设备。返回写入的字节数，如果发生错误，则返回 -1。
+
+qint64 readLine(char *data, qint64 maxSize); // 读取一行数据返回整数
+QByteArray readLine(qint64 maxSize = 0); // 读取一行数据返回字节数组,无法报错
+virtual protected qint64 QIODevice::readLineData(char *data, qint64 maxSize);//内部调用的
+
+virtual bool reset();
+virtual bool seek(qint64 pos);
+virtual qint64 size() const;
+virtual qint64 pos() const;
+
+virtual bool waitForBytesWritten(int msecs); // 
+virtual bool waitForReadyRead(int msecs);
+```
+
+**readLine函数**；从设备中读取一行 ASCII 字符，**最大为 maxSize - 1 个字节**，将字符存储在数据中，并返回读取的字节数。**如果无法读取一行但没有发生错误，则此函数返回 0**。如果发生错误，**此函数返回可读取内容的长度**，如果**未读取任何内容，则返回 -1**。**终止的 &#39;\0&#39; 字节总是附加到数据中，因此 maxSize 必须大于 1**。读取数据直到满足以下任一条件： 读取第一个 &#39;\n&#39; 字符。maxSize - 读取 1 个字节。检测到设备数据的结束。
+
+换行符 (&#39;\n&#39;) 包含在缓冲区中。如果在读取 maxSize - 1 个字节之前没有遇到换行符，则不会将换行符插入缓冲区。在 Windows 上，换行符被替换为 &#39;\n&#39;。此函数调用 readLineData()，它是通过重复调用 getChar() 来实现的。您可以通过在自己的子类中重新实现 readLineData() 来提供更有效的实现。
+
+重载版本也是从设备读取一行，但不超过 maxSize 个字符，并将结果作为字节数组返回。该功能无法报错；返回一个空的 QByteArray 可能意味着当前没有数据可供读取，或者发生了错误。
+
+一个使用的案例代码。
+
+```c++
+QFile file("box.txt");
+if (file.open(QFile::ReadOnly)) {
+    char buf[1024];
+    qint64 lineLength = file.readLine(buf, sizeof(buf));
+    if (lineLength != -1) {
+        // the line is available in buf
+    }
+}
+```
+
+**reset函数**：寻找随机存取设备的输入开始。成功返回true；否则返回 false（例如，如果设备未打开）。请注意，当在 QFile 上使用 QTextStream 时，在 QFile 上调用 reset() 不会得到预期的结果，因为 QTextStream 会缓冲文件。请改用 QTextStream::seek() 函数。
+
+**seek函数**：对于随机访问设备，此函数将当前位置设置为 pos，成功时返回 true，如果发生错误则返回 false。对于顺序设备，默认行为是产生警告并返回 false。当子类化 QIODevice 时，您必须在函数开始时调用QIODevice::seek() 以确保与 QIODevice 的内置缓冲区的完整性。
+
+**size函数**：对于开放式随机访问设备，此函数返回设备的大小。对于打开的顺序设备，返回 bytesAvailable()。
+如果设备关闭，返回的尺寸将不会反映设备的实际尺寸。
+
+**pos函数：**对于随机访问设备，此函数返回数据写入或读取的位置。对于没有“当前位置”概念的顺序设备或封闭设备，返回 0。
+
+**waitForBytesWritten函数：**对于缓冲设备，此函数会等待，直到缓冲写入数据的有效负载已写入设备并且已发出 **bytesWritten()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。对于无缓冲的设备，它会立即返回。如果数据的有效负载已写入设备，则返回 true；否则返回 false（即，如果操作超时，或者如果发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 bytesWritten() 信号的槽中调用，则不会重新发送 bytesWritten()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
+
+**waitForReadyRead函数**：阻塞，直到有新数据可供读取并且发出了 **readyRead()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。如果有新数据可供读取，则返回 true；否则返回 false（如果操作超时或发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 readyRead() 信号的插槽中调用，则不会重新发送 readyRead()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
+
+##### 子类函数
+
+**成员函数，可能暂时不怎么使用的函数。**
+
+```c++
+int currentReadChannel() const;
+int currentWriteChannel() const;
+int readChannelCount() const;
+int writeChannelCount() const;
+void setCurrentReadChannel(int channel);
+void setCurrentWriteChannel(int channel);
+
+QString errorString() const;
+
+bool getChar(char *c);
+void ungetChar(char c);
+bool putChar(char c);
+
+bool isTextModeEnabled() const;
+void setTextModeEnabled(bool enabled);
+
+bool isTransactionStarted() const;
+void commitTransaction();
+void rollbackTransaction();
+void startTransaction();
+
+qint64 peek(char *data, qint64 maxSize);
+QByteArray peek(qint64 maxSize);
+
+OpenMode openMode() const;//打开模式
+bool isOpen() const;//是打开状态
+bool isReadable() const;//可读？
+bool isWritable() const;//可写？
+```
+
+##### 信号函数
+
+最常用的是**bytesWritten和readyRead**信号，也是串口通信类继承的信号。
+
+```c++
+// 当设备即将关闭时发出此信号。如果您有需要在设备关闭之前执行的操作（例如，如果您在单独的缓冲区中有数据需要写入设备），请连接此信号
+void aboutToClose();
+
+// 每次将数据的有效负载写入设备的当前写入通道时，都会发出此信号。 bytes 参数设置为写入此有效负载的字节数。bytesWritten() 不是递归发出的；如果您重新进入事件循环或在连接到 bytesWritten() 信号的插槽内调用 waitForBytesWritten()，则不会重新发送该信号（尽管 waitForBytesWritten() 仍可能返回 true）。
+void bytesWritten(qint64 bytes);
+
+// 每次将数据的有效负载写入设备时都会发出此信号。 bytes 参数设置为此有效负载中写入的字节数，而 channel 是它们写入的通道。与 bytesWritten() 不同，无论当前写入通道如何，都会发出它。channelBytesWritten() 可以递归地发出 - 即使对于同一个通道。
+void channelBytesWritten(int channel, qint64 bytes);
+
+// 当新数据可用于从设备读取时，会发出此信号。通道参数设置为数据到达的读取通道的索引。与 readyRead() 不同的是，无论当前读取通道如何，都会发出它。channelReadyRead() 可以递归地发出 - 即使对于同一个通道。
+void channelReadyRead(int channel);
+
+// 此信号在此设备中关闭输入（读取）流时发出。一旦检测到关闭就会发出它，这意味着可能仍有数据可用于使用 read() 读取。
+void readChannelFinished();
+
+// 每次有新数据可用于从设备的当前读取通道读取时，都会发出一次此信号。它只会在新数据可用时再次发出，例如当新的网络数据有效负载到达您的网络套接字时，或者当新的数据块已附加到您的设备时。readyRead() 不会递归发出；如果您重新进入事件循环或在连接到 readyRead() 信号的插槽内调用 waitForReadyRead()，则不会重新发送该信号（尽管 waitForReadyRead() 仍可能返回 true）。实现从 QIODevice 派生的类的开发人员注意：当新数据到达时，您应该始终发出 readyRead() （不要仅仅因为缓冲区中还有数据要读取而发出它）。不要在其他条件下发出 readyRead()。
+void readyRead();
+```
+
+#### 6.1.2 QFile
+
+QFile 类提供了一个读取和写入文件的接口。
+QFile 是一种用于读写文本和二进制文件和资源的 I/O 设备。 QFile 可以单独使用，或者更方便地与 QTextStream 或 QDataStream 一起使用。
+文件名通常在构造函数中传递，但可以随时使用 setFileName() 设置。无论操作系统如何，QFile 都希望文件分隔符为“/”。不支持使用其他分隔符（例如，' \ '）。
+您可以使用exists() 检查文件是否存在，并使用remove() 删除文件。 （更高级的文件系统相关操作由 QFileInfo 和 QDir 提供。）文件用 open() 打开，用 close() 关闭，用 flush() 刷新。通常使用 QDataStream 或 QTextStream 读取和写入数据，但您也可以调用 QIODevice 继承的函数 read()、readLine()、readAll()、write()。 QFile 还继承了 getChar()、putChar() 和 ungetChar()，它们一次只处理一个字符。
+文件的大小由 size() 返回。您可以使用 pos() 获取当前文件位置，或使用 seek() 移动到新文件位置。如果您已到达文件末尾，atEnd() 将返回 true。
+
+成员函数如下。
+
+```c++
+// 将当前文件复制到名为newName的文件中。成功则返回真，否则返回假。
+bool copy(const QString &newName);
+// 如果指定的文件存在，则返回 true，否则返回假。
+bool exists() const;
+// 创建一个名为 linkName 的链接，该链接指向当前由 fileName() 指定的文件。链接是什么取决于底层文件系统（无论是 Windows 上的快捷方式还是 Unix 上的符号链接）。成功则返回真，否则返回假。
+bool link(const QString &linkName);
+// 以给定模式打开现有文件句柄 fh。 handleFlags可用于指定其他选项。成功则返回真；否则返回假。
+bool open(FILE *fh, OpenMode mode, FileHandleFlags handleFlags = DontCloseHandle);
+// 以给定模式打开现有文件描述符fd。 handleFlags 可用于指定其他选项。成功则返回真；否则返回假。
+bool open(int fd, OpenMode mode, FileHandleFlags handleFlags = DontCloseHandle);
+// 删除由 fileName() 指定的文件。成功则返回真，否则返回假。
+bool remove();
+// 将当前由 fileName() 指定的文件重命名为 newName。成功则返回真，否则返回假。
+bool rename(const QString &newName);
+// 将文件 oldName 重命名为 newName。成功则返回真，否则返回假。
+void setFileName(const QString &name);
+// 返回由 fileName 指定的符号链接（或 Windows 上的快捷方式）引用的文件或目录的绝对路径，如果 fileName 不对应于符号链接，则返回空字符串。
+QString symLinkTarget() const;
+```
+
+静态函数。
+
+```c++
+// 复制文件
+bool copy(const QString &fileName, const QString &newName);
+// 这与使用 localFileName 的 QFile::encodeName() 相反
+QString decodeName(const QByteArray &localFileName);
+// 返回给定 localFileName 的 Unicode 版本。有关详细信息，请参见 encodeName()
+QString decodeName(const char *localFileName);
+// 将 fileName 转换为由用户区域设置确定的本地 8 位编码。这对于用户选择的文件名来说已经足够了。硬编码到应用程序中的文件名只能使用 7 位 ASCII 文件名字符。
+QByteArray encodeName(const QString &fileName);
+// 指定文件是否存在
+bool exists(const QString &fileName);
+// 返回文件名的 QFile::Permission 的完整 OR-ed 组合
+Permissions permissions(const QString &fileName);
+// 将文件的权限设置为指定的权限。如果成功，则返回 true，如果无法修改权限，则返回 false
+bool setPermissions(const QString &fileName, Permissions permissions);
+// 移除文件
+bool remove(const QString &fileName);
+// 重命名文件
+bool rename(const QString &oldName, const QString &newName);
+// 将文件名设置为大小（以字节为单位）sz。如果调整大小成功，则返回 true；否则为假。如果 sz 大于 fileName 当前是新的字节将被设置为 0，如果 sz 更小文件被简单地截断。
+bool resize(const QString &fileName, qint64 sz);
+// 创建一个名为 linkName 的链接，该链接指向文件 fileName。链接是什么取决于底层文件系统（无论是 Windows 上的快捷方式还是 Unix 上的符号链接）。成功则返回真；否则返回假。
+bool link(const QString &amp;fileName, const QString &amp;linkName);
+// 返回由 fileName 指定的符号链接（或 Windows 上的快捷方式）引用的文件或目录的绝对路径，如果 fileName 不对应于符号链接，则返回空字符串。
+QString symLinkTarget(const QString &fileName);
+```
+
+使用的例子参考如下。
+
+使用流读取。
+
+```c++
+QFile aFile("file.txt");  //以文件方式读出
+if (aFile.open(QIODevice::ReadOnly | QIODevice::Text)) //以只读文本方式打开文件
+{
+    QTextStream aStream(&aFile); //用文本流读取文件
+    auto text = aStream.readAll(); // 使用readAll读取文本文件,这里还可以使用readLine等
+    aFile.close();//关闭文件
+
+    QFileInfo   fileInfo(aFileName); //文件信息
+    QString str=fileInfo.fileName(); //去除路径后的文件名
+    // ...dosomething
+}
+
+// 或
+QTextStream in(&aFile);
+QString line = in.readLine(); // 也可以先读取1行
+while (!line.isNull()) { // 不为空就继续处理
+    process_line(line);
+    line = in.readLine();// 使用readLine函数
+}
+```
+
+直接使用IO方式读取。
+
+```c++
+QFile file("in.txt");
+if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    return;
+while (!file.atEnd()) { // 使用继承的atEnd函数
+    QByteArray line = file.readLine(); // 使用继承的readLine函数
+    process_line(line);
+}
+
+// 或
+QFile file("box.txt");
+if (file.open(QFile::ReadOnly)) {
+    char buf[1024];
+    qint64 lineLength = file.readLine(buf, sizeof(buf));
+    if (lineLength != -1) {
+        // the line is available in buf
+    }
+}
+```
+
+#### 6.1.3 QTextStream
+
+用于文本文件读取。
 
 QTextStream 类为读写文本提供了一个方便的接口。
 QTextStream 可以对 QIODevice、QByteArray 或 QString 进行操作。使用 QTextStream 的流式操作符，您可以方便地读写单词、行和数字。对于生成文本，QTextStream 支持字段填充和对齐的格式选项，以及数字的格式。例子：
@@ -6375,6 +6675,8 @@ in >> ch;                      // ch == 'x'
 QTextStream 支持许多用于生成文本的格式化选项。您可以通过调用 setFieldWidth() 和 setPadChar() 来设置字段宽度和填充字符。使用 setFieldAlignment() 设置每个字段内的对齐方式。对于实数，调用 setRealNumberNotation() 和 setRealNumberPrecision() 来设置生成数字的表示法（SmartNotation、ScientificNotation、FixedNotation）和精度。一些额外的数字格式选项也可以通过 setNumberFlags() 获得。
 
 此外，Qt 提供了三个带参数的全局操纵器：qSetFieldWidth()、qSetPadChar() 和 qSetRealNumberPrecision()。
+
+##### 枚举类型
 
 常用的枚举类型。
 
@@ -6422,6 +6724,8 @@ enum QTextStream::Status = {
 }
 ```
 
+##### 子类函数
+
 常用的成员函数如下。
 
 ```c++
@@ -6441,48 +6745,60 @@ void setString(QString *string, QIODevice::OpenMode openMode = QIODevice::ReadWr
 void skipWhiteSpace();// 从流中读取并丢弃空格，直到检测到非空格字符，或者直到 atEnd() 返回 true。此函数在逐字符读取流时很有用。
 Status status() const;// 返回文本流的状态
 QString *string() const;//返回分配给 QTextStream 的当前字符串，如果没有分配字符串，则返回 0
+
+// 如果启用了自动 Unicode 检测，则返回 true，否则返回 false。默认情况下启用自动 Unicode 检测
+// 如果文本有汉字必须要启用
+bool QTextStream::autoDetectUnicode() const;
 ```
 
-### QFileInfo 
+### 6.2 二进制文件读取
 
-QFileInfo 类**提供与系统无关的文件信息**。
-QFileInfo 提供有关文件名和文件系统中的位置（路径）、其访问权限以及它是目录还是符号链接等信息。文件的大小和最后修改/读取时间也可用。 QFileInfo 也可用于获取有关 Qt 资源的信息。
-QFileInfo 可以指向具有相对或绝对文件路径的文件。绝对文件路径以目录分隔符“/”开头（或在 Windows 上以驱动器规范开头）。相对文件名以目录名或文件名开头，并指定相对于当前工作目录的路径。绝对路径的一个示例是字符串“/tmp/quartz”。相对路径可能看起来像“src/fatlib”。您可以使用函数 isRelative() 来检查 QFileInfo 是使用相对文件路径还是绝对文件路径。您可以调用函数 makeAbsolute() 将 QFileInfo 的相对路径转换为绝对路径。
-QFileInfo 处理的文件在构造函数中设置或稍后使用 setFile() 设置。使用 exists() 查看文件是否存在，使用 size() 获取其大小。
-文件的类型通过 isFile()、isDir() 和 isSymLink() 获得。 symLinkTarget() 函数提供符号链接指向的文件的名称。
-在 Unix（包括 macOS 和 iOS）上，符号链接与它指向的文件具有相同的 size()，因为 Unix 透明地处理符号链接；同样，使用 QFile 打开符号链接可以有效地打开链接的目标。例如：
+#### 6.2.1 QDataStream
+
+用于二进制文本读取。
+
+常见的写入文本的函数例子如下。
+
+writeRawData函数。
 
 ```c++
-QFileInfo info1("/home/bob/bin/untabify");
-info1.isSymLink();          // returns true
-info1.absoluteFilePath();   // returns "/home/bob/bin/untabify"
-info1.size();               // returns 56201
-info1.symLinkTarget();      // returns "/opt/pretty++/bin/untabify"
+// 将 s 中的 len 个字节写入流。返回实际写入的字节数，错误时返回 -1
+int QDataStream::writeRawData(const char *s, int len);
 
-QFileInfo info2(info1.symLinkTarget());
-info2.isSymLink();          // returns false
-info2.absoluteFilePath();   // returns "/opt/pretty++/bin/untabify"
-info2.size();
+QFile aFile(aFileName);
+QDataStream aStream(&aFile);
+aStream.setByteOrder(QDataStream::LittleEndian);// 设置字节序为最低有效字节优先(windows平台)
+aStream.writeRawData((char *)&rowCount,sizeof(qint16)); //写入文件流
 ```
 
-在 Windows 上，符号链接（快捷方式）是 .lnk 文件。报告的 size() 是符号链接的大小（不是链接的目标），使用 QFile 打开符号链接会打开 .lnk 文件。例如：
+writeBytes函数，写入字符串必须要使用这个函数。会先写入长度值，然后再写入字符串，也就是保存2个数。
 
 ```c++
-QFileInfo info1("C:\\Documents and Settings\\Bob\\untabify.lnk");
-info1.isSymLink();          // returns true
-info1.absoluteFilePath();   // returns "C:/Documents and Settings/Bob/untabify.lnk"
-info1.size();               // returns 743
-info1.symLinkTarget();      // returns "C:/Pretty++/untabify"
+// 将长度len的字符串s写入流并返回对流的引用。len被序列化为quint32，后跟来自s的len个字节
+QDataStream &QDataStream::writeBytes(const char *s, uint len);
 
-QFileInfo info2(info1.symLinkTarget());
-info2.isSymLink();          // returns false
-info2.absoluteFilePath();   // returns "C:/Pretty++/untabify"
-info2.size();               // returns 63942
+QByteArray  btArray;
+QStandardItem   *aItem;
+for (int i=0;i<theModel->columnCount();i++) // 遍历表头标题(列数)
+{
+    aItem=theModel->horizontalHeaderItem(i); //获取表头的每个列item
+    QString str=aItem->text(); //获取表头文字
+    btArray=str.toUtf8(); //转换为UTF-8的字符数组
+    // btArray = str.toLocal8Bit(); // 转换为字符串的本地 8 位表示形式
+    aStream.writeBytes(btArray,btArray.length()); //写入文件流,长度quint32型,然后是字符串内容
+    // aStream.writeRawData(btArray,btArray.length());//对于字符串,应使用writeBytes()函数
+}
 ```
 
-可以使用 path() 和 fileName() 提取文件名的元素。 fileName() 的部分可以用 baseName()、suffix() 或 completeSuffix() 提取。由 Qt 类创建的目录的 QFileInfo 对象将没有尾随文件分隔符。如果您希望在自己的文件信息对象中使用尾随分隔符，只需将一个附加到给构造函数或 setFile() 的文件名。文件的日期由 created()、lastModified() 和 lastRead() 返回。有关文件访问权限的信息是通过 isReadable()、isWritable() 和 isExecutable() 获得的。文件的所有权可从 owner()、ownerId()、group() 和 groupId() 获得。您可以使用 permission() 函数在单个语句中检查文件的权限和所有权。
+具体的例子可见[15-TestQDataStream](15-TestQDataStream)。
 
-### QDir
+### 6.3 文件和目录操作
+
+#### 6.3.1 QCoreApplication
+
+
+
+#### 6.3.2 QDir
 
 QDir 类提供对目录结构及其内容的访问。
 QDir 用于操作路径名、访问有关路径和文件的信息以及操作底层文件系统。它也可以用来访问Qt的资源系统。
@@ -6590,6 +6906,203 @@ qDebug()<<QDir::rootPath();
 qDebug()<<QDir::tempPath();
 "C:/Users/chenbei/AppData/Local/Temp" 
 ```
+
+#### 6.3.3 QFileInfo  
+
+QFileInfo 类提供与系统无关的文件信息。
+QFileInfo 提供有关文件名和文件系统中的位置（路径）、其访问权限以及它是目录还是符号链接等信息。文件的大小和最后修改/读取时间也可用。 QFileInfo 也可用于获取有关 Qt 资源的信息。
+QFileInfo 可以指向具有相对或绝对文件路径的文件。绝对文件路径以目录分隔符“/”开头（或在 Windows 上以驱动器规范开头）。相对文件名以目录名或文件名开头，并指定相对于当前工作目录的路径。绝对路径的一个示例是字符串“/tmp/quartz”。相对路径可能看起来像“src/fatlib”。您可以使用函数 isRelative() 来检查 QFileInfo 是使用相对文件路径还是绝对文件路径。您可以调用函数 makeAbsolute() 将 QFileInfo 的相对路径转换为绝对路径。
+QFileInfo 处理的文件在构造函数中设置或稍后使用 setFile() 设置。使用 exists() 查看文件是否存在，使用 size() 获取其大小。
+文件的类型通过 isFile()、isDir() 和 isSymLink() 获得。 symLinkTarget() 函数提供符号链接指向的文件的名称。
+在 Unix（包括 macOS 和 iOS）上，符号链接与它指向的文件具有相同的 size()，因为 Unix 透明地处理符号链接；同样，使用 QFile 打开符号链接可以有效地打开链接的目标。例如：  
+
+```c++
+// unix
+QFileInfo info1("/home/bob/bin/untabify");
+info1.isSymLink();          // returns true
+info1.absoluteFilePath();   // returns "/home/bob/bin/untabify"
+info1.size();               // returns 56201
+info1.symLinkTarget();      // returns "/opt/pretty++/bin/untabify"
+
+QFileInfo info2(info1.symLinkTarget());
+info2.isSymLink();          // returns false
+info2.absoluteFilePath();   // returns "/opt/pretty++/bin/untabify"
+info2.size();               // returns 56201
+
+// win
+QFileInfo info1("C:\\Documents and Settings\\Bob\\untabify.lnk");
+info1.isSymLink();          // returns true
+info1.absoluteFilePath();   // returns "C:/Documents and Settings/Bob/untabify.lnk"
+info1.size();               // returns 743
+info1.symLinkTarget();      // returns "C:/Pretty++/untabify"
+
+QFileInfo info2(info1.symLinkTarget());
+info2.isSymLink();          // returns false
+info2.absoluteFilePath();   // returns "C:/Pretty++/untabify"
+info2.size();               // returns 63942
+```
+
+可以使用 path() 和 fileName() 提取文件名的元素。 fileName() 的部分可以用 baseName()、suffix() 或 completeSuffix() 提取。由 Qt 类创建的目录的 QFileInfo 对象将没有尾随文件分隔符。如果您希望在自己的文件信息对象中使用尾随分隔符，只需将一个附加到给构造函数或 setFile() 的文件名。
+文件的日期由 created()、lastModified() 和 lastRead() 返回。有关文件访问权限的信息是通过 isReadable()、isWritable() 和 isExecutable() 获得的。文件的所有权可从 owner()、ownerId()、group() 和 groupId() 获得。您可以使用 permission() 函数在单个语句中检查文件的权限和所有权。
+
+QFileInfo 的一些函数查询文件系统，但出于性能原因，一些函数只对文件名本身进行操作。例如：要返回相对文件名的绝对路径，absolutePath() 必须查询文件系统。但是 path() 函数可以直接处理文件名，因此速度更快。注意：为了提高性能，QFileInfo 缓存有关文件的信息。
+因为文件可以被其他用户或程序更改，甚至可以被同一程序的其他部分更改，所以有一个刷新文件信息的函数：refresh()。如果您想关闭 QFileInfo 的缓存并在每次向它请求信息时强制它访问文件系统，请调用 setCaching(false)。另见 QDir 和 QFile。
+
+#### 6.3.5 QTemporaryFile
+
+
+
+#### 6.3.6 QFileSystemWatcher
+
+
+
+#### 6.3.7 QTextCodec
+
+QTextCodec 类提供文本编码之间的转换。
+Qt 使用 Unicode 来存储、绘制和操作字符串。在许多情况下，您可能希望处理使用不同编码的数据。例如，大多数日语文档仍然存储在 Shift-JIS 或 ISO 2022-JP 中，而俄罗斯用户通常将其文档存储在 KOI8-R 或 Windows-1251 中。Qt 提供了一组 QTextCodec 类来帮助将非 Unicode 格式转换为 Unicode。您还可以创建自己的编解码器类。
+
+支持的编码类型如下。
+
+```c++
+Big5
+Big5-HKSCS
+CP949
+EUC-JP
+EUC-KR
+GB18030
+HP-ROMAN8
+IBM 850
+IBM 866
+IBM 874
+ISO 2022-JP
+ISO 8859-1 to 10
+ISO 8859-13 to 16
+Iscii-Bng, Dev, Gjr, Knd, Mlm, Ori, Pnj, Tlg, and Tml
+KOI8-R
+KOI8-U
+Macintosh
+Shift-JIS
+TIS-620
+TSCII
+UTF-8
+UTF-16
+UTF-16BE
+UTF-16LE
+UTF-32
+UTF-32BE
+UTF-32LE
+Windows-1250 to 1258
+```
+
+这个类可以解决中文乱码的问题，一种方式是使用QTextStream的时候设置流自动检测UniCode。
+
+```c++
+QTextStream stream(file); 
+stream.setAutoDetectUnicode(true); // 但是这种方法不是全局的
+```
+
+全局解决中文乱码的方法是。
+
+```c++
+int main()
+{
+    QTextCodec * code = QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(code);
+
+    QApplication a(argc,argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
+}
+```
+
+
+QTextCodecs 可用于将一些本地编码的字符串转换为 Unicode。假设您有一些以俄语 KOI8-R 编码的字符串，并且想要将其转换为 Unicode。简单的方法是这样的：
+
+```c++
+QByteArray encodedString = "...";
+QTextCodec *codec = QTextCodec::codecForName("KOI8-R");
+QString string = codec->toUnicode(encodedString);
+```
+
+在此之后，字符串保存转换为 Unicode 的文本。将字符串从 Unicode 转换为本地编码同样简单。
+
+```c++
+QString string = "...";
+QTextCodec *codec = QTextCodec::codecForName("KOI8-R");
+QByteArray encodedString = codec->fromUnicode(string);
+```
+
+还可以创建一个解码器，逐块的进行解码而不是一整个，这样更安全。
+
+```c++
+QTextCodec *codec = QTextCodec::codecForName("Shift-JIS");
+QTextDecoder *decoder = codec->makeDecoder(); // 获取解码器
+
+QString string;
+while (new_data_available()) {
+    QByteArray chunk = get_new_data();
+    string += decoder->toUnicode(chunk); // 逐个解码为unicode传递给string
+}
+delete decoder;
+```
+
+需要了解的枚举类型如下。
+
+```c++
+enum QTextCodec::ConversionFlag {
+    QTextCodec::DefaultConversion,//没有设置标志
+    QTextCodec::ConvertInvalidToNull,//如果设置了此标志，则每个无效输入字符都将作为空字符输出
+    QTextCodec::IgnoreHeader//忽略任何 Unicode 字节顺序标记并且不生成任何
+}
+```
+
+成员函数如下。
+
+```c++
+bool canEncode(QChar ch) const;// 字符ch可以使用此编解码器完全编码，则返回 true；否则返回 false
+bool canEncode(const QString &s) const; // 字符串是否可以编码
+QByteArray fromUnicode(const QString &str) const;// 从编码字符串解码
+QByteArray fromUnicode(const QChar *input, int number, ConverterState *state = Q_NULLPTR) const;// 将输入数组中的第一个字符数从 Unicode 转换为此编解码器的编码，并在 QByteArray 中返回结果
+QTextDecoder *makeDecoder(ConversionFlags flags = DefaultConversion) const;// 解码器
+QTextEncoder *makeEncoder(ConversionFlags flags = DefaultConversion) const;// 编码器
+QString toUnicode(const QByteArray &a) const;//转换为 Unicode，并以 QString 形式返回结果
+QString toUnicode(const char *chars) const; // 转换为 Unicode，并以 QString 形式返回结果
+// 将输入中的第一个size大小字符编码转换为 Unicode，返回QString，使用的转换器的状态被更新
+QString toUnicode(const char *input, int size, ConverterState *state = Q_NULLPTR) const;
+```
+
+静态函数。
+
+```c++
+// 按名称返回所有可用编解码器的列表
+QList<QByteArray> availableCodecs();
+// 返回所有可用编解码器的 MIB 列表
+QList<int> availableMibs();
+// 尝试通过检查 BOM（字节顺序标记）和内容类型元标头来检测给定字节数组 ba 中提供的 HTML 片段的编码，并返回能够将 html 解码为 unicode 的 QTextCodec 实例。如果无法从提供的内容中检测到编解码器，则返回 defaultCodec。
+QTextCodec *codecForHtml(const QByteArray &ba, QTextCodec *defaultCodec);
+QTextCodec *codecForHtml(const QByteArray &ba);
+// 返回指向最适合此语言环境的编解码器的指针。在 Windows 上，编解码器将基于系统区域设置。在 Unix 系统上，如果找不到该语言环境的内置编解码器，编解码器可能会回退到使用 iconv 库。
+QTextCodec *codecForLocale();
+// 返回与 MIBenum mib 匹配的 QTextCodec
+QTextCodec *codecForMib(int mib);
+// 搜索所有已安装的 QTextCodec 对象并返回与名称最匹配的对象；匹配不区分大小写。如果找不到与名称 name 匹配的编解码器，则返回 0
+QTextCodec *codecForName(const QByteArray &name);
+QTextCodec *codecForName(const char *name);
+// 尝试使用 BOM（字节顺序标记）检测提供的片段 ba 的编码，并返回能够将文本解码为 unicode 的 QTextCodec 实例。如果无法从提供的内容中检测到编解码器，则返回 defaultCodec。
+QTextCodec *codecForUtfText(const QByteArray &ba, QTextCodec *defaultCodec);
+QTextCodec *codecForUtfText(const QByteArray &ba);
+// 将编解码器设置为c；这将由 codecForLocale() 返回。如果 c 是空指针，则编解码器重置为默认值。对于一些想要使用自己的机制来设置语言环境的应用程序，这可能是必需的。
+void setCodecForLocale(QTextCodec *c);
+```
+
+#### 6.3.8 QTextBlock
+
+
+
+#### 6.3.9 QTextDocument
+
+
 
 ## 布局管理
 
@@ -6804,191 +7317,7 @@ virtual void run();// start()调用此函数执行线程任务,线程离开事�
 
 ## 串口通信
 
-### QIODevice
 
-它继承自QObject。
-
-QIODevice 类是 Qt 中所有 I/O 设备的基接口类。
-QIODevice 为支持读写数据块的设备提供通用实现和抽象接口，例如 **QFile、QBuffer 和 QTcpSocket**。 QIODevice 是抽象的，**不能被实例化**，但是通常使用它定义的接口来提供与设备无关的 I/O 特性。例如，Qt 的 XML 类对 QIODevice 指针进行操作，允许它们与各种设备（如文件和缓冲区）一起使用。
-
-在访问设备之前，**必须调用 open() 来设置正确的 OpenMode（例如 ReadOnly 或 ReadWrite）**。然后，您可以使用 **write() 或 putChar() 写入设备，并通过调用 read()、readLine() 或 readAll() 进行读取**。完成设备后调用 close()。
-QIODevice 区分两种类型的设备：随机访问设备和顺序设备。
-随机访问设备支持使用 seek() 搜索任意位置。文件中的当前位置可通过调用 pos() 获得。 **QFile 和 QBuffer 是随机访问设备的示例**。顺序设备不支持寻找任意位置。必须一次性读取数据。函数 pos() 和 size() 不适用于顺序设备。 您可以使用 isSequential() 来确定设备的类型。
-
-**当有新数据可供读取时，QIODevice 会发出 readyRead()**；例如，如果新数据已到达网络，或者是否将其他数据附加到您正在读取的文件中。**您可以调用 bytesAvailable() 来确定当前可供读取的字节数**。在使用诸如 QTcpSocket 之类的异步设备进行编程时，通常将 bytesAvailable() 与 readyRead() 信号一起使用，其中数据片段可以到达任意时间点。**每次将数据的有效负载写入设备时，QIODevice 都会发出 bytesWritten() 信号**。使用 **bytesToWrite() 确定当前等待写入的数据量**。
-
-QIODevice 的某些子类，例如 QTcpSocket 和 QProcess，是异步的。这意味着诸如 write() 或 read() 之类的 I/O 函数总是立即返回，而当控制返回事件循环时，可能会发生与设备本身的通信。 QIODevice 提供的功能允许您强制立即执行这些操作，同时阻塞调用线程并且不进入事件循环。**这允许在没有事件循环的情况下使用 QIODevice 子类，或者在单独的线程中使用**：
-
-**waitForReadyRead() - 此函数暂停调用线程中的操作，直到有新数据可供读取**。
-**waitForBytesWritten() - 此函数暂停调用线程中的操作，直到一个有效负载数据已写入设备**。
-waitFor....() - QIODevice 的子类为特定于设备的操作**实现阻塞功能**。例如，QProcess 有一个名为 waitForStarted() 的函数，它暂停调用线程中的操作，直到进程启动。
-
-从主 GUI 线程调用这些函数可能会导致您的用户界面冻结。例子：
-
-```c++
-QProcess gzip;
-gzip.start("gzip", QStringList() << "-c");
-if (!gzip.waitForStarted())
-    return false;
-
-gzip.write("uncompressed data");
-
-QByteArray compressed;
-while (gzip.waitForReadyRead())
-    compressed += gzip.readAll();
-```
-
-通过继承 QIODevice，您可以为您自己的 I/O 设备提供相同的接口。 **QIODevice 的子类只需要实现受保护的 readData() 和 writeData() 函数**。 QIODevice 使用这些函数来实现它所有的便利函数，**例如 getChar()、readLine() 和 write()**。 QIODevice 还为您处理访问控制，因此如果**调用 writeData()，您可以放心地假设设备以写入模式打开**。
-
-一些子类，例如 QFile 和 QTcpSocket，是使用内存缓冲区实现的，用于中间存储数据。这减少了所需的设备访问调用的数量，这些调用通常非常慢。缓冲使 getChar() 和 putChar() 之类的函数变得更快，因为它们可以在内存缓冲区上操作，而不是直接在设备本身上操作。但是，某些 I/O 操作不适用于缓冲区。例如，如果几个用户打开同一个设备并逐个字符地读取它，当他们打算分别读取一个单独的块时，他们最终可能会读取相同的数据。因此，QIODevice 允许您通过将 Unbuffered 标志传递给 open() 来绕过任何缓冲。子类化 QIODevice 时，请记住绕过设备在无缓冲模式下打开时可能使用的任何缓冲区。
-
-通常，来自异步设备的传入数据流是分段的，并且数据块可以到达任意时间点。要处理数据结构的不完整读取，请使用 QIODevice 实现的事务机制。有关详细信息，请参阅 startTransaction() 和相关函数。
-一些顺序设备支持通过多个通道进行通信。这些通道代表具有独立排序传递特性的独立数据流。打开设备后，您可以通过调用 readChannelCount() 和 writeChannelCount() 函数来确定通道数。要在频道之间切换，请分别调用 setCurrentReadChannel() 和 setCurrentWriteChannel()。 QIODevice 还提供额外的信号来处理基于每个通道的异步通信。
-
-目前为止2022/6/30，对于串口通信需要了解的东西。
-
-#### 枚举类型
-
-**定义的唯一枚举类型。**
-
-```c++
-flags QIODevice::OpenMode;
-enum QIODevice::OpenModeFlag{
-    QIODevice::NotOpen = 0x0000, // 设备没打开
-    QIODevice::ReadOnly = 0x0001, // 只读
-    QIODevice::WriteOnly = 0x0002，// 只写
-    QIODevice::ReadWrite = ReadOnly | WriteOnly， // 可读可写
-    QIODevice::Append = 0x0004，// 设备以追加模式打开，以便将所有数据写入文件末尾
-    QIODevice::Truncate = 0x0008，// 如果可能，设备会在打开之前被截断。设备的所有早期内容都将丢失
-    QIODevice::Text = 0x0010，// 读取时，行尾终止符被转换为'\n'。写入时，行尾终止符被转换为本地编码，例如Win32的'\r\n';
-    QIODevice::Unbuffered = 0x0020 // 绕过设备中的任何缓冲区
-};
-```
-
-#### 继承函数
-
-**成员函数，被串口通信类继承使用的一些函数。**
-
-```c++
-virtual bool atEnd() const; // 是否为数据的结尾
-virtual qint64 bytesAvailable() const; // 返回等待读取的传入字节数
-virtual qint64 bytesToWrite() const; // 返回等待写入的字节数
-virtual bool canReadLine() const; // 能否读取一行
-virtual void close();// 关闭设备
-virtual bool open(OpenMode mode);//打开设备
-virtual bool isSequential() const;// 是否顺序设备
-
-qint64 read(char *data, qint64 maxSize); // 读取指定字节数据并依据情况返回整数
-QByteArray read(qint64 maxSize); // 读取指定字节数据返回字节数组,无法报错
-QByteArray readAll(); //读取全部数据,无法报错
-qint64 write(const char *data, qint64 maxSize);// 最多将数据中的 maxSize 字节数据写入设备。返回实际写入的字节数，如果发生错误，则返回 -1
-qint64 write(const char *data); // 这是一个过载功能,将数据从 8 位字符的零终止字符串写入设备。返回实际写入的字节数，如果发生错误，则返回 -1。这相当于QIODevice::write(data, qstrlen(data));
-qint64 write(const QByteArray &byteArray);// 这是一个过载功能,将 byteArray 的内容写入设备。返回实际写入的字节数，如果发生错误，则返回 -1
-pure virtual protected qint64 QIODevice::writeData(const char *data, qint64 maxSize);//内部调用,最多将数据中的 maxSize 字节写入设备。返回写入的字节数，如果发生错误，则返回 -1。
-
-qint64 readLine(char *data, qint64 maxSize); // 读取一行数据返回整数
-QByteArray readLine(qint64 maxSize = 0); // 读取一行数据返回字节数组,无法报错
-virtual protected qint64 QIODevice::readLineData(char *data, qint64 maxSize);//内部调用的
-
-virtual bool reset();
-virtual bool seek(qint64 pos);
-virtual qint64 size() const;
-virtual qint64 pos() const;
-
-virtual bool waitForBytesWritten(int msecs); // 
-virtual bool waitForReadyRead(int msecs);
-```
-
-**readLine函数**；从设备中读取一行 ASCII 字符，**最大为 maxSize - 1 个字节**，将字符存储在数据中，并返回读取的字节数。**如果无法读取一行但没有发生错误，则此函数返回 0**。如果发生错误，**此函数返回可读取内容的长度**，如果**未读取任何内容，则返回 -1**。**终止的 &#39;\0&#39; 字节总是附加到数据中，因此 maxSize 必须大于 1**。读取数据直到满足以下任一条件： 读取第一个 &#39;\n&#39; 字符。maxSize - 读取 1 个字节。检测到设备数据的结束。
-
-换行符 (&#39;\n&#39;) 包含在缓冲区中。如果在读取 maxSize - 1 个字节之前没有遇到换行符，则不会将换行符插入缓冲区。在 Windows 上，换行符被替换为 &#39;\n&#39;。此函数调用 readLineData()，它是通过重复调用 getChar() 来实现的。您可以通过在自己的子类中重新实现 readLineData() 来提供更有效的实现。
-
-重载版本也是从设备读取一行，但不超过 maxSize 个字符，并将结果作为字节数组返回。该功能无法报错；返回一个空的 QByteArray 可能意味着当前没有数据可供读取，或者发生了错误。
-
-一个使用的案例代码。
-
-```c++
-QFile file("box.txt");
-if (file.open(QFile::ReadOnly)) {
-    char buf[1024];
-    qint64 lineLength = file.readLine(buf, sizeof(buf));
-    if (lineLength != -1) {
-        // the line is available in buf
-    }
-}
-```
-
-**reset函数**：寻找随机存取设备的输入开始。成功返回true；否则返回 false（例如，如果设备未打开）。请注意，当在 QFile 上使用 QTextStream 时，在 QFile 上调用 reset() 不会得到预期的结果，因为 QTextStream 会缓冲文件。请改用 QTextStream::seek() 函数。
-
-**seek函数**：对于随机访问设备，此函数将当前位置设置为 pos，成功时返回 true，如果发生错误则返回 false。对于顺序设备，默认行为是产生警告并返回 false。当子类化 QIODevice 时，您必须在函数开始时调用QIODevice::seek() 以确保与 QIODevice 的内置缓冲区的完整性。
-
-**size函数**：对于开放式随机访问设备，此函数返回设备的大小。对于打开的顺序设备，返回 bytesAvailable()。
-如果设备关闭，返回的尺寸将不会反映设备的实际尺寸。
-
-**pos函数：**对于随机访问设备，此函数返回数据写入或读取的位置。对于没有“当前位置”概念的顺序设备或封闭设备，返回 0。
-
-**waitForBytesWritten函数：**对于缓冲设备，此函数会等待，直到缓冲写入数据的有效负载已写入设备并且已发出 **bytesWritten()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。对于无缓冲的设备，它会立即返回。如果数据的有效负载已写入设备，则返回 true；否则返回 false（即，如果操作超时，或者如果发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 bytesWritten() 信号的槽中调用，则不会重新发送 bytesWritten()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
-
-**waitForReadyRead函数**：阻塞，直到有新数据可供读取并且发出了 **readyRead()** 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。如果有新数据可供读取，则返回 true；否则返回 false（如果操作超时或发生错误）。此函数可以在没有事件循环的情况下运行。它在编写非 GUI 应用程序和在非 GUI 线程中执行 I/O 操作时很有用。如果从连接到 readyRead() 信号的插槽中调用，则不会重新发送 readyRead()。重新实现此函数以为自定义设备提供阻塞 API。默认实现什么都不做，并返回 false。警告：从主 (GUI) 线程调用此函数可能会导致您的用户界面冻结。
-
-#### 子类函数
-
-**成员函数，可能暂时不怎么使用的函数。**
-
-```c++
-int currentReadChannel() const;
-int currentWriteChannel() const;
-int readChannelCount() const;
-int writeChannelCount() const;
-void setCurrentReadChannel(int channel);
-void setCurrentWriteChannel(int channel);
-
-QString errorString() const;
-
-bool getChar(char *c);
-void ungetChar(char c);
-bool putChar(char c);
-
-bool isTextModeEnabled() const;
-void setTextModeEnabled(bool enabled);
-
-bool isTransactionStarted() const;
-void commitTransaction();
-void rollbackTransaction();
-void startTransaction();
-
-qint64 peek(char *data, qint64 maxSize);
-QByteArray peek(qint64 maxSize);
-
-OpenMode openMode() const;//打开模式
-bool isOpen() const;//是打开状态
-bool isReadable() const;//可读？
-bool isWritable() const;//可写？
-```
-
-#### 信号函数
-
-最常用的是**bytesWritten和readyRead**信号，也是串口通信类继承的信号。
-
-```c++
-// 当设备即将关闭时发出此信号。如果您有需要在设备关闭之前执行的操作（例如，如果您在单独的缓冲区中有数据需要写入设备），请连接此信号
-void aboutToClose();
-
-// 每次将数据的有效负载写入设备的当前写入通道时，都会发出此信号。 bytes 参数设置为写入此有效负载的字节数。bytesWritten() 不是递归发出的；如果您重新进入事件循环或在连接到 bytesWritten() 信号的插槽内调用 waitForBytesWritten()，则不会重新发送该信号（尽管 waitForBytesWritten() 仍可能返回 true）。
-void bytesWritten(qint64 bytes);
-
-// 每次将数据的有效负载写入设备时都会发出此信号。 bytes 参数设置为此有效负载中写入的字节数，而 channel 是它们写入的通道。与 bytesWritten() 不同，无论当前写入通道如何，都会发出它。channelBytesWritten() 可以递归地发出 - 即使对于同一个通道。
-void channelBytesWritten(int channel, qint64 bytes);
-
-// 当新数据可用于从设备读取时，会发出此信号。通道参数设置为数据到达的读取通道的索引。与 readyRead() 不同的是，无论当前读取通道如何，都会发出它。channelReadyRead() 可以递归地发出 - 即使对于同一个通道。
-void channelReadyRead(int channel);
-
-// 此信号在此设备中关闭输入（读取）流时发出。一旦检测到关闭就会发出它，这意味着可能仍有数据可用于使用 read() 读取。
-void readChannelFinished();
-
-// 每次有新数据可用于从设备的当前读取通道读取时，都会发出一次此信号。它只会在新数据可用时再次发出，例如当新的网络数据有效负载到达您的网络套接字时，或者当新的数据块已附加到您的设备时。readyRead() 不会递归发出；如果您重新进入事件循环或在连接到 readyRead() 信号的插槽内调用 waitForReadyRead()，则不会重新发送该信号（尽管 waitForReadyRead() 仍可能返回 true）。实现从 QIODevice 派生的类的开发人员注意：当新数据到达时，您应该始终发出 readyRead() （不要仅仅因为缓冲区中还有数据要读取而发出它）。不要在其他条件下发出 readyRead()。
-void readyRead();
-```
 
 ### QtSerialPort/QSerialPort
 

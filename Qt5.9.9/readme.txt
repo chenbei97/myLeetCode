@@ -36,26 +36,94 @@
 
 14. TestQSplash 展示如何创建无边框可拖动的登录窗口(用户名+加密密码)
 
+15. TestQDataStream 展示如何读取和保存为stm、dat和txt文件格式
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
-7. 文本对话框的使用方式
+8. 中文乱码的问题
+(1) 使用QTextStream的时候设置流自动检测UniCode
+QTextStream stream(&file);
+stream.setAutoDetectUnicode(true); // 但是这种方法不是全局的
+(2) main函数使用QTextCodec设置全局启用
+int main()
+{
+    QTextCodec * code = QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(code);
+
+    QApplication a(argc,argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
+}
+
+8. 文本对话框的使用方式
 QString aFileName=QFileDialog::getOpenFileName(this,tr("打开一个文件"),curPath,
                 "C++文件(*.h *cpp);;文本文件(*.txt);;所有文件(*.*)");
 if (aFileName.isEmpty()) return; //如果未选择文件，退出
 // dosomething
 
-6. 标准的文本文件读取内容的代码（QFile+QTextStream+QFileInfo）
+7. 标准的文本文件保存内容的代码
+7.1 流的方式：（QFile+QTextStream）
+QFile aFile(aFileName);
+if (!aFile.open(QIODevice::WriteOnly | QIODevice::Text))
+    return false;
+QTextStream aStream(&aFile); //用文本流读取文件
+aStream.setAutoDetectUnicode(true); //自动检测Unicode,才能正常显示文档内的汉字
+QString str=ui->textEditStream->toPlainText(); //QPlainText的内容可以直接转换为字符串
+aStream<<str; //写入文本流
+aFile.close();//关闭文件
+
+QTextDocument   *doc;       //文本对象
+QTextBlock      textLine;   //文本中的一段
+doc=ui->textEditStream->document(); //QPlainTextEdit的内容也可以保存在一个 QTextDocument 里
+int cnt=doc->blockCount();//QTextDocument分块保存内容，文本文件就是硬回车符是一个block,
+QString str;
+for (int i=0; i<cnt; i++) //扫描所有 block
+{
+    textLine=doc->findBlockByNumber(i);//用block编号获取block，就是获取一行
+    str=textLine.text(); //转换为文本,末尾无\n
+    aStream<<str<<"\n";
+}
+
+6. 标准的文本文件读取内容的代码
+6.1 流的方式：（QFile+QTextStream+QFileInfo）
+/******************************************************************************/
 QFile aFile("file.txt");  //以文件方式读出
 if (aFile.open(QIODevice::ReadOnly | QIODevice::Text)) //以只读文本方式打开文件
 {
     QTextStream aStream(&aFile); //用文本流读取文件
-    auto text = aStream.readAll(); // 读取文本文件,这里还可以使用readLine等
+    auto text = aStream.readAll(); // 使用readAll读取文本文件,这里还可以使用readLine等
     aFile.close();//关闭文件
 
     QFileInfo   fileInfo(aFileName); //文件信息
     QString str=fileInfo.fileName(); //去除路径后的文件名
     // ...dosomething
 }
+QTextStream in(&aFile);
+QString line = in.readLine(); // 也可以先读取1行
+while (!line.isNull()) { // 不为空就继续处理
+    process_line(line);
+    line = in.readLine();// 使用readLine函数
+}
+/******************************************************************************/
+
+6.2 IO的方式：（QFile+QIODevice）
+/******************************************************************************/
+QFile file("in.txt");
+if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    return;
+while (!file.atEnd()) { // 使用继承的atEnd函数
+    QByteArray line = file.readLine(); // 使用继承的readLine函数
+    process_line(line);
+}
+QFile file("box.txt");
+if (file.open(QFile::ReadOnly)) {
+    char buf[1024];
+    qint64 lineLength = file.readLine(buf, sizeof(buf));
+    if (lineLength != -1) {
+        // the line is available in buf
+    }
+}
+/******************************************************************************/
 
 5. 窗口可以利用的事件类型
     5.1 closeEvent():窗口关闭触发的事件,例如弹出窗口确认是否关闭
@@ -90,19 +158,24 @@ if (aFile.open(QIODevice::ReadOnly | QIODevice::Text)) //以只读文本方式�
 
 4. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
 一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针
+/******************************************************************************/
 void QFormDoc::closeEvent(QCloseEvent *event)
 {
     TestMultiWindow * parentWindow = (TestMultiWindow *)parentWidget(); // 获取主窗口
     parentWindow->setActWidgetEnable(true); // setActWidgetEnable是主窗口提供的公共函数可以被子窗口使用
 
 }
+/******************************************************************************/
+
 如果不能获取主窗口,子窗口是个独立的窗口,只能使用信号与槽机制来传递信息而不必获取指针
+/******************************************************************************/
 void void QFormDoc::closeEvent(QCloseEvent *event)
 {
     emit isAboutClosed(true); // 主窗口要把setActWidgetEnable从公共函数变成公共槽函数使用
     Q_UNUSED(event); // 并且主窗口联系好子窗口自定义的isAboutClosed信号和槽函数setActWidgetEnable
     // 这样当子窗口关闭时发射该信号就会自动执行setActWidgetEnable函数
 }
+/******************************************************************************/
 
 3. 槽函数中获取信号的发送者
 需要利用静态函数sender(),以及类型转换qobject_cast
