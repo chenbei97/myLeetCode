@@ -6755,11 +6755,20 @@ bool QTextStream::autoDetectUnicode() const;
 
 #### 6.2.1 QDataStream
 
-用于二进制文本读取。
+QDataStream 类为 QIODevice 提供二进制数据的序列化，可以用于二进制文本读取。
+数据流是编码信息的二进制流，它 100% 独立于主机的操作系统、CPU 或字节顺序。例如，在 Windows 下由 PC 写入的数据流可以由运行 Solaris 的 Sun SPARC 读取。
+您还可以使用数据流来读取/写入原始未编码的二进制数据。如果您想要“解析”输入流，请参阅 QTextStream。
+QDataStream 类实现了 C++ 基本数据类型的序列化，如 char、short、int、char * 等。更复杂数据的序列化是通过将数据分解为原始单元来完成的。数据流与 QIODevice 密切合作。 QIODevice 代表一种可以读取数据和写入数据的输入/输出介质。 QFile 类是 I/O 设备的一个示例。
+写入流的每个项目都以预定义的二进制格式写入，该格式因项目的类型而异。支持的 Qt 类型包括 QBrush、QColor、QDateTime、QFont、QPixmap、QString、QVariant 等等。有关支持数据流的所有 Qt 类型的完整列表，请参阅序列化 Qt 数据类型。
+对于整数，最好始终转换为 Qt 整数类型以进行写入，并读回相同的 Qt 整数类型。这可确保您获得所需大小的整数，并使您免受编译器和平台差异的影响。
+举个例子，一个 char * 字符串被写成一个 32 位整数，等于字符串的长度，包括 &#39;\0&#39; 字节，后跟字符串的所有字符，包括 &#39;\0&#39; 字节。读取 char * 字符串时，读取 4 个字节以创建 32 位长度值，然后读取 char * 字符串的许多字符，包括 &#39;\0&#39; 终止符。
+初始 I/O 设备通常在构造函数中设置，但可以使用 setDevice() 更改。如果您已经到达数据的末尾（或者如果没有设置 I/O 设备） atEnd() 将返回 true。
 
-常见的写入文本的函数例子如下。
+您可能希望直接从数据流中读取/写入您自己的原始二进制数据。可以使用 readRawData() 将数据从流中读取到预先分配的 char * 中。类似地，可以使用 writeRawData() 将数据写入流。请注意，数据的任何编码/解码都必须由您完成。一对类似的函数是 readBytes() 和 writeBytes()。它们与原始对应物的不同之处如下：readBytes() 读取一个 quint32，它被视为要读取的数据的长度，然后将该字节数读入预分配的 char *； writeBytes() 写入一个包含数据长度的 quint32，后跟数据。请注意，数据的任何编码/解码（除了长度 quint32）都必须由您完成。
 
-writeRawData函数。
+2个写入文本的例子如下。
+
+使用writeRawData函数写入非字符串类型数据。
 
 ```c++
 // 将 s 中的 len 个字节写入流。返回实际写入的字节数，错误时返回 -1
@@ -6791,6 +6800,106 @@ for (int i=0;i<theModel->columnCount();i++) // 遍历表头标题(列数)
 ```
 
 具体的例子可见[15-TestQDataStream](15-TestQDataStream)。
+
+##### 枚举类型
+
+用于读取/写入数据的字节顺序。
+
+```c++
+enum QDataStream::ByteOrder {
+    QDataStream::BigEndian，//最高有效字节在前（默认）
+    QDataStream::LittleEndian//最低有效字节优先
+}
+```
+
+用于读取/写入数据的浮点数的精度。这只有在数据流的版本是 Qt_4_6 或更高版本时才会生效。警告：在写入数据流的对象和读取数据流的对象上，浮点精度必须设置为相同的值。
+
+```c++
+enum QDataStream::FloatingPointPrecision {
+    QDataStream::SinglePrecision,//数据流中的所有浮点数都具有 32 位精度
+    QDataStream::DoublePrecision//数据流中的所有浮点数都具有 64 位精度
+}
+```
+
+这个枚举描述了数据流的当前状态。
+
+```c++
+enum QDataStream::Status {
+    QDataStream::Ok,//数据流运行正常
+    QDataStream::ReadPastEnd,//数据流已读取超过底层设备中数据的末尾
+    QDataStream::ReadCorruptData,//数据流已读取损坏数据
+    QDataStream::WriteFailed// 数据流无法写入底层设备
+}
+```
+
+此枚举为数据序列化格式版本号提供符号同义词，预定义的Qt写入stm格式支持的版本。
+
+```c++
+enum QDataStream::Version { 
+    QDataStream::Qt_1_0,
+    QDataStream::Qt_2_0,
+    QDataStream::Qt_2_1,
+    QDataStream::Qt_3_0,
+    QDataStream::Qt_3_1,
+    QDataStream::Qt_3_3,
+    QDataStream::Qt_4_0,
+    QDataStream::Qt_4_1,
+    QDataStream::Qt_4_2,
+    QDataStream::Qt_4_3,
+    QDataStream::Qt_4_4,
+    QDataStream::Qt_4_5,
+    QDataStream::Qt_4_6,
+    QDataStream::Qt_4_7,
+    QDataStream::Qt_4_8,
+    QDataStream::Qt_4_9,
+    QDataStream::Qt_5_0,
+    QDataStream::Qt_5_1,
+    QDataStream::Qt_5_2,
+    QDataStream::Qt_5_3,
+    QDataStream::Qt_5_4,
+    QDataStream::Qt_5_5,
+    QDataStream::Qt_5_6,
+    QDataStream::Qt_5_7,
+    QDataStream::Qt_5_8,
+    QDataStream::Qt_5_9
+}
+```
+
+##### 成员函数
+
+```c++
+void abortTransaction();//中止读取事务，此函数通常用于在更高级别的协议错误或流同步丢失后丢弃事务
+bool commitTransaction();//完成一个读事务，如果在事务期间没有发生读取错误，则返回 true，否则返回假
+void rollbackTransaction();//恢复读取事务，此函数通常用于在提交事务之前检测到不完整读取时回滚事务
+void startTransaction();//在流上启动新的读取事务
+
+bool atEnd() const;//如果I/O设备已到达结束位置或没有设置I/O设备，则返回true，否则返回假
+
+QDataStream &readBytes(char *&s, uint &l);//从流中读取缓冲区s并返回对流的引用。缓冲区s是使用new[] 分配的。使用delete[]操作符将其销毁。l参数设置为缓冲区的长度。如果读取的字符串为空，则将l设置为0，并将s设置为空指针。序列化格式首先是一个quint32长度说明符，然后是l个字节的数据，如果读取的是字符串必须使用此函数
+QDataStream &writeBytes(const char *s, uint len);//同理,写入缓冲区返回流的引用
+
+int readRawData(char *s, int len);//从流中最多读取len个字节到s中，并返回读取的字节数。如果发生错误，此函数返回-1。缓冲区s必须预先分配，数据未编码，读取非字符串的普通类型qint8,qint16等使用
+int skipRawData(int len);//从设备跳过len个字节。返回实际跳过的字节数或-1错误。这相当于在长度为len的缓冲区上调用readRawData()并忽略缓冲区
+int writeRawData(const char *s, int len);//写入len个字节的s到流中
+
+void resetStatus();// 重置数据流的状态
+void setStatus(Status status);//设置数据流状态
+Status status() const;//返回数据量状态
+void setDevice(QIODevice *d);//设置I/O设备
+ByteOrder byteOrder() const;//返回当前字节顺序设置——BigEndian 或 LittleEndian
+void setByteOrder(ByteOrder bo);//设置字节序
+QIODevice *device() const;//返回当前设置的 I/O 设备，如果当前未设置任何设备，则返回0
+void setDevice(QIODevice *d);//设置I/O设备
+void setFloatingPointPrecision(FloatingPointPrecision precision);//设置浮点精度
+FloatingPointPrecision QDataStream::floatingPointPrecision() const;//返回浮点精度
+int version() const;// 返回数据序列化的版本号
+void QDataStream::setVersion(int v);// 将数据序列化格式的版本号设置为 v，Version 枚举的值
+
+QDataStream &operator<<(qint8 i); // 读入,其它还支持quint8,qint16,...double
+QDataStream &operator>>(qint8 i); // 读出,其它还支持quint8,qint16,...double
+```
+
+
 
 ### 6.3 文件和目录操作
 

@@ -202,141 +202,147 @@ while (condition)
 问题场景：
 例如一个QLineEdit输入一串文字,QLineEdit的槽函数内部会往串口写入带有输入文字的某种命令
 输入命令后使用waitForReadyRead等待响应，如果超时就进行重发，且重发次数不能超过5次，代码如下：
-/******************************************************************************/
-// 在这之前已连接信号readyRead和槽函数receive_reply
-connect(myPort,SIGNAL(readyRead()),this,SLOT(receive_reply()),Qt::AutoConnection); // Qt::QueuedConnection
-// 在这之前已获取要写入串口的命令command
-unsigned int t = 1;
-myPort.write(command);
-while (myPort.waitForReadyRead(50) && t <= 5){
-    qDebug()<<QString::asprintf("第%d次重发",t);
-    myPort.write(command);
-    ++ t;
-}
-if (t > 5){ //超时
-    QMessageBox::critical(this,"设定失败!","设定输入电压失败!请重新输入或检查设备");
-}
-else {
-    qDebug()<<"没超时,发送成功!";
-}
-/******************************************************************************/
-假设串口数据回复方一直正常，总会及时的回复数据。
-一方面：receive_reply()函数中使用read/readAll/readLine读取了串口数据,发现串口数据的确能收到数据也是正确的
-另一方面：QLineEdit输入文字后(往串口写入命令)一致在等待串口是否有响应(waitForReadyRead在等readyRead信号),但是总是超时
-【矛盾点】：receive_reply()能够响应,说明readyRead信号肯定是发送出去了；waitForReadyRead超时说明没有readyRead信号发出
-
-根据CSDN：https://blog.csdn.net/joyopirate/article/details/121786794?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~aggregatepage~first_rank_ecpm_v1~rank_v31_ecpm-3-121786794-null-null.pc_agg_new_rank&utm_term=qt%E7%9A%84waitforreadyread&spm=1000.2123.3001.4430
-这位博主认为的解释是：
-① waitForReadyRead会导致当前进程阻塞，然后就算readyRead信号发出了也无法响应。 （√，我也这么认为，所以我觉得可能的一个解决方案是定义一个工作子线程类，在run()函数使用waitForReadyRead函数）
-② 完全不连接这个ReadyRead，这个waitForReadyRead函数是可以正常工作的。（经过测试，注释掉readyRead和receive_reply的连接,发现就不会超时的确可以正常工作，但是显然不连接就意味着不使用readyRead了,收发逻辑无法分开写）
-③ 无论使用 Qt::DirectConnection 还是 Qt::QueuedConnection，槽函数(博主说的应该是这里的receive_reply)都是在主线程（串口所在的线程）执行的。 （我觉得也是对的，因为receive_reply函数在主线程和readyRead连接的,不管哪种连接方式都是主线程）
-④ 在绑定了readyRead()的我们自己写的槽函数中，不要进行读取数据的操作，就也不会超时。（经过测试，确实如此，如果receive_reply什么也不做，确实不会超时，但是显然这种方法不好，这样等于不使用readyRead）
-⑤ 将readyRead()与我们自己写的槽函数绑定时，使用Qt::QueuedConnection不会超时。（经过测试，问题得到解决，不会超时）（更新，只解决了一半问题）
-connect(myPort,SIGNAL(readyRead()),this,SLOT(receive_reply()),Qt::QueuedConnection); // 使用队列连接
-⑥ 使用Qt::QueuedConnection，将槽函数放到了连接到该信号的槽函数队列比较后的位置
-（调用waitForReadyRead时，其实里面也执行了类似信号槽的绑定，而且这个绑定应该是 Qt::DirectConnection）
-因此在信号发出之后，先执行waitForReadyRead函数，然后再执行自己的函数receive_reply。
-
-【新问题】：第⑤条不是不会超时，当应用程序刚启动时，第一次QLineEidt的槽函数响应后，进入waitForReadyRead循环，即使串口发送了数据依然会超时
-当waitForReadyRead循环终止之后，readyRead的槽函数receive_reply才响应之前的串口已发送的数据,所以首次调用时Qt::QueuedConnection还是阻塞了线程
-但是QLineEidt的槽函数再次响应，进入waitForReadyRead循环后就不超时了,好像一切恢复正常
-Qt文档说的如果在receive_reply函数中调用waitForReadyRead,就不会发送readyRead信号
-现在看起来即使在其他函数调用也会导致不会发送readyRead信号，但是可能因为Qt::QueuedConnection的原因后续就跟上了，开始发送readyRead信号
-但是对用户来说，他永远不知道为何第一次设定命令总是会失败，后边就正常，这种情况还是要解决的
-
-再回过头来看Qt::AutoConnection和Qt::QueuedConnection的使用区别：
-Qt::QueuedConnection：超时问题解决了一半，首次进入waitForReadyRead循环一定会阻塞readyRead信号的发送然后对应的槽函数receive_reply无法执行
-    waitForReadyRead循环结束后，readyRead信号发送才执行了槽函数。之后再进入waitForReadyRead循环，恢复正常不超时
-Qt::AutoConnection：一定超时，阻塞readyRead信号，但是这里是阻塞收不到信号，而不是阻塞发出信号，在waitForReadyRead循环事件期间receive_reply槽函数可以执行
-
-现在诞生了2个解决方案：
-一、使用Qt::AutoConnection，既然并不阻塞receive_reply槽函数执行，那么可以在waitForReadyRead循环之间用一个变量保存输入值InputVal
-    然后在receive_reply收到数据以后，把收到的数据用一个变量feedbackVal保存。然后在waitForReadyRead循环结束后，多一层判断，
-    如果InputVal=feedbackVal，依然判定成功而不是失败。
+（0）Qt::AutoConnection + waitForReadyRead（不能解决超时重发问题）
     /******************************************************************************/
-    this->port->write(command); 
-    this->inputVal = text.toDouble(); // 保存用户想要设定的命令参数,用于在接收数据时比较,浮点数可以不精确相等
+
+    // 在这之前已连接信号readyRead和槽函数receive_reply
+    connect(myPort,SIGNAL(readyRead()),this,SLOT(receive_reply()),Qt::AutoConnection); // Qt::QueuedConnection
+    // 在这之前已获取要写入串口的命令command
     unsigned int t = 1;
-    while ((!port->waitForReadyRead(500) || !this->setVariableAccepted) && // 串口没有反馈数据重发或回馈设定失败重发
-                t<=5 ) //  且重发次数不超过5次时while会执行
-    {
+    myPort.write(command);
+    while (myPort.waitForReadyRead(500) && t <= 5){ // only waitForReadyRead
         qDebug()<<QString::asprintf("第%d次重发",t);
+        myPort.write(command);
+        ++ t;
+    }
+    if (t > 5){ //超时
+        QMessageBox::critical(this,"设定失败!","设定输入电压失败!请重新输入或检查设备");
+    }
+    else {
+        qDebug()<<"没超时,发送成功!";
+    }
+    /******************************************************************************/
+    假设串口数据回复方一直正常，总会及时的回复数据。
+    一方面：receive_reply()函数中使用read/readAll/readLine读取了串口数据,发现串口数据的确能收到数据也是正确的
+    另一方面：QLineEdit输入文字后(往串口写入命令)一致在等待串口是否有响应(waitForReadyRead在等readyRead信号),但是总是超时
+    【矛盾点】：receive_reply()能够响应,说明readyRead信号肯定是发送出去了；waitForReadyRead超时说明没有收到readyRead信号
+    【也就是说waitForReadyRead会阻塞readyRead信号但是不阻塞receive_reply函数的执行】
+
+    根据CSDN：https://blog.csdn.net/joyopirate/article/details/121786794?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~aggregatepage~first_rank_ecpm_v1~rank_v31_ecpm-3-121786794-null-null.pc_agg_new_rank&utm_term=qt%E7%9A%84waitforreadyread&spm=1000.2123.3001.4430
+    这位博主认为的解释是：
+    ① waitForReadyRead会导致当前进程阻塞，然后就算readyRead信号发出了也无法响应。 （实际测试确实如此）
+    ② 完全不连接这个ReadyRead，这个waitForReadyRead函数是可以正常工作的。（经过测试，注释掉readyRead和receive_reply的连接,发现就不会超时的确可以正常工作，但是这种做法是消极的因为receive_reply函数是必须要使用的）
+    ③ 无论使用 Qt::DirectConnection 还是 Qt::QueuedConnection，槽函数(博主说的应该是这里的receive_reply)都是在主线程（串口所在的线程）执行的。 （我觉得也是对的，因为receive_reply函数在主线程和readyRead连接的,不管哪种连接方式都是主线程）
+    ④ 在绑定了readyRead()的我们自己写的槽函数中，不要进行读取数据的操作，就也不会超时。（经过测试，确实如此，如果receive_reply什么也不做，确实不会超时，但是显然这种方法不好，这样等于不使用readyRead）
+    ⑤ 将readyRead()与receive_reply槽函数绑定时，使用Qt::QueuedConnection不会超时。（从结果来看，确实都能解决问题）
+    connect(myPort,SIGNAL(readyRead()),this,SLOT(receive_reply()),Qt::QueuedConnection); // 使用队列连接
+
+然后我尝试了4个解决方案（其中有2个解决了问题）：
+（1）Qt::AutoConnection+waitForReadyRead+feedbackval（解决超时重发问题）
+    既然并不阻塞receive_reply槽函数执行，那么可以在waitForReadyRead循环之前用一个变量保存输入值InputVal
+    然后在receive_reply收到数据以后，把收到的数据用一个变量feedbackVal保存。然后把输入和反馈值是否相等作为waitForReadyRead事件的条件
+    这样只是单纯的利用了waitForReadyRead的延时功能（因为它总是超时，等于此功能没用必须引入新条件辅助结束while循环）
+    /******************************************************************************/
+    unsigned int t = 1;
+    while ((!port->waitForReadyRead(300) ) && // 单纯的延时功能,在该循环内阻塞readyRead但不阻止receive_reply函数执行
+                t<=5 &&(qAbs(inputVal-feedbackVal)>=1e-3)) //  还要多判断feedbackval和inputval辅助作为while事件的条件
+    {
+        // receive_reply函数能够及时的更新feedbackval的情况反馈给这里的while循环
+        mutex.lock();
         this->port->write(command);
+        mutex.unlock();
+        qDebug()<<"超时"<<t<<"次";
         ++t;
     }
-    if (t <= 5)
+    if (t<5)
     {
         QMessageBox::information(this,"设定成功","设定输入电压成功!");
         return;
     }
-    //即使t>5,如果2个值匹配了依然不认为超时
-    if (qAbs(feedbackVal-inputVal)<1e-3)
-    {
-        QMessageBox::information(this,"设定成功","设定输入电压成功!");
-        return;
-    }
-    this->setVariableAccepted = false;
-    QMessageBox::critical(this,"设定失败!","设定输入电压失败!请重新输入或检查设备");
-    ui->lineEdit->clear();
+      QMessageBox::critical(this,"设定失败!","设定输入电压失败!请重新输入或检查设备");
     /******************************************************************************/
-    
-    但是这样的话，似乎waitForReadyRead失去了其意义，仅仅起到了延时作用（不完全失去），因为这个循环一定会被判定重发,总是重发5次
-    所以我尝试使用一个普通的定时循环代替waitForReadyRead，结果发现依然存在问题，依然会出现5次都判定重发的情况
-    从debug结果来看，while定时卡住，结束以后才会执行receive_reply函数，就像使用Qt::QueuedConnection的情况一样
-    所以我才体会到，waitForReadyRead不仅仅作为延时，它的事件循环内才可以不阻碍receive_reply函数的调用，普通事件循环依然会阻止
+（2）Qt::AutoConnection+timer+feedbackval（不能解决超时重发问题）
+    但是这样的话，似乎waitForReadyRead失去了其意义，仅仅起到了延时作用，所以我尝试使用一个普通的定时循环代替waitForReadyRead，看看能不能用
+    从debug结果来看情况更糟糕，while事件不仅会阻塞readyRead信号还让receive_reply函数无法执行(之前仅仅是晚些收到readyRead而不会影响receive_reply函数执行,只是有些不同步)
+    所以我才体会到，waitForReadyRead不仅仅作为延时，它的至少起到了不阻碍receive_reply函数的调用，普通事件循环依然会阻止
     /******************************************************************************/
-    this->port->write(command); 
-    this->inputVal = text.toDouble(); // 保存用户想要设定的命令参数,用于在接收数据时比较,浮点数可以不精确相等
-    QTime timer;
-    timer.start();
     unsigned int t = 1;
-    while (!this->setVariableAccepted && (t<=5)) // 如果收到的数据和设置的不相等且不超过5次时可以继续重发
+    // 这里会发现总是超时,因为while循环卡住了receive_reply函数的执行无法给feedbackVal反馈
+    // 所以还不能用普通的延时循环,必须使用waitForReadyRead的延时
+    while (!(qAbs(inputVal-feedbackVal)<1e-3) && (t<=5)) // 不仅阻塞readyRead还阻塞receive_reply函数
     {
-        // 创建一个延时,给500ms让串口收到数据进行处理设置feedbackVal
-         if (timer.elapsed()>500) // 如果等待了500ms还不满足条件就++t
+        // 创建一个延时,给300ms让串口收到数据进行处理设置feedbackVal
+         if (timer.elapsed()>300) // 如果等待了300ms还不满足条件就++t
          {
             qDebug()<<QTime::currentTime()<<" "<<QString::asprintf("第%d次重发",t);
-             if (this->setVariableAccepted)
-            {
-                QMessageBox::information(this,"设定成功","设定输入电压成功!");
-                return;
-            }
             this->port->write(command);
             ++t;
             timer.restart();
          }
     }
-    QMessageBox::critical(this,"设定失败!","设定输入电压失败!请重新输入或检查设备");
-    ui->lineEdit->clear();
-    this->inputVal = 0.0;
-    /******************************************************************************/
-
-    根据之前的debug结果，还是采用waitForReadyRead去延时，从测试结果来看，暂时没有什么问题。
-    /******************************************************************************/
-    mutex.lock();
-    mutex.unlock();
-    this->port->write(command);
-    this->inputVal = text.toDouble(); // 保存用户想要设定的命令参数,用于在接收数据时比较,浮点数可以不精确相等
-    unsigned int t = 1;
-    while ((!port->waitForReadyRead(300) ) && // 单纯的延时功能,利用它在Qt::AutoConnection模式下可以在该循环内不阻止receive_reply函数执行
-                t<=5 ) //  重发次数不超过5次时while会执行
+    if (t<5)
     {
-        // 单单setVariableAccepted情况还不行,因为用户更改输入值以后setVariableAccepted还没来得及变化保持上次的true
-        if (this->setVariableAccepted && (qAbs(inputVal-feedbackVal)<1e-3)) // 这样receive_reply函数能够及时的更新setVariableAccepted的情况反馈给这里的while循环
-        {
-            QMessageBox::information(this,"设定成功","设定输入电压成功!");
-            return;
-        }
-        mutex.lock();
-        this->port->write(command);
-        mutex.unlock();
-        ++t;
+        QMessageBox::information(this,"设定成功","设定输入电压成功!");
+        return;
     }
     QMessageBox::critical(this,"设定失败!","设定输入电压失败!请重新输入或检查设备");
-    ui->lineEdit->clear();
-    this->inputVal = 0.0;
     /******************************************************************************/
-二、使用Qt::QueuedConnection，这个问题只在启动时会出现问题，但是这个问题也是不好解决的
-    我的想法是定义一个类继承QThread,run()函数内运行waitForReadyRead循环,这个类显然还需要定义私有属性port
-    主线程创建的myPort还必须交给这个port属性,然后通过子线程的运行可能能够不阻止readyRead信号发射了,不过这可能很麻烦,而且也不一定能成功
-    根据第③条博主的看法，很有可能因为连接信号是主线程完成的，还是会收不到readyRead信号
+（3）Qt::QueueConnection + waitForReadyRead（解决超时重发问题）
+    （0）中的代码没有任何变化，仅仅将连接信号的方式从Qt::AutoConnection改为了Qt::QueueConnection，发现没有阻塞信号也不阻塞槽函数执行
+（4）Qt::QueueConnection + waitForReadyRead + feedbackval（解决超时重发问题）
+    （1）中的代码没有任何变化，仅仅将连接信号的方式从Qt::AutoConnection改为了Qt::QueueConnection，发现没有阻塞信号也不阻塞槽函数执行
+    但是显然（4）比（3）更好，因为（0）中的代码只能判定确实收到了数据，但是数据不一定是对的，所以应当考虑双保险，也就是（4）的做法
+（5）Qt::QueueConnection + Timer + feedbackval（不能解决超时重发问题）
+    （2）中的代码没有任何变化，仅仅将连接信号的方式从Qt::AutoConnection改为了Qt::QueueConnection，发现依然阻塞信号和槽函数的执行
+    所以结论可以知道，超时重发还就只能使用waitForReadyRead不能使用自己的定时循环，而且失效问题使用Qt::QueueConnection解决。
+
+总结：
+① 后台定时300ms固定查询,所以定时器的timeout信号绑定了一个发送查询命令的函数send_query()
+② 发送查询()内部往串口写数据,因为每300ms都会固定重发,即使硬件没有收到也不用作什么超时处理,因为超时也是重发
+③ 而串口一旦open,只要串口有数据,就会有readyRead信号,readyRead绑定了receive_reply函数,是唯一的一个
+④ receive_reply函数只有1个,所以必须处理不同类型的数据,除了固定查询还有界面组件的槽函数,例如未来会增加的电压、电流、功率的输入设定
+⑤ 所以receive_reply函数必须同时处理不同类型的数据。大方向固定查询单作一类,因为返回的数据有好几条带有分号;而其它的设定查询只会返回1条数据
+⑥ 设定查询命令返回的数据必须要知道是谁发的命令,才能作对应的处理;如果知道是谁发的命令,但是没有数据返回还要做超时反馈处理
+⑦ 超时反馈处理能想到的函数就是waitForReadyRead
+    设想的是等待500ms没有readyRead信号,也就不能执行receive_reply函数,那么waitForReadyRead就会一直等待
+    然后如果有readyRead信号就会执行receive_reply函数,waitForReadyRead就不会等待
+    但是这是1个设想的情况,实际不能用这套机制来得到超时重发的反馈结果。
+
+    如果是AutoConnection,结果总是超时,因为串口数据实际是正常的进来了,readyRead信号也有,但是它被waitForReadyRead事件卡住了,receive_reply执行事件排到后边
+    也就是说永远会超时,事件结束以后执行receive_reply,而不是超时判断过程中执行receive_reply得到结果给waitForReadyRead事件一个反馈是继续重发还是终止
+    既然waitForReadyRead超时不起作用,那就换成别的条件,receive_reply因为可以正常执行,所以接收到数据以后反馈给this->feedbackVal
+    waitForReadyRead事件通过检测qAbs(this->feedbackVal,this->InputVal)<1e-3来判定是否设定和查询的结果一致,一致的话提前终止否则提示失败
+    这是一个【曲线救国】的做法可以解决问题！
+    
+    这时候我继续想，既然waitForReadyRead的超时功能都没用了,它似乎仅仅起到了一个延时的作用,干嘛不拿掉换一个直接延时的定时器不就好了?
+    经过实际测试，反而更加糟糕，不仅收不到readyRead信号也阻塞了receive_reply函数的执行，这就说明waitForReadyRead绝不仅仅起到了延时的作用
+⑧ 根据csdn提供的方案，仅仅将连接信号的方式从Qt::AutoConnection改为了Qt::QueueConnection，发现是可以解决问题的
+  但是只能使用waitForReadyRead，不能使用自定义的timer延时。
+⑨ 既然改为Qt::QueueConnection就能成功，就很有必要查看这个枚举值的含义是什么。
+
+enum Qt::ConnectionType {
+
+    // 默认连接方式,如果接收者位于发出信号的线程中,则使用Qt::DirectConnection否则使用Qt::QueuedConnection,连接类型在信号发出时确定
+    // 从qt文档的说明来看,因为接收者receive_reply和发出者lineEdit的槽函数确实都同一线程,所以默认使用这种方式
+    Qt::AutoConnection = 0, 
+
+    // 发出信号时立即调用槽函数,该槽函数会在信号发出的线程中执行
+    Qt::DirectConnection = 1,
+
+    // 当控制返回到接收者线程的事件循环时调用该槽函数,槽函数在接收者的线程中执行
+    // 也就是说可以不在信号readyRead发出的线程中执行,这也是为何waitForReadyRead阻塞了readyRead但是不会阻塞receive_reply
+    // Qt额外对此种连接提出了警告,参数必须是Qt元对象系统已知的类型,因为Qt需要复制参数以将它们存储在幕后的事件中
+    // 换句话说就是信号函数和槽函数的参数必须是Qt自带的也就是Q打头的数据类型,不能是自定义的数据类型否则也会连接失败
+    // 使用自定义类型必须在建立连接之前调用qRegisterMetaType()来注册数据类型
+    Qt::QueuedConnection = 2,
+
+    // 与Qt::QueuedConnection相同,只是信号线程会阻塞直到槽函数返回
+    // 如果接收者位于信号线程中,则不得使用此连接,否则应用程序将死锁
+    // 也就说readyRead信号会卡住等待recive_reply,但是同一线程中recive_reply又会等待readyRead就会死锁
+    Qt::BlockingQueuedConnection = 3,
+
+    // 这是一个可以使用按位OR与上述任何一种连接类型组合的标志
+    // 当设置了Qt::UniqueConnection时，如果连接已经存在(即如果相同的信号已经连接到同一对象的同一槽函数)
+    // 则QObject::connect()将失败,这个标志是在Qt 4.6中引入的,也就声明连接必须是唯一的,否则失败
+    Qt::UniqueConnection = 0x80
+}
