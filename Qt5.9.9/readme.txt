@@ -237,7 +237,7 @@ while (condition)
     ⑤ 将readyRead()与receive_reply槽函数绑定时，使用Qt::QueuedConnection不会超时。（从结果来看，确实都能解决问题）
     connect(myPort,SIGNAL(readyRead()),this,SLOT(receive_reply()),Qt::QueuedConnection); // 使用队列连接
 
-然后我尝试了4个解决方案（其中有2个解决了问题）：
+然后我尝试了5个解决方案（其中有3个解决了问题）：
 （1）Qt::AutoConnection+waitForReadyRead+feedbackval（解决超时重发问题）
     既然并不阻塞receive_reply槽函数执行，那么可以在waitForReadyRead循环之前用一个变量保存输入值InputVal
     然后在receive_reply收到数据以后，把收到的数据用一个变量feedbackVal保存。然后把输入和反馈值是否相等作为waitForReadyRead事件的条件
