@@ -2736,32 +2736,7 @@ void setWindow(const QRect &rectangle);
 const QTransform &transform() const;
 ```
 
-#### 3.1.17 QCoreApplication
 
-成员函数3个。
-
-```c++
-void installNativeEventFilter(QAbstractNativeEventFilter *filterObj);//为应用程序在主线程中接收到的所有本机事件安装事件过滤器 filterObj
-virtual bool notify(QObject *receiver, QEvent *event);//向接收者发送事件：receiver-&gt;event(event)。返回从接收者的事件处理程序返回的值。请注意，对于发送到任何线程中的任何对象的所有事件，都会调用此函数。
-void removeNativeEventFilter(QAbstractNativeEventFilter *filterObject);//从此对象中移除事件 filterObject。如果尚未安装此类事件过滤器，则忽略该请求
-```
-
-一对信号和槽函数。
-
-```c++
-static slot void QCoreApplication::quit();//告诉应用程序退出并返回代码0(成功)。相当于调用 QCoreApplication::exit(0)
-void aboutToQuit();//当应用程序即将退出主事件循环时发出此信号，例如当事件循环级别降至零时。这可能发生在从应用程序内部调用 quit()之后或当用户关闭整个桌面会话时
-```
-
-常用的静态函数。
-
-```c++
-QString applicationDirPath();//返回包含应用程序可执行文件的目录
-QString applicationFilePath();//返回应用程序可执行文件的文件路径
-QString applicationName();//此属性包含此应用程序的名称
-qint64 applicationPid();//返回应用程序的当前进程 ID
-QString applicationVersion();//此属性保存此应用程序的版本
-```
 
 
 
@@ -6905,7 +6880,33 @@ QDataStream &operator>>(qint8 i); // 读出,其它还支持quint8,qint16,...doub
 
 #### 6.3.1 QCoreApplication
 
+成员函数3个。
 
+```c++
+void installNativeEventFilter(QAbstractNativeEventFilter *filterObj);//为应用程序在主线程中接收到的所有本机事件安装事件过滤器 filterObj
+virtual bool notify(QObject *receiver, QEvent *event);//向接收者发送事件：receiver-&gt;event(event)。返回从接收者的事件处理程序返回的值。请注意，对于发送到任何线程中的任何对象的所有事件，都会调用此函数。
+void removeNativeEventFilter(QAbstractNativeEventFilter *filterObject);//从此对象中移除事件 filterObject。如果尚未安装此类事件过滤器，则忽略该请求
+```
+
+一对信号和槽函数。
+
+```c++
+static slot void QCoreApplication::quit();//告诉应用程序退出并返回代码0(成功)。相当于调用 QCoreApplication::exit(0)
+void aboutToQuit();//当应用程序即将退出主事件循环时发出此信号，例如当事件循环级别降至零时。这可能发生在从应用程序内部调用 quit()之后或当用户关闭整个桌面会话时
+```
+
+常用的静态函数。
+
+```c++
+static QString applicationDirPath();//返回包含应用程序可执行文件的目录
+static QString applicationFilePath();//返回应用程序可执行文件的文件路径
+static QString applicationName();//此属性包含此应用程序的名称
+static qint64 applicationPid();//返回应用程序的当前进程 ID
+static QString applicationVersion();//此属性保存此应用程序的版本
+static StringList QCoreApplication::libraryPaths();//返回应用程序在动态加载库时将搜索的路径列表
+static void QCoreApplication::exit(int returnCode = 0);// 告诉应用程序退出并返回代码
+static QString QCoreApplication::organizationName();// 此属性包含编写此应用程序的组织的名称
+```
 
 #### 6.3.2 QDir
 
@@ -6933,6 +6934,49 @@ QDir().dirName();
 目录可以用 mkdir() 创建，用 rename() 重命名，用 rmdir() 删除。
 您可以使用exists() 测试具有给定名称的目录是否存在，并且可以使用isReadable()、isAbsolute()、isRelative() 和isRoot() 测试目录的属性。
 refresh() 函数从磁盘重新读取目录的数据。
+
+需要了解的枚举类型如下。
+
+这个枚举描述了 QDir 可用的过滤选项；例如用于 entryList() 和 entryInfoList()。过滤器值是通过使用按位 OR 运算符组合以下列表中的值来指定的：
+
+```c++
+enum QDir::Filter {
+    	QDir::Dirs,//列出与过滤器匹配的目录
+        QDir::AllDirs,//列出所有目录；即不要将过滤器应用于目录名称。
+        QDir::Files,//列出文件
+        QDir::Drives,//列出磁盘
+        QDir::NoSymLinks,//不要列出符号链接（被不支持符号链接的操作系统忽略）
+        QDir::NoDotAndDotDot,//不要列出特殊符号 "."和 ".."
+        QDir::NoDot,// 不要列出"."
+        QDir::NoDotDot,//不要列出".."
+        QDir::AllEntries,//列出目录、文件、驱动器和符号链接
+        QDir::Readable,//列出应用程序对其具有读取权限的文件。 Readable 值需要与 Dirs 或 Files 结合
+        QDir::Writable,//列出应用程序对其具有写入权限的文件。 Writable 值需要与 Dirs 或 Files 结合
+        QDir::Executable,//列出应用程序对其具有执行权限的文件。 Executable 值需要与 Dirs 或 Files 
+        QDir::Modified,//仅列出已修改的文件（在 Unix 上忽略）
+        QDir::Hidden,//列出隐藏文件（在 Unix 上，文件以“.”开头）
+        QDir::System,//列出系统文件（在Unix上包括FIFO、套接字和设备文件；在Windows包括.lnk文件）
+        QDir::CaseSensitive//过滤器应该区分大小写
+}
+```
+
+这个枚举描述了 QDir 可用的排序选项，例如用于 entryList() 和 entryInfoList()。排序值通过对以下列表中的值进行 OR 运算来指定：
+
+```c++
+enum QDir::SortFlag {
+    QDir::Name,//按名称
+    QDir::Time,//按事件
+    QDir::Size,//按大小
+    QDir::Type,//按类型
+    QDir::Unsorted,//默认不排序
+    QDir::NoSort,//默认不排序
+    QDir::DirsFirst,//先放目录，再放文件
+    QDir::DirsLast,//先放文件，再放目录
+    QDir::Reversed,//反转排序顺序
+    QDir::IgnoreCase,//不区分大小写排序
+    QDir::LocaleAware,//使用当前区域设置对项目进行适当排序
+}
+```
 
 常用的成员函数。
 
@@ -7057,15 +7101,262 @@ info2.size();               // returns 63942
 QFileInfo 的一些函数查询文件系统，但出于性能原因，一些函数只对文件名本身进行操作。例如：要返回相对文件名的绝对路径，absolutePath() 必须查询文件系统。但是 path() 函数可以直接处理文件名，因此速度更快。注意：为了提高性能，QFileInfo 缓存有关文件的信息。
 因为文件可以被其他用户或程序更改，甚至可以被同一程序的其他部分更改，所以有一个刷新文件信息的函数：refresh()。如果您想关闭 QFileInfo 的缓存并在每次向它请求信息时强制它访问文件系统，请调用 setCaching(false)。另见 QDir 和 QFile。
 
+一些常用的成员函数。
+
+```c++
+QString QFileInfo::absoluteFilePath() const;//返回包含文件名的绝对路径
+QString QFileInfo::absolutePath() const;//返回文件的路径绝对路径。这不包括文件名
+bool QFileInfo::exists() const;// 如果文件存在则返回真；否则返回假
+static bool QFileInfo::exists(const QString &file); // 如果文件存在则返回真；否则返回假
+QDateTime QFileInfo::lastRead() const;
+QDateTime QFileInfo::lastModified() const;
+QDateTime QFileInfo::created() const;
+bool QFileInfo::isExecutable() const;
+bool QFileInfo::isFile() const;
+bool QFileInfo::isDir() const;
+QString QFileInfo::completeSuffix() const;//完整后缀
+QString QFileInfo::suffix() const；
+QString QFileInfo::completeBaseName() const；//返回不带路径的文件的完整基本名称
+QString QFileInfo::baseName() const；//返回不带路径的文件的基本名称
+QString QFileInfo::path() const；//返回文件的路径。这不包括文件名
+qint64 QFileInfo::size() const；
+QString QFileInfo::filePath() const；//返回文件名，包括路径
+QString QFileInfo::fileName() const；//返回文件名，不包括路径
+QString QFileInfo::absolutePath() const；//返回文件的路径绝对路径
+QString QFileInfo::absoluteFilePath() const；//返回包含文件名的绝对路径
+QStringList QDir::entryList(const QStringList &nameFilters, Filters filters = NoFilter, SortFlags sort = NoSort) const;//列出所有子文件或者子目录
+```
+
+#### 6.3.4 QTemporaryDir
+
+QTemporaryDir 类创建一个唯一的目录供临时使用。
+QTemporaryDir 用于安全地创建唯一的临时目录。目录本身是由构造函数创建的。临时目录的名称保证是唯一的（即，您保证不会覆盖现有目录），并且该目录随后将在 QTemporaryDir 对象销毁时被删除。目录名称要么是自动生成的，要么是基于模板创建的，模板被传递给 QTemporaryDir 的构造函数。
+例子：
+
+```c++
+QTemporaryDir dir;
+if (dir.isValid()) {
+    // dir.path() returns the unique directory path
+}
+
+// The QTemporaryDir destructor removes the temporary directory
+// as it goes out of scope.
+```
+
+使用 isValid() 测试是否可以创建临时目录非常重要。不要使用 exists()，因为默认构造的 QDir 代表当前目录，它存在。可以通过调用 path() 找到临时目录的路径。临时目录将具有名称的某些静态部分和计算为唯一的某些部分。默认路径将由 QCoreApplication::applicationName() 确定（否则为 qt_temp），并将放置在 QDir::tempPath() 返回的临时路径中。如果您指定自己的路径，则默认情况下不会将相对路径放置在临时目录中，而是相对于当前工作目录。在所有情况下，都会将随机字符串附加到路径以使其唯一。
+
+主要的成员函数如下。
+
+```c++
+bool autoRemove() const;//如果 QTemporaryDir 处于自动删除模式，则返回 true。自动删除模式将在销毁时自动从磁盘中删除目录。
+QString errorString() const;//如果 isValid() 返回 false，则此函数返回解释临时目录创建失败原因的错误字符串。否则，此函数返回一个空字符串
+QString filePath(const QString &fileName) const;//
+bool isValid() const;//返回临时目录中文件的路径名。不检查文件是否实际存在于目录中。冗余的多个分隔符或“.”文件名中的“..”和“..”目录不会被删除（参见 QDir::cleanPath()）。不允许使用绝对路径
+QString path() const;//如果成功创建 QTemporaryDir，则返回 true
+bool remove();//删除临时目录，包括其所有内容。如果删除成功，则返回 true。
+void setAutoRemove(bool b); // 设置是否自动删除
+```
+
+
+
 #### 6.3.5 QTemporaryFile
 
+QTemporaryFile 类是对临时文件进行操作的 I/O 设备。
+QTemporaryFile 用于安全地创建唯一的临时文件。文件本身是通过调用 open() 创建的。临时文件的名称保证是唯一的（即，您保证不会覆盖现有文件），并且该文件随后将在 QTemporaryFile 对象销毁时被删除。这是一项重要的技术，可以避免将数据存储在临时文件中的应用程序的数据损坏。文件名要么是自动生成的，要么是基于模板创建的，模板被传递给 QTemporaryFile 的构造函数。
+例子：
 
+```c++
+QTemporaryFile file;
+if (file.open()) {
+    // file.fileName() returns the unique file name
+}
+
+// The QTemporaryFile destructor removes the temporary file
+// as it goes out of scope.
+```
+
+调用 close() 后重新打开 QTemporaryFile 是安全的。只要 QTemporaryFile 对象本身没有被破坏，唯一的临时文件就会存在并在 QTemporaryFile 内部保持打开状态。
+通过调用fileName()可以找到临时文件的文件名。请注意，这仅在文件首次打开后定义；该函数在此之前返回一个空字符串。临时文件将具有名称的某些静态部分和计算为唯一的某些部分。默认文件名将由 QCoreApplication::applicationName() 确定（否则为 qt_temp），并将放置在 QDir::tempPath() 返回的临时路径中。如果您指定自己的文件名，则默认情况下不会将相对文件路径放置在临时目录中，而是相对于当前工作目录。指定的文件名可以包含以下模板 XXXXXX（六个大写“X”字符），它将被文件名的自动生成部分替换。请注意，模板区分大小写。如果文件名中不存在模板，QTemporaryFile 将生成的部分附加到给定的文件名中。
+
+主要的成员函数如下。
+
+```c++
+void setAutoRemove(bool b);//设置是否自动删除
+bool autoRemove() const;
+QString fileTemplate() const;
+void setFileTemplate(const QString &name);//将文件名的静态部分设置为 name。如果文件模板包含将自动替换为文件名的唯一部分的 XXXXXX，否则将根据指定的静态部分自动确定文件名。如果 name 包含相对文件路径，则该路径将相对于当前工作目录。如果要使用系统的临时目录，可以使用 QDir::tempPath() 来构造名称。
+bool open();//QTemporaryFile 将始终以 QIODevice::ReadWrite 模式打开，这允许轻松访问文件中的数据。此函数将在成功时返回 true，并将 fileName() 设置为使用的唯一文件名
+```
+
+2个静态成员函数。
+
+```c++
+QTemporaryFile *createNativeFile(QFile &file);//如果 file 还不是本地文件，则在 QDir::tempPath() 中创建一个 QTemporaryFile，将 file 的内容复制到其中，并返回指向临时文件的指针。如果文件已经是本机文件，则不执行任何操作并返回 0。
+
+QFile f(":/resources/file.txt");
+QTemporaryFile::createNativeFile(f); // Returns a pointer to a temporary file
+QFile f("/users/qt/file.txt");
+QTemporaryFile::createNativeFile(f); // Returns 0
+
+QTemporaryFile *createNativeFile(const QString &fileName);//适用于给定的文件名而不是现有的 QFile 对象
+```
 
 #### 6.3.6 QFileSystemWatcher
 
+QFileSystemWatcher 类为监视文件和目录的修改提供了一个接口。
+QFileSystemWatcher 通过监视指定路径的列表来监视文件系统对文件和目录的更改。
+调用 addPath() 来查看特定的文件或目录。可以使用 addPaths() 函数添加多个路径。可以使用 removePath() 和 removePaths() 函数删除现有路径。
+QFileSystemWatcher 检查添加到它的每个路径。可以使用 files() 函数访问已添加到 QFileSystemWatcher 的文件，并使用目录() 函数访问目录。
+当文件被修改、重命名或从磁盘中删除时，会发出 fileChanged() 信号。类似地，当目录或其内容被修改或删除时，会发出 directoryChanged() 信号。请注意，一旦文件被重命名或从磁盘中删除，QFileSystemWatcher 将停止监视文件，一旦从磁盘中删除目录，它们就会停止监视。
+注意：在运行不支持 inotify 的 Linux 内核的系统上，无法卸载包含监视路径的文件系统。
+监视文件和目录以进行修改的行为会消耗系统资源。这意味着您的进程可以同时监控的文件和目录的数量是有限的。例如，在所有 BSD 变体上，每个受监视文件都需要一个打开的文件描述符。某些系统默认将打开文件描述符的数量限制为 256。这意味着如果您的进程尝试向文件系统监视器添加超过 256 个文件或目录，则 addPath() 和 addPaths() 将失败。另请注意，除了被监视文件的文件描述符之外，您的进程可能还打开了其他文件描述符，并且这些其他打开的描述符也计入总数。 macOS 使用不同的后端，不会遇到此问题。
+
+主要的成员函数如下。
+
+```c++
+bool addPath(const QString &path);//添加监听路径
+QStringList addPaths(const QStringList &paths);
+QStringList directories() const; // 返回监听目录
+QStringList files() const;// 返回监听文件
+bool removePath(const QString &path); // 移除监听路径
+QStringList removePaths(const QStringList &paths);
+```
+
+拥有2个信号函数，在监听的文件和目录变化时发射。
+
+```c++
+void directoryChanged(const QString &path);
+void fileChanged(const QString &path);
+```
 
 
-#### 6.3.7 QTextCodec
+
+### 6.4 关联数据类型
+
+#### 6.4.1 QByteArray
+
+QByteArray 类提供了一个字节数组。
+QByteArray 可用于存储原始字节（包括“\0”）和传统的 8 位“\0”结尾的字符串。使用 QByteArray 比使用 const char * 方便得多。在幕后，**它始终确保数据后跟一个 &#39;\0&#39; 终止符，并使用隐式共享（写时复制）来减少内存使用并避免不必要的数据复制**。
+除了 QByteArray，Qt 还提供了 QString 类来存储字符串数据。对于大多数用途，**QString 是您要使用的类，它存储 16 位 Unicode 字符**，从而可以轻松地在您的应用程序中存储非 ASCII/非拉丁 1 字符。此外，QString 贯穿于 Qt API 中。 
+
+QByteArray 适用的两种主要情况是，当您**需要存储原始二进制数据**时，以及当内存保护至关重要时（例如，使用 Qt for Embedded Linux）。初始化 QByteArray 的一种方法是简单地将 const char * 传递给它的构造函数。例如，以下代码创建一个大小为 5 的字节数组，其中包含数据“Hello”：
+
+```c++
+QByteArray ba("Hello");
+```
+
+尽管 size() 为 5，但字节数组还在末尾保留了一个额外的 &#39;\0&#39; 字符，因此如果使用请求指向基础数据的指针的函数（例如对 data() 的调用），则指向的数据保证以&#39;\0&#39;结尾。QByteArray 对 const char * 数据进行了深层复制，因此您可以稍后对其进行修改而不会遇到副作用。 （如果出于性能原因您不想获取字符数据的深层副本，请**改用 QByteArray::fromRawData()**）另一种方法是使用 resize() 设置数组的大小并初始化数据字节每个字节。 QByteArray 使用从 0 开始的索引，就像 C++ 数组一样。要访问特定索引位置的字节，可以使用 operator[]()。在非常量字节数组上，operator[]() 返回对可以在赋值左侧使用的字节的引用。at() 可以比 operator[]() 更快，因为它永远不会导致发生深拷贝。要一次提取多个字节，请使用 left()、right() 或 mid()。例如：
+
+```c++
+QByteArray ba;
+ba.resize(5);
+ba[0] = 0x3c;
+ba[1] = 0xb8;
+ba[2] = 0x64;
+ba[3] = 0x18;
+ba[4] = 0xca;
+
+for (int i = 0; i < ba.size(); ++i) {
+    if (ba.at(i) >= 'a' && ba.at(i) <= 'f')
+        cout << "Found character in range [a-f]" << endl;
+}
+```
+
+需要了解的枚举类型如下。
+
+此枚举包含可用于编码和解码 Base64 的选项。 Base64 由 RFC 4648 定义，具有以下选项。
+
+```c++
+enum QByteArray::Base64Option {
+    QByteArray::Base64Encoding,//（默认）常规 Base64 字母表，简称为“base64”
+    QByteArray::Base64UrlEncoding,//一种替代字母表，称为“base64url”，它替换字母表中的两个字符以对 URL 更友好
+    QByteArray::KeepTrailingEquals,//（默认）在编码数据的末尾保留尾随填充等号，因此数据的大小始终是四的倍数
+    QByteArray::OmitTrailingEquals//省略在编码数据末尾添加填充等号
+}
+```
+
+成员函数，这里剔除掉过载版本，具备类似于STL容器的方法。
+
+```c++
+QByteArray &append(const QByteArray &ba);
+char at(int i) const;
+iterator begin();
+iterator end();
+int capacity() const;
+void chop(int n);// 从字节数组的末尾删除 n 个字节
+void clear();
+bool contains(const QByteArray &ba) const;
+int count(const char *str) const;
+char *data();
+bool endsWith(const QByteArray &ba) const;
+QByteArray &fill(char ch, int size = -1);
+int indexOf(char ch, int from = 0) const;
+QByteArray &insert(int i, const QByteArray &ba);
+bool isEmpty() const;
+bool isNull() const;
+int lastIndexOf(char ch, int from = -1) const;
+QByteArray left(int len) const;
+int length() const;
+QByteArray mid(int pos, int len = -1) const;
+QByteArray &prepend(const QByteArray &ba);
+void push_back(const QByteArray &other);
+void push_front(const QByteArray &other);
+QByteArray &remove(int pos, int len);
+QByteArray repeated(int times) const;
+QByteArray &replace(int pos, int len, const QByteArray &after);//将索引位置 pos 的 len 个字节替换为之后的字节数组，并返回对该字节数组的引用
+void reserve(int size);// 尝试为至少 size 个字节分配内存
+void resize(int size);//将字节数组的大小设置为 size 个字节
+QByteArray right(int len) const;
+QByteArray &setNum(int n, int base = 10)
+QByteArray &setNum(double n, char f = 'g', int prec = 6);
+QByteArray &setRawData(const char *data, uint size);//重置 QByteArray 以使用数据数组的第一个 size 字节,不复制字节, QByteArray 将包含数据指针
+QByteArray simplified() const;// 返回一个字节数组，该数组的开头和结尾都删除了空格，并且每个内部空格序列都替换为单个空格
+int size() const;
+QList<QByteArray> split(char sep) const;
+void squeeze();//释放存储阵列数据不需要的任何内存
+bool startsWith(const QByteArray &ba) const;
+void swap(QByteArray &other);
+double toDouble(bool *ok = Q_NULLPTR) const;
+float toFloat(bool *ok = Q_NULLPTR) const;
+QByteArray toHex() const;
+int toInt(bool *ok = Q_NULLPTR, int base = 10) const;
+QByteArray toLower() const;
+std::string toStdString() const;
+QByteArray trimmed() const;// 返回从开头和结尾删除空格的字节数组
+void truncate(int pos);//截断索引位置 pos 处的字节数组
+QByteArray &operator+=(const QString &str);
+QByteRef operator[](int i);
+
+static QByteArray fromStdString(const std::string &str);
+static QByteArray number(int n, int base = 10);
+static QByteArray number(double n, char f = 'g', int prec = 6);
+```
+
+一些关联的非成员函数很有用，可以关注一下。
+
+```c++
+int qsnprintf(char *str, size_t n, const char *fmt, ...);//一个可移植的 snprintf() 函数，调用 qvsnprintf。fmt 是 printf() 格式字符串。结果被放入 str，它是一个至少 n 字节的缓冲区。
+int qstrcmp(const char *str1, const char *str2);//一个安全的 strcmp() 函数。比较 str1 和 str2。如果 str1 小于 str2，则返回负值；如果 str1 等于 str2，则返回 0；如果 str1 大于 str2，则返回正值。特殊情况 1：如果 str1 和 str2 都为 0，则返回 0。特殊情况 2：如果 str1 为 0 或 str2 为 0（但不是两者），则返回任意非零值。
+char *qstrcpy(char *dst, const char *src);//将 src 中直到 &#39;\0&#39; 的所有字符复制到 dst 中，并返回一个指向 dst 的指针。如果 src 为 0，则立即返回 0。此函数假定 dst 足够大以容纳 src 的内容。
+char *qstrdup(const char *src);//返回一个重复的字符串。为 src 的副本分配空间，复制它，并返回指向该副本的指针。如果 src 为 0，则立即返回 0。所有权传递给调用者，因此必须使用 delete[] 删除返回的字符串
+int qstricmp(const char *str1, const char *str2);//一个安全的 stricmp() 函数。比较 str1 和 str2 忽略字符的大小写。字符串的编码假定为 Latin-1。如果 str1 小于 str2，则返回负值；如果 str1 等于 str2，则返回 0；如果 str1 大于 str2，则返回正值。特殊情况 1：如果 str1 和 str2 都为 0，则返回 0。特殊情况 2：如果 str1 为 0 或 str2 为 0（但不是两者），则返回一个随机的非零值。
+uint qstrlen(const char *str);//一个安全的 strlen() 函数。返回终止'\0'之前的字符数，如果 str 为 0，则返回 0
+int qstrncmp(const char *str1, const char *str2, uint len);//一个安全的 strncmp() 函数。最多比较 str1 和 str2 的 len 个字节。如果 str1 小于 str2，则返回负值；如果 str1 等于 str2，则返回 0；如果 str1 大于 str2，则返回正值。特殊情况 1：如果 str1 和 str2 都为 0，则返回 0。特殊情况 2：如果 str1 为 0 或 str2 为 0（但不是两者），则返回一个随机的非零值。
+char *qstrncpy(char *dst, const char *src, uint len);//一个安全的 strncpy() 函数。最多从 src 复制 len 个字节（停止在 len 或终止的 &#39;\0&#39; 以先到者为准）到 dst 并返回指向 dst 的指针。保证 dst 以'\0'; 结尾。如果 src 或 dst 为 0，则立即返回 0。此函数假定 dst 至少有 len 个字符长。
+int qstrnicmp(const char *str1, const char *str2, uint len);//一个安全的 strnicmp() 函数。最多比较 str1 和 str2 的 len 个字节，忽略字符的大小写。字符串的编码假定为 Latin-1。如果 str1 小于 str2，则返回负值；如果 str1 等于 str2，则返回 0；如果 str1 大于 str2，则返回正值。特殊情况 1：如果 str1 和 str2 都为 0，则返回 0。特殊情况 2：如果 str1 为 0 或 str2 为 0（但不是两者），则返回一个随机的非零值
+uint qstrnlen(const char *str, uint maxlen);//一个安全的 strnlen() 函数。返回'\0'之前的字符数，但最多为 maxlen。如果 str 为 0，则返回 0
+int qvsnprintf(char *str, size_t n, const char *fmt, va_list ap);//一个可移植的 vsnprintf() 函数。将根据系统调用 ::vsnprintf()、::_vsnprintf() 或 ::vsnprintf_s，或者回退到内部版本。fmt 是 printf() 格式字符串。结果被放入 str，它是一个至少 n 字节的缓冲区。调用者负责在 ap 上调用 va_end()。警告：由于 vsnprintf() 在某些平台上表现出不同的行为，你不应该依赖返回值或者你总是会得到一个以 0 结尾的字符串的事实。理想情况下，你不应该调用这个函数，而是使用 QString::asprintf() 
+```
+
+#### 6.4.2 QTextBlock
+
+
+
+#### 6.4.3 QTextDocument
+
+
+
+#### 6.4.4 QTextCodec
 
 QTextCodec 类提供文本编码之间的转换。
 Qt 使用 Unicode 来存储、绘制和操作字符串。在许多情况下，您可能希望处理使用不同编码的数据。例如，大多数日语文档仍然存储在 Shift-JIS 或 ISO 2022-JP 中，而俄罗斯用户通常将其文档存储在 KOI8-R 或 Windows-1251 中。Qt 提供了一组 QTextCodec 类来帮助将非 Unicode 格式转换为 Unicode。您还可以创建自己的编解码器类。
@@ -7124,7 +7415,6 @@ int main()
     return a.exec();
 }
 ```
-
 
 QTextCodecs 可用于将一些本地编码的字符串转换为 Unicode。假设您有一些以俄语 KOI8-R 编码的字符串，并且想要将其转换为 Unicode。简单的方法是这样的：
 
@@ -7204,14 +7494,6 @@ QTextCodec *codecForUtfText(const QByteArray &ba);
 // 将编解码器设置为c；这将由 codecForLocale() 返回。如果 c 是空指针，则编解码器重置为默认值。对于一些想要使用自己的机制来设置语言环境的应用程序，这可能是必需的。
 void setCodecForLocale(QTextCodec *c);
 ```
-
-#### 6.3.8 QTextBlock
-
-
-
-#### 6.3.9 QTextDocument
-
-
 
 ## 布局管理
 

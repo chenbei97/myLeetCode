@@ -38,6 +38,8 @@
 
 15. TestQDataStream 展示如何读取和保存为stm、dat和txt文件格式
 
+16. TestFileDirOpera QCoreApplication\QDir\QFile\QFileInfo\QTemporaryFile\QTemporaryDir\QFileSystemWatcher的使用
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 8. 中文乱码的问题
 (1) 使用QTextStream的时候设置流自动检测UniCode
@@ -331,7 +333,7 @@ enum Qt::ConnectionType {
 
     // 当控制返回到接收者线程的事件循环时调用该槽函数,槽函数在接收者的线程中执行
     // 也就是说可以不在信号readyRead发出的线程中执行,这也是为何waitForReadyRead阻塞了readyRead但是不会阻塞receive_reply
-    // Qt额外对此种连接提出了警告,参数必须是Qt元对象系统已知的类型,因为Qt需要复制参数以将它们存储在幕后的事件中
+    // Qt额外对此种连接提出了警告,参数必须是Qt元对象系统已知的类j型,因为Qt需要复制参数以将它们存储在幕后的事件中
     // 换句话说就是信号函数和槽函数的参数必须是Qt自带的也就是Q打头的数据类型,不能是自定义的数据类型否则也会连接失败
     // 使用自定义类型必须在建立连接之前调用qRegisterMetaType()来注册数据类型
     Qt::QueuedConnection = 2,
