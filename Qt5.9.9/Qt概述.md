@@ -1467,93 +1467,7 @@ x.convert(QVariant::Int);
 // x.isNull() == true y.isNull() == true, z.isNull() == false
 ```
 
-#### 3.1.3 QColor
-
-常见的公共成员函数如下。
-
-```c++
-QColor(Qt::GlobalColor color);
-QColor(int r, int g, int b, int a = 255);
-QColor(QRgb color);
-QColor(const QColor &color);
-QString QColor::name() const;//返回形如"#RRGGBB"格式的颜色表示
-int QColor::value() const; // 返回颜色的组成部分
-QColor convertTo(Spec colorSpec) const; // 详见枚举值QColor:Spec
-QColor toHsv() const;
-QColor toRgb() const;
-// 获取和设置RGB值和透明度
-int saturation() const;
-int hue() const;
-int lightness() const;
-void setHsv(int h, int s, int v, int a = 255);
-QRgb rgb() const;
-void setRgb(int r, int g, int b, int a = 255);
-void setRgb(QRgb rgb);
-QRgb rgba() const;
-void setRgba(QRgb rgba);
-int alpha() const;
-void setAlpha(int alpha);
-int red() const;
-void setRed(int red);
-int blue() const;
-void setBlue(int blue);
-int green() const;
-void setGreen(int green);
-int black() const;
-int cyan() const;
-int yellow() const;
-...
-```
-
-其他的不怎么常用的静态成员函数和关联函数可以了解一下。
-
-```c++
-static QStringList colorNames();
-static QColor fromCmyk(int c, int m, int y, int k, int a = 255);
-static QColor fromCmykF(qreal c, qreal m, qreal y, qreal k, qreal a = 1.0);
-static QColor fromHsl(int h, int s, int l, int a = 255);
-static QColor fromHslF(qreal h, qreal s, qreal l, qreal a = 1.0);
-static QColor fromHsv(int h, int s, int v, int a = 255);
-static QColor fromHsvF(qreal h, qreal s, qreal v, qreal a = 1.0);
-static QColor fromRgb(QRgb rgb);
-static QColor fromRgb(int r, int g, int b, int a = 255);
-static QColor fromRgba64(ushort r, ushort g, ushort b, ushort a = USHRT_MAX);
-static QColor fromRgba64(QRgba64 rgba64);
-static QColor fromRgbF(qreal r, qreal g, qreal b, qreal a = 1.0);
-static QColor fromRgba(QRgb rgba);
-static bool isValidColor(const QString &name);
-static bool isValidColor(QLatin1String name);
-
-typedef QRgb;
-int qAlpha(QRgb rgba);
-uint qAlpha(QRgba64 rgba64);
-int qBlue(QRgb rgb);
-uint qBlue(QRgba64 rgba64);
-int qGray(int r, int g, int b);
-int qGray(QRgb rgb);
-int qGreen(QRgb rgb);
-uint qGreen(QRgba64 rgba64);
-QRgb qPremultiply(QRgb rgb);
-QRgba64 qPremultiply(QRgba64 rgba64);
-int qRed(QRgb rgb);
-uint qRed(QRgba64 rgba64);
-QRgb qRgb(int r, int g, int b);
-QRgba64 qRgba64(quint16 r, quint16 g, quint16 b, quint16 a);
-QRgba64 qRgba64(quint64 c);
-QRgb qRgba(int r, int g, int b, int a);
-QRgb qUnpremultiply(QRgb rgb);
-QRgba64 qUnpremultiply(QRgba64 rgba64);
-```
-
-需要知道的枚举值定义如下。
-
-```c++
-enum QColor::NameFormatQColor={QColor:HexRgb=0,QColor:HexArgb=1};
-enum QColor::Spec = {QColor::Rgb=1,QColor::Hsv=2,QColor::Cmyk=3,
-                     QColor::Hsl=4,QColor::Invalid=0};
-```
-
-#### 3.1.4 QTime
+#### 3.1.3 QTime
 
 QTime类提供时钟时间函数。
 QTime对象包含时钟时间，即从午夜开始的小时、分钟、秒和毫秒数。它可以从系统时钟读取当前时间，并测量经过的时间范围。它提供了用于比较时间和通过添加毫秒数来操纵时间的函数。
@@ -2111,634 +2025,6 @@ for (constIterator = fonts.constBegin(); constIterator != fonts.constEnd();
              ++constIterator)
     cout << (*constIterator).toLocal8Bit().constData() << endl;
 ```
-
-#### 3.1.9 QSize
-
-**QSize类使用整数点精度定义二维对象的大小**。
-大小由**width()和height()指定**。它可以在构造函数中设置，并使用setWidth()、setHeight()或scale()函数或使用算术运算符进行更改。通过使用rwidth()和rheight()函数检索对宽度和高度的引用，也可以直接操纵大小。最后，可以使用transpose()函数交换宽度和高度。
-isValid()函数的作用是：确定大小是否有效（有效大小的宽度和高度均大于或等于零）。如果宽度和高度都小于或等于零，isEmpty()函数将返回true，而isNull()函数仅当宽度和高度都为零时才返回true。
-使用expandedTo()函数检索一个大小，该大小包含此大小和给定大小的最大高度和宽度。类似地，boundedTo()函数返回一个大小，该大小保持此大小和给定大小的最小高度和宽度。
-
-常见的成员函数如下。
-
-```c++
-QSize();
-QSize(int width, int height);
-QSize boundedTo(const QSize &otherSize) const;
-QSize expandedTo(const QSize &otherSize) const;
-int height() const;
-bool isEmpty() const;
-bool isNull() const;
-bool isValid() const;
-int &rheight();
-int &rwidth();
-void scale(int width, int height, Qt::AspectRatioMode mode);
-void scale(const QSize &size, Qt::AspectRatioMode mode);
-QSize scaled(int width, int height, Qt::AspectRatioMode mode) const;
-QSize scaled(const QSize &s, Qt::AspectRatioMode mode) const;
-void setHeight(int height);
-void setWidth(int width);
-CGSize toCGSize() const;
-void transpose();
-QSize transposed() const;
-int width() const;
-```
-
-#### 3.1.10 QPixmap
-
-QPixmap类是一种屏幕外图像表示，可以用作绘制设备。
-Qt提供了四个用于处理图像数据的类：**QImage、QPixmap、QBitmap和QPicture**。QImage针对I/O、直接像素访问和操作进行了设计和优化，而QPixmap针对在屏幕上显示图像进行了设计和优化。QBitmap只是一个继承QPixmap的方便类，确保深度为1。如果QPixmap对象实际上是位图，则isQBitmap()函数返回true，否则返回false。最后，QPicture类是一个绘制设备，用于记录和重放QPaint命令。
-使用**QLabel或QAbstractButton的子类之一（如QPushButton和QToolButton）**，可以很容易地在屏幕上显示QPixmap。QLabel有一个pixmap属性，而QAbstractButton有一个icon属性。**因为QPixmap是QPaintDevice子类，所以QPainter可以用于直接绘制到Pixmap上**。只**能通过QPaint功能或通过将QPixmap转换为QImage来访问像素**。但是，fill()函数可用于初始化具有给定颜色的整个pixmap。
-有一些函数可以在QImage和QPixmap之间进行转换。通常，在将QImage对象转换为要在屏幕上显示的QPixmap之前，**QImage类用于加载图像文件，可以选择操作图像数据**。或者，如果不需要操作，则可以将图像文件直接加载到QPixmap中。
-
-可以使用**toImage()函数将QPixmap对象转换为QImage**。同样，可以使用**fromImage()将QImage转换为QPixmap**。如果这是一个过于昂贵的操作，那么可以使用QBitmap::fromImage()。
-
-QPixmap支持的加载文件格式以及支持的操作类型如下。
-
-```c++
-BMP Read/write
-GIF Read
-JPG Joint Photographic Experts Group Read/write
-JPEG Read/write
-PNG Read/write
-PBM Read
-PGM Read
-PPM Read/write
-XBM Read/write
-XPM Read/write
-```
-
-常见的公共成员函数如下。
-
-```c++
-QPixmap(int width, int height);
-QPixmap(const QSize &size);
-QPixmap(const QString &fileName, const char *format = Q_NULLPTR,
-        Qt::ImageConversionFlags flags = Qt::AutoColor);
-QPixmap(const char * const[] xpm);
-QPixmap(const QPixmap &pixmap);
-
-bool convertFromImage(const QImage &image, 
-                      Qt::ImageConversionFlags flags = Qt::AutoColor);
-QPixmap copy(const QRect &rectangle = QRect()) const;
-QPixmap copy(int x, int y, int width, int height) const;
-int depth() const;
-void fill(const QColor &color = Qt::white);
-bool hasAlpha() const;
-bool hasAlphaChannel() const;
-int width() const;
-int height() const;
-bool isNull() const;
-bool isQBitmap() const;
-bool load(const QString &fileName, const char *format = Q_NULLPTR,
-          Qt::ImageConversionFlags flags = Qt::AutoColor);
-QRect rect() const;
-bool save(const QString &fileName, const char *format = Q_NULLPTR, int quality = -1) const;
-bool save(QIODevice *device, const char *format = Q_NULLPTR, int quality = -1) const;
-QPixmap scaled(const QSize &size, 
-               Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
-               Qt::TransformationMode transformMode = Qt::FastTransformation) const;
-QPixmap scaled(int width, int height, 
-               Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
-               Qt::TransformationMode transformMode = Qt::FastTransformation) const;
-QPixmap scaledToHeight(int height, 
-                       Qt::TransformationMode mode = Qt::FastTransformation) const;
-QPixmap scaledToWidth(int width, 
-                      Qt::TransformationMode mode = Qt::FastTransformation) const;
-QSize size() const;
-void swap(QPixmap &other);
-QImage toImage() const;
-```
-
-常用的静态成员函数如下，涉及了2个数据类型QMatrix和QTransform，可见[3.1.14 QMatrix](#3.1.14 QMatrix)和[3.1.15 QTransform](#3.1.15 QTransform)。
-
-```c++
-static int defaultDepth();
-static QPixmap fromImage(const QImage &image,
-                         Qt::ImageConversionFlags flags = Qt::AutoColor);
-static QPixmap fromImage(QImage &&image, 
-                         Qt::ImageConversionFlags flags = Qt::AutoColor);
-static QPixmap fromImageReader(QImageReader *imageReader, 
-                               Qt::ImageConversionFlags flags = Qt::AutoColor);
-static QTransform trueMatrix(const QTransform &matrix, int width, int height);
-static QMatrix trueMatrix(const QMatrix &m, int w, int h);
-```
-
-#### 3.1.11 QImage
-
-处理图像的数据类型。
-
-需要了解的枚举类型如下。
-
-```c++
-// 定义了一些图像格式
-enum Format { Format_Invalid, Format_Mono, Format_MonoLSB, Format_Indexed8, ..., Format_Grayscale8 };
-// 此枚举类型用于描述在invertPixels()函数中应如何反转像素值
-enum InvertMode { InvertRgb, InvertRgba };
-```
-
-常见的构造函数如下。
-
-```c++
-QImage(const QSize &size, Format format);
-QImage(int width, int height, Format format);
-QImage(uchar *data, int width, int height, Format format, 
-       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
-QImage(const uchar *data, int width, int height, Format format, 
-       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
-QImage(uchar *data, int width, int height, int bytesPerLine, Format format,
-       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
-QImage(const uchar *data, int width, int height, int bytesPerLine, Format format,
-       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
-QImage(const char * const[] xpm);
-QImage(const QString &fileName, const char *format = Q_NULLPTR);
-QImage(const QImage &image);
-```
-
-常见的公共成员函数如下。
-
-```c++
-QImage convertToFormat(Format format, 
-                       Qt::ImageConversionFlags flags = Qt::AutoColor) const;
-QImage convertToFormat(Format format, const QVector<QRgb> &colorTable, 
-                       Qt::ImageConversionFlags flags = Qt::AutoColor) const;
-int depth() const;
-void fill(uint pixelValue);
-void fill(const QColor &color);
-void fill(Qt::GlobalColor color);
-Format format() const;
-bool hasAlphaChannel() const;
-int height() const;
-void invertPixels(InvertMode mode = InvertRgb);
-bool isGrayscale() const;
-bool isNull() const;
-bool load(const QString &fileName, const char *format = Q_NULLPTR);
-bool load(QIODevice *device, const char *format);
-bool loadFromData(const uchar *data, int len, const char *format = Q_NULLPTR);
-bool loadFromData(const QByteArray &data, const char *format = Q_NULLPTR);
-QImage mirrored(bool horizontal = false, bool vertical = true) const;
-QRgb pixel(const QPoint &position) const;
-QRgb pixel(int x, int y) const;
-QColor pixelColor(const QPoint &position) const;
-QColor pixelColor(int x, int y) const;
-QPixelFormat pixelFormat() const;
-QRect rect() const;
-bool save(const QString &fileName, 
-          const char *format = Q_NULLPTR, int quality = -1) const;
-bool save(QIODevice *device, const char *format = Q_NULLPTR, int quality = -1) const;
-QImage scaled(const QSize &size, 
-              Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
-              Qt::TransformationMode transformMode = Qt::FastTransformation) const;
-QImage scaled(int width, int height, 
-       Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio,
-       Qt::TransformationMode transformMode = Qt::FastTransformation) const;
-QImage scaledToHeight(int height, 
-               Qt::TransformationMode mode = Qt::FastTransformation) const;
-QImage scaledToWidth(int width, 
-                     Qt::TransformationMode mode = Qt::FastTransformation) const;
-void setColor(int index, QRgb colorValue);
-setOffset(const QPoint &offset)
-void setPixel(const QPoint &position, uint index_or_rgb);
-void setPixel(int x, int y, uint index_or_rgb);
-void setPixelColor(const QPoint &position, const QColor &color);
-void setPixelColor(int x, int y, const QColor &color);
-void setText(const QString &key, const QString &text);
-QSize size() const;
-QString text(const QString &key = QString()) const;
-bool valid(const QPoint &pos) const;
-bool valid(int x, int y) const;
-int width() const;
-```
-
-静态成员函数如下。
-
-```c++
-QImage fromData(const uchar *data, int size, const char *format = Q_NULLPTR);
-QImage fromData(const QByteArray &data, const char *format = Q_NULLPTR);
-QImage::Format toImageFormat(QPixelFormat format);
-QPixelFormat toPixelFormat(QImage::Format format);
-QMatrix trueMatrix(const QMatrix &matrix, int width, int height);
-QTransform trueMatrix(const QTransform &matrix, int width, int height);
-```
-
-示例代码。
-
-```c++
-QImage image(3, 3, QImage::Format_Indexed8);
-QRgb value;
-value = qRgb(122, 163, 39); // 0xff7aa327
-image.setColor(0, value);
-value = qRgb(237, 187, 51); // 0xffedba31
-image.setColor(1, value);
-value = qRgb(189, 149, 39); // 0xffbd9527
-image.setColor(2, value);
-image.setPixel(0, 1, 0);
-image.setPixel(1, 0, 0);
-image.setPixel(1, 1, 2);
-image.setPixel(2, 1, 1);
-
-QImage image(3, 3, QImage::Format_RGB32);
-QRgb value;
-value = qRgb(189, 149, 39); // 0xffbd9527
-image.setPixel(1, 1, value);
-value = qRgb(122, 163, 39); // 0xff7aa327
-image.setPixel(0, 1, value);
-image.setPixel(1, 0, value);
-value = qRgb(237, 187, 51); // 0xffedba31
-image.setPixel(2, 1, value);
-```
-
-#### 3.1.12 QBitmap
-
-QBitmap类提供单色（1位深度）像素贴图。
-QBitmap类是一种单色屏幕外绘制设备，主要用于创建自定义QCursor和QBrush对象，构建QRegion对象，以及设置pixmap和widget的掩码。**QBitmap是一个QPixmap子类**，确保深度为1，但深度为0的空对象除外。如果为位图指定了深度大于1的像素贴图，则位图将自动抖动。
-在QBitmap对象（或深度为1的QPixmap对象）上绘制时，请使用QColor对象Qt::color0和Qt::color1。
-使用Qt::color0绘制将位图位设置为0，使用Qt::color1绘制将位设置为1。对于位图，0位表示背景（或透明像素），1位表示前景（或不透明像素）。使用clear()函数将所有位设置为Qt::color0。请注意，使用Qt::black和Qt::white没有任何意义，因为QColor::pixel()值对于黑色不一定是0，对于白色不一定是1。
-QBitmap类提供transformed()函数，返回位图的转换副本；使用QTransform参数可以平移、缩放、剪切和旋转位图。此外，QBitmap还提供了静态fromData()函数，该函数返回由给定uchar数据构造的位图，以及静态fromdimage()函数，该函数返回QImage对象的转换副本。
-
-常见的成员函数和静态成员函数如下。
-
-```c++
-QBitmap(const QPixmap &pixmap);
-QBitmap(int width, int height);
-QBitmap(const QSize &size);
-QBitmap(const QString &fileName, const char *format = Q_NULLPTR);
-QBitmap(const QBitmap &other);
-void clear();
-void swap(QBitmap &other);
-QBitmap transformed(const QTransform &matrix) const;
-
-static QBitmap fromData(const QSize &size, const uchar *bits, QImage::Format monoFormat = QImage::Format_MonoLSB);
-static QBitmap fromImage(const QImage &image, Qt::ImageConversionFlags flags = Qt::AutoColor);
-```
-
-#### 3.1.13 QPicture
-
-QPicture类是记录和重放**QPaint命令**的绘制设备，总是与QPainter结合使用，可见[3.1.16 QPainter](#3.1.16 QPainter)。
-图片以独立于平台的格式将painter命令序列化到IO设备。它们有时被称为元文件。
-Qt图片使用专有的二进制格式。与许多窗口系统上的本机图片（元文件）格式不同，Qt图片对其内容没有限制。可以在小部件或pixmap上绘制的所有内容（例如字体、pixmap、区域、转换的图形等）也可以存储在图片中。
-QPicture与分辨率无关，即QPicture可以显示在外观相同的不同设备（例如svg、pdf、ps、打印机和屏幕）上。例如，这是所见即所得打印预览所必需的。QPicture在默认系统dpi中运行，并根据窗口系统缩放画师以匹配分辨率差异。
-
-常见成员函数如下。
-
-```c++
-QPicture(int formatVersion = -1);
-QPicture(const QPicture &pic);
-QRect boundingRect() const;
-const char *data() const;
-bool isNull() const;
-bool load(const QString &fileName, const char *format = Q_NULLPTR);
-bool load(QIODevice *dev, const char *format = Q_NULLPTR);
-bool play(QPainter *painter);
-bool save(const QString &fileName, const char *format = Q_NULLPTR);
-bool save(QIODevice *dev, const char *format = Q_NULLPTR);
-void setBoundingRect(const QRect &r);
-virtual void setData(const char *data, uint size);
-uint size() const;
-void swap(QPicture &other);
-```
-
-可能的示例代码。
-
-```c++
-QPicture picture;
-QPainter painter;
-painter.begin(&picture);           // paint in picture
-painter.drawEllipse(10,20, 80,70); // draw an ellipse
-painter.end();                     // painting done
-picture.save("drawing.pic");       // save picture
-
-QPicture picture;
-picture.load("drawing.pic");           // load picture
-QPainter painter;
-painter.begin(&myImage);               // paint in myImage
-painter.drawPicture(0, 0, picture);    // draw the picture at (0,0)
-painter.end();                         // painting done
-```
-
-#### 3.1.14 QMatrix
-
-QMatrix类指定坐标系的二维变换。
-矩阵指定如何平移、缩放、剪切或旋转坐标系，通常在渲染图形时使用。QMatrix与QTransform不同，它不允许透视变换。QTransform是Qt中推荐的转换类。
-可以使用**setMatrix()、scale()、rotate()、translate()和shear()函数构建QMatrix对象**。或者，可以通过应用基本矩阵运算来构建它。矩阵也可以在构造时定义，并且可以使用**reset()函数将其重置为单位矩阵**（默认值）。
-QMatrix类支持图形原语的映射：可以使用**map()函数将给定的点、线、多边形、区域或绘制路径映射到此矩阵定义的坐标系**。对于矩形，可以使用mapRect()函数转换其坐标。还可以使用mapToPolygon（）函数将矩形转换为多边形（映射到此矩阵定义的坐标系）。
-QMatrix提供**isIdentity()函数，如果矩阵是单位矩阵，则返回true**；如果矩阵是**非奇异矩阵（即AB=BA=i），则提供isInvertible()**，则返回true。inverted()函数的作用是：如果该矩阵是可逆的，则返回该矩阵的反向副本（否则返回单位矩阵）。此外，QMatrix提供了返**回矩阵行列式的determinate()函数**。
-最后，QMatrix类支持矩阵乘法，该类的对象可以进行流式处理和比较。
-
-常见的成员函数如下。
-
-```c++
-qreal m11() const; // 返回水平比例因子
-qreal m12() const; // 返回垂直剪切因子
-qreal m21() const; // 返回水平剪切因子
-qreal m22() const; // 返回垂直比例因子
-qreal QMatrix::determinant() const ;// 返回矩阵的行列式
-qreal dx() const; // 返回水平平移因子返回垂直平移因子。
-qreal dy() const; // 返回垂直平移因子
-QMatrix inverted(bool *invertible = Q_NULLPTR) const; // 返回此矩阵的反转副本
-bool isIdentity() const; // 如果矩阵是单位矩阵，则返回 true，否则返回 false
-bool isInvertible() const;// 如果矩阵可逆则返回真，否则返回假
-void map(qreal x, qreal y, qreal *tx, qreal *ty) const; // 将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中。结果值分别放在 *tx 和 *ty 中将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中
-void map(int x, int y, int *tx, int *ty) const;// 将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中。结果值分别放在 *tx 和 *ty 中。请注意，转换后的坐标四舍五入到最接近的整数。
-QPoint map(const QPoint &point) const;// 创建并返回一个 QPoint 对象，该对象是给定点的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
-QPointF map(const QPointF &point) const;// 创建并返回一个 QPointF 对象，该对象是给定点的副本，映射到此矩阵定义的坐标系中
-QLine map(const QLine &line) const;// 创建并返回一个 QLine 对象，该对象是给定线的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
-QLineF map(const QLineF &line) const;// 创建并返回一个 QLineF 对象，它是给定线的副本，映射到此矩阵定义的坐标系中
-QPolygonF map(const QPolygonF &polygon) const;// 创建并返回一个 QPolygonF 对象，该对象是给定多边形的副本，映射到此矩阵定义的坐标系中
-QPolygon map(const QPolygon &polygon) const;// 创建并返回一个 QPolygon 对象，该对象是给定多边形的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
-QRegion map(const QRegion &region) const;// 创建并返回一个 QRegion 对象，该对象是给定区域的副本，映射到此矩阵定义的坐标系中。如果使用旋转或剪切，调用此方法可能会相当昂贵
-QPainterPath map(const QPainterPath &path) const;// 创建并返回一个 QPainterPath 对象，它是给定路径的副本，映射到此矩阵定义的坐标系中
-QRectF mapRect(const QRectF &rectangle) const;// 创建并返回一个 QRectF 对象，该对象是给定矩形的副本，映射到此矩阵定义的坐标系中
-QRect mapRect(const QRect &rectangle) const; // 创建并返回一个 QRect 对象，该对象是给定矩形的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
-QPolygon mapToPolygon(const QRect &rectangle) const;// 创建并返回给定矩形的 QPolygon 表示，映射到此矩阵定义的坐标系
-void reset();// 将矩阵重置为单位矩阵，即所有元素都设置为零，除了设置为 1 的 m11 和 m22（指定比例）
-QMatrix &rotate(qreal degrees);// 将坐标系逆时针旋转给定度数。返回对矩阵的引用
-QMatrix &scale(qreal sx, qreal sy);// 通过 sx 水平和 sy 垂直缩放坐标系，并返回对矩阵的引用
-void setMatrix(qreal m11, qreal m12, qreal m21, qreal m22, qreal dx, qreal dy);// 请注意，此函数将替换以前的值。 QMatrix 提供 translate()、rotate()、scale() 和shear() 方便的函数来根据当前定义的坐标系来操作各种矩阵元素
-QMatrix &shear(qreal sh, qreal sv);// 通过 sh 水平和 sv 垂直剪切坐标系，并返回对矩阵的引用
-QMatrix &translate(qreal dx, qreal dy);// 沿 x 轴移动坐标系 dx，沿 y 轴移动 dy，并返回对矩阵的引用
-```
-
-可能的示例代码。
-
-```c++
-void SimpleTransformation::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
-    painter.drawRect(0, 0, 100, 100);
-
-    painter.rotate(45);
-
-    painter.setFont(QFont("Helvetica", 24));
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(20, 10, "QMatrix");
-}
-
-void CombinedTransformation::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
-    painter.drawRect(0, 0, 100, 100);
-
-    QMatrix matrix;
-    matrix.translate(50, 50);
-    matrix.rotate(45);
-    matrix.scale(0.5, 1.0);
-    painter.setMatrix(matrix); // 利用QPainter具有的QMatrix属性
-
-    painter.setFont(QFont("Helvetica", 24));
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(20, 10, "QMatrix");
-}
-
-void BasicOperations::paintEvent(QPaintEvent *)
-{
-    double pi = 3.14;
-
-    double a    = pi/180 * 45.0;
-    double sina = sin(a);
-    double cosa = cos(a);
- 
-    QMatrix translationMatrix(1, 0, 0, 1, 50.0, 50.0);
-    QMatrix rotationMatrix(cosa, sina, -sina, cosa, 0, 0);
-    QMatrix scalingMatrix(0.5, 0, 0, 1.0, 0, 0);
-
-    QMatrix matrix; // 矩阵变换
-    matrix =  scalingMatrix * rotationMatrix * translationMatrix;
-
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
-    painter.drawRect(0, 0, 100, 100);
-
-    painter.setMatrix(matrix);
-
-    painter.setFont(QFont("Helvetica", 24));
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(20, 10, "QMatrix");
-}
-```
-
-#### 3.1.15 QTransform
-
-QTransform 类指定坐标系的二维变换。转换指定如何平移、缩放、剪切、旋转或投影坐标系，通常在渲染图形时使用。**QTransform 与 QMatrix 的不同之处在于它是一个真正的 3x3 矩阵，允许透视变换。** QTransform 的 **toAffine() 方法允许将 QTransform 转换为 QMatrix**。如果在矩阵上指定了透视变换，则该变换将导致数据丢失。QTransform 是 Qt 中推荐的转换类。可以使用 setMatrix()、scale()、rotate()、translate() 和 Shear() 函数**构建 QTransform 对象**。或者，它可以通过应用基本的矩阵运算来构建。
-
-矩阵也可以在构造时定义，并且可以使用 reset() 函数将其重置为单位矩阵（默认）。QTransform 类支持图形基元的映射：给定的点、线、多边形、区域或画家路径可以使用 map() 函数映射到此矩阵定义的坐标系。如果是矩形，可以使用 mapRect() 函数转换其坐标。也可以使用 mapToPolygon() 函数将矩形转换为多边形（映射到此矩阵定义的坐标系）。QTransform 提供了 isIdentity() 函数，如果矩阵是单位矩阵，则返回 true；如果矩阵是非奇异矩阵（即 AB = BA = I），则返回 true 的 isInvertible() 函数。如果它是可逆的，则inverted() 函数返回该矩阵的反转副本（否则它返回单位矩阵），并且 adjoint() 返回矩阵的经典伴随矩阵。此外，QTransform 提供了返回矩阵行列式的determinant()函数。最后，QTransform 类支持矩阵乘法、加法和减法，并且该类的对象可以流式传输和比较。
-
-需要知道的枚举类型如下。
-
-```c++
-enum TransformationType { TxNone，TxTranslate，TxScale，TxRotate，TxShear，TxProject };
-```
-
-```c++
-QTransform(); // 构造函数系列
-QTransform(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33 = 1.0);
-QTransform(qreal m11, qreal m12, qreal m21, qreal m22, qreal dx, qreal dy);
-QTransform(const QMatrix &matrix);
-QTransform(QTransform &&other);
-QTransform(const QTransform &other);
-
-qreal m11() const
-qreal m12() const
-qreal m13() const
-qreal m21() const
-qreal m22() const
-qreal m23() const
-qreal m31() const
-qreal m32() const
-qreal m33() const
-QTransform adjoint() const
-qreal determinant() const
-qreal dx() const
-qreal dy() const
-QTransform inverted(bool *invertible = Q_NULLPTR) const
-bool isAffine() const
-bool isIdentity() const
-bool isInvertible() const
-bool isRotating() const
-bool isScaling() const
-bool isTranslating() const
-void map(qreal x, qreal y, qreal *tx, qreal *ty) const
-QPointF map(const QPointF &p) const
-QLine map(const QLine &l) const
-QLineF map(const QLineF &line) const
-QPolygonF map(const QPolygonF &polygon) const
-QPolygon map(const QPolygon &polygon) const
-QRegion map(const QRegion &region) const
-QPainterPath map(const QPainterPath &path) const
-void map(int x, int y, int *tx, int *ty) const
-QPoint map(const QPoint &point) const
-QRectF mapRect(const QRectF &rectangle) const
-QRect mapRect(const QRect &rectangle) const
-QPolygon mapToPolygon(const QRect &rectangle) const
-void reset()
-QTransform &rotate(qreal angle, Qt::Axis axis = Qt::ZAxis)
-QTransform &rotateRadians(qreal angle, Qt::Axis axis = Qt::ZAxis)
-QTransform &scale(qreal sx, qreal sy)
-void setMatrix(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33)QTransform &shear(qreal sh, qreal sv)
-const QMatrix &toAffine() const
-QTransform &translate(qreal dx, qreal dy)
-QTransform transposed() const
-TransformationType type() constoperator QVariant() const
-bool operator!=(const QTransform &matrix) const
-QTransform operator*(const QTransform &matrix) const
-QTransform &operator*=(const QTransform &matrix)
-QTransform &operator*=(qreal scalar)
-QTransform &operator+=(qreal scalar)
-QTransform &operator-=(qreal scalar)
-QTransform &operator/=(qreal scalar)
-QTransform &operator=(QTransform &&other)
-QTransform &operator=(const QTransform &matrix)
-bool operator==(const QTransform &matrix) const
-```
-
-5个静态函数如下。
-
-```c++
-QTransform fromScale(qreal sx, qreal sy);
-QTransform fromTranslate(qreal dx, qreal dy);
-bool quadToQuad(const QPolygonF &one, const QPolygonF &two, QTransform &trans);
-bool quadToSquare(const QPolygonF &quad, QTransform &trans);
-bool squareToQuad(const QPolygonF &quad, QTransform &trans);
-```
-
-示例代码。
-
-```c++
-void SimpleTransformation::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
-    painter.drawRect(0, 0, 100, 100);
-
-    painter.rotate(45);
-
-    painter.setFont(QFont("Helvetica", 24));
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(20, 10, "QTransform");
-}
-
-void CombinedTransformation::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
-    painter.drawRect(0, 0, 100, 100);
-
-    QTransform transform;
-    transform.translate(50, 50);
-    transform.rotate(45);
-    transform.scale(0.5, 1.0);
-    painter.setTransform(transform);
-
-    painter.setFont(QFont("Helvetica", 24));
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(20, 10, "QTransform");
-}
-
-void BasicOperations::paintEvent(QPaintEvent *)
-{
-    double pi = 3.14;
-
-    double a    = pi/180 * 45.0;
-    double sina = sin(a);
-    double cosa = cos(a);
-
-    QTransform translationTransform(1, 0, 0, 1, 50.0, 50.0);
-    QTransform rotationTransform(cosa, sina, -sina, cosa, 0, 0);
-    QTransform scalingTransform(0.5, 0, 0, 1.0, 0, 0);
-
-    QTransform transform;
-    transform = scalingTransform * rotationTransform * translationTransform;
-
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
-    painter.drawRect(0, 0, 100, 100);
-
-    painter.setTransform(transform);
-
-    painter.setFont(QFont("Helvetica", 24));
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(20, 10, "QTransform");
-}
-```
-
-#### 3.1.16 QPainter
-
-QPainter 类在小部件和其他绘画设备上执行低级绘画。
-QPainter 提供了高度优化的功能来完成大多数绘图 GUI 程序所需的工作。它可以绘制从简单的线条到复杂的形状（如馅饼和弦）的所有内容。它还可以绘制对齐的文本和像素图。通常，它在“自然”坐标系中绘制，但它也可以进行视图和世界变换。 QPainter 可以对任何继承 QPaintDevice 类的对象进行操作。
-QPainter 的常见用途是在小部件的绘制事件中：构造和自定义（例如设置钢笔或画笔）画家。然后画。记得在绘制后销毁 QPainter 对象。例如：
-
-```c++
-void SimpleExampleWidget::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.setPen(Qt::blue);
-    painter.setFont(QFont("Arial", 30));
-    painter.drawText(rect(), Qt::AlignCenter, "Qt");
-}
-```
-
-QPainter 的核心功能是绘图，但该类还提供了一些功能，允许您自定义 QPainter 的设置及其渲染质量，以及启用剪辑的其他功能。此外，您可以通过指定画家的合成模式来控制不同形状的合并方式。
-isActive() 函数指示画家是否处于活动状态。画家由 begin() 函数和接受 QPaintDevice 参数的构造函数激活。 end() 函数和析构函数将其停用。与 QPaintDevice 和 QPaintEngine 类一起，QPainter 构成了 Qt 绘画系统的基础。 QPainter 是用于执行绘图操作的类。 QPaintDevice 表示可以使用 QPainter 绘制的设备。 QPaintEngine 提供了画家用来在不同类型的设备上绘制的接口。如果painter 处于活动状态，device() 返回painter 在其上绘制的绘制设备，paintEngine() 返回painter 当前正在操作的绘制引擎。有关详细信息，请参阅绘制系统。有时需要让其他人在不寻常的 QPaintDevice 上绘画。 QPainter 支持一个静态函数来执行此操作，setRedirected()。警告：当paintdevice 是一个widget 时，QPainter 只能在paintEvent() 函数内部或由paintEvent() 调用的函数中使用。
-
-枚举类型还挺多的，不过这个用于绘画时可以仔细研究一番。
-
-```c++
-class PixmapFragment;
-enum CompositionMode { CompositionMode_SourceOver, CompositionMode_DestinationOver, CompositionMode_Clear, CompositionMode_Source, ..., RasterOp_SourceOrNotDestination };
-enum PixmapFragmentHint { OpaqueHint };
-flags PixmapFragmentHints;
-enum RenderHint { Antialiasing, TextAntialiasing, SmoothPixmapTransform, HighQualityAntialiasing, NonCosmeticDefaultPen, Qt4CompatiblePainting };
-flags RenderHints;
-```
-
-成员函数也非常多，这里只列出最常见的画图函数，重载版本不提供，只提供1个。
-
-```c++
-const QBrush &background() const;
-Qt::BGMode backgroundMode() const;
-const QBrush &brush() const;
-void drawArc(const QRectF &rectangle, int startAngle, int spanAngle);
-void drawChord(const QRectF &rectangle, int startAngle, int spanAngle);
-void drawConvexPolygon(const QPointF *points, int pointCount);
-void drawEllipse(const QRectF &rectangle);
-void drawGlyphRun(const QPointF &position, const QGlyphRun &glyphs);
-void drawImage(const QRectF &target, const QImage &image, const QRectF &source, Qt::ImageConversionFlags flags = Qt::AutoColor);
-void drawLine(const QLineF &line);
-void drawLines(const QLineF *lines, int lineCount);
-void drawPath(const QPainterPath &path);
-void drawPicture(const QPointF &point, const QPicture &picture);
-drawPicture(const QPoint &point, const QPicture &picture)
-void drawPie(const QRectF &rectangle, int startAngle, int spanAngle);
-void drawPixmap(const QRectF &target, const QPixmap &pixmap, const QRectF &source);
-void drawPoints(const QPointF *points, int pointCount)
-void drawPolygon(const QPointF *points, int pointCount, Qt::FillRule fillRule = Qt::OddEvenFill);
-void drawPolyline(const QPointF *points, int pointCount);
-void drawRect(const QRectF &rectangle);
-void drawStaticText(const QPointF &topLeftPosition, const QStaticText &staticText);
-void drawText(const QPointF &position, const QString &text);
-void eraseRect(const QRectF &rectangle);
-void fillRect(const QRectF &rectangle, const QBrush &brush);
-const QFont &font() const;
-QFontInfo fontInfo() const;
-const QPen &pen() const;
-void resetTransform();
-void restore();
-void rotate(qreal angle);
-void save();
-void scale(qreal sx, qreal sy);
-void setBackground(const QBrush &brush);
-void setBackgroundMode(Qt::BGMode mode);
-void setBrush(const QBrush &brush)
-void setPen(const QPen &pen);
-void setWindow(const QRect &rectangle);
-const QTransform &transform() const;
-```
-
-
-
-
 
 ### 3.2 常见输入组件类
 
@@ -7494,6 +6780,1354 @@ QTextCodec *codecForUtfText(const QByteArray &ba);
 // 将编解码器设置为c；这将由 codecForLocale() 返回。如果 c 是空指针，则编解码器重置为默认值。对于一些想要使用自己的机制来设置语言环境的应用程序，这可能是必需的。
 void setCodecForLocale(QTextCodec *c);
 ```
+
+## 7. 绘图
+
+### 7.1 QPainter绘图系统
+
+常见的绘图设备有QWidget、QPixmap、QImage等。
+
+对于QWidget，绘图依赖于绘图事件paintEvent，只要是继承了QWidget的都可以重载此函数定义自己的绘图，例如设置背景。
+
+```c++
+void TestQSplash::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+    QPainter painter(this);
+    int x = 0, y = ui->toolBar->height();
+    int width = this->width(), height = this->height()-ui->toolBar->height()-ui->statusbar->height();
+    // 坐标系统从左上角作为(0,0)开始,向下Y轴,向右X轴
+    // 故图片的位置x是从0开始的,而y因为图片是在工具栏下方绘制的所以y就是工具栏的高度
+    // 图片的宽度width就是窗口的宽度,高度的话因为图片绘制在工具栏和状态栏之间,所以主窗口高度减去工具栏和状态栏宽度是实际高度
+    painter.drawPixmap(x,y,width,height,QPixmap(":/images/back.jpg"));
+}
+```
+
+QPainter可以看成是一个画家，他拿着画笔QPen控制线条属性（例如线条颜色、宽度和线型），拿着颜料桶QBrush控制填充属性（填充颜色、填充方式和渐变特性），辅助工具QFont控制文字格式，QColor控制颜色。
+
+#### 7.1.1 QPainter
+
+**QPainter 可以对任何继承 QPaintDevice 类的对象进行操作**。
+QPainter 的常见用途是在小部件的绘制事件中：构造和自定义（例如设置钢笔或画笔）画家。然后画。记得在绘制后销毁 QPainter 对象。例如：
+
+```c++
+void SimpleExampleWidget::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(Qt::blue);
+    painter.setFont(QFont("Arial", 30));
+    painter.drawText(rect(), Qt::AlignCenter, "Qt");
+}
+```
+
+isActive() 函数指示Painter是否处于活动状态。画家由 begin() 函数和接受 QPaintDevice 参数的构造函数激活。 end() 函数和析构函数将其停用。与 QPaintDevice 和 QPaintEngine 类一起，QPainter 构成了 Qt 绘画系统的基础。 **QPainter 是用于执行绘图操作的类**， **QPaintDevice 表示可以使用 QPainter 绘制的设备**，**QPaintEngine 提供了画家用来在不同类型的设备上绘制的接口**。如果painter 处于活动状态，device() 返回painter 在其上绘制的绘制设备，paintEngine() 返回painter 当前正在操作的绘制引擎。
+
+##### 枚举类型
+
+这个枚举类型定义数字图像合成支持的模式。
+
+```c++
+enum QPainter::CompositionMode {
+    QPainter::CompositionMode_SourceOver,//这是默认模式。源的 alpha 用于混合目标顶部的像素。
+    QPainter::CompositionMode_DestinationOver,//目标的 alpha 用于将其混合到源像素的顶部。此模式是 CompositionMode_SourceOver 的逆模式
+    QPainter::CompositionMode_Clear,//目标中的像素被清除（设置为完全透明），与源无关
+    QPainter::CompositionMode_Source,//输出是源像素（这意味着基本的复制操作，当源像素不透明时与 SourceOver 相同）
+    QPainter::CompositionMode_Destination,//输出是目标像素。这意味着混合没有效果。此模式是 CompositionMode_Source 的逆模式
+    QPainter::CompositionMode_SourceIn,//输出是源，其中 alpha 通过目标的 alpha 减少
+    QPainter::CompositionMode_DestinationIn,//输出是目标，其中 alpha 会被源的 alpha 减少。此模式是 CompositionMode_SourceIn 的逆模式
+    QPainter::CompositionMode_SourceOut,//输出是源，其中 alpha 通过目标的倒数减少
+    QPainter::CompositionMode_DestinationOut,//输出是目标，其中 alpha 通过源的倒数减少。此模式是 CompositionMode_SourceOut 的逆模式
+    QPainter::CompositionMode_SourceAtop,//源像素混合在目标之上，源像素的 alpha 减少了目标像素的 alpha
+    QPainter::CompositionMode_DestinationAtop,//目标像素混合在源的顶部，目标像素的 alpha 减少了目标像素的 alpha。此模式是 CompositionMode_SourceAtop 的逆模式
+    QPainter::CompositionMode_Xor,//源，其 alpha 与目标 alpha 的倒数减少，与目标合并，其 alpha 与源 alpha 的倒数减少。 CompositionMode_Xor 与按位 Xor 不同
+    QPainter::CompositionMode_Plus,//源像素和目标像素的 alpha 和颜色都加在一起
+    QPainter::CompositionMode_Multiply,//输出是源颜色乘以目标颜色。将一种颜色与白色相乘，颜色不变，而将一种颜色与黑色相乘，则为黑色
+    QPainter::CompositionMode_Screen,//源颜色和目标颜色被反转然后相乘。用白色筛选颜色会产生白色，而用黑色筛选颜色会保持颜色不变
+    QPainter::CompositionMode_Overlay,//根据目标颜色对颜色进行倍增或筛选。目标颜色与源颜色混合以反映目标的明暗
+    QPainter::CompositionMode_Darken,//选择源颜色和目标颜色中较深的颜色
+    QPainter::CompositionMode_Lighten,//选择源颜色和目标颜色中较浅的颜色
+    QPainter::CompositionMode_ColorDodge,//目标颜色变亮以反映源颜色。黑色源颜色使目标颜色保持不变
+    QPainter::CompositionMode_ColorBurn,//目标颜色变暗以反映源颜色。白色源颜色使目标颜色保持不变
+    QPainter::CompositionMode_HardLight,//根据源颜色对颜色进行倍增或筛选。光源颜色会使目标颜色变亮，而深色源颜色会使目标颜色变暗
+    QPainter::CompositionMode_SoftLight,//根据源颜色使颜色变暗或变亮。类似于 CompositionMode_HardLight
+    QPainter::CompositionMode_Difference,//从较浅的颜色中减去较深的颜色。用白色绘画会反转目标颜色，而用黑色绘画会保持目标颜色不变
+    QPainter::CompositionMode_Exclusion,//类似于 CompositionMode_Difference，但对比度较低。用白色绘画会反转目标颜色，而用黑色绘画会保持目标颜色不变
+    QPainter::RasterOp_SourceOrDestination,//对源像素和目标像素进行按位或运算（src OR dst）
+    QPainter::RasterOp_SourceAndDestination,//对源像素和目标像素进行按位与运算（src AND dst）
+    QPainter::RasterOp_SourceXorDestination,//对源像素和目标像素进行按位异或运算 (src XOR dst)
+    QPainter::RasterOp_NotSourceAndNotDestination,//对源像素和目标像素（（NOT src）AND（NOT dst））进行按位或非运算
+    QPainter::RasterOp_NotSourceOrNotDestination,//对源像素和目标像素（（NOT src）OR（NOT dst））进行按位与非操作
+    QPainter::RasterOp_NotSourceXorDestination,//执行按位运算，其中源像素被反转，然后与目标进行异或（（NOT src）XOR dst）
+    QPainter::RasterOp_NotSource,//在源像素被反转的情况下进行按位运算（NOT src）
+    QPainter::RasterOp_NotSourceAndDestination,//执行按位运算，其中源被反转，然后与目标（（NOT src）AND dst）
+    QPainter::RasterOp_SourceAndNotDestination,//执行按位运算，其中源与反转的目标像素（src AND (NOT dst)）进行与运算
+    QPainter::RasterOp_NotSourceOrDestination,//执行按位运算，其中源被反转，然后与目标进行 OR&#39;ed ((NOT src) OR dst)
+    QPainter::RasterOp_ClearDestination,//目标中的像素被清除（设置为 0），与源无关
+    QPainter::RasterOp_SetDestination,//目标中的像素被设置（设置为 1）独立于源
+    QPainter::RasterOp_NotDestination,//执行目标像素反转的按位运算（不是 dst）
+    QPainter::RasterOp_SourceOrNotDestinatio算，将源与反转的目标像素进行或运算（src OR (NOT dst)）
+}
+```
+
+QPainter 提供了 CompositionMode 枚举，它定义了数字图像合成的 Porter-Duff 规则；它描述了一个模型，用于将一个图像（源）中的像素与另一图像（目标）中的像素组合起来。两种最常见的合成形式是 Source 和 SourceOver。源用于将不透明对象绘制到绘图设备上。在这种模式下，源中的每个像素都会替换目标中的相应像素。在 SourceOver 合成模式下，源对象是透明的并绘制在目标之上。
+请注意，合成变换是按像素进行的。出于这个原因，使用图形基元本身及其边界矩形之间存在差异：边界矩形包含 alpha == 0 的像素（即基元周围的像素）。这些像素将覆盖其他图像的像素，有效地清除这些像素，而图元仅覆盖其自己的区域。
+
+```c++
+enum QPainter::PixmapFragmentHint {
+	QPainter::OpaqueHint// 表示要绘制的像素图片段是不透明的。不透明片段的绘制速度可能更快
+}
+```
+
+这个枚举类型用于QPainter 指定控制渲染的质量。
+
+```c++
+enum QPainter::RenderHint {
+    QPainter::Antialiasing,//指示引擎应尽可能消除图元边缘的锯齿
+    QPainter::TextAntialiasing,//指示引擎应尽可能消除文本锯齿。要强制禁用文本的抗锯齿，请不要使用此提示。相反，在字体的样式策略上设置 QFont::NoAntialias
+    QPainter::SmoothPixmapTransform,//表示引擎应该使用平滑的像素图变换算法（例如双线性）而不是最近邻
+    QPainter::HighQualityAntialiasing,//此值已过时并将被忽略，请改用抗锯齿渲染提示
+    QPainter::NonCosmeticDefaultPen,//此值已过时，QPen 的默认值现在是非修饰的
+    QPainter::Qt4CompatiblePainting//兼容性提示告诉引擎使用与 Qt 4 中相同的基于 X11 的填充规则，其中锯齿渲染的偏移量略小于半个像素。还将默认构造的笔视为化妆品。在将 Qt 4 应用程序移植到 Qt 5 时可能很有用
+}
+```
+
+使用 QPainter 获得最佳渲染效果，应使用平台无关的 QImage 作为绘图设备；即使用 QImage 将确保结果在任何平台上都具有相同的像素表示。 RenderHint 枚举和对浮点精度的支持提供了一种控制渲染质量的方法：所有用于绘制图元的函数都有一个浮点版本。这些通常与 QPainter::Antialiasing 渲染提示结合使用。
+
+QPainter::Antialiasing 表明引擎应该尽可能对图元边缘进行抗锯齿，QPainter::TextAntialiasing 表明引擎应该尽可能对文本进行抗锯齿，QPainter::SmoothPixmapTransform 表明引擎应该使用平滑像素图变换算法。
+renderHints() 函数返回一个标志，该标志指定为此画家设置的呈现提示。使用 setRenderHint() 函数设置或清除当前设置的 RenderHints。
+
+##### 绘图函数
+
+因为成员函数非常的多，这里只列举至今接触过的函数，后边遇到新的就会补充进去。
+
+```c++
+QPaintDevice * device() const; // 返回绘图设备
+
+//指定区域绘图
+void drawPixmap(int x, int y, const QPixmap &pixmap);
+void drawPixmap(const QRect &rectangle, const QPixmap &pixmap);
+void drawPixmap(int x, int y, int width, int height, const QPixmap &pixmap);
+
+```
+
+列出最常见的画图函数。
+
+```c++
+// 画弧线
+void drawArc(const QRectF &rectangle, int startAngle, int spanAngle);
+// 画一段弦
+void drawChord(const QRectF &rectangle, int startAngle, int spanAngle);
+// 画凸多边形
+void drawConvexPolygon(const QPointF *points, int pointCount);
+// 画椭圆
+void drawEllipse(const QRectF &rectangle);
+// 画由字形表示的字形
+void drawGlyphRun(const QPointF &position, const QGlyphRun &glyphs);
+// 指定矩形区域绘制图片
+void drawImage(const QRectF &target, const QImage &image, const QRectF &source, Qt::ImageConversionFlags flags = Qt::AutoColor);
+// 画直线
+void drawLine(const QLineF &line);
+// 画一批直线
+void drawLines(const QLineF *lines, int lineCount);
+// 画QPainterPath定义的路线
+void drawPath(const QPainterPath &path);
+// 绘制给定的图片
+void drawPicture(const QPointF &point, const QPicture &picture);
+// 画扇形
+void drawPie(const QRectF &rectangle, int startAngle, int spanAngle);
+// 画Pixmap图片
+void drawPixmap(const QRectF &target, const QPixmap &pixmap, const QRectF &source);
+// 画点
+void drawPoint(const QPointF &position);
+// 画一批点
+void drawPoints(const QPointF *points, int pointCount);
+// 画闭合多边形
+void drawPolygon(const QPointF *points, int pointCount, Qt::FillRule fillRule = Qt::OddEvenFill);
+// 画非闭合多线
+void drawPolyline(const QPointF *points, int pointCount);
+// 画矩形
+void drawRect(const QRectF &rectangle);
+// 绘制staticText
+void drawStaticText(const QPointF &topLeftPosition, const QStaticText &staticText);
+// 绘制单行文本
+void drawText(const QPointF &position, const QString &text);
+// 擦除矩形区域
+void eraseRect(const QRectF &rectangle);
+// 填充矩形区域
+void fillRect(const QRectF &rectangle, const QBrush &brush);
+// 填充QPainterPath定义的路径
+void QPainter::fillPath(const QPainterPath &path, const QBrush &brush)；
+```
+
+关于drawPicture、drawPixmap和drawImage的不同要说明一下。
+
+绘制像素图/图像的函数，即drawPixmap()、drawImage()和drawTiledPixmap()。 **drawPixmap() 和 drawImage() 产生相同的结果，区别是drawPixmap() 在屏幕上更快，而 drawImage() 在 QPrinter 或其他设备上可能更快**。**drawPicture() 函数则可以绘制整个 QPicture 的内容。 drawPicture() 函数是唯一一个忽略所有画家设置的函数，因为 QPicture 有自己的设置**。
+
+##### 变换函数
+
+除了绘图成员函数，还有一些变换函数。
+
+最常用的变换是缩放、旋转、平移和剪切。使用 scale() 函数将坐标系缩放给定的偏移量，使用 rotate() 函数顺时针旋转它，并使用 translate() 平移它（即向点添加给定的偏移量）。可以使用shear() 函数围绕原点扭转坐标系。
+
+还有仿射变换，所有的转换操作都在转换 worldTransform() 上进行。矩阵将平面中的一个点转换为另一个点。
+setWorldTransform() 函数可以替换或添加到当前设置的 worldTransform()。 resetTransform() 函数重置使用 translate()、scale()、shear()、rotate()、setWorldTransform()、setViewport() 和 setWindow() 函数进行的任何转换。 deviceTransform() 返回从逻辑坐标转换为平台相关绘图设备的设备坐标的矩阵。仅当在依赖平台的句柄上使用平台绘制命令时才需要后一个功能，并且平台本身不会进行转换。
+使用 QPainter 绘图时，我们使用逻辑坐标指定点，然后将其转换为绘图设备的物理坐标。逻辑坐标到物理坐标的映射由 QPainter 的 combineTransform() 处理，它是 viewport() 和 window() 以及 worldTransform() 的组合。 viewport() 表示指定任意矩形的物理坐标，window() 在逻辑坐标中描述相同的矩形，worldTransform() 与变换矩阵相同。
+
+```c++
+void QPainter::rotate(qreal angle);// 坐标系统顺时针旋转
+void QPainter::translate(qreal dx,qreal dy);//坐标系统水平、垂直移动dx和dy个单位
+void QPainter::translate(const QPointF &offset);
+void QPainter::scale(qreal sx, qreal sy);// 坐标系统缩放，大于1是放大,小于1是缩小
+void QPainter::shear(qreal sh, qreal sv);// 坐标系统扭转变换
+void QPainter::save();//保存painter当前的状态,压入堆栈
+void QPainter::restore();//恢复上一次状态,弹出堆栈,必须和save配对使用
+void resetTransform();//复位所有坐标变化
+
+const QTransform &QPainter::worldTransform() const;
+void QPainter::setWorldTransform(const QTransform &matrix, bool combine = false);
+void QPainter::resetTransform();
+void QPainter::setViewport(const QRect &rectangle);
+void QPainter::setWindow(const QRect &rectangle);
+const QTransform &QPainter::deviceTransform() const;
+bool QPainter::viewTransformEnabled() const;
+QRect QPainter::viewport() const;
+void QPainter::setViewTransformEnabled(bool enable);
+```
+
+![QPainterTransform](QPainterTransform.jpg)
+
+#### 7.1.2 QPaintDevice
+
+常见的绘图设备有QWidget、QPixmap、QImage等。
+
+#### 7.1.3 QPaintEngine 
+
+此类一般是QPainter和QPainterDevice内部使用的，应用程序不需要和此类打交道，除非要创建自己的设备类型。这个类的有关信息参见文档，这里不赘述。
+
+#### 7.1.4 QPainterPath
+
+QPainterPath 类为绘画操作提供了一个容器，使图形形状能够被构造和重用。
+画家路径是由许多图形构建块组成的对象，例如矩形、椭圆、直线和曲线。构建块可以连接到封闭的子路径中，例如矩形或椭圆形。封闭路径具有重合的起点和终点。或者它们可以作为未闭合的子路径独立存在，例如直线和曲线。QPainterPath 对象可用于填充、勾画和裁剪。要为给定的画家路径生成可填充的轮廓，请使用 QPainterPathStroker 类。与普通绘图操作相比，painter path 的主要优点是复杂的形状只需要创建一次；那么它们可以通过调用 QPainter::drawPath() 函数多次绘制。
+QPainterPath 提供了一组函数，可用于获取有关路径及其元素的信息。此外，可以使用 toReversed() 函数反转元素的顺序。还有几个函数可以将此画家路径对象转换为多边形表示。
+
+
+
+QPainterPath 对象可以构造为空路径，具有给定的起点，或作为另一个 QPainterPath 对象的副本。创建后，可以使用 lineTo()、arcTo()、cubicTo() 和 quadTo() 函数将直线和曲线添加到路径中。直线和曲线从 currentPosition() 延伸到作为参数传递的位置。
+QPainterPath 对象的 currentPosition() 始终是添加的最后一个子路径的结束位置（或初始起点）。使用 moveTo() 函数移动 currentPosition() 而不添加组件。 moveTo() 函数隐式启动一个新的子路径，并关闭前一个。启动新子路径的另一种方法是调用 closeSubpath() 函数，该函数通过将 currentPosition() 中的一条线添加回路径的起始位置来关闭当前路径。请注意，新路径将 (0, 0) 作为其初始 currentPosition()。
+QPainterPath 类还提供了几个方便的函数来将封闭的子路径添加到画家路径：addEllipse()、addPath()、addRect()、addRegion() 和 addText()。 addPolygon() 函数添加一个未闭合的子路径。实际上，这些函数都是moveTo()、lineTo()和cubicTo()操作的集合。
+此外，可以使用 connectPath() 函数将路径添加到当前路径。但请注意，此函数将通过添加一条线将当前路径的最后一个元素连接到给定路径的第一个元素。
+
+一个示例如下。
+
+```c++
+QPainterPath path;
+path.addRect(20, 20, 60, 60);
+
+path.moveTo(0, 0);
+path.cubicTo(99, 0,  50, 50,  99, 99);
+path.cubicTo(0, 99,  50, 50,  0, 0);
+
+QPainter painter(this);
+painter.fillRect(0, 0, 100, 100, Qt::white);
+painter.setPen(QPen(QColor(79, 106, 25), 1, Qt::SolidLine,
+                    Qt::FlatCap, Qt::MiterJoin));
+painter.setBrush(QColor(122, 163, 39));
+
+painter.drawPath(path);
+```
+
+绘制结果如图所示。
+
+![QPainterPathEG](QPainterPathEG.jpg)
+
+
+
+需要了解的枚举类型如下。
+
+此枚举描述了用于连接子路径中的顶点的元素类型。请注意，使用 addEllipse()、addPath()、addPolygon()、addRect()、addRegion() 和 addText() 便利函数作为封闭子路径添加的元素实际上是使用 moveTo 作为单独元素的集合添加到路径中的()、lineTo() 和cubicTo() 函数。
+
+```c++
+enum QPainterPath::ElementType {
+    QPainterPath::MoveToElement,//一个新的子路径。另请参阅 moveTo()
+    QPainterPath::LineToElement,//一条线。另请参阅 lineTo()
+    QPainterPath::CurveToElement,//一条曲线。另请参见cubicTo() 和 quadTo()
+    QPainterPath::CurveToDataElement//在 CurveToElement 元素中描述曲线所需的额外数据
+}
+```
+
+此枚举类型指定应该使用哪种方法来填充路径和多边形。
+
+```c++
+enum Qt::FillRule{
+    Qt::OddEvenFill,//指定使用奇偶填充规则填充区域。有了这个规则，我们通过下面的方法来判断一个点是否在形状内。从该点到形状外的位置画一条水平线，并计算交叉点的数量。如果交叉点的数量为奇数，则该点位于形状内部。此模式为默认模式
+    Qt::WindingFill//指定使用非零缠绕规则填充区域。有了这个规则，我们通过下面的方法来判断一个点是否在形状内。从该点到形状外部的位置绘制一条水平线。确定每个交点处的线的方向是向上还是向下。绕组数是通过对每个交叉点的方向求和来确定的。如果数字不为零，则该点位于形状内部。这种填充模式在大多数情况下也可以被认为是闭合形状的交集。
+}
+```
+
+#### 7.1.5 QPen
+
+主要的成员函数如下。
+
+```c++
+// 从构造函数来看可以设置画笔风格、颜色、画刷、画笔宽度
+QPen(Qt::PenStyle style);
+QPen(const QColor &color);
+QPen(const QBrush &brush, qreal width, Qt::PenStyle style = Qt::SolidLine, Qt::PenCapStyle cap = Qt::SquareCap, Qt::PenJoinStyle join = Qt::BevelJoin);
+QPen(const QPen &pen);
+
+Qt::PenCapStyle capStyle() const; // 返回笔的笔帽样式
+void setCapStyle(Qt::PenCapStyle style);
+
+Qt::PenJoinStyle joinStyle() const; // 返回画笔的连接样式
+void setJoinStyle(Qt::PenJoinStyle style);
+
+Qt::PenStyle style() const;// 返回画笔样式
+void setStyle(Qt::PenStyle style);
+
+QColor color() const; // 返回此笔刷的颜色
+void setColor(const QColor &color);
+
+qreal dashOffset() const; // 返回画笔的虚线偏移量,自定义线条样式用
+void setDashOffset(qreal offset);
+
+QVector<qreal> dashPattern() const;// 返回此笔的虚线图案,自定义线条样式用
+void setDashPattern(const QVector<qreal> &pattern);
+
+qreal miterLimit() const;// 返回画笔的斜接限制。斜接限制仅在连接样式设置为 Qt::MiterJoin 时才相关
+void setMiterLimit(qreal limit);
+
+bool isCosmetic() const;// 如果笔是装饰性的，则返回 true；否则返回 false
+void setCosmetic(bool cosmetic);
+bool isSolid() const; // 如果笔具有实心填充，则返回 true，否则返回 false
+
+int width() const;// 以整数精度返回画笔宽度
+qreal widthF() const;// 以浮点数返回画笔精度
+void setWidth(int width);
+void setWidthF(qreal width);
+
+void setBrush(const QBrush &brush);// 设置画刷
+```
+
+关于miterLimit和width的定义如图所示。
+
+![QPen_Width_MiterLimit](QPen_Width_MiterLimit.jpg)
+
+从成员函数的参数来看，显然需要了解三个枚举类型，不过这三个枚举类型不是在QPen定义的，而是在Qt头文件定义的。
+
+**第一个是画笔的线型。**
+
+```c++
+Qt::PenStyle {
+    Qt::NoPen,//根本没有线。例如，QPainter::drawRect() 填充但不绘制任何边界线
+    Qt::SolidLine,//一条普通的线
+    Qt::DashLine,//由几个像素分隔的破折号
+    Qt::DotLine,//由几个像素分隔的点
+    Qt::DashDotLine,//交替的点和破折号
+    Qt::DashDotDotLine,//一个破折号，两个点，一个破折号，两个点
+    Qt::CustomDashLine,//使用 QPainterPathStroker::setDashPattern() 定义的自定义模式
+}
+```
+
+直观的图如下。
+
+![QPen_Style](QPen_Style.jpg)
+
+如果想要自定义线可以这样做，使用 setDashPattern() 函数指定自定义破折号图案，该函数将笔的样式隐式转换为 Qt::CustomDashLine。模式参数 QVector 必须指定为偶数个 qreal 条目，其中条目 1、3、5... 是破折号，而 2、4、6... 是空格。例如，上面显示的自定义模式是使用以下代码创建的：
+
+请注意，虚线图案以笔宽为单位指定，例如一条长 5 宽 10 的破折号是 50 像素长。可以使用 dashPattern() 函数检索当前设置的破折号模式。使用 isSolid() 函数来确定笔是否有实心填充。
+
+```c++
+QPen pen;
+QVector<qreal> dashes;
+qreal space = 4;
+dashes << 1 << space << 3 << space << 9 << space
+       << 27 << space << 9 << space; // 偶数个,破折号长度1,空格4,破折号长度3,空格4,以此类推
+pen.setDashPattern(dashes); // 隐式转换为Qt::CustomDashLine
+```
+
+**第二个是画笔端点样式**。cap 样式定义了如何使用 QPainter 绘制线条的端点。 cap 样式仅适用于宽线，即当宽度为 1 或更大时。 Qt::PenCapStyle 枚举提供以下样式
+
+```c++
+enum PenCupStyle{
+    Qt::FlatCap,//不覆盖线端点的方形线端
+    Qt::SquareCap,//覆盖端点并超出端点线宽一半的方形线端
+    Qt::RoundCap//圆形线端
+}
+```
+
+如图所示。
+
+![QPen_CapStyle](QPen_CapStyle.jpg)
+
+**第三个定义了画笔的连接样式**。
+
+此枚举类型定义了 Qt 支持的笔连接样式，即可以使用 QPainte 绘制两条连接线之间的连接。
+
+```c++
+enum Qt::PenJoinStyle{
+    Qt::MiterJoin,//线条的外边缘延伸成一个角度相交，并填充该区域
+    Qt::BevelJoin,//填充两条线之间的三角形缺口
+    Qt::RoundJoin,//填充两条线之间的圆弧
+    Qt::SvgMiterJoin//与 SVG 1.2 Tiny 规范中的斜接定义相对应的斜接
+}
+```
+
+![QPen_JoinStyle](QPen_JoinStyle.png)
+
+#### 7.1.6 QBrush
+
+画刷最主要的功能是设置**画刷颜色和画刷样式**，下方构造函数的QPixmap、QImage和QGradient都是一类样式，可以隐式转换为Qt::BrushStyle的风格。如果是QPixmap、QImage，就默认指定为Qt::BrushStyle::TexturePattern的风格，即使用材质填充。而QGradien可以是线性渐变、辐射渐变或圆锥形渐变的一种。
+
+成员函数如下。
+
+```c++
+// 构造函数
+QBrush(const QColor &color, Qt::BrushStyle style = Qt::SolidPattern);
+QBrush(Qt::GlobalColor color, Qt::BrushStyle style = Qt::SolidPattern);
+QBrush(const QColor &color, const QPixmap &pixmap);
+QBrush(Qt::GlobalColor color, const QPixmap &pixmap);
+QBrush(const QPixmap &pixmap);
+QBrush(const QImage &image);
+QBrush(const QGradient &gradient)
+    
+// 返回和设置颜色
+const QColor &color() const;
+void setColor(const QColor &color);
+void setColor(Qt::GlobalColor color);
+
+// 返回渐变风格
+const QGradient *gradient() const;
+
+// 返回和设置填充样式
+Qt::BrushStyle style() const;
+void setStyle(Qt::BrushStyle style);
+
+// 设置和返回当前画笔上的显式变换矩阵
+const QMatrix &matrix() const;
+void setMatrix(const QMatrix &matrix);
+
+// 返回自定义画笔图案，如果没有设置自定义画笔图案，则返回空像素图
+QPixmap texture() const;
+void setTexture(const QPixmap &pixmap);
+QImage textureImage() const;
+void setTextureImage(const QImage &image);
+
+void swap(QBrush &other); // 互换
+
+// 如果画笔完全不透明，则返回true，否则返回false。在以下情况下，画笔被认为是不透明的：color()的alpha 分量是255。texture()没有alpha通道，也不是QBitmap。gradient()中的颜色都有一个255的alpha分量，它是一个扩展的径向梯度。
+bool isOpaque() const;
+
+// 返回和设置当前画笔上的显式变换矩阵。画笔变换矩阵与 QPainter 变换矩阵合并产生最终结果
+void setTransform(const QTransform &matrix);
+QTransform transform() const;
+```
+
+**第一个要关注的枚举类型是画刷风格**，此枚举类型定义了 Qt 支持的画笔样式，即使用 QPainter 绘制的形状的填充模式。
+
+```c++
+enum Qt::BrushStyle { 
+    Qt::NoBrush,//没有画笔图案
+    Qt::SolidPattern,//统一的颜色
+    Qt::Dense1Pattern,//极其密集的画笔图案
+    Qt::Dense2Pattern,//非常密集的画笔图案
+    Qt::Dense3Pattern,//有点密集的画笔图案
+    Qt::Dense4Pattern,//半密刷纹
+    Qt::Dense5Pattern,//有点稀疏的画笔图案
+    Qt::Dense6Pattern,//非常稀疏的画笔图案
+    Qt::Dense7Pattern,//极稀疏的画笔图案
+    Qt::HorPattern,//水平线
+    Qt::VerPattern,//垂直线
+    Qt::CrossPattern,//跨越水平线和垂直线
+    Qt::BDiagPattern,//后向对角线
+    Qt::FDiagPattern,//前向对角线
+    Qt::DiagCrossPattern,//穿过对角线
+    Qt::LinearGradientPattern,//线性渐变，使用QLinearGradient设置
+    Qt::ConicalGradientPattern,//圆锥形渐变，使用QConicalGradient设置
+    Qt::RadialGradientPattern,//辐射渐变，使用QRadialGradent设置
+    Qt::TexturePattern//自定义图案，材质填充
+}
+```
+
+**第二个是设置画刷颜色**，画笔color()定义填充图案的颜色。颜色可以是 Qt 的预定义颜色之一，Qt::GlobalColor 或任何其他自定义 QColor。可以分别使用 color() 和 setColor() 函数检索和更改当前设置的颜色。关于QColor的内容可见后续小节[7.1.8 QColor](#7.1.8 QColor)。
+
+**第三个是渐变风格。**gradient() 定义当当前样式为 Qt::LinearGradientPattern、Qt::RadialGradientPattern 或 Qt::ConicalGradientPattern 时使用的渐变填充。在创建 QBrush 时，通过将 QGradient 作为构造函数参数来创建渐变画笔。 Qt 提供了三种不同的渐变：QLinearGradient、QConicalGradient 和 QRadialGradient——它们都继承了 QGradient，可见下一小节[7.1.7 QGradient](#7.1.7 QGradient)。
+
+```c++
+QRadialGradient gradient(50, 50, 50, 50, 50);
+gradient.setColorAt(0, QColor::fromRgbF(0, 1, 0, 1));
+gradient.setColorAt(1, QColor::fromRgbF(0, 0, 0, 0));
+QBrush brush(gradient);
+```
+
+渐变风格还可以使用自己的图片定义，texture() 定义了当前样式为 Qt::TexturePattern 时使用的像素图。您可以通过在创建画笔时提供像素图或使用 setTexture() 来创建具有纹理的画笔。请注意，无论以前的样式设置如何，应用 setTexture() 都会使 style() == Qt::TexturePattern。此外，如果样式是渐变，调用 setColor() 也不会产生影响。如果样式是 Qt::TexturePattern 样式，情况也是如此，除非当前纹理是 QBitmap。
+
+#### 7.1.7 QGradient
+
+QConicalGradient、QLinearGradient、和QRadialGradient都是它的子类。
+
+需要了解的枚举类型如下。
+
+此枚举类型指定渐变坐标如何映射到使用渐变的绘制设备。
+
+```c++
+enum QGradient::CoordinateMode{
+    QGradient::LogicalMode,//这是默认模式。梯度坐标是指定的逻辑空间，就像对象坐标一样
+    QGradient::StretchToDeviceMode,//在这种模式下，渐变坐标是相对于绘图设备的边界矩形，（0,0）在左上角，（1,1）在绘图设备的右下角
+    QGradient::ObjectBoundingMode//在此模式下，渐变坐标相对于正在绘制的对象的边界矩形，(0,0) 在左上角，(1,1) 在对象边界矩形的右下角
+}
+```
+
+此枚举类型指定应如何填充渐变区域之外的区域。辐射填充和线性填充有展布模式，圆锥形没有展布模式。
+
+```c++
+enum QGradient::Spread {
+    QGradient::PadSpread,//该区域用最接近的停止颜色填充。这是默认设置
+    QGradient::RepeatSpread,//在渐变区域外重复渐变
+    QGradient::ReflectSpread//渐变在渐变区域外反射,展布模式
+}
+```
+
+![QBrush_Spread](QBrush_Spread.jpg)
+
+此枚举类型指定渐变的类型。
+
+```c++
+enum QGradient::Type {
+    QGradient::LinearGradient,
+    QGradient::RadialGradient,
+    QGradient::ConicalGradient,
+    QGradient::NoGradient
+}
+
+QLinearGradient linearGrad(QPointF(100, 100), QPointF(200, 200));
+linearGrad.setColorAt(0, Qt::black);
+linearGrad.setColorAt(1, Qt::white);
+
+QRadialGradient radialGrad(QPointF(100, 100), 100);
+radialGrad.setColorAt(0, Qt::red);
+radialGrad.setColorAt(0.5, Qt::blue);
+radialGrad.setColorAt(1, Qt::green);
+```
+
+![QBrush_Gardient](QBrush_Gardient.jpg)
+
+公共成员函数。
+
+```c++
+CoordinateMode coordinateMode() const;//返回此渐变的坐标模式。默认模式是逻辑模式
+void setCoordinateMode(CoordinateMode mode);
+
+void setColorAt(qreal position, const QColor &color);//使用给定颜色在给定位置创建一个停止点。给定的位置必须在 0 到 1 的范围内
+
+void setSpread(Spread method);//指定应用于此渐变的扩展方法
+SPread spread() const;
+
+void setStops(const QGradientStops &stopPoints);// 用给定的 stopPoints 替换当前的停止点集。点的位置必须在 0 到 1 的范围内，并且必须从最低点优先排序
+QGradientStops stops() const;
+
+Type type() const;// 返回渐变的类型
+```
+
+#### 7.1.8 QColor
+
+常见的公共成员函数如下。
+
+```c++
+QColor(Qt::GlobalColor color);
+QColor(int r, int g, int b, int a = 255);
+QColor(QRgb color);
+QColor(const QColor &color);
+QString QColor::name() const;//返回形如"#RRGGBB"格式的颜色表示
+int QColor::value() const; // 返回颜色的组成部分
+QColor convertTo(Spec colorSpec) const; // 详见枚举值QColor:Spec
+QColor toHsv() const;
+QColor toRgb() const;
+// 获取和设置RGB值和透明度
+int saturation() const;
+int hue() const;
+int lightness() const;
+void setHsv(int h, int s, int v, int a = 255);
+QRgb rgb() const;
+void setRgb(int r, int g, int b, int a = 255);
+void setRgb(QRgb rgb);
+QRgb rgba() const;
+void setRgba(QRgb rgba);
+int alpha() const;
+void setAlpha(int alpha);
+int red() const;
+void setRed(int red);
+int blue() const;
+void setBlue(int blue);
+int green() const;
+void setGreen(int green);
+int black() const;
+int cyan() const;
+int yellow() const;
+...
+```
+
+其他的不怎么常用的静态成员函数和关联函数可以了解一下。
+
+```c++
+static QStringList colorNames();
+static QColor fromCmyk(int c, int m, int y, int k, int a = 255);
+static QColor fromCmykF(qreal c, qreal m, qreal y, qreal k, qreal a = 1.0);
+static QColor fromHsl(int h, int s, int l, int a = 255);
+static QColor fromHslF(qreal h, qreal s, qreal l, qreal a = 1.0);
+static QColor fromHsv(int h, int s, int v, int a = 255);
+static QColor fromHsvF(qreal h, qreal s, qreal v, qreal a = 1.0);
+static QColor fromRgb(QRgb rgb);
+static QColor fromRgb(int r, int g, int b, int a = 255);
+static QColor fromRgba64(ushort r, ushort g, ushort b, ushort a = USHRT_MAX);
+static QColor fromRgba64(QRgba64 rgba64);
+static QColor fromRgbF(qreal r, qreal g, qreal b, qreal a = 1.0);
+static QColor fromRgba(QRgb rgba);
+static bool isValidColor(const QString &name);
+static bool isValidColor(QLatin1String name);
+
+typedef QRgb;
+int qAlpha(QRgb rgba);
+uint qAlpha(QRgba64 rgba64);
+int qBlue(QRgb rgb);
+uint qBlue(QRgba64 rgba64);
+int qGray(int r, int g, int b);
+int qGray(QRgb rgb);
+int qGreen(QRgb rgb);
+uint qGreen(QRgba64 rgba64);
+QRgb qPremultiply(QRgb rgb);
+QRgba64 qPremultiply(QRgba64 rgba64);
+int qRed(QRgb rgb);
+uint qRed(QRgba64 rgba64);
+QRgb qRgb(int r, int g, int b);
+QRgba64 qRgba64(quint16 r, quint16 g, quint16 b, quint16 a);
+QRgba64 qRgba64(quint64 c);
+QRgb qRgba(int r, int g, int b, int a);
+QRgb qUnpremultiply(QRgb rgb);
+QRgba64 qUnpremultiply(QRgba64 rgba64);
+```
+
+需要知道的枚举值定义如下。
+
+```c++
+enum QColor::NameFormatQColor={QColor:HexRgb=0,QColor:HexArgb=1};
+enum QColor::Spec = {QColor::Rgb=1,QColor::Hsv=2,QColor::Cmyk=3,
+                     QColor::Hsl=4,QColor::Invalid=0};
+```
+
+#### 7.1.9 QPicture
+
+QPicture类是记录和重放**QPaint命令**的绘制设备，总是与QPainter结合使用。
+图片以独立于平台的格式将painter命令序列化到IO设备。它们有时被称为元文件。
+Qt图片使用专有的二进制格式。与许多窗口系统上的本机图片（元文件）格式不同，Qt图片对其内容没有限制。可以在小部件或pixmap上绘制的所有内容（例如字体、pixmap、区域、转换的图形等）也可以存储在图片中。
+QPicture与分辨率无关，即QPicture可以显示在外观相同的不同设备（例如svg、pdf、ps、打印机和屏幕）上。例如，这是所见即所得打印预览所必需的。QPicture在默认系统dpi中运行，并根据窗口系统缩放画师以匹配分辨率差异。
+
+常见成员函数如下。
+
+```c++
+QPicture(int formatVersion = -1);
+QPicture(const QPicture &pic);
+QRect boundingRect() const;
+const char *data() const;
+bool isNull() const;
+bool load(const QString &fileName, const char *format = Q_NULLPTR);
+bool load(QIODevice *dev, const char *format = Q_NULLPTR);
+bool play(QPainter *painter);
+bool save(const QString &fileName, const char *format = Q_NULLPTR);
+bool save(QIODevice *dev, const char *format = Q_NULLPTR);
+void setBoundingRect(const QRect &r);
+virtual void setData(const char *data, uint size);
+uint size() const;
+void swap(QPicture &other);
+```
+
+可能的示例代码。
+
+```c++
+QPicture picture;
+QPainter painter;
+painter.begin(&picture);           // paint in picture
+painter.drawEllipse(10,20, 80,70); // draw an ellipse
+painter.end();                     // painting done
+picture.save("drawing.pic");       // save picture
+
+QPicture picture;
+picture.load("drawing.pic");           // load picture
+QPainter painter;
+painter.begin(&myImage);               // paint in myImage
+painter.drawPicture(0, 0, picture);    // draw the picture at (0,0)
+painter.end();                         // painting done
+```
+
+#### 7.1.10 QPixmap
+
+QPixmap类是一种屏幕外图像表示，可以用作绘制设备。
+Qt提供了四个用于处理图像数据的类：**QImage、QPixmap、QBitmap和QPicture**。QImage针对I/O、直接像素访问和操作进行了设计和优化，而QPixmap针对在屏幕上显示图像进行了设计和优化。QBitmap只是一个继承QPixmap的方便类，确保深度为1。如果QPixmap对象实际上是位图，则isQBitmap()函数返回true，否则返回false。最后，QPicture类是一个绘制设备，用于记录和重放QPaint命令。
+使用**QLabel或QAbstractButton的子类之一（如QPushButton和QToolButton）**，可以很容易地在屏幕上显示QPixmap。QLabel有一个pixmap属性，而QAbstractButton有一个icon属性。**因为QPixmap是QPaintDevice子类，所以QPainter可以用于直接绘制到Pixmap上**。只**能通过QPaint功能或通过将QPixmap转换为QImage来访问像素**。但是，fill()函数可用于初始化具有给定颜色的整个pixmap。
+有一些函数可以在QImage和QPixmap之间进行转换。通常，在将QImage对象转换为要在屏幕上显示的QPixmap之前，**QImage类用于加载图像文件，可以选择操作图像数据**。或者，如果不需要操作，则可以将图像文件直接加载到QPixmap中。
+
+可以使用**toImage()函数将QPixmap对象转换为QImage**。同样，可以使用**fromImage()将QImage转换为QPixmap**。如果这是一个过于昂贵的操作，那么可以使用QBitmap::fromImage()。
+
+QPixmap支持的加载文件格式以及支持的操作类型如下。
+
+```c++
+BMP Read/write
+GIF Read
+JPG Joint Photographic Experts Group Read/write
+JPEG Read/write
+PNG Read/write
+PBM Read
+PGM Read
+PPM Read/write
+XBM Read/write
+XPM Read/write
+```
+
+常见的公共成员函数如下。
+
+```c++
+QPixmap(int width, int height);
+QPixmap(const QSize &size);
+QPixmap(const QString &fileName, const char *format = Q_NULLPTR,
+        Qt::ImageConversionFlags flags = Qt::AutoColor);
+QPixmap(const char * const[] xpm);
+QPixmap(const QPixmap &pixmap);
+
+bool convertFromImage(const QImage &image, 
+                      Qt::ImageConversionFlags flags = Qt::AutoColor);
+QPixmap copy(const QRect &rectangle = QRect()) const;
+QPixmap copy(int x, int y, int width, int height) const;
+int depth() const;
+void fill(const QColor &color = Qt::white);
+bool hasAlpha() const;
+bool hasAlphaChannel() const;
+int width() const;
+int height() const;
+bool isNull() const;
+bool isQBitmap() const;
+bool load(const QString &fileName, const char *format = Q_NULLPTR,
+          Qt::ImageConversionFlags flags = Qt::AutoColor);
+QRect rect() const;
+bool save(const QString &fileName, const char *format = Q_NULLPTR, int quality = -1) const;
+bool save(QIODevice *device, const char *format = Q_NULLPTR, int quality = -1) const;
+QPixmap scaled(const QSize &size, 
+               Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
+               Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QPixmap scaled(int width, int height, 
+               Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
+               Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QPixmap scaledToHeight(int height, 
+                       Qt::TransformationMode mode = Qt::FastTransformation) const;
+QPixmap scaledToWidth(int width, 
+                      Qt::TransformationMode mode = Qt::FastTransformation) const;
+QSize size() const;
+void swap(QPixmap &other);
+QImage toImage() const;
+```
+
+常用的静态成员函数如下，涉及了2个数据类型QMatrix和QTransform，可见[3.1.14 QMatrix](#3.1.14 QMatrix)和[3.1.15 QTransform](#3.1.15 QTransform)。
+
+```c++
+static int defaultDepth();
+static QPixmap fromImage(const QImage &image,
+                         Qt::ImageConversionFlags flags = Qt::AutoColor);
+static QPixmap fromImage(QImage &&image, 
+                         Qt::ImageConversionFlags flags = Qt::AutoColor);
+static QPixmap fromImageReader(QImageReader *imageReader, 
+                               Qt::ImageConversionFlags flags = Qt::AutoColor);
+static QTransform trueMatrix(const QTransform &matrix, int width, int height);
+static QMatrix trueMatrix(const QMatrix &m, int w, int h);
+```
+
+#### 7.1.11 QImage
+
+处理图像的数据类型。
+
+需要了解的枚举类型如下。
+
+```c++
+// 定义了一些图像格式
+enum Format { Format_Invalid, Format_Mono, Format_MonoLSB, Format_Indexed8, ..., Format_Grayscale8 };
+// 此枚举类型用于描述在invertPixels()函数中应如何反转像素值
+enum InvertMode { InvertRgb, InvertRgba };
+```
+
+常见的构造函数如下。
+
+```c++
+QImage(const QSize &size, Format format);
+QImage(int width, int height, Format format);
+QImage(uchar *data, int width, int height, Format format, 
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(const uchar *data, int width, int height, Format format, 
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(uchar *data, int width, int height, int bytesPerLine, Format format,
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(const uchar *data, int width, int height, int bytesPerLine, Format format,
+       QImageCleanupFunction cleanupFunction = Q_NULLPTR, void *cleanupInfo = Q_NULLPTR);
+QImage(const char * const[] xpm);
+QImage(const QString &fileName, const char *format = Q_NULLPTR);
+QImage(const QImage &image);
+```
+
+常见的公共成员函数如下。
+
+```c++
+QImage convertToFormat(Format format, 
+                       Qt::ImageConversionFlags flags = Qt::AutoColor) const;
+QImage convertToFormat(Format format, const QVector<QRgb> &colorTable, 
+                       Qt::ImageConversionFlags flags = Qt::AutoColor) const;
+int depth() const;
+void fill(uint pixelValue);
+void fill(const QColor &color);
+void fill(Qt::GlobalColor color);
+Format format() const;
+bool hasAlphaChannel() const;
+int height() const;
+void invertPixels(InvertMode mode = InvertRgb);
+bool isGrayscale() const;
+bool isNull() const;
+bool load(const QString &fileName, const char *format = Q_NULLPTR);
+bool load(QIODevice *device, const char *format);
+bool loadFromData(const uchar *data, int len, const char *format = Q_NULLPTR);
+bool loadFromData(const QByteArray &data, const char *format = Q_NULLPTR);
+QImage mirrored(bool horizontal = false, bool vertical = true) const;
+QRgb pixel(const QPoint &position) const;
+QRgb pixel(int x, int y) const;
+QColor pixelColor(const QPoint &position) const;
+QColor pixelColor(int x, int y) const;
+QPixelFormat pixelFormat() const;
+QRect rect() const;
+bool save(const QString &fileName, 
+          const char *format = Q_NULLPTR, int quality = -1) const;
+bool save(QIODevice *device, const char *format = Q_NULLPTR, int quality = -1) const;
+QImage scaled(const QSize &size, 
+              Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio, 
+              Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QImage scaled(int width, int height, 
+       Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio,
+       Qt::TransformationMode transformMode = Qt::FastTransformation) const;
+QImage scaledToHeight(int height, 
+               Qt::TransformationMode mode = Qt::FastTransformation) const;
+QImage scaledToWidth(int width, 
+                     Qt::TransformationMode mode = Qt::FastTransformation) const;
+void setColor(int index, QRgb colorValue);
+setOffset(const QPoint &offset)
+void setPixel(const QPoint &position, uint index_or_rgb);
+void setPixel(int x, int y, uint index_or_rgb);
+void setPixelColor(const QPoint &position, const QColor &color);
+void setPixelColor(int x, int y, const QColor &color);
+void setText(const QString &key, const QString &text);
+QSize size() const;
+QString text(const QString &key = QString()) const;
+bool valid(const QPoint &pos) const;
+bool valid(int x, int y) const;
+int width() const;
+```
+
+静态成员函数如下。
+
+```c++
+QImage fromData(const uchar *data, int size, const char *format = Q_NULLPTR);
+QImage fromData(const QByteArray &data, const char *format = Q_NULLPTR);
+QImage::Format toImageFormat(QPixelFormat format);
+QPixelFormat toPixelFormat(QImage::Format format);
+QMatrix trueMatrix(const QMatrix &matrix, int width, int height);
+QTransform trueMatrix(const QTransform &matrix, int width, int height);
+```
+
+示例代码。
+
+```c++
+QImage image(3, 3, QImage::Format_Indexed8);
+QRgb value;
+value = qRgb(122, 163, 39); // 0xff7aa327
+image.setColor(0, value);
+value = qRgb(237, 187, 51); // 0xffedba31
+image.setColor(1, value);
+value = qRgb(189, 149, 39); // 0xffbd9527
+image.setColor(2, value);
+image.setPixel(0, 1, 0);
+image.setPixel(1, 0, 0);
+image.setPixel(1, 1, 2);
+image.setPixel(2, 1, 1);
+
+QImage image(3, 3, QImage::Format_RGB32);
+QRgb value;
+value = qRgb(189, 149, 39); // 0xffbd9527
+image.setPixel(1, 1, value);
+value = qRgb(122, 163, 39); // 0xff7aa327
+image.setPixel(0, 1, value);
+image.setPixel(1, 0, value);
+value = qRgb(237, 187, 51); // 0xffedba31
+image.setPixel(2, 1, value);
+```
+
+#### 7.1.12 QBitmap
+
+QBitmap类提供单色（1位深度）像素贴图。
+QBitmap类是一种单色屏幕外绘制设备，主要用于创建自定义QCursor和QBrush对象，构建QRegion对象，以及设置pixmap和widget的掩码。**QBitmap是一个QPixmap子类**，确保深度为1，但深度为0的空对象除外。如果为位图指定了深度大于1的像素贴图，则位图将自动抖动。
+在QBitmap对象（或深度为1的QPixmap对象）上绘制时，请使用QColor对象Qt::color0和Qt::color1。
+使用Qt::color0绘制将位图位设置为0，使用Qt::color1绘制将位设置为1。对于位图，0位表示背景（或透明像素），1位表示前景（或不透明像素）。使用clear()函数将所有位设置为Qt::color0。请注意，使用Qt::black和Qt::white没有任何意义，因为QColor::pixel()值对于黑色不一定是0，对于白色不一定是1。
+QBitmap类提供transformed()函数，返回位图的转换副本；使用QTransform参数可以平移、缩放、剪切和旋转位图。此外，QBitmap还提供了静态fromData()函数，该函数返回由给定uchar数据构造的位图，以及静态fromdimage()函数，该函数返回QImage对象的转换副本。
+
+常见的成员函数和静态成员函数如下。
+
+```c++
+QBitmap(const QPixmap &pixmap);
+QBitmap(int width, int height);
+QBitmap(const QSize &size);
+QBitmap(const QString &fileName, const char *format = Q_NULLPTR);
+QBitmap(const QBitmap &other);
+void clear();
+void swap(QBitmap &other);
+QBitmap transformed(const QTransform &matrix) const;
+
+static QBitmap fromData(const QSize &size, const uchar *bits, QImage::Format monoFormat = QImage::Format_MonoLSB);
+static QBitmap fromImage(const QImage &image, Qt::ImageConversionFlags flags = Qt::AutoColor);
+```
+
+### 7.2 坐标系统与坐标变换
+
+关于坐标变换的一些函数其实在QPainter的变换函数提到过，常用的就是平移、旋转和缩放，使用世界坐标变换矩阵也可以实现这些功能，但是需要定义自己的QTransform类，可见[7.2.1 QTransform](#7.2.1 QTransform)。坐标矩阵的定义一般和QMatrix也离不开，可见[7.2.2 QMatrix](#7.2.2 QMatrix)。
+
+
+
+#### 7.2.1 QTransform
+
+QTransform 类指定坐标系的二维变换。转换指定如何平移、缩放、剪切、旋转或投影坐标系，通常在渲染图形时使用。**QTransform 与 QMatrix 的不同之处在于它是一个真正的 3x3 矩阵，允许透视变换。** QTransform 的 **toAffine() 方法允许将 QTransform 转换为 QMatrix**。如果在矩阵上指定了透视变换，则该变换将导致数据丢失。QTransform 是 Qt 中推荐的转换类。可以使用 setMatrix()、scale()、rotate()、translate() 和 Shear() 函数**构建 QTransform 对象**。或者，它可以通过应用基本的矩阵运算来构建。
+
+矩阵也可以在构造时定义，并且可以使用 reset() 函数将其重置为单位矩阵（默认）。QTransform 类支持图形基元的映射：给定的点、线、多边形、区域或画家路径可以使用 map() 函数映射到此矩阵定义的坐标系。如果是矩形，可以使用 mapRect() 函数转换其坐标。也可以使用 mapToPolygon() 函数将矩形转换为多边形（映射到此矩阵定义的坐标系）。QTransform 提供了 isIdentity() 函数，如果矩阵是单位矩阵，则返回 true；如果矩阵是非奇异矩阵（即 AB = BA = I），则返回 true 的 isInvertible() 函数。如果它是可逆的，则inverted() 函数返回该矩阵的反转副本（否则它返回单位矩阵），并且 adjoint() 返回矩阵的经典伴随矩阵。此外，QTransform 提供了返回矩阵行列式的determinant()函数。最后，QTransform 类支持矩阵乘法、加法和减法，并且该类的对象可以流式传输和比较。
+
+需要知道的枚举类型如下。
+
+```c++
+enum TransformationType { TxNone，TxTranslate，TxScale，TxRotate，TxShear，TxProject };
+```
+
+```c++
+QTransform(); // 构造函数系列
+QTransform(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33 = 1.0);
+QTransform(qreal m11, qreal m12, qreal m21, qreal m22, qreal dx, qreal dy);
+QTransform(const QMatrix &matrix);
+QTransform(QTransform &&other);
+QTransform(const QTransform &other);
+
+qreal m11() const
+qreal m12() const
+qreal m13() const
+qreal m21() const
+qreal m22() const
+qreal m23() const
+qreal m31() const
+qreal m32() const
+qreal m33() const
+QTransform adjoint() const
+qreal determinant() const
+qreal dx() const
+qreal dy() const
+QTransform inverted(bool *invertible = Q_NULLPTR) const
+bool isAffine() const
+bool isIdentity() const
+bool isInvertible() const
+bool isRotating() const
+bool isScaling() const
+bool isTranslating() const
+void map(qreal x, qreal y, qreal *tx, qreal *ty) const
+QPointF map(const QPointF &p) const
+QLine map(const QLine &l) const
+QLineF map(const QLineF &line) const
+QPolygonF map(const QPolygonF &polygon) const
+QPolygon map(const QPolygon &polygon) const
+QRegion map(const QRegion &region) const
+QPainterPath map(const QPainterPath &path) const
+void map(int x, int y, int *tx, int *ty) const
+QPoint map(const QPoint &point) const
+QRectF mapRect(const QRectF &rectangle) const
+QRect mapRect(const QRect &rectangle) const
+QPolygon mapToPolygon(const QRect &rectangle) const
+void reset()
+QTransform &rotate(qreal angle, Qt::Axis axis = Qt::ZAxis)
+QTransform &rotateRadians(qreal angle, Qt::Axis axis = Qt::ZAxis)
+QTransform &scale(qreal sx, qreal sy)
+void setMatrix(qreal m11, qreal m12, qreal m13, qreal m21, qreal m22, qreal m23, qreal m31, qreal m32, qreal m33)QTransform &shear(qreal sh, qreal sv)
+const QMatrix &toAffine() const
+QTransform &translate(qreal dx, qreal dy)
+QTransform transposed() const
+TransformationType type() constoperator QVariant() const
+bool operator!=(const QTransform &matrix) const
+QTransform operator*(const QTransform &matrix) const
+QTransform &operator*=(const QTransform &matrix)
+QTransform &operator*=(qreal scalar)
+QTransform &operator+=(qreal scalar)
+QTransform &operator-=(qreal scalar)
+QTransform &operator/=(qreal scalar)
+QTransform &operator=(QTransform &&other)
+QTransform &operator=(const QTransform &matrix)
+bool operator==(const QTransform &matrix) const
+```
+
+5个静态函数如下。
+
+```c++
+QTransform fromScale(qreal sx, qreal sy);
+QTransform fromTranslate(qreal dx, qreal dy);
+bool quadToQuad(const QPolygonF &one, const QPolygonF &two, QTransform &trans);
+bool quadToSquare(const QPolygonF &quad, QTransform &trans);
+bool squareToQuad(const QPolygonF &quad, QTransform &trans);
+```
+
+示例代码。
+
+```c++
+void SimpleTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.rotate(45);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QTransform");
+}
+
+void CombinedTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    QTransform transform;
+    transform.translate(50, 50);
+    transform.rotate(45);
+    transform.scale(0.5, 1.0);
+    painter.setTransform(transform);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QTransform");
+}
+
+void BasicOperations::paintEvent(QPaintEvent *)
+{
+    double pi = 3.14;
+
+    double a    = pi/180 * 45.0;
+    double sina = sin(a);
+    double cosa = cos(a);
+
+    QTransform translationTransform(1, 0, 0, 1, 50.0, 50.0);
+    QTransform rotationTransform(cosa, sina, -sina, cosa, 0, 0);
+    QTransform scalingTransform(0.5, 0, 0, 1.0, 0, 0);
+
+    QTransform transform;
+    transform = scalingTransform * rotationTransform * translationTransform;
+
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.setTransform(transform);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QTransform");
+}
+```
+
+#### 7.2.2 QMatrix
+
+QMatrix类指定坐标系的二维变换。
+矩阵指定如何平移、缩放、剪切或旋转坐标系，通常在渲染图形时使用。QMatrix与QTransform不同，它不允许透视变换。QTransform是Qt中推荐的转换类。
+可以使用**setMatrix()、scale()、rotate()、translate()和shear()函数构建QMatrix对象**。或者，可以通过应用基本矩阵运算来构建它。矩阵也可以在构造时定义，并且可以使用**reset()函数将其重置为单位矩阵**（默认值）。
+QMatrix类支持图形原语的映射：可以使用**map()函数将给定的点、线、多边形、区域或绘制路径映射到此矩阵定义的坐标系**。对于矩形，可以使用mapRect()函数转换其坐标。还可以使用mapToPolygon（）函数将矩形转换为多边形（映射到此矩阵定义的坐标系）。
+QMatrix提供**isIdentity()函数，如果矩阵是单位矩阵，则返回true**；如果矩阵是**非奇异矩阵（即AB=BA=i），则提供isInvertible()**，则返回true。inverted()函数的作用是：如果该矩阵是可逆的，则返回该矩阵的反向副本（否则返回单位矩阵）。此外，QMatrix提供了返**回矩阵行列式的determinate()函数**。
+最后，QMatrix类支持矩阵乘法，该类的对象可以进行流式处理和比较。
+
+常见的成员函数如下。
+
+```c++
+qreal m11() const; // 返回水平比例因子
+qreal m12() const; // 返回垂直剪切因子
+qreal m21() const; // 返回水平剪切因子
+qreal m22() const; // 返回垂直比例因子
+qreal QMatrix::determinant() const ;// 返回矩阵的行列式
+qreal dx() const; // 返回水平平移因子返回垂直平移因子。
+qreal dy() const; // 返回垂直平移因子
+QMatrix inverted(bool *invertible = Q_NULLPTR) const; // 返回此矩阵的反转副本
+bool isIdentity() const; // 如果矩阵是单位矩阵，则返回 true，否则返回 false
+bool isInvertible() const;// 如果矩阵可逆则返回真，否则返回假
+void map(qreal x, qreal y, qreal *tx, qreal *ty) const; // 将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中。结果值分别放在 *tx 和 *ty 中将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中
+void map(int x, int y, int *tx, int *ty) const;// 将给定的坐标 x 和 y 映射到此矩阵定义的坐标系中。结果值分别放在 *tx 和 *ty 中。请注意，转换后的坐标四舍五入到最接近的整数。
+QPoint map(const QPoint &point) const;// 创建并返回一个 QPoint 对象，该对象是给定点的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QPointF map(const QPointF &point) const;// 创建并返回一个 QPointF 对象，该对象是给定点的副本，映射到此矩阵定义的坐标系中
+QLine map(const QLine &line) const;// 创建并返回一个 QLine 对象，该对象是给定线的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QLineF map(const QLineF &line) const;// 创建并返回一个 QLineF 对象，它是给定线的副本，映射到此矩阵定义的坐标系中
+QPolygonF map(const QPolygonF &polygon) const;// 创建并返回一个 QPolygonF 对象，该对象是给定多边形的副本，映射到此矩阵定义的坐标系中
+QPolygon map(const QPolygon &polygon) const;// 创建并返回一个 QPolygon 对象，该对象是给定多边形的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QRegion map(const QRegion &region) const;// 创建并返回一个 QRegion 对象，该对象是给定区域的副本，映射到此矩阵定义的坐标系中。如果使用旋转或剪切，调用此方法可能会相当昂贵
+QPainterPath map(const QPainterPath &path) const;// 创建并返回一个 QPainterPath 对象，它是给定路径的副本，映射到此矩阵定义的坐标系中
+QRectF mapRect(const QRectF &rectangle) const;// 创建并返回一个 QRectF 对象，该对象是给定矩形的副本，映射到此矩阵定义的坐标系中
+QRect mapRect(const QRect &rectangle) const; // 创建并返回一个 QRect 对象，该对象是给定矩形的副本，映射到此矩阵定义的坐标系中。请注意，转换后的坐标四舍五入到最接近的整数
+QPolygon mapToPolygon(const QRect &rectangle) const;// 创建并返回给定矩形的 QPolygon 表示，映射到此矩阵定义的坐标系
+void reset();// 将矩阵重置为单位矩阵，即所有元素都设置为零，除了设置为 1 的 m11 和 m22（指定比例）
+QMatrix &rotate(qreal degrees);// 将坐标系逆时针旋转给定度数。返回对矩阵的引用
+QMatrix &scale(qreal sx, qreal sy);// 通过 sx 水平和 sy 垂直缩放坐标系，并返回对矩阵的引用
+void setMatrix(qreal m11, qreal m12, qreal m21, qreal m22, qreal dx, qreal dy);// 请注意，此函数将替换以前的值。 QMatrix 提供 translate()、rotate()、scale() 和shear() 方便的函数来根据当前定义的坐标系来操作各种矩阵元素
+QMatrix &shear(qreal sh, qreal sv);// 通过 sh 水平和 sv 垂直剪切坐标系，并返回对矩阵的引用
+QMatrix &translate(qreal dx, qreal dy);// 沿 x 轴移动坐标系 dx，沿 y 轴移动 dy，并返回对矩阵的引用
+```
+
+可能的示例代码。
+
+```c++
+void SimpleTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.rotate(45);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QMatrix");
+}
+
+void CombinedTransformation::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    QMatrix matrix;
+    matrix.translate(50, 50);
+    matrix.rotate(45);
+    matrix.scale(0.5, 1.0);
+    painter.setMatrix(matrix); // 利用QPainter具有的QMatrix属性
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QMatrix");
+}
+
+void BasicOperations::paintEvent(QPaintEvent *)
+{
+    double pi = 3.14;
+
+    double a    = pi/180 * 45.0;
+    double sina = sin(a);
+    double cosa = cos(a);
+ 
+    QMatrix translationMatrix(1, 0, 0, 1, 50.0, 50.0);
+    QMatrix rotationMatrix(cosa, sina, -sina, cosa, 0, 0);
+    QMatrix scalingMatrix(0.5, 0, 0, 1.0, 0, 0);
+
+    QMatrix matrix; // 矩阵变换
+    matrix =  scalingMatrix * rotationMatrix * translationMatrix;
+
+    QPainter painter(this);
+    painter.setPen(QPen(Qt::blue, 1, Qt::DashLine));
+    painter.drawRect(0, 0, 100, 100);
+
+    painter.setMatrix(matrix);
+
+    painter.setFont(QFont("Helvetica", 24));
+    painter.setPen(QPen(Qt::black, 1));
+    painter.drawText(20, 10, "QMatrix");
+}
+```
+
+#### 7.3.3 QRect
+
+构造函数可以以QPoint和QSize构造，也可以直接使用整型数。
+
+```c++
+QRect(const QPoint &topLeft, const QPoint &bottomRight);
+QRect(const QPoint &topLeft, const QSize &size);
+QRect(int x, int y, int width, int height);
+```
+
+获取4个顶点的坐标，或者矩形的长度宽度，或者设置它们的一些函数。
+
+```c++
+QPoint bottomLeft() const;
+QPoint bottomRight() const;
+QPoint topLeft() const;
+QPoint topRight() const;
+QPoint center() const;
+QSize size() const;
+int top() const
+int height() const;
+int bottom() const;
+int width() const;
+int x() const;
+int y() const;
+void getCoords(int *x1, int *y1, int *x2, int *y2) const;//将矩形左上角的位置提取到 *x1 和 *y1，将右下角的位置提取到 *x2 和 *y2
+void getRect(int *x, int *y, int *width, int *height) const;//将矩形左上角的位置提取到 *x 和 *y，并将其尺寸提取到 *width 和 *height
+
+void setBottom(int y);
+void setCoords(int x1, int y1, int x2, int y2);//将矩形左上角的坐标设置为 (x1, y1)，将其右下角的坐标设置为 (x2, y2)
+void setHeight(int height);
+void setLeft(int x);
+void setRect(int x, int y, int width, int height);
+void setRight(int x);
+void setSize(const QSize &size);;
+void setTop(int y);
+int left() const;
+int right() const;
+void setTopLeft(const QPoint &position);
+void setTopRight(const QPoint &position);
+void setBottomLeft(const QPoint &position);
+void setBottomRight(const QPoint &position);
+void setWidth(int width);
+void setX(int x);
+void setY(int y);
+```
+
+移动到某个位置的相关函数。
+
+```c++
+void moveBottom(int y);//垂直移动矩形，将矩形的底边留在给定的 y 坐标处。矩形的大小不变
+void moveBottomLeft(const QPoint &position);
+void moveBottomRight(const QPoint &position);
+void moveCenter(const QPoint &position);
+void moveLeft(int x);
+void moveRight(int x);
+void moveTo(int x, int y);
+void moveTo(const QPoint &position);
+void moveTop(int y);
+void moveTopLeft(const QPoint &position);
+void moveTopRight(const QPoint &position);
+```
+
+是否包含某个区域、点
+
+```c++
+bool contains(const QPoint &point, bool proper = false) const;
+bool contains(const QRect &rectangle, bool proper = false) const;
+bool contains(int x, int y) const;
+bool contains(int x, int y, bool proper) const;
+```
+
+调整区域。
+
+```c++
+void adjust(int dx1, int dy1, int dx2, int dy2);
+QRect adjusted(int dx1, int dy1, int dx2, int dy2) const;
+```
+
+其他函数。
+
+```c++
+QRect intersected(const QRect &rectangle) const;//返回此矩形与给定矩形的交集。请注意，r.intersected(s) 等价于 r&s
+bool intersects(const QRect &rectangle) const;//如果此矩形与给定矩形相交（即两个矩形内至少有一个像素），则返回 true，否则返回 false
+bool isEmpty() const;//如果矩形为空，则返回 true，否则返回 false
+bool isNull() const;//如果矩形是空矩形，则返回 true，否则返回 false
+bool isValid() const;//如果矩形有效，则返回 true，否则返回 false
+QRect marginsAdded(const QMargins &margins) const;//返回由边距增长的矩形
+QRect marginsRemoved(const QMargins &margins) const;//从矩形中删除边距，将其缩小
+QRect normalized() const;//返回一个标准化的矩形；即，具有非负宽度和高度的矩形
+CGRect toCGRect() const;//从 QRect 创建一个 CGRect
+void translate(int dx, int dy); // 平移
+void translate(const QPoint &offset);//平移
+QRect translated(int dx, int dy) const;// 返回相对于当前位置沿 x 轴平移 dx 和沿 y 轴平移 dy 的矩形副本。正值将矩形向右和向下移动
+QRect translated(const QPoint &offset) const;
+QRect transposed() const;// 返回交换了宽度和高度的矩形的副本
+QRect united(const QRect &rectangle) const;//返回此矩形和给定矩形的边界矩形
+```
+
+#### 7.3.4 QLine
+
+成员函数如下。只要知道P1对应(x1,y1)第一个点，P2是第2个点对应(x2,y2)就可以。
+
+```c++
+QLine(const QPoint &p1, const QPoint &p2);
+QLine(int x1, int y1, int x2, int y2);
+QPoint p1() const;
+QPoint p2() const;
+int x1() const;
+int x2() const;
+int y1() const;
+int y2() const;
+QPoint center() const;
+int dx() const; // 两点之间的水平平移量
+int dy() const; // 垂直平移量
+bool isNull() const;
+void setP1(const QPoint &p1);
+void setP2(const QPoint &p2);
+void setLine(int x1, int y1, int x2, int y2);
+void setPoints(const QPoint &p1, const QPoint &p2);
+void translate(const QPoint &offset);
+void translate(int dx, int dy);
+QLine translated(const QPoint &offset) const; //返回平移后的直线
+QLine translated(int dx, int dy) const;
+```
+
+#### 7.3.5 QPoint
+
+成员函数如下。
+
+```c++
+QPoint(int xpos, int ypos);
+bool isNull() const;
+int manhattanLength() const;//返回 x() 和 y() 的绝对值之和，传统上称为从原点到该点的向量的“曼哈顿长度”。
+int &rx();// 返回对该点 x 坐标的引用
+int &ry();
+void setX(int x);
+void setY(int y);
+CGPoint toCGPoint() const;// 从 QPoint 生成 CGPoint
+int x() const;//返回此点的 x 坐标
+int y() const;
+```
+
+#### 7.3.6 QSize
+
+**QSize类使用整数点精度定义二维对象的大小**。
+大小由**width()和height()指定**。它可以在构造函数中设置，并使用setWidth()、setHeight()或scale()函数或使用算术运算符进行更改。通过使用rwidth()和rheight()函数检索对宽度和高度的引用，也可以直接操纵大小。最后，可以使用transpose()函数交换宽度和高度。
+isValid()函数的作用是：确定大小是否有效（有效大小的宽度和高度均大于或等于零）。如果宽度和高度都小于或等于零，isEmpty()函数将返回true，而isNull()函数仅当宽度和高度都为零时才返回true。
+使用expandedTo()函数检索一个大小，该大小包含此大小和给定大小的最大高度和宽度。类似地，boundedTo()函数返回一个大小，该大小保持此大小和给定大小的最小高度和宽度。
+
+常见的成员函数如下。
+
+```c++
+QSize(int width, int height);
+QSize boundedTo(const QSize &otherSize) const;//返回一个包含此尺寸的最小宽度和高度以及给定的 otherSize 的尺寸
+QSize expandedTo(const QSize &otherSize) const;//返回一个包含此尺寸的最大宽度和高度以及给定的 otherSize 的尺寸
+int height() const;
+bool isEmpty() const;
+bool isNull() const;
+bool isValid() const;
+int &rheight();
+int &rwidth();
+void scale(int width, int height, Qt::AspectRatioMode mode);//根据指定的模式将大小缩放为具有给定宽度和高度的矩形
+void scale(const QSize &size, Qt::AspectRatioMode mode);
+QSize scaled(int width, int height, Qt::AspectRatioMode mode) const;//根据指定的模式，返回缩放为具有给定宽度和高度的矩形的大小
+QSize scaled(const QSize &s, Qt::AspectRatioMode mode) const;
+void setHeight(int height);
+void setWidth(int width);
+CGSize toCGSize() const;// 从 QSize 创建 CGSize
+void transpose();//交换宽度和高度值
+QSize transposed() const;//返回宽度和高度交换的 QSize
+int width() const;
+```
+
+对于缩放需要了解的枚举类型如下。此枚举类型定义了缩放矩形时长宽比发生的变化。
+
+```c++
+enum Qt::AspectRatioMode {
+    Qt::IgnoreAspectRatio,//大小可自由缩放。不保留纵横比
+    Qt::KeepAspectRatio,//大小在给定矩形内缩放为尽可能大的矩形，保持纵横比
+    Qt::KeepAspectRatioByExpanding//大小在给定矩形之外缩放到尽可能小的矩形，保持纵横比
+}
+```
+
+![Enum_AspectRatioMode](Enum_AspectRatioMode.jpg)
+
+### 7.3 GraphicsView绘图架构
+
+
 
 ## 布局管理
 

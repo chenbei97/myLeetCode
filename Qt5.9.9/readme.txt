@@ -40,7 +40,22 @@
 
 16. TestFileDirOpera QCoreApplication\QDir\QFile\QFileInfo\QTemporaryFile\QTemporaryDir\QFileSystemWatcher的使用
 
+17. TestQPainter 使用绘图系统配合QPainterPath绘制五角星和散射圆的案例,比较视图和窗口坐标系统的差异
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
+9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
+void TestQSplash::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+    QPainter painter(this);
+    int x = 0, y = ui->toolBar->height();
+    int width = this->width(), height = this->height()-ui->toolBar->height()-ui->statusbar->height();
+    // 坐标系统从左上角作为(0,0)开始,向下Y轴,向右X轴
+    // 故图片的位置x是从0开始的,而y因为图片是在工具栏下方绘制的所以y就是工具栏的高度
+    // 图片的宽度width就是窗口的宽度,高度的话因为图片绘制在工具栏和状态栏之间,所以主窗口高度减去工具栏和状态栏宽度是实际高度
+    painter.drawPixmap(x,y,width,height,QPixmap(":/images/back.jpg"));
+}
+
 8. 中文乱码的问题
 (1) 使用QTextStream的时候设置流自动检测UniCode
 QTextStream stream(&file);
@@ -48,7 +63,7 @@ stream.setAutoDetectUnicode(true); // 但是这种方法不是全局的
 (2) main函数使用QTextCodec设置全局启用
 int main()
 {
-    QTextCodec * code = QTextCodec::codecForName("UTF-8");
+    QTextCodec * code = QTextCodec::codecForName("UTF-8"); // GBK,GB2312等
     QTextCodec::setCodecForLocale(code);
 
     QApplication a(argc,argv);
@@ -141,16 +156,6 @@ if (file.open(QFile::ReadOnly)) {
             event->ignore();
     }
     5.2 paintEvent():窗口绘制事件,可以用来加入背景图片
-    void TestMultiWindow::paintEvent(QPaintEvent *event)
-    {
-        Q_UNUSED(event);
-        QPainter painter(this);
-        // void QPainter::drawPixmap(int x, int y, int width, int height, const QPixmap &pixmap);
-        // 使用给定的宽度width和高度height将像素图绘制到位置 (x, y) 的矩形中
-        int x  = 0, y = ui->toolBar->height(), width = this->width(); // 位置在工具栏下方,左上角是(0,0),所以y是工具栏高度,x就是0
-        int height = this->height()-ui->toolBar->height()-ui->statusbar->height(); // 图片的高度就是主窗口高度减去状态栏和工具栏的高度
-        painter.drawPixmap(x,y,width,height, QPixmap(":/images/back2.jpg"));
-    }
     5.3 showEvent():窗口显示时触发的事件
     5.4 mouseMoveEvent():鼠标移动事件
     5.5 mouseReleaseEvent():鼠标键释放事件
