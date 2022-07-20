@@ -8127,6 +8127,279 @@ enum Qt::AspectRatioMode {
 
 ### 7.3 GraphicsView绘图架构
 
+paintEvent事件进行的绘图是位图，只适合绘制复杂度不高的固定图形，不能实现图件的选择、编辑、拖放和修改功能，而GraphicsView绘图架构可以提供可交互的绘图方式。GraphicsView绘图架构也是一种model/view架构，每个图形元件都是可选择拖放和修改的。
+
+GraphicsView绘图架构由3个部分组成，**场景、视图和图形项**。
+
+**场景**，关联的类是QGraphicsScene，场景是不可见的，是一个抽象的管理图形项的容器，可以往场景添加图形项，获取场景的某个图形项等。除了图形项之外，场景还有背景层和前景层，通常由QBrush指定，也可以重新实现drawBackground()和drawForeground()函数来实现自定义的前景和背景，实现特殊效果。
+
+**视图**，关联的类是QGraphicsView，提供绘图的视图组件，用于显示场景的内容，可以为一个场景设置多个视图。视图可以比场景大，这样场景默认会在视图的中间部分显示，也可以设置视图的Alignment属性来控制场景在视图中的位置；视图也可以比场景小，这样视图只显示一部分内容，但是会提供卷滚条在整个场景内移动。视图接受键盘和鼠标输入并转换为场景事件，进行坐标转换后可以传送给可视场景。
+
+**图形项**，一些基本的图形原件，图形项基类是QGraphicsItem，Qt提供了一些基本图形项，例如绘制椭圆的QGraphicsEllipseItem、绘制矩形的QGraphicsRectItem、绘制文字的QGraphicsTextItem。图形项可以包含子图形项，支持碰撞检测，即是否和其他图形项碰撞。
+
+坐标系统有3个。场**景坐标默认是逻辑坐标，以场景的中心为原点；图形项也是逻辑坐标，不过是局部的，它以自己的中心作为原点；视图是物理坐标，缺省为左上角为原点**。
+
+**关于图形项坐标要进行强调：**
+
+如果图形项没有父图形项，它的父容器就是场景，图形项的位置是图形项中心在场景的位置。
+
+如果图形项有父图形项，那么父图形项坐标变换时它也会同步变换。
+
+大多数图形项的函数都是在局部坐标完成的，返回的也是局部坐标，也就是图形项自己作为原点的坐标。个别的函数例如QGraphicsItem::pos()，就会返回它在父图形项中（有的话）的坐标或者场景中的坐标。
+
+**关于视图坐标要进行强调：**
+
+它是物理坐标，单位是像素。视图坐标只与widget或者视口有关，视口就是物理坐标，而与观察的场景（窗口）无关，QGraphicsView视口的左上角坐标总是(0,0)。
+
+ **关于场景坐标要进行强调：**
+
+场景坐标是所有图形项的基础坐标，描述了每个顶层图形项的位置，创建场景时可以定义场景矩形区的坐标范围。例如scene  = new QGraphicsScene(-400,-300,800,600)。告知左上角坐标为(-400,-300)，宽度800高度600，这样原点就在场景的中心位置了。这样每个图形项的坐标都可以给出，由函数QGraphicsItem::scenePos()给出或者图形项边界矩形QGraphicsItem::ssceneBoundingRect()函数给出。场景发生变化时会发射changed信号，参数时一个场景的矩形列表，表示哪些矩形区域发生了变化。
+
+最后要说明的是坐标映射问题，例如在QGraphicsView的视口上单击鼠标会通过函数QGraphicsView::mapToScene()将视图坐标转为场景坐标，然后用QGraphicsScene::itemAt()获取场景中鼠标光标处的图形项。
+
+#### 7.3.1 QGraphicsScene
+
+场景具备的主要功能如下。
+
+1.提供管理大量图形项的快速接口；
+
+2.将事件传播给每个图形项；
+
+3.管理每个图形项的状态，如选择状态、焦点状态等；
+
+4.管理未经变换的渲染功能，主要用于打印。
+
+
+
+#### 7.3.2 QGraphicsView
+
+QGraphicsView 类提供了一个用于显示 QGraphicsScene 内容的小部件。
+要可视化场景，首先要构造一个 QGraphicsView 对象，将要可视化的场景的地址传递给 QGraphicsView 的构造函数。或者，您可以稍后调用 setScene() 来设置场景。调用 show() 后，默认情况下视图将滚动到场景中心并显示此时可见的所有项目。例如：
+
+```c++
+QGraphicsScene scene;
+scene.addText("Hello, world!");
+
+QGraphicsView view(&scene);
+view.show();
+```
+
+您可以使用滚动条或调用 centerOn() 显式滚动到场景中的任何位置。通过将一个点传递给 centerOn()，QGraphicsView 将滚动其视口以确保该点在视图中居中。为滚动到 QGraphicsItem 提供了重载，在这种情况下，QGraphicsView 将看到项目的中心位于视图的中心。如果您只想确保某个区域可见（但不一定居中），您可以调用 ensureVisible()。
+
+QGraphicsView 可用于可视化整个场景或仅部分场景。默认情况下，第一次显示视图时会自动检测到可视化区域（通过调用 QGraphicsScene::itemsBoundingRect()）。要自己设置可视化区域矩形，可以调用 setSceneRect()。这将适当地调整滚动条的范围。请注意，尽管场景支持几乎无限大小，但滚动条的范围永远不会超过整数（INT_MIN，INT_MAX）的范围。
+
+QGraphicsView 通过调用 render() 来可视化场景。默认情况下，通过使用常规 QPainter 并使用默认渲染提示将项目绘制到视口上。要更改 QGraphicsView 在绘制项目时传递给 QPainter 的默认渲染提示，您可以调用 setRenderHints()。
+
+默认情况下，QGraphicsView 为视口小部件提供了一个常规的 QWidget。您可以通过调用 viewport() 访问此小部件，也可以通过调用 setViewport() 来替换它。要使用 OpenGL 进行渲染，只需调用 setViewport(new QGLWidget)。 QGraphicsView 拥有视口小部件的所有权。
+
+QGraphicsView 支持仿射变换，使用 QTransform。您可以将矩阵传递给 setTransform()，也可以调用便利函数之一 rotate()、scale()、translate() 或 slice()。最常见的两种转换是用于实现缩放的缩放和旋转。 QGraphicsView 在转换过程中保持视图的中心固定。由于场景对齐 (setAligment())，平移视图不会产生视觉影响。
+
+您可以使用鼠标和键盘与场景中的项目进行交互。 QGraphicsView 将鼠标和按键事件转化为场景事件，（继承QGraphicsSceneEvent的事件），并转发到可视化场景。最后，处理事件并对其做出反应的是单个项目。例如，如果您单击一个可选项目，该项目通常会让场景知道它已被选中，并且它还会重新绘制自身以显示一个选择矩形。类似地，如果您单击并拖动鼠标来移动一个可移动的项目，它是处理鼠标移动和自身移动的项目。默认情况下启用项目交互，您可以通过调用 setInteractive() 来切换它。
+
+您还可以通过创建 QGraphicsView 的子类并重新实现鼠标和按键事件处理程序来提供您自己的自定义场景交互。为了简化您以编程方式与视图中的项目交互的方式，QGraphicsView 提供了映射函数 mapToScene() 和 mapFromScene()，以及项目访问器 items() 和 itemAt()。这些函数允许您在视图坐标和场景坐标之间映射点、矩形、多边形和路径，并使用视图坐标在场景中查找项目。
+
+##### 枚举类型
+
+这个枚举描述了你可以为 QGraphicsView 的缓存模式设置的标志。
+
+```c++
+enum QGraphicsView::CacheModeFlag{
+    QGraphicsView::CacheNone,//所有绘画都直接在视口上完成
+    QGraphicsView::CacheBackground//背景被缓存。这会影响自定义背景和基于 backgroundBrush 属性的背景。启用此标志后，QGraphicsView 将分配一个具有视口全尺寸的像素图
+}
+```
+
+此枚举描述了在视口上按下并拖动鼠标时视图的默认操作。
+
+```c++
+enum QGraphicsView::DragMode{
+    QGraphicsView::NoDrag,//什么都没发生;鼠标事件被忽略
+    QGraphicsView::ScrollHandDrag,//光标变为指向手，拖动鼠标将滚动滚动条。此模式适用于交互式和非交互式模式
+    QGraphicsView::RubberBandDrag//将出现一条橡皮筋。拖动鼠标将设置橡皮筋几何图形，并选中所有被橡皮筋覆盖的项目。非交互式视图禁用此模式
+}
+```
+
+此枚举描述了您可以启用以提高 QGraphicsView 中的呈现性能的标志。默认情况下，没有设置这些标志。请注意，设置标志通常会产生副作用，并且此效果可能因绘图设备和平台而异。
+
+```c++
+enum QGraphicsView::OptimizationFlag{
+    QGraphicsView::DontClipPainter,//此值已过时且无效
+    QGraphicsView::DontSavePainterState,//渲染时，QGraphicsView 在渲染背景或前景以及渲染每个项目时保护画家状态（参见 QPainter::save()）。这允许您让画家处于改变状态（即，您可以调用 QPainter::setPen() 或 QPainter::setBrush() 而不在绘画后恢复状态）。但是，如果项目始终恢复状态，则应启用此标志以防止 QGraphicsView 执行相同操作
+    QGraphicsView::DontAdjustForAntialiasing,//禁用 QGraphicsView 对暴露区域的抗锯齿自动调整。在其 QGraphicsItem::boundingRect() 边界上呈现抗锯齿线的项目最终可能会在外部呈现线的一部分。为了防止渲染伪影，QGraphicsView 在所有方向上将所有暴露区域扩展 2 个像素。如果启用此标志，QGraphicsView 将不再执行这些调整，从而最大限度地减少需要重绘的区域，从而提高性能。一个常见的副作用是使用抗锯齿绘制的项目在移动时会在场景中留下绘画痕迹
+    QGraphicsView::IndirectPainting//自 Qt 4.6 起，恢复调用 QGraphicsView::drawItems() 和 QGraphicsScene::drawItems() 的旧绘画算法。仅用于与旧代码兼容
+}
+```
+
+此枚举描述了当用户调整视图大小或转换视图时 QGraphicsView 可以使用的可能锚点。
+
+```c++
+enum QGraphicsView::ViewportAnchor{
+    QGraphicsView::NoAnchor,//无锚点，即视图保持场景位置不变
+    QGraphicsView::AnchorViewCenter,//视图中心的场景点用作锚点
+    QGraphicsView::AnchorUnderMouse//鼠标下方的点用作锚点
+}
+```
+
+这个枚举描述了当场景内容改变或暴露时 QGraphicsView 如何更新它的视口。
+
+```c++
+enum QGraphicsView::ViewportUpdateMode{
+    QGraphicsView::FullViewportUpdate,//当场景的任何可见部分发生变化或重新曝光时，QGraphicsView 将更新整个视口。当 QGraphicsView 花费更多时间来确定要绘制的内容而不是绘制时（例如，当重复更新非常多的小项目时），这种方法是最快的。这是不支持部分更新的视口（例如 QGLWidget）和需要禁用滚动优化的视口的首选更新模式
+    QGraphicsView::MinimalViewportUpdate,//QGraphicsView 将确定需要重绘的最小视口区域，通过避免重绘未更改的区域来最大限度地减少绘制时间。这是 QGraphicsView 的默认模式。虽然这种方法总体上提供了最佳性能，但如果场景中有许多可见的小变化，QGraphicsView 最终可能会花费更多时间来寻找最小方法，而不是花费在绘图上
+    QGraphicsView::SmartViewportUpdate,//QGraphicsView 将尝试通过分析需要重绘的区域来找到最佳更新模式
+    QGraphicsView::BoundingRectViewportUpdate,//将重绘视口中所有更改的边界矩形。这种模式的优点是 QGraphicsView 只搜索一个区域的变化，最大限度地减少确定需要重绘的时间。缺点是没有改变的区域也需要重新绘制
+    QGraphicsView::NoViewportUpdate//当场景改变时，QGraphicsView 永远不会更新它的视口；用户应控制所有更新。此模式禁用 QGraphicsView 中的所有（可能很慢）项目可见性测试，适用于需要固定帧速率或视口在外部更新的场景
+}
+```
+
+##### 成员函数
+
+```c++
+QGraphicsView(QGraphicsScene *scene, QWidget *parent = Q_NULLPTR);
+void scale(qreal sx, qreal sy);//缩放、旋转、扭曲、平移
+void rotate(qreal angle);
+void shear(qreal sh, qreal sv);
+void translate(qreal dx, qreal dy);
+
+Qt::Alignment alignment() const;//整个场景可见时，此属性保存视图中场景的对齐方式
+void setAlignment(Qt::Alignment alignment);
+
+QBrush backgroundBrush() const;//该属性保存场景的背景画笔
+void setBackgroundBrush(const QBrush &brush);
+
+CacheMode cacheMode() const;//此属性保存视图的哪些部分被缓存
+void setCacheMode(CacheMode mode);
+
+DragMode dragMode() const;//此属性保存按下鼠标左键时在场景上拖动鼠标的行为
+void setDragMode(DragMode mode);
+
+QBrush foregroundBrush() const;//该属性持有场景的前景画笔
+void setForegroundBrush(const QBrush &brush);
+
+void setViewportUpdateMode(ViewportUpdateMode mode);//视口应如何更新其内容
+ViewportUpdateMode viewportUpdateMode() const;
+
+bool isInteractive() const;//该属性保存视图是否允许场景交互
+void setInteractive(bool allowed);
+
+bool isTransformed() const;//如果视图被转换（即，已分配非身份转换或调整滚动条），则返回 true
+void setTransform(const QTransform &matrix, bool combine = false);
+void resetTransform();
+QTransform transform() const;
+
+QMatrix matrix() const;//返回视图的当前变换矩阵。如果没有设置当前变换，则返回单位矩阵
+void setMatrix(const QMatrix &matrix, bool combine = false);
+void resetMatrix();
+
+OptimizationFlags optimizationFlags() const;//可用于调整 QGraphicsView 性能的标志。QGraphicsView 使用裁剪、额外的边界矩形调整和某些其他辅助工具来提高常见情况图形场景的渲染质量和性能。但是，根据目标平台、场景和使用的视口，其中一些操作可能会降低性能。
+void setOptimizationFlag(OptimizationFlag flag, bool enabled = true);
+void setOptimizationFlags(OptimizationFlags flags);
+
+void setScene(QGraphicsScene *scene);//返回指向当前在视图中可视化的场景的指针。如果当前没有可视化场景，则返回 0
+QGraphicsScene *scene() const;
+
+QRectF sceneRect() const;//此属性保存此视图可视化的场景区域
+void setSceneRect(const QRectF &rect);
+void setSceneRect(qreal x, qreal y, qreal w, qreal h);
+
+ViewportAnchor transformationAnchor() const;//视图在变换期间应如何定位场景
+void setTransformationAnchor(ViewportAnchor anchor);
+
+QPainter::RenderHints renderHints() const;//该属性保存视图的默认渲染提示
+void setRenderHint(QPainter::RenderHint hint, bool enabled = true);
+void setRenderHints(QPainter::RenderHints hints);
+
+QRect rubberBandRect() const;//此属性包含使用橡皮筋选择矩形选择项目的行为
+Qt::ItemSelectionMode rubberBandSelectionMode() const;
+void setRubberBandSelectionMode(Qt::ItemSelectionMode mode);
+
+ViewportAnchor resizeAnchor() const;//调整视图大小时视图应如何定位场景
+void setResizeAnchor(ViewportAnchor anchor);
+
+void render(QPainter *painter, const QRectF &target = QRectF(), const QRect &source = QRect(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);//使用painter将位于视图坐标中的源矩形从场景渲染到位于绘制设备坐标中的目标中。此函数对于将视图的内容捕获到绘图设备（例如 QImage）（例如，截取屏幕截图）或打印到 QPrinter 很有用
+void resetCachedContent();//重置任何缓存的内容。调用此函数将清除 QGraphicsView 的缓存。如果当前缓存模式为 CacheNone，则此函数不执行任何操作
+QTransform viewportTransform() const;//返回将场景坐标映射到视口坐标的矩阵。
+
+void centerOn(const QPointF &pos);//滚动视口的内容以确保场景坐标 pos, 在视图中居中。因为 pos 是一个浮点坐标，并且滚动条在整数坐标上运行，所以居中只是一个近似值
+void centerOn(qreal x, qreal y);
+void centerOn(const QGraphicsItem *item);
+
+void ensureVisible(const QRectF &rect, int xmargin = 50, int ymargin = 50);//滚动视口的内容，使场景矩形矩形可见，其边距由 xmargin 和 ymargin 以像素为单位指定。如果无法到达指定的矩形，则将内容滚动到最近的有效位置。两个边距的默认值为 50 像素
+void ensureVisible(qreal x, qreal y, qreal w, qreal h, int xmargin = 50, int ymargin = 50);
+void ensureVisible(const QGraphicsItem *item, int xmargin = 50, int ymargin = 50);
+
+void fitInView(const QRectF &rect, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio);//缩放视图矩阵并滚动滚动条以确保场景矩形矩形适合视口。 rect 必须在场景 rect 内；否则， fitInView() 不能保证整个矩形都是可见的
+void fitInView(qreal x, qreal y, qreal w, qreal h, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio);
+void fitInView(const QGraphicsItem *item, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio);
+
+QGraphicsItem *itemAt(const QPoint &pos) const;//返回位置 pos 处的项目，该位置位于视口坐标中。如果此位置有多个项目，则此函数返回最顶部的项目
+QGraphicsItem *itemAt(int x, int y) const;
+
+QList<QGraphicsItem *> items() const;//返回关联场景中所有项目的列表，以降序堆叠顺序（即，返回列表中的第一项是最上面的项目）。
+QList<QGraphicsItem *> items(const QPoint &pos) const;
+QList<QGraphicsItem *> items(int x, int y) const;
+QList<QGraphicsItem *> items(const QRect &rect, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+QList<QGraphicsItem *> items(int x, int y, int w, int h, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+QList<QGraphicsItem *> items(const QPolygon &polygon, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+QList<QGraphicsItem *> items(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+
+QPoint mapFromScene(const QPointF &point) const;//将场景坐标点返回到视口坐标
+QPolygon mapFromScene(const QRectF &rect) const;
+QPolygon mapFromScene(const QPolygonF &polygon) const;
+QPainterPath mapFromScene(const QPainterPath &path) const;
+QPoint mapFromScene(qreal x, qreal y) const;
+QPolygon mapFromScene(qreal x, qreal y, qreal w, qreal h) const;
+
+QPointF mapToScene(const QPoint &point) const;//返回映射到场景坐标的视口坐标点
+QPolygonF mapToScene(const QRect &rect) const;
+QPolygonF mapToScene(const QPolygon &polygon) const;
+QPainterPath mapToScene(const QPainterPath &path) const;
+QPointF mapToScene(int x, int y) const;
+QPolygonF mapToScene(int x, int y, int w, int h) const;
+```
+
+##### 信号和槽函数
+
+```c++
+slots void invalidateScene(const QRectF &rect = QRectF(), QGraphicsScene::SceneLayers layers = QGraphicsScene::AllLayers);// 使矩形内的图层无效并安排重绘。 rect 在场景坐标中。矩形内层的任何缓存内容都将无条件失效并重绘
+slots void updateScene(const QList<QRectF> &rects);//安排场景矩形矩形的更新
+slots void updateSceneRect(const QRectF &rect);//通知 QGraphicsView 场景的场景矩形已更改。 rect 是新的场景矩形。如果视图已经有一个明确设置的场景矩形，这个函数什么都不做
+
+signals void rubberBandChanged(QRect rubberBandRect, QPointF fromScenePoint, QPointF toScenePoint);//该信号在橡皮筋矩形改变时发出。视口 Rect 由 RubberBandRect 指定。使用 fromScenePoint 和 toScenePoint 在场景点中提供拖动开始位置和拖动结束位置
+```
+
+
+
+#### 7.3.3 QGraphicsItem
+
+图形项基类。
+
+支持如下操作：
+
+支持鼠标响应事件，包括鼠标按下、移动、释放、双击，还包括鼠标停留、滚轮、快捷菜单等事件；
+
+支持键盘输入，按键事件；
+
+支持拖放操作；
+
+支持组合，可以是父子项关系组合，也可以通过QGraphicsItemGroup类进行组合。
+
+
+
+#### 7.3.4 QGraphicsEllipseItem
+
+椭圆图形项。
+
+#### 7.3.5 QGraphicsRectItem
+
+矩形图形项
+
+#### 7.3.6 QGraphicsTextItem
+
+文字图形项。
+
+#### QGraphicsItemGroup
+
 
 
 ## 布局管理
