@@ -8169,7 +8169,182 @@ GraphicsView绘图架构由3个部分组成，**场景、视图和图形项**。
 
 4.管理未经变换的渲染功能，主要用于打印。
 
+要将项目添加到场景中，首先要构造一个 QGraphicsScene 对象。然后，您有两个选择：通过调用 addItem() 添加现有的 QGraphicsItem 对象，或者您可以调用便利函数之一 addEllipse()、addLine()、addPath()、addPixmap()、addPolygon()、addRect( ) 或 addText()，它们都返回一个指向新添加项的指针。使用这些函数添加的项目的尺寸是相对于项目的坐标系的，项目的位置在场景中被初始化为 (0, 0)。
+然后，您可以使用 QGraphicsView 可视化场景。当场景改变时（例如，当一个项目移动或变形时）QGraphicsScene 发出 changed() 信号。要删除项目，请调用 removeItem()。
+QGraphicsScene 使用索引算法来有效地管理项目的位置。默认情况下，使用 BSP（Binary Space Partitioning）树；适用于大多数项目保持静态（即不移动）的大型场景的算法。您可以通过调用 setItemIndexMethod() 来选择禁用此索引。有关可用索引算法的更多信息，请参阅 itemIndexMethod 属性。
+通过调用 setSceneRect() 设置场景的边界矩形。物品可以放置在场景的任意位置，场景的大小默认无限制。场景矩形仅用于内部簿记，维护场景的项目索引。如果未设置场景矩形，QGraphicsScene 将使用由 itemsBoundingRect() 返回的所有项目的边界区域作为场景矩形。但是，itemsBoundingRect() 是一个相对耗时的函数，因为它通过收集场景中每个项目的位置信息来进行操作。因此，在大型场景上操作时，您应该始终设置场景矩形。
+QGraphicsScene 的最大优势之一是它能够有效地确定项目的位置。即使场景中有数百万个项目，items() 函数也可以在几毫秒内确定项目的位置。 items() 有几个重载：一个在特定位置查找项目，一个在多边形或矩形内部或与多边形或矩形相交中查找项目，等等。返回的项目列表按堆叠顺序排序，最上面的项目是列表中的第一项。为方便起见，还有一个 itemAt() 函数返回给定位置的最上面的项目。
+QGraphicsScene 维护场景的选择信息。要选择项目，请调用 setSelectionArea()，要清除当前选择，请调用 clearSelection()。调用 selectedItems() 以获取所有选定项目的列表。
 
+QGraphicsScene 的另一个职责是从 QGraphicsView 传播事件。要将事件发送到场景，请构造一个继承 QEvent 的事件，然后使用例如 QApplication::sendEvent() 发送它。 event() 负责将事件分派给各个项目。一些常见事件由便利事件处理程序处理。例如按键事件由 keyPressEvent() 处理，鼠标按下事件由 mousePressEvent() 处理。
+关键事件被传递到焦点项目。要设置焦点项目，您可以调用 setFocusItem()，传递一个接受焦点的项目，或者项目本身可以调用 QGraphicsItem::setFocus()。调用 focusItem() 获取当前焦点项。为了与小部件兼容，场景还维护自己的焦点信息。默认情况下，场景没有焦点，所有关键事件都被丢弃。如果调用 setFocus()，或者如果场景中的某个项目获得焦点，则场景会自动获得焦点。如果场景有焦点，hasFocus() 将返回 true，并且键事件将被转发到焦点项（如果有）。如果场景失去焦点（即有人调用 clearFocus()），而某个项目有焦点，场景将保持其项目焦点信息，一旦场景重新获得焦点，它将确保最后一个焦点项目重新获得焦点。
+对于鼠标悬停效果，QGraphicsScene 调度悬停事件。如果一个项目接受悬停事件（见 QGraphicsItem::acceptHoverEvents()），当鼠标进入它的区域时它会收到一个 GraphicsSceneHoverEnter 事件。随着鼠标在项目区域内继续移动，QGraphicsScene 将向它发送 GraphicsSceneHoverMove 事件。当鼠标离开项目的区域时，项目将收到一个 GraphicsSceneHoverLeave 事件。
+所有鼠标事件都传递给当前的鼠标抓取器项。如果一个项目接受鼠标事件（参见 QGraphicsItem::acceptedMouseButtons()）并且它接收到鼠标按下，它就会成为场景的鼠标抓取器。在没有按下其他鼠标按钮时，它会一直保持鼠标抓取器的状态，直到它接收到鼠标释放。您可以调用 mouseGrabberItem() 来确定当前正在抓取鼠标的项目。
+
+##### 枚举类型
+
+这个枚举描述了 QGraphicsScene 提供的用于管理场景中项目的位置信息的索引算法。
+
+```c++
+enum QGraphicsScene::ItemIndexMethod{
+    QGraphicsScene::BspTreeIndex,//应用二进制空间分区树。通过使用二分搜索，QGraphicsScene 的所有项目定位算法的顺序都接近对数复杂度。添加、移动和删除项目是对数的。这种方法最适合静态场景（即大多数项目不移动的场景）
+    QGraphicsScene::NoIndex//没有应用索引。项目位置具有线性复杂性，因为搜索了场景中的所有项目。然而，添加、移动和删除项目是在恒定时间内完成的。这种方法非常适合动态场景，其中许多项目被连续添加、移动或删除
+}
+```
+
+这个枚举描述了 QGraphicsScene 中的渲染层。当 QGraphicsScene 绘制场景内容时，它会按顺序分别渲染每一层。每个层代表一个标志，当调用诸如 invalidate() 或 QGraphicsView::invalidateScene() 之类的函数时，可以将其 OR&#39;ed 在一起。
+
+```c++
+enum QGraphicsScene::SceneLayer{
+    QGraphicsScene::ItemLayer,//项目层。 QGraphicsScene 通过调用虚函数drawItems() 来渲染该层中的所有项目。项目层绘制在背景层之后，前景层之前
+    QGraphicsScene::BackgroundLayer,//背景层。 QGraphicsScene 通过调用虚函数drawBackground() 在这一层渲染场景的背景。在所有图层中首先绘制背景图层
+    QGraphicsScene::ForegroundLayer,//前景层。 QGraphicsScene 通过调用虚函数drawForeground() 在这一层渲染场景的前景。前景层在所有层中最后绘制
+    QGraphicsScene::AllLayers//所有层；该值表示所有三层的组合
+}
+```
+
+##### 成员函数
+
+构造函数。
+
+```c++
+QGraphicsScene(QObject *parent = Q_NULLPTR);
+QGraphicsScene(const QRectF &sceneRect, QObject *parent = Q_NULLPTR);
+QGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent = Q_NULLPTR);
+```
+
+和场景属性、性质有关的函数。
+
+```c++
+QGraphicsItem *activePanel() const;//返回当前活动面板，如果当前没有活动面板，则返回 0
+void setActivePanel(QGraphicsItem *item);
+
+QGraphicsWidget *activeWindow() const;//返回当前活动窗口，如果当前没有活动窗口，则返回 0
+void setActiveWindow(QGraphicsWidget *widget);
+
+QFont font() const;//该属性保存场景的默认字体
+void setFont(const QFont &font);
+
+QBrush foregroundBrush() const;//该属性持有场景的前景画笔
+void setForegroundBrush(const QBrush &brush);
+QBrush backgroundBrush() const;//该属性持有场景的背景画笔
+void setBackgroundBrush(const QBrush &brush);
+
+void setFocus(Qt::FocusReason focusReason = Qt::OtherFocusReason);
+bool hasFocus() const;//如果场景有焦点，则返回 true；否则返回 false
+void clearFocus();//从场景中清除焦点,并在场景重新获得焦点后重新获得焦点
+
+QGraphicsItem *focusItem() const;//当场景处于活动状态时，此函数返回场景的当前焦点项目，如果当前没有项目具有焦点，则返回 0
+void setFocusItem(QGraphicsItem *item, Qt::FocusReason focusReason = Qt::OtherFocusReason);
+
+bool isActive() const;//如果场景处于活动状态（例如，它被至少一个处于活动状态的 QGraphicsView 查看），则返回 true；否则返回 false
+
+qreal height() const;//这个便利函数相当于调用sceneRect().height()
+qreal width() const;
+
+QRectF itemsBoundingRect() const;//计算并返回场景中所有项目的边界矩形
+qreal minimumRenderSize() const;//此属性保存必须绘制的项目的最小视图转换大小
+QGraphicsItem *mouseGrabberItem() const;//返回当前鼠标抓取项，如当前没有任何项正在抓取鼠标则返回0
+
+int bspTreeDepth() const;//这个属性保存了 QGraphicsScene 的 BSP 索引树的深度
+void setBspTreeDepth(int depth);
+
+ItemIndexMethod itemIndexMethod() const;//此属性保存项目索引方法
+void setItemIndexMethod(ItemIndexMethod method);
+
+QPalette palette() const;//该属性保存场景的默认调色板
+void setPalette(const QPalette &palette);
+
+QRectF sceneRect() const;//该属性保存场景矩形；场景的边界矩形
+void setSceneRect(const QRectF &rect);
+void setSceneRect(qreal x, qreal y, qreal w, qreal h);
+
+void QGraphicsScene::clearSelection();//清除当前选择的项目
+QList<QGraphicsItem *> selectedItems() const;//返回所有当前选定项目的列表。物品按无特定顺序退回
+
+QPainterPath selectionArea() const;//返回之前使用 setSelectionArea() 设置的选择区域，如果没有设置选择区域，则返回一个空的 QPainterPath
+void setSelectionArea(const QPainterPath &path, const QTransform &deviceTransform);
+void setSelectionArea(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, const QTransform &deviceTransform = QTransform());
+void setSelectionArea(const QPainterPath &path, Qt::ItemSelectionOperation selectionOperation, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, const QTransform &deviceTransform = QTransform());
+
+qreal minimumRenderSize() const;//此属性保存必须绘制的项目的最小视图转换大小
+void setMinimumRenderSize(qreal minSize);
+
+bool stickyFocus() const;//该属性保存点击进入场景背景是否会清除焦点
+void setStickyFocus(bool enabled);
+
+void setStyle(QStyle *style);//将场景的样式设置或替换为样式，并将样式重新设置为该场景
+QStyle *style() const;
+```
+
+和图形项有关的函数如下。
+
+```c++
+QList<QGraphicsItem *> collidingItems(const QGraphicsItem *item, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;//返回与项目冲突的所有项目的列表
+QGraphicsItemGroup *createItemGroup(const QList<QGraphicsItem *> &items);//将 items 中的所有项目分组到一个新的 QGraphicsItemGroup 中，并返回一个指向该组的指针
+void destroyItemGroup(QGraphicsItemGroup *group);//将 group 中的所有 item 重新设置为 group 的 parent item，然后从场景中删除 group，最后将其删除
+void removeItem(QGraphicsItem *item);//从场景中移除项目项及其所有子项。项目的所有权被传递给调用者（即，QGraphicsScene 在销毁时将不再删除项目）
+
+// 返回指定位置的最顶部可见项，如果此位置没有项，则返回 0
+QGraphicsItem *itemAt(const QPointF &position, const QTransform &deviceTransform) const;
+QGraphicsItem *itemAt(qreal x, qreal y, const QTransform &deviceTransform) const;
+// 返回场景中所有项目的有序列表。 order 决定堆叠顺序
+QList<QGraphicsItem *> items(Qt::SortOrder order = Qt::DescendingOrder) const;
+// 根据模式返回所有可见项目，这些项目位于使用 order 排序的列表中的指定位置
+QList<QGraphicsItem *> items(const QPointF &pos, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const;
+QList<QGraphicsItem *> items(const QRectF &rect, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const;
+QList<QGraphicsItem *> items(const QPolygonF &polygon, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const;
+QList<QGraphicsItem *> items(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const;
+QList<QGraphicsItem *> items(qreal x, qreal y, qreal w, qreal h, Qt::ItemSelectionMode mode, Qt::SortOrder order, const QTransform &deviceTransform = QTransform()) const;
+```
+
+用于添加图形项的便利函数如下，它们的返回值都是QGraphicsItem的派生类。
+
+```c++
+QGraphicsEllipseItem *addEllipse(const QRectF &rect, const QPen &pen = QPen(), const QBrush &brush = QBrush());
+QGraphicsEllipseItem *addEllipse(qreal x, qreal y, qreal w, qreal h, const QPen &pen = QPen(), const QBrush &brush = QBrush());
+void addItem(QGraphicsItem *item);
+QGraphicsLineItem *addLine(const QLineF &line, const QPen &pen = QPen());
+QGraphicsLineItem *addLine(qreal x1, qreal y1, qreal x2, qreal y2, const QPen &pen = QPen());
+QGraphicsPathItem *addPath(const QPainterPath &path, const QPen &pen = QPen(), const QBrush &brush = QBrush());
+QGraphicsPixmapItem *addPixmap(const QPixmap &pixmap);
+QGraphicsPolygonItem *addPolygon(const QPolygonF &polygon, const QPen &pen = QPen(), const QBrush &brush = QBrush());
+QGraphicsRectItem *addRect(const QRectF &rect, const QPen &pen = QPen(), const QBrush &brush = QBrush());
+QGraphicsRectItem *addRect(qreal x, qreal y, qreal w, qreal h, const QPen &pen = QPen(), const QBrush &brush = QBrush());
+QGraphicsSimpleTextItem *addSimpleText(const QString &text, const QFont &font = QFont())
+QGraphicsTextItem *addText(const QString &text, const QFont &font = QFont());
+QGraphicsProxyWidget *addWidget(QWidget *widget, Qt::WindowFlags wFlags = Qt::WindowFlags());
+```
+
+其它函数。
+
+```c++
+QRectF itemsBoundingRect() const;//计算并返回场景中所有项目的边界矩形
+QGraphicsItem *mouseGrabberItem() const;//返回当前的鼠标抓取项，如果当前没有任何项正在抓取鼠标，则返回 0
+virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;//该方法用于输入法查询场景的一组属性，以支持复杂的输入法操作作为对周围文本和重新转换的支持
+void invalidate(qreal x, qreal y, qreal w, qreal h, SceneLayers layers = AllLayers);//使场景中的矩形图层无效并安排重绘。图层中的任何缓存内容都会无条件失效并重绘
+void render(QPainter *painter, const QRectF &target = QRectF(), const QRectF &source = QRectF(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio);//使用painter将源矩形从场景渲染到目标
+bool sendEvent(QGraphicsItem *item, QEvent *event);//通过可能的事件过滤器将事件事件发送到项目项
+void update(qreal x, qreal y, qreal w, qreal h);//安排在场景中重绘区域矩形
+QList<QGraphicsView *> views() const;//返回显示此场景的所有视图的列表
+```
+
+##### 信号与槽函数
+
+```c++
+// 槽函数
+void advance();//此插槽通过为场景中的所有项目调用 QGraphicsItem::advance() 将场景推进一步
+void clear();//Removes and deletes all items from the scene, but otherwise leaves the state of the scene unchanged
+void clearSelection();//清除当前选择
+void invalidate(const QRectF &rect = QRectF(), SceneLayers layers = AllLayers);//使场景中的矩形图层无效并安排重绘。图层中的任何缓存内容都会无条件失效并重绘
+void update(const QRectF &rect = QRectF());//安排在场景中重绘区域矩形
+
+// 信号函数
+void changed(const QList<QRectF> &region);//此信号由 QGraphicsScene 在控制到达事件循环时发出，如果场景内容发生变化
+void focusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason);//每当场景中的焦点发生变化时，此信号由 QGraphicsScene 发出
+void sceneRectChanged(const QRectF &rect);//每当场景矩形发生变化时此信号由QGraphicsScene发出
+void selectionChanged();//每当选择改变时，QGraphicscene就会发出该信号。您可以调用selectedItems（）来获取所选项目的新列表。
+```
 
 #### 7.3.2 QGraphicsView
 
@@ -8309,7 +8484,7 @@ QPainter::RenderHints renderHints() const;//该属性保存视图的默认渲染
 void setRenderHint(QPainter::RenderHint hint, bool enabled = true);
 void setRenderHints(QPainter::RenderHints hints);
 
-QRect rubberBandRect() const;//此属性包含使用橡皮筋选择矩形选择项目的行为
+QRect rubberBandRect() const;//选择模式，返回选择矩形框
 Qt::ItemSelectionMode rubberBandSelectionMode() const;
 void setRubberBandSelectionMode(Qt::ItemSelectionMode mode);
 
@@ -8368,8 +8543,6 @@ slots void updateSceneRect(const QRectF &rect);//通知 QGraphicsView 场景的�
 signals void rubberBandChanged(QRect rubberBandRect, QPointF fromScenePoint, QPointF toScenePoint);//该信号在橡皮筋矩形改变时发出。视口 Rect 由 RubberBandRect 指定。使用 fromScenePoint 和 toScenePoint 在场景点中提供拖动开始位置和拖动结束位置
 ```
 
-
-
 #### 7.3.3 QGraphicsItem
 
 图形项基类。
@@ -8384,7 +8557,315 @@ signals void rubberBandChanged(QRect rubberBandRect, QPointF fromScenePoint, QPo
 
 支持组合，可以是父子项关系组合，也可以通过QGraphicsItemGroup类进行组合。
 
+它和派生类的继承关系如下所示。
 
+```mermaid
+graph LR
+QGraphicsItem-->QAbstractGraphicsShapeItem
+QGraphicsItem-->QGraphicsLineItem
+QGraphicsItem-->QGraphicsPixmapItem
+QGraphicsItem-->QGraphicsObject
+QGraphicsObject-->QGraphicsTextItem
+QGraphicsItem-->QGraphicsItemGroup
+QAbstractGraphicsShapeItem-->QGraphicsEllipseItem
+QAbstractGraphicsShapeItem-->QGraphicsPathItem
+QAbstractGraphicsShapeItem-->QGraphicsPolygonItem
+QAbstractGraphicsShapeItem-->QGraphicsSimpleTextItem
+QAbstractGraphicsShapeItem-->QGraphicsRectItem
+```
+
+##### 枚举类型
+
+这个枚举描述了 QGraphicsItem 的缓存模式。缓存用于通过分配和渲染到屏幕外像素缓冲区来加速渲染，当项目需要重绘时可以重用该缓冲区。对于某些绘图设备，缓存直接存储在图形内存中，这使得渲染非常快速。
+
+```c++
+enum QGraphicsItem::CacheMode {
+    QGraphicsItem::NoCache，//
+    QGraphicsItem::ItemCoordinateCache，//
+    QGraphicsItem::DeviceCoordinateCache//
+}
+```
+
+这个枚举描述了由 QGraphicsItem::itemChange() 通知的状态变化。通知在状态更改时发送，在某些情况下，可以进行调整（有关详细信息，请参阅每个更改的文档）。
+注意：在 itemChange() 中调用 QGraphicsItem 本身的函数时要小心，因为某些函数调用会导致不必要的递归。例如，您不能在 ItemPositionChange 通知上调用 itemChange() 中的 setPos()，因为 setPos() 函数将再次调用 itemChange(ItemPositionChange)。相反，您可以从 itemChange() 返回调整后的新位置。
+
+```c++
+enum QGraphicsItem::GraphicsItemChange{
+    QGraphicsItem::ItemEnabledChange,//项目的启用状态更改。如果该项目当前已启用，它将被禁用，反之亦然。 value 参数是新的启用状态（即，真或假）。不要在 itemChange() 中调用 setEnabled()，因为此通知已传递。相反，您可以从 itemChange() 返回新状态
+    QGraphicsItem::ItemEnabledHasChanged,//该项目的启用状态已更改。 value 参数是新的启用状态（即，真或假）。不要在 itemChange() 中调用 setEnabled()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemMatrixChange,//项目的仿射变换矩阵正在发生变化。该值已过时；您可以改用 ItemTransformChange
+    QGraphicsItem::ItemPositionChange,//项目的位置发生变化。如果启用了 ItemSendsGeometryChanges 标志，并且项目的本地位置相对于其父项发生更改（即，作为调用 setPos() 或 moveBy() 的结果），则会发送此通知。 value 参数是新位置（即 QPointF）。您可以调用 pos() 来获取原始位置。在传递此通知时，请勿在 itemChange() 中调用 setPos() 或 moveBy()；相反，您可以从 itemChange() 返回调整后的新位置。在这个通知之后，如果位置发生变化，QGraphicsItem 会立即发送 ItemPositionHasChanged 通知
+    QGraphicsItem::ItemPositionHasChanged,//项目的位置已更改。如果启用了 ItemSendsGeometryChanges 标志，并且在项目的本地位置（相对于其父项）发生更改后，则会发送此通知。 value 参数是新位置（与 pos() 相同），QGraphicsItem 忽略此通知的返回值（即只读通知）
+    QGraphicsItem::ItemTransformChange,//项目的变换矩阵发生变化。如果启用了 ItemSendsGeometryChanges 标志，并且当项目的本地变换矩阵发生更改（即，作为调用 setTransform() 的结果）时发送此通知。值参数是新矩阵（即 QTransform）；获取旧矩阵, 调用 transform()。不要调用 setTransform() 或在 itemChange() 中设置任何转换属性，因为此通知已传递；相反，您可以从 itemChange() 返回新矩阵。如果您更改，则不会发送此通知变换属性
+    QGraphicsItem::ItemTransformHasChanged,//由于调用了 setTransform，或者更改了其中一个转换属性，因此项的转换矩阵已更改。如果启用了 ItemSendsGeometryChanges 标志，并且在项目的本地转换矩阵发生更改后，将发送此通知。 value 参数是新矩阵（与 transform() 相同），QGraphicsItem 忽略此通知的返回值（即只读通知）
+    QGraphicsItem::ItemRotationChange,//项目的旋转属性发生变化。如果启用了 ItemSendsGeometryChanges 标志，并且项目的旋转属性发生更改（即，作为调用 setRotation() 的结果），则会发送此通知。 value 参数是新的旋转（即双精度）；要获得旧的旋转，请调用 rotation()。不要在 itemChange() 中调用 setRotation()，因为此通知已传递；相反，您可以从 itemChange() 返回新的旋转
+    QGraphicsItem::ItemRotationHasChanged,//项目的旋转属性已更改。如果启用了 ItemSendsGeometryChanges 标志，并且项目的旋转属性已更改，则会发送此通知。 value 参数是新的旋转（即双精度），QGraphicsItem 忽略此通知的返回值（即只读通知）。不要在 itemChange() 中调用 setRotation()，因为此通知已传递
+    QGraphicsItem::ItemScaleChange,//项目的比例属性发生变化。如果启用了 ItemSendsGeometryChanges 标志，并且项目的 scale 属性发生更改（即，作为调用 setScale() 的结果），则会发送此通知。 value 参数是新的比例（即双精度）；要获得旧比例，请调用 scale()。在传递此通知时不要在 itemChange() 中调用 setScale()；相反，您可以从 itemChange() 返回新的比例
+    QGraphicsItem::ItemScaleHasChanged,//项目的比例属性已更改。如果启用了 ItemSendsGeometryChanges 标志，并且在项目的 scale 属性发生更改后，将发送此通知。 value 参数是新的比例（即双精度），QGraphicsItem 忽略此通知的返回值（即只读通知）。不要在 itemChange() 中调用 setScale()，因为此通知已传递
+    QGraphicsItem::ItemTransformOriginPointChange,//项目的变换原点属性发生变化。如果启用了 ItemSendsGeometryChanges 标志，并且项目的变换原点属性发生更改（即，作为调用 setTransformOriginPoint() 的结果），则会发送此通知。 value 参数是新的原点（即 QPointF）；要获取旧的原点，请调用 transformOriginPoint()。不要在 itemChange() 中调用 setTransformOriginPoint()，因为此通知已传递；相反，您可以从 itemChange() 返回新的变换原点
+    QGraphicsItem::ItemTransformOriginPointHasChanged,//项目的变换原点属性已更改。如果启用了 ItemSendsGeometryChanges 标志，并且在项目的变换原点属性发生更改后，将发送此通知。 value 参数是新的原点（即 QPointF），QGraphicsItem 忽略此通知的返回值（即只读通知）。不要在 itemChange() 中调用 setTransformOriginPoint()，因为此通知已传递
+    QGraphicsItem::ItemSelectedChange,//项目的选定状态发生变化。如果该项目当前被选中，它将变为未选中，反之亦然。 value 参数是新的选定状态（即，真或假）。在传递此通知时不要在 itemChange() 中调用 setSelected()；相反，您可以从 itemChange() 返回新的选定状态
+    QGraphicsItem::ItemSelectedHasChanged,//项目的选定状态已更改。 value 参数是新的选定状态（即，真或假）。在传递此通知时，请勿在 itemChange() 中调用 setSelected()。返回值被忽略
+    QGraphicsItem::ItemVisibleChange,//项目的可见状态发生变化。如果该项目当前可见，它将变为不可见，反之亦然。 value 参数是新的可见状态（即，真或假）。不要在 itemChange() 中调用 setVisible()，因为此通知已传递；相反，您可以从 itemChange() 返回新的可见状态
+    QGraphicsItem::ItemVisibleHasChanged,//该项目的可见状态已更改。 value 参数是新的可见状态（即，真或假）。不要在 itemChange() 中调用 setVisible()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemParentChange,//项目的父项更改。 value 参数是新的父项（即 QGraphicsItem 指针）。不要在 itemChange() 中调用 setParentItem()，因为此通知已发送；相反，您可以从 itemChange() 返回新的父级
+    QGraphicsItem::ItemParentHasChanged,//项目的父项已更改。 value 参数是新的父级（即，指向 QGraphicsItem 的指针）。不要在 itemChange() 中调用 setParentItem()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemChildAddedChange,//一个孩子被添加到这个项目。 value 参数是新的子项（即 QGraphicsItem 指针）。在传递此通知时，请勿将此项目传递给任何项目的 setParentItem() 函数。返回值未使用；您无法调整此通知中的任何内容。请注意，发送此通知时，新子代可能未完全构建；在子节点上调用纯虚函数可能会导致崩溃
+    QGraphicsItem::ItemChildRemovedChange,//从该项目中删除了一个孩子。 value 参数是即将被删除的子项（即 QGraphicsItem 指针）。返回值未使用；您无法调整此通知中的任何内容
+    QGraphicsItem::ItemSceneChange,//该项目被移动到一个新场景。当项目被添加到其初始场景以及被移除时，也会发送此通知。项目的 scene() 是旧场景（如果项目尚未添加到场景中，则为 0）。 value 参数是新场景（即 QGraphicsScene 指针），如果项目从场景中移除，则为空指针。在传递此通知时，不要通过将此项目传递给 QGraphicsScene::addItem() 来覆盖此更改；相反，您可以从 itemChange() 返回新场景。谨慎使用此功能；反对场景变化会很快导致不必要的递归
+    QGraphicsItem::ItemSceneHasChanged,//物品的场景发生了变化。该项目的场景（）是新场景。当项目被添加到其初始场景以及被移除时，也会发送此通知。值参数是新场景（即，指向 QGraphicsScene 的指针）。不要在 itemChange() 中调用 setScene()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemCursorChange,//项目的光标发生变化。 value 参数是新的游标（即 QCursor）。不要在 itemChange() 中调用 setCursor()，因为此通知已传递。相反，您可以从 itemChange() 返回一个新光标
+    QGraphicsItem::ItemCursorHasChanged,//该项目的光标已更改。 value 参数是新的游标（即 QCursor）。不要在传递此通知时调用 setCursor()。返回值被忽略
+    QGraphicsItem::ItemToolTipChange,//该项目的工具提示更改。 value 参数是新的工具提示（即 QToolTip）。不要在 itemChange() 中调用 setToolTip()，因为此通知已发送。相反，您可以从 itemChange() 返回一个新的工具提示
+    QGraphicsItem::ItemToolTipHasChanged,//该项目的工具提示已更改。 value 参数是新的工具提示（即 QToolTip）。不要调用 setToolTip()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemFlagsChange,//该项目的标志改变。 value 参数是新标志（即 quint32）。不要在 itemChange() 中调用 setFlags()，因为此通知已传递。相反，您可以从 itemChange() 返回新标志
+    QGraphicsItem::ItemFlagsHaveChanged,//该项目的标志已更改。 value 参数是新标志（即 quint32）。不要在 itemChange() 中调用 setFlags()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemZValueChange,//项目的 Z 值发生变化。 value 参数是新的 Z 值（即双精度值）。不要在 itemChange() 中调用 setZValue()，因为此通知已传递。相反，您可以从 itemChange() 返回一个新的 Z 值
+    QGraphicsItem::ItemZValueHasChanged,//项目的 Z 值已更改。 value 参数是新的 Z 值（即双精度值）。不要调用 setZValue()，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemOpacityChange,//项目的不透明度发生变化。 value 参数是新的不透明度（即双精度）。不要在 itemChange() 中调用 setOpacity()，因为此通知已传递。相反，您可以从 itemChange() 返回一个新的不透明度
+    QGraphicsItem::ItemOpacityHasChanged,//项目的不透明度已更改。 value 参数是新的不透明度（即双精度）。不要调用 setOpacity() ，因为此通知已传递。返回值被忽略
+    QGraphicsItem::ItemScenePositionHasChanged//项目的场景位置已更改。如果启用了 ItemSendsScenePositionChanges 标志，并且在项目的场景位置已更改（即项目本身的位置或变换或任何祖先的位置或变换已更改），则会发送此通知。 value 参数是新的场景位置（与 scenePos() 相同），QGraphicsItem 忽略此通知的返回值（即只读通知）
+}
+```
+
+此枚举描述了您可以在项目上设置的不同标志，以切换项目行为中的不同功能。
+默认情况下禁用所有标志。
+
+```c++
+enum QGraphicsItem::GraphicsItemFlag{
+    QGraphicsItem::ItemIsMovable,//该项目支持使用鼠标进行交互式移动。通过单击该项目然后拖动，该项目将与鼠标光标一起移动。如果项目有子项，则所有子项也会被移动。如果该项目是选择的一部分，则所有选定的项目也会被移动。通过 QGraphicsItem 的鼠标事件处理程序的基本实现提供此功能是为了方便
+    QGraphicsItem::ItemIsSelectable,//该项目支持选择。启用此功能将启用 setSelected() 来切换项目的选择。它还会通过调用 QGraphicsScene::setSelectionArea()、单击一个项目或在 QGraphicsView 中使用橡皮筋选择来自动选择项目
+    QGraphicsItem::ItemIsFocusable,//该项目支持键盘输入焦点（即，它是一个输入项目）。启用此标志将允许项目接受焦点，这再次允许将关键事件传递给 QGraphicsItem::keyPressEvent() 和 QGraphicsItem::keyReleaseEvent()
+    QGraphicsItem::ItemClipsToShape,//项目剪辑成自己的形状。该项目无法在其形状之外绘制或接收鼠标、平板电脑、拖放或悬停事件。默认情况下禁用。此行为由 QGraphicsView::drawItems() 或 QGraphicsScene::drawItems() 强制执行
+    QGraphicsItem::ItemClipsChildrenToShape,//该项目将其所有后代的绘画剪辑成自己的形状。作为该项的直接或间接子项的项不能在该项的形状之外绘制。默认情况下，此标志是禁用的；孩子们可以在任何地方画画。此行为由 QGraphicsView::drawItems() 或 QGraphicsScene::drawItems() 强制执行
+    QGraphicsItem::ItemIgnoresTransformations,//该项目忽略继承的转换（即，它的位置仍然锚定到其父级，但忽略父级或视图旋转、缩放或剪切转换）。这个标志对于保持文本标签项水平和未缩放很有用，因此如果视图被转换，它们仍然是可读的。设置后，项目的视图几何和场景几何将分别维护。您必须调用 deviceTransform() 来映射坐标并检测视图中的碰撞。默认情况下，此标志被禁用
+    QGraphicsItem::ItemIgnoresParentOpacity,//该项目忽略其父项的不透明度。该项目的有效不透明度与它自己的相同；它不与父母的不透明度结合。即使父项是半透明的，此标志也允许您的项目保持其绝对不透明度
+    QGraphicsItem::ItemDoesntPropagateOpacityToChildren,//该项目不会将其不透明度传播给其子项。此标志允许您创建不影响其子项不透明度的半透明项
+    QGraphicsItem::ItemStacksBehindParent,//该项目堆叠在其父项后面。默认情况下，子项堆叠在父项之上。但是设置这个标志，孩子将被堆叠在它后面。此标志对于投影效果和遵循父项的几何形状而不在其上绘制的装饰对象很有用
+    QGraphicsItem::ItemUsesExtendedStyleOption,//该项目使用 QStyleOptionGraphicsItem 中的暴露矩形或矩阵。默认情况下，exposedRect 被初始化为项目的 boundingRect() 并且矩阵是未转换的。您可以启用此标志，以便使用更细粒度的值设置样式选项。请注意，QStyleOptionGraphicsItem::levelOfDetail 不受此标志的影响，并且始终初始化为 1。如果您需要更高的值，请使用 QStyleOptionGraphicsItem::levelOfDetailFromTransform()
+    QGraphicsItem::ItemHasNoContents,//该项目不绘制任何东西（即，在该项目上调用 paint() 无效）。您应该在不需要绘制的项目上设置此标志，以确保 Graphics View 避免不必要的绘制准备
+    QGraphicsItem::ItemSendsGeometryChanges,//该项为ItemPositionChange、ItemPositionHasChanged、ItemMatrixChange、ItemTransformChange、ItemTransformHasChanged、ItemRotationChange、ItemRotationHasChanged、ItemScaleChange、ItemScaleHasChanged、ItemTransformOriginPointChange和ItemTransformOriginPointHasChanged启用itemChange（）通知。出于性能原因，默认情况下禁用这些通知。必须启用此标志才能接收位置和变换更改的通知
+    QGraphicsItem::ItemAcceptsInputMethod,//该项目支持通常用于亚洲语言的输入法
+    QGraphicsItem::ItemNegativeZStacksBehindParent,//如果项目的 z 值为负数，项目会自动堆叠在其父项目后面。此标志使 setZValue() 能够切换 ItemStacksBehindParent
+    QGraphicsItem::ItemIsPanel,//该项目是一个面板。面板提供激活和包含的焦点处理。一次只能激活一个面板（参见 QGraphicsItem::isActive()）。当没有面板处于活动状态时，QGraphicsScene 会激活所有非面板项。窗口项（即 QGraphicsItem::isWindow() 返回 true）是面板
+    QGraphicsItem::ItemSendsScenePositionChanges,//该项目为 ItemScenePositionHasChanged 启用 itemChange() 通知
+    QGraphicsItem::ItemContainsChildrenInShape//此标志表示项目的所有直接或间接子项仅在项目的形状内绘制。与 ItemClipsChildrenToShape 不同，不强制执行此限制。当您手动确保绘图绑定到项目的形状并希望避免与强制执行剪辑相关的成本时，请设置 ItemContainsChildrenInShape。设置此标志可实现更有效的绘图和碰撞检测。默认情况下禁用该标志
+}
+```
+
+此枚举指定模式面板的行为。模态面板是阻止输入到其他面板的面板。请注意，模式面板的子项不会被阻止。
+
+```c++
+enum QGraphicsItem::PanelModality{
+    QGraphicsItem::NonModal,//该面板不是模态的，不会阻止对其他面板的输入。这是面板的默认值
+    QGraphicsItem::PanelModal,//该面板对于单个项目层次结构是模态的，并阻止对其父面板、所有祖父面板以及其父面板和祖父面板的所有兄弟姐妹的输入
+    QGraphicsItem::SceneModal//该窗口对整个场景是模态的，并阻止对所有面板的输入
+}
+```
+
+##### 成员函数
+
+需要关注的常用的函数。
+
+```c++
+QPainterPath clipPath() const;
+QTransform itemTransform(const QGraphicsItem *other, bool *ok = Q_NULLPTR) const;
+GraphicsItemFlagsflags() const;
+QGraphicsScene *scene() const;
+QRectF sceneBoundingRect() const;
+QPointF scenePos() const;
+QTransform sceneTransform() const;
+QGraphicsItem *focusItem() const;
+QGraphicsItem *focusProxy() const;
+QGraphicsItemGroup *group() const;
+QPointF pos() const;
+qreal rotation() const;
+qreal scale() const;
+qreal x() const;
+qreal y() const;
+qreal zValue() const;
+qreal opacity() const;
+virtual QPainterPath opaqueArea() const;
+QGraphicsItem *panel() const;
+PanelModality panelModality() const;
+
+bool hasCursor() const;
+bool hasFocus() const;
+bool isActive() const;
+bool isClipped() const;
+bool isEnabled() const;
+bool isObscured(const QRectF &rect = QRectF()) const;
+bool isObscured(qreal x, qreal y, qreal w, qreal h) const;
+bool isPanel() const;
+bool isSelected() const;
+bool isUnderMouse() const;
+bool isVisible() const;
+bool isVisibleTo(const QGraphicsItem *parent) const;
+bool isWidget() const;
+bool isWindow() const;
+bool isAncestorOf(const QGraphicsItem *child) const;
+bool isBlockedByModalPanel(QGraphicsItem **blockingPanel = Q_NULLPTR) const;
+bool acceptDrops() const;
+bool acceptHoverEvents() const;
+bool acceptTouchEvents() const;
+
+void setAcceptHoverEvents(bool enabled);//如果 enabled 为 true，则此项将接受悬停事件；否则，它将忽略它们。默认情况下，项目不接受悬停事件
+void setAcceptTouchEvents(bool enabled);//如果 enabled 为 true，则此项将接受触摸事件；否则，它将忽略它们。默认情况下，项目不接受触摸事件
+void setFiltersChildEvents(bool enabled);//如果 enabled 为 true，则此项设置为过滤其所有子项的所有事件
+
+void moveBy(qreal dx, qreal dy);//将项目水平移动 dx 点，垂直移动 dy 点
+void setPos(const QPointF &pos);//设置位置
+void setPos(qreal x, qreal y);
+void setX(qreal x); // 图形的x坐标
+void setY(qreal y);//图形的y坐标
+void setZValue(qreal z);//Z值越大叠放越靠前
+void hide();//隐藏图形
+void show();//显示图形
+void clearFocus();//清除焦点
+void resetTransform();//将此项的变换矩阵重置为单位矩阵或将所有变换属性重置为其默认值
+void scroll(qreal dx, qreal dy, const QRectF &rect = QRectF());//将 rect 的内容滚动 dx, dy。如果 rect 是空矩形（默认值），则滚动项目的边界矩形
+void setAcceptDrops(bool on);//接受拖动
+void setAcceptedMouseButtons(Qt::MouseButtons buttons);
+void setActive(bool active);//设置为活动
+void setBoundingRegionGranularity(qreal granularity);//将边界区域粒度设置为粒度；介于 0 和 1 之间的值。默认值为 0
+void setCacheMode(CacheMode mode, const QSize &logicalCacheSize = QSize());//将项目的缓存模式设置为模式
+void setCursor(const QCursor &cursor);//设置鼠标
+void setData(int key, const QVariant &value);//设置数据
+void setEnabled(bool enabled);//设置使能
+void setFlag(GraphicsItemFlag flag, bool enabled = true);//设置图形操作属性，如可选择和可移动
+void setFlags(GraphicsItemFlags flags);
+void setFocus(Qt::FocusReason focusReason = Qt::OtherFocusReason);//设置焦点
+void setFocusProxy(QGraphicsItem *item);//设置焦点代理
+void setGraphicsEffect(QGraphicsEffect *effect);
+void setGroup(QGraphicsItemGroup *group);//设置容器
+void setInputMethodHints(Qt::InputMethodHints hints);//设置此项的当前输入法提示为提示
+void setOpacity(qreal opacity);//设置透明度
+void setPanelModality(PanelModality panelModality);//将此项目的模态设置为 panelModality
+void setParentItem(QGraphicsItem *newParent);//设置父项
+void setRotation(qreal angle);//设置绕 Z 轴的顺时针旋转角度，以度为单位
+void setScale(qreal factor);//设置项目的比例因子
+void setSelected(bool selected);//如果 selected 为 true 且该项可选，则该项被选中；否则，它被取消选中
+void setToolTip(const QString &toolTip);//将项目的工具提示设置为 toolTip。如果 toolTip 为空，则该项目的工具提示被清除
+void setTransform(const QTransform &matrix, bool combine = false);//将项目的当前变换矩阵设置为矩阵
+void setTransformOriginPoint(const QPointF &origin);//在项目坐标中设置转换的原点
+void setTransformOriginPoint(qreal x, qreal y);
+void setTransformations(const QList<QGraphicsTransform *> &transformations);//设置当前应用到此项的图形变换列表（QGraphicsTransform）
+void setVisible(bool visible);//设置可见
+```
+
+ 映射系列函数。
+
+```c++
+// 将另一个图形项的一个点映射到本图形项的坐标系
+QPointF mapFromItem(const QGraphicsItem *item, const QPointF &point) const;
+QPolygonF mapFromItem(const QGraphicsItem *item, const QRectF &rect) const;
+QPolygonF mapFromItem(const QGraphicsItem *item, const QPolygonF &polygon) const;
+QPainterPath mapFromItem(const QGraphicsItem *item, const QPainterPath &path) const;
+QPointF mapFromItem(const QGraphicsItem *item, qreal x, qreal y) const;
+QPolygonF mapFromItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
+// 将父项的一个点映射到本图形项的坐标系
+QPointF mapFromParent(const QPointF &point) const;
+QPolygonF mapFromParent(const QRectF &rect) const;
+QPolygonF mapFromParent(const QPolygonF &polygon) const;
+QPainterPath mapFromParent(const QPainterPath &path) const;
+QPointF mapFromParent(qreal x, qreal y) const;
+QPolygonF mapFromParent(qreal x, qreal y, qreal w, qreal h) const;
+// 将场景中的一个点映射到本图形项的坐标系
+QPointF mapFromScene(const QPointF &point) const;
+QPolygonF mapFromScene(const QRectF &rect) const;
+QPolygonF mapFromScene(const QPolygonF &polygon) const;
+QPainterPath mapFromScene(const QPainterPath &path) const;
+QPointF mapFromScene(qreal x, qreal y) const;
+QPolygonF mapFromScene(qreal x, qreal y, qreal w, qreal h) const;
+// 将 item 坐标系中的矩形 rect 映射到 item 的坐标系，并将映射的矩形作为新矩形（即生成的多边形的边界矩形）返回
+QRectF mapRectFromItem(const QGraphicsItem *item, const QRectF &rect) const;
+QRectF mapRectFromItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
+// 将位于此项的父坐标系中的矩形 rect 映射到此项的坐标系，并将映射的矩形作为新矩形（即生成的多边形的边界矩形）返回
+QRectF mapRectFromParent(const QRectF &rect) const;
+QRectF mapRectFromParent(qreal x, qreal y, qreal w, qreal h) const;
+// 将场景坐标中的矩形 rect 映射到此项的坐标系，并将映射的矩形作为新矩形（即生成的多边形的边界矩形）返回
+QRectF mapRectFromScene(const QRectF &rect) const;
+QRectF mapRectFromScene(qreal x, qreal y, qreal w, qreal h) const;
+// 将位于此项坐标系中的矩形 rect 映射到项的坐标系，并将映射的矩形作为新矩形（即生成的多边形的边界矩形）返回。
+QRectF mapRectToItem(const QGraphicsItem *item, const QRectF &rect) const;
+QRectF mapRectToItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
+// 将位于此项坐标系中的矩形 rect 映射到其父坐标系，并将映射的矩形作为新矩形返回（即，生成的多边形的边界矩形）
+QRectF mapRectToParent(const QRectF &rect) const;
+QRectF mapRectToParent(qreal x, qreal y, qreal w, qreal h) const;
+//将该项坐标系中的矩形rect映射到场景坐标系，并将映射的矩形作为新矩形返回
+QRectF mapRectToScene(const QRectF &rect) const;
+QRectF mapRectToScene(qreal x, qreal y, qreal w, qreal h) const;
+// 将本图形项内的一个点映射到另一个图形项的坐标系
+QPointF mapToItem(const QGraphicsItem *item, const QPointF &point) const;
+QPolygonF mapToItem(const QGraphicsItem *item, const QRectF &rect) const;
+QPolygonF mapToItem(const QGraphicsItem *item, const QPolygonF &polygon) const;
+QPainterPath mapToItem(const QGraphicsItem *item, const QPainterPath &path) const;
+QPointF mapToItem(const QGraphicsItem *item, qreal x, qreal y) const;
+QPolygonF mapToItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
+// 将本图形项内的一个点映射到父项坐标系
+QPointF mapToParent(const QPointF &point) const;
+QPolygonF mapToParent(const QRectF &rect) const;
+QPolygonF mapToParent(const QPolygonF &polygon) const;
+QPainterPath mapToParent(const QPainterPath &path) const;
+QPointF mapToParent(qreal x, qreal y) const;
+QPolygonF mapToParent(qreal x, qreal y, qreal w, qreal h) const;
+// 将本图形项内的一个点映射到场景坐标系
+QPointF mapToScene(const QPointF &point) const;
+QPolygonF mapToScene(const QRectF &rect) const;
+QPolygonF mapToScene(const QPolygonF &polygon) const;
+QPainterPath mapToScene(const QPainterPath &path) const;
+QPointF mapToScene(qreal x, qreal y) const;
+QPolygonF mapToScene(qreal x, qreal y, qreal w, qreal h) const;
+```
+
+其它不常用的函数。
+
+```c++
+Qt::MouseButtons acceptedMouseButtons() const;
+void grabKeyboard();
+void grabMouse();
+QGraphicsEffect *graphicsEffect() const;
+Qt::InputMethodHints inputMethodHints() const;
+void installSceneEventFilter(QGraphicsItem *filterItem);
+QRegion boundingRegion(const QTransform &itemToDeviceTransform) const;
+qreal boundingRegionGranularity() const;
+CacheMode cacheMode() const;
+QList<QGraphicsItem *> childItems() const;
+QRectF childrenBoundingRect() const;
+QGraphicsItem *parentItem() const;
+QGraphicsObject *parentObject() const;
+QGraphicsWidget *parentWidget() const;
+void removeSceneEventFilter(QGraphicsItem *filterItem);
+virtual bool collidesWithItem(const QGraphicsItem *other, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+virtual bool collidesWithPath(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+QList<QGraphicsItem *> collidingItems(Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
+QGraphicsItem *commonAncestorItem(const QGraphicsItem *other) const
+virtual bool contains(const QPointF &point) const;
+QCursor cursor() const;
+QVariant data(int key) const;
+QTransform deviceTransform(const QTransform &viewportTransform) const;
+qreal effectiveOpacity() const;
+void ensureVisible(const QRectF &rect = QRectF(), int xmargin = 50, int ymargin = 50);
+void ensureVisible(qreal x, qreal y, qreal w, qreal h, int xmargin = 50, int ymargin = 50);
+bool filtersChildEvents() const;
+virtual QPainterPath shape() const;
+void stackBefore(const QGraphicsItem *sibling);
+QGraphicsObject *toGraphicsObject();
+const QGraphicsObject *toGraphicsObject() const;
+QString toolTip() const;
+QGraphicsItem *topLevelItem() const;
+QGraphicsWidget *topLevelWidget() const;
+QTransform transform() const;
+QPointF transformOriginPoint() const;
+QList<QGraphicsTransform *> transformations() const;
+virtual int type() const;
+void ungrabKeyboard();
+void ungrabMouse();
+void unsetCursor();
+void update(const QRectF &rect = QRectF());
+void update(qreal x, qreal y, qreal width, qreal height);
+QGraphicsWidget *window() const;
+```
 
 #### 7.3.4 QGraphicsEllipseItem
 
@@ -8398,9 +8879,29 @@ signals void rubberBandChanged(QRect rubberBandRect, QPointF fromScenePoint, QPo
 
 文字图形项。
 
-#### QGraphicsItemGroup
+#### 7.3.7 QGraphicsSimpleTextItem
 
+简单文字图形项。
 
+#### 7.3.8 QGraphicsPathItem
+
+路径图形项。
+
+#### 7.3.9 QGraphicsPolygonIem
+
+多边形图形项。
+
+#### 7.3.10 QGraphicsLineItem
+
+线图形项。
+
+#### 7.3.11 QGraphicsPixmapItem
+
+图像图形项。
+
+#### 7.3.12 QGraphicsItemGroup
+
+管理项的容器。
 
 ## 布局管理
 

@@ -42,6 +42,10 @@
 
 17. TestQPainter 使用绘图系统配合QPainterPath绘制五角星和散射圆的案例,比较视图和窗口坐标系统的差异
 
+18. TestGraphicsViewCooridate 演示视图、场景和图形项的坐标关系
+
+19. Test
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
