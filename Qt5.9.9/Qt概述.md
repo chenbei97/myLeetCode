@@ -8574,6 +8574,19 @@ QAbstractGraphicsShapeItem-->QGraphicsSimpleTextItem
 QAbstractGraphicsShapeItem-->QGraphicsRectItem
 ```
 
+要强调的是，如果自定义图形项，必须重载type()函数并给出Type信息，且Type必须比UserType大。
+
+```c++
+class customItem: public QGraphicsItem
+{
+	public:
+		enum {Type = UserType + 1};
+		int type() const{ 
+			return Type; // 使qgraphicsitem_cast函数可以强转为此类型
+		}
+}
+```
+
 ##### 枚举类型
 
 这个枚举描述了 QGraphicsItem 的缓存模式。缓存用于通过分配和渲染到屏幕外像素缓冲区来加速渲染，当项目需要重绘时可以重用该缓冲区。对于某些绘图设备，缓存直接存储在图形内存中，这使得渲染非常快速。
@@ -8871,37 +8884,173 @@ QGraphicsWidget *window() const;
 
 椭圆图形项。
 
+成员函数如下。
+
+```c++
+QGraphicsEllipseItem(const QRectF &rect, QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsEllipseItem(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *parent = Q_NULLPTR);
+QRectF rect() const;
+void setRect(const QRectF &rect);//将项目的椭圆几何设置为矩形。矩形的左边缘定义椭圆的左边缘，矩形的上边缘描述椭圆的顶部。矩形的高度和宽度描述了椭圆的高度和宽度
+void setRect(qreal x, qreal y, qreal width, qreal height);
+void setSpanAngle(int angle);
+void setStartAngle(int angle);
+int spanAngle() const;//返回椭圆段的跨度角，以 16 度为单位。该角度与 startAngle() 一起用于表示椭圆段（饼图）。默认情况下，此函数返回 5760（360 * 16，一个完整的椭圆）。
+int startAngle() const;//返回以 16 度为单位的椭圆段的起始角度。该角度与 spanAngle() 一起用于表示椭圆段（饼图）。默认情况下，起始角度为 0
+```
+
 #### 7.3.5 QGraphicsRectItem
 
-矩形图形项
+矩形图形项。
+
+成员函数如下。
+
+```c++
+QGraphicsRectItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsRectItem(const QRectF &rect, QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsRectItem(qreal x, qreal y, qreal width, qreal height, QGraphicsItem *parent = Q_NULLPTR);
+QRectF rect() const; // 返回项目的矩形位置
+void setRect(const QRectF &rectangle);
+void setRect(qreal x, qreal y, qreal width, qreal height);
+```
 
 #### 7.3.6 QGraphicsTextItem
 
 文字图形项。
 
+成员函数如下。
+
+```c++
+QGraphicsTextItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsTextItem(const QString &text, QGraphicsItem *parent = Q_NULLPTR);
+void adjustSize();//将文本项调整到合理的大小
+void setDefaultTextColor(const QColor &col);
+QColor defaultTextColor() const;//返回用于无格式文本的默认文本颜色
+QTextDocument *document() const;//返回项目的文本文档
+void setDocument(QTextDocument *document);
+QFont font() const;//f返回字体格式
+void setFont(const QFont &font);
+bool openExternalLinks() const;//指定 QGraphicsTextItem 是否应该使用 QDesktopServices::openUrl() 自动打开链接，而不是发出 linkActivated 信号。默认值为假。
+void setOpenExternalLinks(bool open);
+void setHtml(const QString &text);//设置Html
+QString toHtml() const;
+void setPlainText(const QString &text);//设置多行文本
+QString toPlainText() const;
+void setTabChangesFocus(bool b);//如果 b 为真，Tab 键将导致小部件改变焦点；否则，tab 键将在文档中插入一个选项卡。在某些情况下，文本编辑不应允许用户输入制表符或使用 Tab 键更改缩进，因为这会破坏焦点链。默认值为假
+bool tabChangesFocus() const;
+void setTextCursor(const QTextCursor &cursor);//此属性表示可编辑文本项中的可见文本光标。默认情况下，如果未设置项目的文本，则该属性包含空文本光标；否则它包含放置在项目文档开头的文本光标。
+QTextCursor textCursor() const;
+void setTextInteractionFlags(Qt::TextInteractionFlags flags);//设置 flags 标志以指定文本项应如何响应用户输入
+Qt::TextInteractionFlags textInteractionFlags() const;
+void setTextWidth(qreal width); // 设置文本宽度
+qreal textWidth() const;
+```
+
 #### 7.3.7 QGraphicsSimpleTextItem
 
 简单文字图形项。
+
+成员函数如下。
+
+```c++
+QGraphicsSimpleTextItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsSimpleTextItem(const QString &text, QGraphicsItem *parent = Q_NULLPTR);
+QFont font() const;
+void setFont(const QFont &font);
+void setText(const QString &text);
+QString text() const;
+```
 
 #### 7.3.8 QGraphicsPathItem
 
 路径图形项。
 
-#### 7.3.9 QGraphicsPolygonIem
+成员函数如下。
+
+```c++
+QGraphicsPathItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent = Q_NULLPTR);
+QPainterPath path() const;
+void setPath(const QPainterPath &path);
+```
+
+#### 7.3.9 QGraphicsPolygonItem
 
 多边形图形项。
 
+成员函数如下。
+
+```c++
+QGraphicsPolygonItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsPolygonItem(const QPolygonF &polygon, QGraphicsItem *parent = Q_NULLPTR);
+Qt::FillRule fillRule() const;
+QPolygonF polygon() const;
+void setFillRule(Qt::FillRule rule);
+void setPolygon(const QPolygonF &polygon);
+```
+
 #### 7.3.10 QGraphicsLineItem
 
-线图形项。
+直线图形项。
+
+成员函数如下。
+
+```c++
+QGraphicsLineItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsLineItem(const QLineF &line, QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsLineItem(qreal x1, qreal y1, qreal x2, qreal y2, QGraphicsItem *parent = Q_NULLPTR);
+QLineF line() const;
+QPen pen() const;
+void setLine(const QLineF &line);
+void setLine(qreal x1, qreal y1, qreal x2, qreal y2);
+void setPen(const QPen &pen);
+```
 
 #### 7.3.11 QGraphicsPixmapItem
 
 图像图形项。
 
+这个枚举描述了 QGraphicsPixmapItem 如何计算它的形状和不透明区域。
+默认值为 MaskShape。
+
+```c++
+enum QGraphicsPixmapItem::ShapeMode{
+    QGraphicsPixmapItem::MaskShape,//形状是通过调用 QPixmap::mask() 来确定的。此形状仅包括像素图的不透明像素。然而，由于形状更复杂，它可能比其他模式更慢，并且使用更多内存
+    QGraphicsPixmapItem::BoundingRectShape,//形状是通过跟踪像素图的轮廓来确定的。这是最快的形状模式，但它不考虑像素图上的任何透明区域
+    QGraphicsPixmapItem::HeuristicMaskShape//形状是通过调用 QPixmap::createHeuristicMask() 来确定的。性能和内存消耗与 MaskShape 类似
+}
+```
+
+成员函数如下。
+
+```c++
+QGraphicsPixmapItem(QGraphicsItem *parent = Q_NULLPTR);
+QGraphicsPixmapItem(const QPixmap &pixmap, QGraphicsItem *parent = Q_NULLPTR);
+QPointF offset() const;//返回像素图项的偏移量，它定义了像素图左上角的点，以本地坐标表示
+QPixmap pixmap() const;//返回项目的像素图，如果没有设置像素图，则返回无效的 QPixmap
+void setOffset(const QPointF &offset);
+void setOffset(qreal x, qreal y);
+void setPixmap(const QPixmap &pixmap);
+void setShapeMode(ShapeMode mode);//将项目的形状模式设置为模式。形状模式描述了 QGraphicsPixmapItem 如何计算其形状。默认模式是 MaskShape
+void setTransformationMode(Qt::TransformationMode mode);//将像素图项目的转换模式设置为模式，并切换项目的更新。默认模式是 Qt::FastTransformation，它提供了没有平滑的快速转换
+ShapeMode shapeMode() const;//返回项目的形状模式。形状模式描述了 QGraphicsPixmapItem 如何计算其形状。默认模式是 MaskShape
+Qt::TransformationMode transformationMode() const;//返回像素图的转换模式。默认模式是 Qt::FastTransformation，它提供了没有平滑的快速转换
+```
+
 #### 7.3.12 QGraphicsItemGroup
 
-管理项的容器。
+管理项的容器，例如组合各种图形项时就是放在一个Group里。
+
+成员函数如下。
+
+```c++
+QGraphicsItemGroup(QGraphicsItem *parent = Q_NULLPTR);
+void addToGroup(QGraphicsItem *item);
+void removeFromGroup(QGraphicsItem *item);
+```
+
+## 8. 图表
+
+
 
 ## 布局管理
 
