@@ -9050,6 +9050,321 @@ void removeFromGroup(QGraphicsItem *item);
 
 ## 8. 图表
 
+QtCharts就是基于QGraphicsView开发的，核心组件是QChartView和QChart。
+
+使用QChart必须使用命名空间或者宏定义，且在pro文件加上Qt += charts。
+
+```c++
+#include <QtCharts>
+using namespace QtCharts;
+// 
+Qt_CHARTS_USE_NAMESPACE
+```
+
+继承关系如图。
+
+```mermaid
+graph LR
+QGraphicsItem-->QGraphicsObject
+QGraphicsObject-->QGraphicsWidget
+QGraphicsWidget-->QChart
+QChart-->QPolarChart
+```
+
+可以看到，QChart继承自QGraphicsItem，所以它也是图形项的一种。而ChartView则是继承自QGraphicsView，所以是一种视图组件，用于存放QChart类型的图形项罢了。
+
+### 8.1 基本绘图类
+
+#### 8.1.1 QChartView
+
+图表视图类。
+
+枚举类型一个，用于设置选择框的类型。
+
+```c++
+enum QChartView::RubberBand{
+    QChartView::NoRubberBand,//无选择框
+    QChartView::VerticalRubberBand,//垂直选择
+    QChartView::HorizontalRubberBand,//水平选择
+    QChartView::RectangleRubberBand//矩形框选择
+}
+```
+
+成员函数，最最核心的函数就是setChart，一般来讲，使用的方式是这样的。
+
+```c++
+QChartView * chartView = new QChartView(this);
+QChart * chart = new QChart();
+chartView->setChart(chart);
+this->setCentralWidget(chartView);
+// 对chart进行一些设置...
+
+QChartView(QChart *chart, QWidget *parent = Q_NULLPTR);
+QChart *chart() const;
+void setChart(QChart *chart); 
+RubberBands rubberBand() const;
+void setRubberBand(const RubberBands &rubberBand);
+```
+
+#### 8.1.2 QChart
+
+图表类。
+
+##### 枚举类型
+
+此枚举描述图表中启用的动画。
+
+```c++
+enum QChart::AnimationOption {
+    QChart::NoAnimation,//动画在图表中被禁用。这是默认值
+    QChart::GridAxisAnimations,//图表中启用了网格轴动画
+    QChart::SeriesAnimations,//图表中启用了系列动画
+    QChart::AllAnimations//图表中启用了所有动画类型
+}
+```
+
+此枚举描述图表使用的主题。
+主题是应用于图表所有视觉元素的 UI 样式相关设置的内置集合，例如颜色、钢笔、画笔和系列字体，以及轴、标题和图例。图表主题示例说明了如何使用主题。
+注意：更改主题将覆盖以前应用于该系列的所有自定义。
+
+```c++
+enum QChart::ChartTheme{
+    QChart::ChartThemeLight,//浅色主题，这是默认主题
+    QChart::ChartThemeBlueCerulean,//天蓝色主题
+    QChart::ChartThemeDark,//黑暗的主题
+    QChart::ChartThemeBrownSand,//沙褐色主题
+    QChart::ChartThemeBlueNcs,//自然色系 (NCS) 蓝色主题
+    QChart::ChartThemeHighContrast,//高对比度主题
+    QChart::ChartThemeBlueIcy,//冰蓝色主题
+    QChart::ChartThemeQt//Qt 主题
+}
+```
+
+此枚举描述图表类型。
+
+```c++
+enum QChart::ChartType{
+    QChart::ChartTypeUndefined,//图表类型未定义
+    QChart::ChartTypeCartesian,//笛卡尔图
+    QChart::ChartTypePolar//极坐标图
+}
+```
+
+##### 成员函数
+
+从成员函数可以看到，与图表相关的类有QAbstractAxis(常用的是QValueAxis)、QAbstractSeries（QLineSeries）、QEasingCurve、QLegend、QLocale、AnimationOptions。关于这些抽象类和具体类的介绍后边会继续给出
+
+```c++
+void addSeries(QAbstractSeries *series);//添加序列
+void removeAllSeries();//移除序列
+void removeSeries(QAbstractSeries *series);//从图表中删除系列系列。图表释放指定系列对象的所有权
+QList<QAbstractSeries *> series() const;//返回添加到图表的所有系列
+
+int animationDuration() const;//此属性保存图表动画的持续时间
+void setAnimationDuration(int msecs);
+QEasingCurve animationEasingCurve() const;//此属性保存图表动画的缓动曲线
+void setAnimationEasingCurve(const QEasingCurve &curve);
+AnimationOptions animationOptions() const;//此属性保存图表的动画选项
+void setAnimationOptions(AnimationOptions options);
+
+void addAxis(QAbstractAxis *axis, Qt::Alignment alignment);//添加轴
+QList<QAbstractAxis *> axes(Qt::Orientations orientation = Qt::Horizontal | Qt::Vertical, QAbstractSeries *series = Q_NULLPTR) const;// 默认返回所有轴
+QAbstractAxis *axisX(QAbstractSeries *series = Q_NULLPTR) const;//返回X轴
+QAbstractAxis *axisY(QAbstractSeries *series = Q_NULLPTR) const;//返回Y轴
+void removeAxis(QAbstractAxis *axis);// 移除所有坐标轴
+void setAxisX(QAbstractAxis *axis, QAbstractSeries *series = Q_NULLPTR);
+void setAxisY(QAbstractAxis *axis, QAbstractSeries *series = Q_NULLPTR);
+void createDefaultAxes();//根据已添加到图表的系列为图表创建轴。之前添加到图表中的任何轴都将被删除
+
+ChartType chartType() const；//此属性保存图表是笛卡尔图还是极坐标图
+QLegend *legend() const;//返回图表的图例对象。所有权保留在图表中
+void scroll(qreal dx, qreal dy);//按 dx 和 dy 指定的距离滚动图表的可见区域。对于极坐标图，dx 表示沿角轴的角度，而不是距离。
+
+QLocale locale() const;//此属性保存用于格式化各种图表标签的语言环境
+void setLocale(const QLocale &locale);
+bool localizeNumbers() const;//此属性保存数字是否已本地化
+void setLocalizeNumbers(bool localize);
+
+QPointF mapToPosition(const QPointF &value, QAbstractSeries *series = Q_NULLPTR);//返回与 series 指定的系列中的值对应的图表上的位置
+QPointF mapToValue(const QPointF &position, QAbstractSeries *series = Q_NULLPTR);//在图表中位置指定的位置处返回由系列指定的系列中的值
+
+QMargins margins() const;//此属性保存图表矩形边缘和绘图区域之间允许的最小边距
+void setMargins(const QMargins &margins);
+
+void setBackgroundRoundness(qreal diameter);//此属性保存图表背景角处圆角的直径
+qreal backgroundRoundness() const;
+void setBackgroundVisible(bool visible = true);//此属性保存图表背景是否可见
+bool isBackgroundVisible() const;
+void setDropShadowEnabled(bool enabled = true);//该属性保存是否启用背景阴影效果
+bool isDropShadowEnabled() const;
+
+QRectF plotArea() const;//此属性保存绘制图表的矩形
+void setPlotAreaBackgroundBrush(const QBrush &brush);//将用于填充图表绘图区域背景的画笔设置为画笔
+QBrush plotAreaBackgroundBrush() const;
+void setPlotAreaBackgroundPen(const QPen &pen);//将用于绘制图表绘图区域背景的笔设置为笔
+QPen plotAreaBackgroundPen() const;
+void setPlotAreaBackgroundVisible(bool visible = true);
+bool isPlotAreaBackgroundVisible() const;
+void setBackgroundBrush(const QBrush &brush);//将用于绘制图表区域背景的画笔设置为画笔
+QBrush backgroundBrush() const;
+void setBackgroundPen(const QPen &pen);//将用于绘制图表区域背景的笔设置为笔
+QPen backgroundPen() const;
+
+void setTheme(QChart::ChartTheme theme);//设置图表主题
+QChart::ChartTheme theme() const;
+
+void setTitle(const QString &title);//设置图标标题及其颜色与字体
+void setTitleBrush(const QBrush &brush);
+void setTitleFont(const QFont &font);
+QString title() const;
+QBrush titleBrush() const;
+QFont titleFont() const;
+
+void zoom(qreal factor);//按自定义因子放大视图
+void zoomIn();//将视图放大两倍
+void zoomIn(const QRectF &rect);//将视图放大到矩形矩形仍然完全可见的最大级别
+void zoomOut();//将视图缩小两倍
+void zoomReset();//将系列域重置为调用任何缩放方法之前的值
+bool isZoomed();//是否处于缩放状态
+
+signal void plotAreaChanged(const QRectF &plotArea); //信号,绘图区域改变时发射
+```
+
+
+
+#### 8.1.3 QAbstactSeries
+
+抽象序列类。其继承关系如下所示。
+
+```mermaid
+graph LR
+QAbstractSeries-->QAreaSeries
+QAbstractSeries-->QBoxPlotSeries
+QAbstractSeries-->QAbstractBarSeries
+QAbstractSeries-->QPieSeries
+QAbstractSeries-->QXYSeries
+QAbstractBarSeries-->QBarSeries
+QAbstractBarSeries-->QHorizontalBarSeries
+QAbstractBarSeries-->QHorizontalPercentBarSeries
+QAbstractBarSeries-->QPercentBarSeries
+QAbstractBarSeries-->QStackedBarSeries
+QXYSeries-->QLineSeries
+QXYSeries-->QScatterSeries
+QLineSeries-->QSplineSeries
+```
+
+中文对照含义如下。
+
+```mermaid
+graph LR
+抽象序列类-->面积图
+抽象序列类-->火柴盒图
+抽象序列类-->抽象柱状图
+抽象序列类-->饼图
+抽象序列类-->二维图
+抽象柱状图-->柱状图
+抽象柱状图-->水平柱状图
+抽象柱状图-->水平百分比柱状图
+抽象柱状图-->百分比柱状图
+抽象柱状图-->堆叠柱状图
+二维图-->折线图
+二维图-->散点图
+```
+
+下方只说明比较常用的序列类。
+
+#### 8.1.4 QLineSeries
+
+折线图类。
+
+#### 8.1.5 QScatterSeries
+
+散点图类。
+
+#### 8.1.6 QBarSeries
+
+柱状图类。
+
+#### 8.1.7 QPieSeries
+
+饼图类。
+
+#### 8.1.8 QAreaSeries
+
+面积图类。
+
+#### 8.1.9 QSplineSeries
+
+光滑曲线图类。
+
+#### 8.1.10 QAbstractAxis
+
+抽象坐标轴类，封装了坐标轴的刻度、标签、网格线和标题等属性。
+
+坐标轴分为数值、对数、类别、时间日期坐标轴，也有分组数值最标轴。
+
+一般来讲，常规的二维平面图或者柱状图都使用数值或者对数坐标，部分柱状图以及饼图使用类别、时间日期坐标轴。
+
+```mermaid
+graph LR
+QAbstractAxis-->QValueAxis
+QAbstractAxis-->QLogValueAxis
+QAbstractAxis-->QBarCategoryAxis
+QAbstractAxis-->QDateTimeAxis
+QValueAxis-->QCategoryAxis
+```
+
+中文对照。
+
+```mermaid
+graph LR
+抽象坐标轴-->数值坐标轴
+数值坐标轴-->分组数值坐标轴
+抽象坐标轴-->对数数值坐标轴
+抽象坐标轴-->类别坐标轴
+抽象坐标轴-->时间日期坐标轴
+```
+
+#### 8.1.11 QValueAxis
+
+数值坐标轴类。
+
+#### 8.1.12 QCategoryAxis
+
+分组数值坐标轴类。
+
+#### 8.1.13 QLogValueAxis
+
+对数坐标轴类。
+
+#### 8.1.14 QBarCategoryAxis
+
+类别坐标轴类。
+
+#### 8.1.15 QDateTimeAxis
+
+时间日期轴类。
+
+#### 8.1.16 QLegend
+
+图例类。
+
+#### 8.1.17 QLegendMarker
+
+可生成类似于QCheckBox的组件，在图例上点击序列标记就可以控制序列是否显示。
+
+#### 8.1.18 QEasingCurve
+
+
+
+#### 8.1.19 QPolarChart
+
+
+
+### 8.3 关联数据类型
+
+#### 8.3.1 QMargins
+
 
 
 ## 布局管理

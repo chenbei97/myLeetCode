@@ -1,0 +1,12 @@
+INPUT(
+./release\actSLot.o
+./release\main.o
+./release\TestQChartLineSeries.o
+./release\setAxisSlot.o
+./release\setChartSlot.o
+./release\setPenDialog.o
+./release\setSeriesSlot.o
+./release\qrc_images.o
+./release\moc_TestQChartLineSeries.o
+./release\moc_setPenDialog.o
+);

@@ -46,6 +46,11 @@
 
 19. TestGraphicsViewDraw 演示如何绘制椭圆、多边形、矩形、直线和文字图形项，并组合它们，辅助鼠标和键盘事件
 
+20. TestQChartLineSeries 演示如何绘制折线图,设置图表、曲线、坐标轴、图例、主次刻度、主次网格线，各类标题、可见性等
+
+21.
+
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
