@@ -9361,9 +9361,43 @@ graph LR
 
 
 
-### 8.3 关联数据类型
+### 8.3 其它图表类
 
-#### 8.3.1 QMargins
+#### 8.3.1 QBarSeries
+
+普通柱状图。
+
+#### 8.3.2 QStackedBarSeries
+
+堆叠柱状图。
+
+#### 8.3.3 QPercentBarSeries
+
+百分比柱状图。
+
+#### 8.3.4 QPieSeries
+
+饼图。
+
+#### 8.3.5 QScatterSeries
+
+散点图。
+
+#### 8.3.6 QSplineSeries
+
+光滑散点图。
+
+### 8.4 关联数据类型
+
+#### 8.4.1 QMargins
+
+
+
+#### 8.4.2 QBarSet
+
+
+
+#### 8.4.3 QPieSlice
 
 
 
