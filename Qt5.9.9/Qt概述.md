@@ -1,6 +1,6 @@
 ## 1. 认识Qt和GUI应用程序基础
 
-1-2章关于Qt的安装和简单复习可见[01-hello_world](01-hello_world)的内容，其运行结果图片可见[](01-hello_world/app.png)。
+1-2章关于Qt的安装和简单复习可见[01-hello_world](01-hello_world)的内容，其运行结果图片可见[01-hello_world/app.png](01-hello_world/app.png)。
 
 主要的笔记如下。
 
@@ -9073,7 +9073,7 @@ QChart-->QPolarChart
 
 可以看到，QChart继承自QGraphicsItem，所以它也是图形项的一种。而ChartView则是继承自QGraphicsView，所以是一种视图组件，用于存放QChart类型的图形项罢了。
 
-### 8.1 基本绘图类
+### 8.1 图表与视图类
 
 #### 8.1.1 QChartView
 
@@ -9230,9 +9230,149 @@ bool isZoomed();//是否处于缩放状态
 signal void plotAreaChanged(const QRectF &plotArea); //信号,绘图区域改变时发射
 ```
 
+#### 8.1.3 QPolarChart
+
+QPolarChart 以极坐标图显示数据。极坐标图以圆形图表的形式显示数据，其中数据的放置基于与图表中心（极点）的角度和距离。
+
+极坐标图是 QChart 的一种特殊形式，它支持线、样条、面积和散点系列，以及它们支持的所有轴类型。每个轴都可以用作径向轴或角轴。
+角度 QValueAxis 上的第一个和最后一个刻度线位于 0/360 度角处。
+如果一个序列中两个连续点之间的角距离超过 180 度，那么任何连接这两个点的直线都变得毫无意义，并且不会被绘制。相反，将在图表中心之间绘制一条线。因此，在显示线、样条或面积系列时，必须相应地选择轴范围。
+极坐标图在同一位置绘制相同方向的所有轴，因此使用多个相同方向的轴可能会造成混淆，除非额外的轴仅用于自定义网格。例如，您可以使用辅助阴影 QCategoryAxis 显示突出显示的范围，或提供具有隐藏标签的辅助 QValueAxis 的未标记子标记。
+
+此枚举类型指定轴的极轴方向。
+
+```c++
+enum QPolarChart::PolarOrientation{
+    QPolarChart::PolarOrientationRadial,//径向轴，其中值沿图表的半径放置，从极点开始
+    QPolarChart::PolarOrientationAngular//一个角轴，其中值放置在图表周围
+}
+```
+
+成员函数。
+
+```c++
+QPolarChart(QGraphicsItem *parent = Q_NULLPTR, Qt::WindowFlags wFlags = Qt::WindowFlags());//构造一个极坐标图作为父级的子级。 wFlags 指定的属性被传递给 QChart 构造函数
+void addAxis(QAbstractAxis *axis, PolarOrientation polarOrientation);//这种方便的方法将轴轴添加到具有极坐标polarOrientation 的极坐标图中。图表拥有轴的所有权。
+QList<QAbstractAxis *> axes(PolarOrientations polarOrientation = PolarOrientations( PolarOrientationRadial | PolarOrientationAngular ), QAbstractSeries *series = Q_NULLPTR) const;//返回为具有极轴方向polarOrientation 的系列系列添加的轴。如果未提供系列，则返回具有指定极轴方向的任何轴
+
+static PolarOrientation axisPolarOrientation(QAbstractAxis *axis);//极坐标图的角轴报告水平方向，径向轴报告垂直方向。该函数是一个方便的函数，用于将轴轴的方向转换为对应的极轴方向。如果轴为空或未添加到极坐标图，则返回值无意义
+```
+
+#### 8.1.4 QEasingCurve
+
+缓动曲线的类型。
+
+QEasingCurve 类提供用于控制动画的缓动曲线。
+缓动曲线描述了一个函数，该函数控制 0 和 1 之间的插值速度应该如何。缓动曲线允许从一个值到另一个值的过渡看起来比简单的恒定速度所允许的更自然。 QEasingCurve 类通常与 QVariantAnimation 和 QPropertyAnimation 类一起使用，但也可以单独使用。它通常用于将插值从零速度加速（缓入）或减速到零速度（缓出）。缓入和缓出也可以组合在同一个缓动曲线中。
+为了计算插值的速度，缓动曲线提供了函数 valueForProgress()，其中的 progress 参数指定了插值的进度：0 是插值的开始值，1 是插值的结束值。返回值为插值的有效进度。如果返回值与所有输入值的输入值相同，则缓动曲线为线性曲线。这是默认行为。
+例如，
+
+```c++
+QEasingCurve easing(QEasingCurve::InOutQuad);
+
+for(qreal t = 0.0; t < 1.0; t+=0.1)
+    qWarning() << "Effective progress" << t << " is
+    << easing.valueForProgress(t);
+```
+
+将打印 0 到 1 之间插值的有效进度。
+当使用 QPropertyAnimation 时，关联的缓动曲线将用于控制 startValue 和 endValue 之间插值的进度：
+
+```c++
+QPropertyAnimation animation;
+animation.setStartValue(0);
+animation.setEndValue(1000);
+animation.setDuration(1000);
+animation.setEasingCurve(QEasingCurve::InOutQuad);
+```
+
+设置幅度、过冲或周期的能力取决于 QEasingCurve 类型。振幅访问可用于作为弹簧的曲线，例如弹性曲线和反弹曲线。改变幅度会改变曲线的高度。周期访问仅适用于弹性曲线，设置更高的周期会减慢反弹速度。只有具有“回旋镖”行为的曲线（例如 InBack、OutBack、InOutBack 和 OutInBack）才具有过冲设置。这些曲线将插值超出端点并返回到端点，其作用类似于回旋镖。
+Easing Curves Example 包含 QEasingCurve 类型的示例，并允许您更改曲线设置。
+
+```c++
+enum QEasingCurve::Type{ 
+    Linear,//线性 (t) 函数的缓动曲线：速度是恒定的
+    InQuad,//二次 (t^2) 函数的缓动曲线：从零速度加速
+    OutQuad,//二次 (t^2) 函数的缓动曲线：减速到零速度
+    InOutQuad,//二次 (t^2) 函数的缓动曲线：加速到一半，然后减速
+    OutInOuad,//二次 (t^2) 函数的缓动曲线：减速到一半，然后加速
+    InCubic,//三次 (t^3) 函数的缓动曲线：从零速度加速
+    OutCubic,//三次 (t^3) 函数的缓动曲线：减速到零速度
+    InOutCubic,//三次 (t^3) 函数的缓动曲线：加速到一半，然后减速
+    OutInCubic,//三次 (t^3) 函数的缓动曲线：减速到一半，然后加速
+    InQuart,//四次 (t^4) 函数的缓动曲线：从零速度加速
+    OutQuart,//四次 (t^4) 函数的缓动曲线：从零速度加速
+    InOutQuart,//四次 (t^4) 函数的缓动曲线：加速到一半，然后减速
+    OutInQuart,//四次 (t^4) 函数的缓动曲线：减速到一半，然后加速
+    InQuint,//五次 (t^5) 缓动的缓动曲线：从零速度加速
+    OutQuint,//五次 (t^5) 函数的缓动曲线：减速到零速度
+    InOutQuint,//五次 (t^5) 函数的缓动曲线：加速到一半，然后减速
+    OutInQuint,//五次 (t^5) 函数的缓动曲线：减速到一半，然后加速
+    InSine,//正弦 (sin(t)) 函数的缓动曲线：从零速度加速
+    OutSine,//正弦 (sin(t)) 函数的缓动曲线：减速到零速度
+    InOutSine,//正弦 (sin(t)) 函数的缓动曲线：加速到一半，然后减速
+    OutInSine,//正弦 (sin(t)) 函数的缓动曲线：减速到一半，然后加速
+    InExpo,//指数 (2^t) 函数的缓动曲线：从零速度加速
+    OutExpo,//指数 (2^t) 函数的缓动曲线：减速到零速度
+    InOutExpo,//指数 (2^t) 函数的缓动曲线：加速到一半，然后减速
+    OutInExpo,//指数 (2^t) 函数的缓动曲线：减速到一半，然后加速
+    InCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：从零速度加速。
+    OutCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：减速到零速度。
+    InOutCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：加速到一半，然后减速。
+    OutInCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：减速到一半，然后加速。
+    InElastic,//弹性（指数衰减正弦波）函数的缓动曲线：从零速度加速。峰值幅度可以通过幅度参数设置，衰减周期可以通过周期参数设置
+    OutElastic,//弹性（指数衰减正弦波）函数的缓动曲线：减速到零速度。峰值幅度可以通过幅度参数设置，衰减周期可以通过周期参数设置
+    InOutElastic,//弹性（指数衰减正弦波）函数的缓动曲线：加速到一半，然后减速
+    OutInElastic,//弹性（指数衰减正弦波）函数的缓动曲线：减速到一半，然后加速
+    InBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓动：从零速度加速
+    OutBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓动：减速到零速度
+    InOutBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓入/缓出：加速到中途，然后减速
+    OutInBack,//背部缓动曲线（超过三次缓动：(s+1)*t^3 - s*t^2）缓出/入：减速到一半，然后加速
+    InBounce,//反弹（指数衰减抛物线反弹）函数的缓动曲线：从零速度加速
+    OutBounce,//反弹（指数衰减抛物线反弹）函数的缓动曲线：从零速度减速
+    InOutBounce,//反弹的缓动曲线（指数衰减抛物线反弹）函数缓入/缓出：加速到一半，然后减速
+    OutInBounce,//弹跳缓动曲线（指数衰减抛物线弹跳）函数缓动/缓动：减速到一半，然后加速
+    BezierSpline,//允许使用三次贝塞尔样条定义自定义缓动曲线
+    TCBSpline,//允许使用 TCB 样条定义自定义缓动曲线
+    Custom//如果用户使用 setCustomType() 指定了自定义曲线类型，则返回此值。请注意，您不能使用此值调用 setType()，但 type() 可以返回它
+}
+```
+
+成员函数。
+
+```c++
+QEasingCurve(Type type = Linear);
+
+QVector<QPointF> toCubicSpline() const;//返回定义自定义缓动曲线的cubicBezierSpline。如果缓动曲线没有自定义贝塞尔缓动曲线，则列表为空
+qreal valueForProgress(qreal progress) const;//返回进度处缓动曲线的有效进度。虽然进度必须在 0 和 1 之间，但返回的有效进度可以超出这些范围。例如，QEasingCurve::InBack 将在函数的开头返回负值。
+
+//添加一段三次贝塞尔样条曲线以定义自定义缓动曲线。仅当 type() 为 QEasingCurve::BezierSpline 时才适用。请注意，样条曲线隐式地从 (0.0, 0.0) 开始，并且必须在 (1.0, 1.0) 结束才能成为有效的缓动曲线。 c1 和 c2 是用于绘制曲线的控制点。 endPoint 是曲线的端点。
+void addCubicBezierSegment(const QPointF &c1, const QPointF &c2, const QPointF &endPoint);
+
+//添加一段 TCB 贝塞尔样条曲线以定义自定义缓动曲线。仅当 type() 为 QEasingCurve::TCBSpline 时才适用。样条曲线必须明确地从 (0.0, 0.0) 开始，并且必须在 (1.0, 1.0) 结束才能成为有效的缓动曲线。张力 t 改变了切向量的长度。连续性 c 改变了切线之间变化的锐度。偏差 b 改变切向量的方向。 nextPoint 是样本位置。所有三个参数都在 -1 和 1 之间有效，并定义控制点的切线。如果所有三个参数都为 0，则生成的样条是 Catmull-Rom 样条。起点和终点的偏差始终为 -1 和 1，因为未定义外切线。
+void addTCBSegment(const QPointF &nextPoint, qreal t, qreal c, qreal b);
+
+void setAmplitude(qreal amplitude);//将幅度设置为幅度。这将设置反弹的幅度或弹性“弹簧”效果的幅度。数字越大，幅度越高
+qreal amplitude() const;
+
+void setCustomType(EasingFunction func);//设置用户在函数 func 中定义的自定义缓动曲线。该函数的签名是qreal myEasingFunction(qreal progress)，其中progress和返回值被认为是在0和1之间归一化的。（在某些情况下，返回值可能超出该范围）调用此函数后type()将返回 QEasingCurve::Custom。 func 不能为零。
+EasingFunction customType() const;
+
+void setOvershoot(qreal overshoot);//将过冲设置为过冲。0 不会产生过冲，默认值 1.70158 会产生 10% 的过冲
+qreal overshoot() const；
+
+void setPeriod(qreal period);//将期间设置为期间。设置较小的周期值将给出较高的曲线频率。一个大的周期会给它一个小的频率
+qreal period() const;
+
+void setType(Type type);//将缓动曲线的类型设置为 type
+Type type() const;
+```
 
 
-#### 8.1.3 QAbstactSeries
+
+### 8.2 基础类
+
+#### 8.2.1 QAbstactSeries
 
 抽象序列类。其继承关系如下所示。
 
@@ -9271,35 +9411,197 @@ graph LR
 二维图-->散点图
 ```
 
-下方只说明比较常用的序列类。
+这个枚举描述了系列的类型。
 
-#### 8.1.4 QLineSeries
+```c++
+enum QAbstractSeries::SeriesType{  
+    QAbstractSeries::SeriesTypeLine,
+    QAbstractSeries::SeriesTypeArea,
+    QAbstractSeries::SeriesTypeBar,
+    QAbstractSeries::SeriesTypeStackedBar,
+    QAbstractSeries::SeriesTypePercentBar,
+    QAbstractSeries::SeriesTypePie,
+    QAbstractSeries::SeriesTypeScatter,
+    QAbstractSeries::SeriesTypeSpline,
+    QAbstractSeries::SeriesTypeHorizontalBar,
+    QAbstractSeries::SeriesTypeHorizontalStackedBar,
+    QAbstractSeries::SeriesTypeHorizontalPercentBar,
+    QAbstractSeries::SeriesTypeBoxPlot,
+    QAbstractSeries::SeriesTypeCandlestick
+}
+```
 
-折线图类。
+成员函数如下。
 
-#### 8.1.5 QScatterSeries
+```c++
+bool attachAxis(QAbstractAxis *axis);//将由axis指定的轴附加到序列。如果轴连接成功，则返回 true，否则返回 false。
+bool detachAxis(QAbstractAxis *axis);//从序列中分离由轴指定的轴。如果轴分离成功，则返回 true，否则返回 false
+QList<QAbstractAxis *> attachedAxes();//返回附加到系列的轴列表。通常，一个 x 轴和一个 y 轴附加到一个系列，除了 QPieSeries，它没有附加任何轴。
+QChart *chart() const;//获取序列依附的图表
+void hide();//隐藏
+void show();//显示
+void setName(const QString &name);//序列名称
+QString name() const;
+void setOpacity(qreal opacity);//透明度
+qreal opacity() const;
+void setUseOpenGL(bool enable = true);//指定是否使用 OpenGL 加速绘制系列，仅 QLineSeries 和 QScatterSeries 支持使用 OpenGL 进行加速
+bool useOpenGL() const;
+void setVisible(bool visible = true);//可见性
+bool isVisible() const;
+virtual SeriesType type() const = 0;//自定义新序列必须重载此函数
+```
 
-散点图类。
+信号函数。
 
-#### 8.1.6 QBarSeries
+```c++
+void nameChanged();
+void opacityChanged();
+void useOpenGLChanged();
+void visibleChanged();
+```
 
-柱状图类。
+#### 8.2.2 QXYSeries
 
-#### 8.1.7 QPieSeries
+##### 成员函数
 
-饼图类。
+成员函数如下。
 
-#### 8.1.8 QAreaSeries
+```c++
+void append(qreal x, qreal y);//给序列添加点
+void append(const QPointF &point);
+void append(const QList<QPointF> &points);
+QXYSeries &operator<<(const QPointF &point);
+QXYSeries &operator<<(const QList<QPointF> &points);
 
-面积图类。
+void clear();//清空所有点
+int count() const;//返回系列中的数据点数
+void insert(int index, const QPointF &point);//插入点
 
-#### 8.1.9 QSplineSeries
+const QPointF &at(int index) const;//访问点
+QList<QPointF> points() const;//返回所有点
+QVector<QPointF> pointsVector() const;//以Vector形式返回所有点
 
-光滑曲线图类。
+void remove(qreal x, qreal y);// 移除点
+void remove(const QPointF &point);
+void remove(int index);
+void removePoints(int index, int count);
 
-#### 8.1.10 QAbstractAxis
+void replace(qreal oldX, qreal oldY, qreal newX, qreal newY);//替换点
+void replace(const QPointF &oldPoint, const QPointF &newPoint);
+void replace(int index, qreal newX, qreal newY);
+void replace(int index, const QPointF &newPoint);
+void replace(QList<QPointF> points);
+void replace(QVector<QPointF> points);
 
-抽象坐标轴类，封装了坐标轴的刻度、标签、网格线和标题等属性。
+virtual void setBrush(const QBrush &brush);//设置画刷
+QBrush brush() const;
+virtual void setColor(const QColor &color);//设置颜色
+virtual QColor color() const;
+virtual void setPen(const QPen &pen);//设置画笔(width+brush+color)
+QPen pen() const;
+
+void setPointLabelsClipping(bool enabled = true);//此属性保存数据点标签的剪辑。此属性默认为 true。启用剪切时，绘图区域边缘的标签会被剪切。
+bool pointLabelsClipping() const;
+void setPointLabelsColor(const QColor &color);//此属性保存用于数据点标签的颜色。默认情况下，颜色是标签主题中定义的画笔颜色。
+QColor pointLabelsColor() const;
+void setPointLabelsFont(const QFont &font);//此属性保存用于数据点标签的字体。
+QFont pointLabelsFont() const;
+void setPointLabelsFormat(const QString &format);//此属性保存用于显示带有数据点的标签的格式。（@xPoint，@yPoint）或（@yPoint）
+QString pointLabelsFormat() const;
+void setPointLabelsVisible(bool visible = true);//此属性保存数据点标签的可见性。
+bool pointLabelsVisible() const;
+void setPointsVisible(bool visible = true);//该属性保存数据点是否可见并且应该被绘制。
+bool pointsVisible() const;
+```
+
+##### 信号函数
+
+```c++
+// 某个序列点被鼠标单击、双击、按压和释放时的信号
+void clicked(const QPointF &point);
+void doubleClicked(const QPointF &point);
+void pressed(const QPointF &point);
+void released(const QPointF &point);
+void colorChanged(QColor color);//序列颜色改变发射信号
+void penChanged(const QPen &pen);// 序列画笔画笔改变发射信号
+void hovered(const QPointF &point, bool state);//当鼠标悬停在图表中的点上时会发出此信号。当鼠标移到该点上时，状态变为真，当鼠标再次移开时，变为假（常用于饼图的分块爆炸效果）
+// 数据点和数据点标签的一些信号
+void pointLabelsClippingChanged(bool clipping);
+void pointLabelsColorChanged(const QColor &color);
+void pointLabelsFontChanged(const QFont &font);
+void pointLabelsFormatChanged(const QString &format);
+void pointLabelsVisibilityChanged(bool visible);
+void pointAdded(int index);
+void pointRemoved(int index);
+void pointReplaced(int index);
+void pointsRemoved(int index, int count);
+void pointsReplaced();
+```
+
+#### 8.2.3 QAbstractBarSeries
+
+QAbstractBarSeries 类是所有条形系列类的抽象父类。
+在条形图中，条形定义为包含每个类别的一个数据值的条形集。条形的位置由类别指定，其高度由数据值指定。包含多个条形集的条形系列将属于同一类别的条形组合在一起。条形图的显示方式由选择用于创建条形图的此类的子类确定。
+如果使用 QValueAxis 而不是 QBarCategoryAxis 作为主条轴，则条将围绕类别的索引值进行分组。
+
+这个枚举值描述了数据值标签的位置：
+
+```c++
+enum QAbstractBarSeries::LabelsPosition{
+    QAbstractBarSeries::LabelsCenter,//标签位于栏的中心
+    QAbstractBarSeries::LabelsInsideEnd,//标签位于顶部的栏内
+    QAbstractBarSeries::LabelsInsideBase,//标签位于底部的栏内
+    QAbstractBarSeries::LabelsOutsideEnd//标签位于顶部栏外
+}
+```
+
+成员函数，含义类似，不再赘述。
+
+```c++
+bool append(QBarSet *set);
+bool append(QList<QBarSet *> sets);
+bool insert(int index, QBarSet *set);
+bool remove(QBarSet *set);
+bool take(QBarSet *set);
+QList<QBarSet *> barSets() const;
+
+void clear();
+int count() const;
+
+void setBarWidth(qreal width);
+qreal barWidth() const;
+void setLabelsAngle(qreal angle);
+qreal labelsAngle() const;
+void setLabelsFormat(const QString &format);
+QString labelsFormat() const;
+void setLabelsPosition(QAbstractBarSeries::LabelsPosition position);
+QAbstractBarSeries::LabelsPosition labelsPosition() const;
+void setLabelsVisible(bool visible = true);
+bool isLabelsVisible() const;
+```
+
+信号函数。
+
+```c++
+void barsetsAdded(QList<QBarSet *> sets);
+void barsetsRemoved(QList<QBarSet *> sets);
+void countChanged();
+void hovered(bool status, int index, QBarSet *barset);
+void labelsAngleChanged(qreal angle);
+void labelsFormatChanged(const QString &format);
+void labelsPositionChanged(QAbstractBarSeries::LabelsPosition position);
+void labelsVisibleChanged();
+void clicked(int index, QBarSet *barset);
+void doubleClicked(int index, QBarSet *barset);
+void pressed(int index, QBarSet *barset);
+void released(int index, QBarSet *barset);
+```
+
+#### 8.2.4 QAbstractAxis
+
+QAbstractAxis 类是用于专用轴类的基类。
+每个系列可以绑定一个或多个水平和垂直轴，但不支持混合轴类型会导致不同的域，例如在同一方向上指定 QValueAxis 和 QLogValueAxis。
+可以单独控制各种轴元素的属性和可见性，例如轴线、标题、标签、网格线和阴影。
 
 坐标轴分为数值、对数、类别、时间日期坐标轴，也有分组数值最标轴。
 
@@ -9325,81 +9627,1008 @@ graph LR
 抽象坐标轴-->时间日期坐标轴
 ```
 
-#### 8.1.11 QValueAxis
+此枚举类型指定轴对象的类型。
 
-数值坐标轴类。
+```c++
+enum QAbstractAxis::AxisType}
+    QAbstractAxis::AxisTypeNoAxis,
+    QAbstractAxis::AxisTypeValue,
+    QAbstractAxis::AxisTypeBarCategory,
+    QAbstractAxis::AxisTypeCategory,
+    QAbstractAxis::AxisTypeDateTime,
+    QAbstractAxis::AxisTypeLogValue
+}
+```
 
-#### 8.1.12 QCategoryAxis
+成员函数。
 
-分组数值坐标轴类。
+```c++
+Qt::Alignment alignment() const;//此属性保存轴的对齐方式
+Qt::Orientation orientation() const;//返回轴的方向（垂直或水平）
+//坐标轴隐藏、显示、是否反转、范围
+void hide();
+void show();
+void setVisible(bool visible = true);
+bool isVisible() const;
+void setMax(const QVariant &max);
+void setMin(const QVariant &min);
+void setRange(const QVariant &min, const QVariant &max);
+void setReverse(bool reverse = true);
+bool isReverse() const;
+// 设置轴线画笔、颜色、可见性
+void setLinePen(const QPen &pen);
+void setLinePenColor(QColor color);
+void setLineVisible(bool visible = true);
+QPen linePen() const;
+QColor linePenColor() const;
+bool isLineVisible() const;
+// 设置次网格线颜色、画笔和可见性
+void setMinorGridLineColor(const QColor &color);
+void setMinorGridLinePen(const QPen &pen);
+void setMinorGridLineVisible(bool visible = true);
+QColor minorGridLineColor();
+QPen minorGridLinePen() const;
+bool isMinorGridLineVisible() const;
+// 设置主网格线颜色、画笔、可见性
+void setGridLineColor(const QColor &color);
+void setGridLinePen(const QPen &pen);
+void setGridLineVisible(bool visible = true);
+QColor gridLineColor();
+QPen gridLinePen() const;
+bool isGridLineVisible() const;
+// 设置标签角度、颜色、画刷、字体、可见性
+void setLabelsAngle(int angle);
+void setLabelsBrush(const QBrush &brush);
+void setLabelsColor(QColor color);
+void setLabelsFont(const QFont &font);
+void setLabelsVisible(bool visible = true);
+int labelsAngle() const;
+QBrush labelsBrush() const;
+QColor labelsColor() const;
+QFont labelsFont() const;
+bool labelsVisible() const;
+// 设置阴影画刷、画笔、颜色、可见性
+void setShadesBorderColor(QColor color);
+void setShadesBrush(const QBrush &brush);
+void setShadesColor(QColor color);
+void setShadesPen(const QPen &pen);
+void setShadesVisible(bool visible = true);
+QColor shadesBorderColor() const;
+QBrush shadesBrush() const;
+QColor shadesColor() const;
+QPen shadesPen() const;
+bool shadesVisible() const;
+// 设置轴标题颜色、字体、文字和可见性
+void setTitleBrush(const QBrush &brush);
+void setTitleFont(const QFont &font);
+void setTitleText(const QString &title);
+void setTitleVisible(bool visible = true);
+QBrush titleBrush() const;
+QFont titleFont() const;
+QString titleText() const;
+bool isTitleVisible() const;
+// 轴类型
+virtual AxisType type() const = 0;
+```
 
-#### 8.1.13 QLogValueAxis
+信号函数。
 
-对数坐标轴类。
+```c++
+void reverseChanged(bool reverse);
+void colorChanged(QColor color);
+void visibleChanged(bool visible);
+void gridLineColorChanged(const QColor &color);
+void gridLinePenChanged(const QPen &pen);
+void gridVisibleChanged(bool visible);
+void labelsAngleChanged(int angle);
+void labelsBrushChanged(const QBrush &brush);
+void labelsColorChanged(QColor color);
+void labelsFontChanged(const QFont &font);
+void labelsVisibleChanged(bool visible);
+void linePenChanged(const QPen &pen);
+void lineVisibleChanged(bool visible);
+void minorGridLineColorChanged(const QColor &color);
+void minorGridLinePenChanged(const QPen &pen);
+void minorGridVisibleChanged(bool visible);
+void shadesBorderColorChanged(QColor color);
+void shadesBrushChanged(const QBrush &brush);
+void shadesColorChanged(QColor color);
+void shadesPenChanged(const QPen &pen);
+void shadesVisibleChanged(bool visible);
+void titleBrushChanged(const QBrush &brush);
+void titleFontChanged(const QFont &font);
+void titleTextChanged(const QString &text);
+void titleVisibleChanged(bool visible);
+```
 
-#### 8.1.14 QBarCategoryAxis
-
-类别坐标轴类。
-
-#### 8.1.15 QDateTimeAxis
-
-时间日期轴类。
-
-#### 8.1.16 QLegend
+#### 8.2.5 QLegend
 
 图例类。
 
-#### 8.1.17 QLegendMarker
+QLegend 类显示图表的图例。
+图例是显示图表图例的图形对象。当系列更改时，图例状态由 QChart 更新。默认情况下，图例附加到图表，但可以将其分离以使其独立于图表布局。图例对象无法创建或删除，但可以通过 QChart 类引用。
+
+此枚举描述了渲染图例标记项时使用的形状。
+
+```c++
+enum QLegend::MarkerShape{
+    QLegend::MarkerShapeDefault,//由 QLegend 确定的默认形状用于标记。仅单个 QLegendMarker 项目支持此值
+    QLegend::MarkerShapeRectangle,//使用矩形标记。标记大小由字体大小决定
+    QLegend::MarkerShapeCircle,//使用圆形标记。标记大小由字体大小决定
+    QLegend::MarkerShapeFromSeries//标记形状由系列决定。在散点系列的情况下，图例标记看起来像一个散点，并且与该点的大小相同。对于直线或样条系列，图例标记看起来像直线的一小段。对于其他系列类型，显示矩形标记
+}
+```
+
+成员函数。
+
+```c++
+void setAlignment(Qt::Alignment alignment);//图例如何与图表对齐，Qt::AlignTop, Qt::AlignBottom, Qt::AlignLeft, Qt::AlignRight
+Qt::Alignment alignment() const;
+void attachToChart();//将图例附加到图表。图表可能会调整图例的布局。
+void detachFromChart();//从图表中分离图例。图表将不再调整图例的布局
+bool isAttachedToChart();// 如果图例附加到图表，则返回 true
+// 返回图例中的标记列表，可以通过指定为其返回标记的系列来过滤列表
+QList<QLegendMarker *> markers(QAbstractSeries *series = Q_NULLPTR) const;
+// 设置背景是否可见、边界颜色、画刷、字体、画笔、颜色
+void setBackgroundVisible(bool visible = true);
+void setBorderColor(QColor color);
+void setBrush(const QBrush &brush);
+void setColor(QColor color);
+void setFont(const QFont &font);
+void setPen(const QPen &pen);
+bool isBackgroundVisible() const;
+QColor borderColor();
+QBrush brush() const;
+QColor color();
+QFont font() const;
+QPen pen() const;
+// 设置标签的画刷、颜色、形状、标志位、提示，标志是否反转
+void setLabelBrush(const QBrush &brush);
+void setLabelColor(QColor color);
+void setMarkerShape(MarkerShape shape);
+void setReverseMarkers(bool reverseMarkers = true);
+void setShowToolTips(bool show);
+QBrush labelBrush() const;
+QColor labelColor() const;
+MarkerShape markerShape() const;
+bool reverseMarkers();
+bool showToolTips() const;
+```
+
+信号函数。
+
+```c++
+void backgroundVisibleChanged(bool visible);
+void borderColorChanged(QColor color);
+void colorChanged(QColor color);
+void fontChanged(QFont font);
+void labelColorChanged(QColor color);
+void markerShapeChanged(MarkerShape shape);
+void reverseMarkersChanged(bool reverseMarkers);
+void showToolTipsChanged(bool showToolTips);
+```
+
+#### 8.2.6 QLegendMarker
 
 可生成类似于QCheckBox的组件，在图例上点击序列标记就可以控制序列是否显示。
 
-#### 8.1.18 QEasingCurve
+QLegendMarker 类是一个抽象对象，可用于访问图例中的标记。**图例标记由图标和标签组成**。图标颜色对应于用于绘制系列的颜色，标签显示系列的名称（或饼系列的切片标签或条形系列的条形集的标签）。图例标记始终与一个系列、切片或条形集相关。
 
+图例标记对象的类型。
 
+```c++
+enum QLegendMarker::LegendMarkerType{
+    QLegendMarker::LegendMarkerTypeArea,//区域系列的图例标记
+    QLegendMarker::LegendMarkerTypeBar,//条形集的图例标记
+    QLegendMarker::LegendMarkerTypePie,//饼图的图例标记
+    QLegendMarker::LegendMarkerTypeXY,//线、样条线或散点系列的图例标记
+    QLegendMarker::LegendMarkerTypeBoxPlot,//箱线图系列的图例标记
+    QLegendMarker::LegendMarkerTypeCandlestick//烛台系列的图例标记
+}
+```
 
-#### 8.1.19 QPolarChart
+成员函数。
 
+```c++
+virtual QAbstractSeries *series() = 0;//返回指向与此图例标记相关的曲线指针。图例标记始终与系列相关
+virtual LegendMarkerType type() = 0;
 
+void setBrush(const QBrush &brush);
+void setFont(const QFont &font);
+void setLabel(const QString &label);
+void setLabelBrush(const QBrush &brush);
+void setPen(const QPen &pen);
+void setShape(QLegend::MarkerShape shape);
+void setVisible(bool visible);
+QBrush brush() const;
+QFont font() const;
+bool isVisible() const;
+QString label() const;
+QBrush labelBrush() const;
+QPen pen() const;
+QLegend::MarkerShape shape() const;
+```
 
-### 8.3 其它图表类
+### 8.3 序列类
 
-#### 8.3.1 QBarSeries
+#### 8.3.1 QLineSeries
 
-普通柱状图。
+折线图类。
 
-#### 8.3.2 QStackedBarSeries
+```c++
+QLineSeries(QObject *parent = Q_NULLPTR);
+```
 
-堆叠柱状图。
+如果定义自己的折线图类，就必须重定义type()函数。
 
-#### 8.3.3 QPercentBarSeries
+```c++
+QAbstractSeries::SeriesType QLineSeries::type() const;
+```
+
+QLineSeries 类以折线图的形式呈现数据。
+折线图用于将信息显示为由直线连接的一系列数据点。一个使用的例子如下。
+
+```c++
+QLineSeries* series = new QLineSeries();
+series->append(0, 6);
+series->append(2, 4);
+...
+chart->addSeries(series);
+```
+
+#### 8.3.2 QScatterSeries
+
+散点图类。
+
+此枚举值描述了渲染标记项时使用的形状。（就是散点的样式）
+
+```c++
+enum QScatterSeries::MarkerShape{
+    QScatterSeries::MarkerShapeCircle,//圆形
+    QScatterSeries::MarkerShapeRectangle//矩形
+}
+```
+
+成员函数。
+
+```c++
+QScatterSeries(QObject *parent = Q_NULLPTR);
+QBrush brush() const;
+// 设置边界颜色、标记形状和大小
+void setBorderColor(const QColor &color);
+QColor borderColor() const;
+void setMarkerShape(MarkerShape shape);
+MarkerShape markerShape() const;
+void setMarkerSize(qreal size);
+qreal markerSize() const;
+```
+
+自定义类需要重定义的函数。
+
+```c++
+virtual QColor color() const;
+virtual void setBrush(const QBrush &brush);
+virtual void setColor(const QColor &color);
+virtual void setPen(const QPen &pen);
+virtual QAbstractSeries::SeriesType type() const;
+```
+
+#### 8.3.3 QSplineSeries
+
+光滑曲线图类。
+
+```c++
+QSplineSeries(QObject *parent = Q_NULLPTR);
+virtual QAbstractSeries::SeriesType type() const;
+```
+
+QSplineSeries 类将数据显示为样条图。
+样条系列存储 QPainterPath 绘制样条所需的数据点和线段控制点。数据变化时会自动计算控制点。该算法计算点，以便可以绘制法线样条。
+
+使用例子。
+
+```c++
+QSplineSeries* series = new QSplineSeries();
+series->append(0, 6);
+series->append(2, 4);
+...
+chart->addSeries(series);
+```
+
+#### 8.3.4 QBoxPlotSeries
+
+火柴盒图。
+
+QBoxPlotSeries 类以盒须图的形式呈现数据。
+箱线图系列充当盒须项目的容器。来自多个系列的项目根据其索引值分组。
+QBarCategoryAxis 类用于将类别添加到图表的轴。类别标签必须是唯一的。如果为多个盒须项定义了相同的类别标签，则仅绘制第一个。
+
+成员函数。
+
+```c++
+bool append(QBoxSet *set);
+bool append(QList<QBoxSet *> sets);
+bool insert(int index, QBoxSet *set);
+bool take(QBoxSet *set);//从系列中获取由 set 指定的盒须项目。不删除项目
+bool remove(QBoxSet *set);
+QList<QBoxSet *> boxSets() const;
+
+void setBoxOutlineVisible(bool visible);//此属性保存框轮廓的可见性
+bool boxOutlineVisible();
+void setBoxWidth(qreal width);
+qreal boxWidth();
+void setBrush(const QBrush &brush);
+QBrush brush() const;
+void setPen(const QPen &pen);
+QPen pen() const;
+void clear();
+int count() const;//返回箱线图系列中盒须项的数量
+```
+
+信号函数。
+
+```c++
+void clicked(QBoxSet *boxset);
+void pressed(QBoxSet *boxset);
+void released(QBoxSet *boxset);
+void doubleClicked(QBoxSet *boxset);
+
+void boxOutlineVisibilityChanged();
+void boxWidthChanged();
+void boxsetsAdded(QList<QBoxSet *> sets);
+void boxsetsRemoved(QList<QBoxSet *> sets);
+
+void brushChanged();
+void countChanged();
+void penChanged();
+
+void hovered(bool status, QBoxSet *boxset);
+```
+
+#### 8.3.5 QBarSeries
+
+柱状图类。
+
+QBarSeries 类将一系列数据显示为按类别分组的垂直条。
+此类将数据绘制为一系列按类别分组的垂直条，每个类别中每个类别都有一个条来自添加到该系列的每个条集。
+
+成员函数和信号函数基本都继承自QAbstractBarSeries。
+
+#### 8.3.6 QHorizontalBarSeries
+
+水平柱状图类。
+
+QHorizontalBarSeries 类将一系列数据显示为按类别分组的水平条。
+此类将数据绘制为一系列按类别分组的水平条，每个类别中每个类别一个条来自添加到该系列的每个条集。
+
+成员函数和信号函数基本都继承自QAbstractBarSeries。
+
+#### 8.3.7 QHorizontalPercentBarSeries
+
+水平百分比柱状图类。
+
+QHorizontalPercentBarSeries 类将一系列分类数据显示为每个类别的百分比。
+此类将数据绘制为一系列大小均匀的水平堆叠条，每个类别一个条。添加到系列中的每个条形集都会为每个堆叠条形贡献一个段。段大小对应于段值与堆栈中所有段的总值相比的百分比。不绘制零值条。
+
+成员函数和信号函数基本都继承自QAbstractBarSeries。
+
+#### 8.3.8 QHorizontalStackedBarSeries
+
+水平堆叠柱状图类。
+
+QHorizontalStackedBarSeries 类将一系列数据显示为水平堆叠的条形，每个类别一个条形。添加到系列中的每个条形集都会为每个堆叠条形贡献一个段。
+
+成员函数和信号函数基本都继承自QAbstractBarSeries。
+
+#### 8.3.9 QPercentBarSeries
 
 百分比柱状图。
 
-#### 8.3.4 QPieSeries
+QPercentBarSeries 类将一系列分类数据表示为每个类别的百分比。
+此类将数据绘制为一系列大小一致的垂直堆叠条形图，每个类别一个条形图。添加到系列中的每个条形集都会为每个堆叠条形贡献一个段。段大小对应于段值与堆栈中所有段的总值相比的百分比。不绘制零值条。
 
-饼图。
+成员函数和信号函数基本都继承自QAbstractBarSeries。
 
-#### 8.3.5 QScatterSeries
+#### 8.3.10 QStackedBarSeries
 
-散点图。
+堆叠柱状图。
 
-#### 8.3.6 QSplineSeries
+QStackedBarSeries 类将一系列数据显示为垂直堆叠的条形，每个类别一个条形。
+添加到系列中的每个条形集都会为每个堆叠条形贡献一个段。
 
-光滑散点图。
+成员函数和信号函数基本都继承自QAbstractBarSeries。
 
-### 8.4 关联数据类型
+#### 8.3.11 QPieSeries
 
-#### 8.4.1 QMargins
+饼图类。
 
+QPieSeries 类以饼图的形式呈现数据。
+饼系列由定义为 QPieSlice 对象的切片组成。切片可以具有任何值，因为 QPieSeries 对象计算切片与系列中所有切片的总和的百分比，以确定图表中切片的实际大小。
+图表上的饼图大小和位置通过使用范围从 0.0 到 1.0 的相对值来控制。这些与实际的图表矩形有关。默认情况下，饼图被定义为一个完整的饼图。可以通过为系列设置起始角度和角度跨度来创建部分饼图。一个完整的派是 360 度，其中 0 是在 12 点。
 
+成员函数。
 
-#### 8.4.2 QBarSet
+```c++
+bool append(QPieSlice *slice);
+bool append(QList<QPieSlice *> slices);
+QPieSlice *append(QString label, qreal value);
+QPieSeries &operator<<(QPieSlice *slice);
+bool remove(QPieSlice *slice);
+bool insert(int index, QPieSlice *slice);
+bool take(QPieSlice *slice);
+QList<QPieSlice *> slices() const;
 
+void clear();
+int count() const;//返回此系列中的切片数
+bool isEmpty() const;
+qreal sum() const;//该属性保存所有切片的总和
 
+void setHoleSize(qreal holeSize);//此属性保存甜甜圈孔的大小
+qreal holeSize() const;
 
-#### 8.4.3 QPieSlice
+void setHorizontalPosition(qreal relativePosition);//此属性保存饼图水平位置
+qreal horizontalPosition() const;
 
+void setLabelsPosition(QPieSlice::LabelPosition position);//将所有切片标签的位置设置为位置
+void setLabelsVisible(bool visible = true);//将所有切片标签的可见性设置为可见
 
+void setPieEndAngle(qreal angle);//此属性保存饼图的起始和终止角度
+qreal pieEndAngle() const;
+void setPieStartAngle(qreal startAngle);
+qreal pieStartAngle() const;
+
+void setPieSize(qreal relativeSize);//此属性保存饼图大小
+qreal pieSize() const;
+
+void setVerticalPosition(qreal relativePosition);//此属性保存饼图的垂直位置
+qreal verticalPosition() const;
+```
+
+信号函数。
+
+```c++
+void hovered(QPieSlice *slice, bool state);
+void clicked(QPieSlice *slice);
+void doubleClicked(QPieSlice *slice);
+void pressed(QPieSlice *slice);
+void released(QPieSlice *slice);
+void removed(QList<QPieSlice *> slices);
+void added(QList<QPieSlice *> slices);
+void countChanged();
+void sumChanged();
+```
+
+#### 8.3.12 QAreaSeries
+
+面积图类。
+
+成员函数。
+
+```c++
+QAreaSeries(QLineSeries *upperSeries, QLineSeries *lowerSeries = Q_NULLPTR);
+
+void setBorderColor(const QColor &color);
+QColor borderColor() const;
+void setPen(const QPen &pen);
+void setBrush(const QBrush &brush);
+void setColor(const QColor &color);
+QBrush brush() const;
+QColor color() const;
+QPen pen() const;
+
+void setLowerSeries(QLineSeries *series);//设置要用作面积图下/上序列。如果上系列为空，则不绘制面积图，即使它有下系列
+QLineSeries *lowerSeries() const;
+void setUpperSeries(QLineSeries *series)
+QLineSeries *upperSeries() const;
+
+void setPointLabelsClipping(bool enabled = true);
+bool pointLabelsClipping() const;
+void setPointLabelsColor(const QColor &color);
+QColor pointLabelsColor() const;
+void setPointLabelsFont(const QFont &font);
+QFont pointLabelsFont() const;
+void setPointLabelsFormat(const QString &format);
+QString pointLabelsFormat() const;
+void setPointLabelsVisible(bool visible = true);
+bool pointLabelsVisible() const;
+void setPointsVisible(bool visible = true);
+bool pointsVisible() const;
+```
+
+信号函数。
+
+```c++
+void clicked(const QPointF &point);
+void doubleClicked(const QPointF &point);
+void pressed(const QPointF &point);
+void released(const QPointF &point);
+void hovered(const QPointF &point, bool state);
+void colorChanged(QColor color);
+void borderColorChanged(QColor color);
+void pointLabelsClippingChanged(bool clipping);
+void pointLabelsColorChanged(const QColor &color);
+void pointLabelsFontChanged(const QFont &font);
+void pointLabelsFormatChanged(const QString &format);
+void pointLabelsVisibilityChanged(bool visible);
+```
+
+### 8.4 坐标轴类
+
+#### 8.4.1 QValueAxis
+
+数值坐标轴类。
+
+QValueAxis 类将值添加到图表的轴。
+可以设置值轴以显示带有刻度线、网格线和阴影的轴线。轴上的值绘制在刻度线的位置。
+以下示例代码说明了如何使用 QValueAxis 类：
+
+```c++
+QChartView *chartView = new QChartView;
+QLineSeries *series = new QLineSeries;
+// ...
+chartView->chart()->addSeries(series);
+
+QValueAxis *axisX = new QValueAxis;
+axisX->setRange(10, 20.5);
+axisX->setTickCount(10);
+axisX->setLabelFormat("%.2f");
+chartView->chart()->setAxisX(axisX, series);
+```
+
+成员函数。
+
+```c++
+void setMax(qreal max);
+void setMin(qreal min);
+void setRange(qreal min, qreal max);
+qreal max() const;
+qreal min() const;
+void setLabelFormat(const QString &format);
+QString labelFormat() const;
+void setMinorTickCount(int count);
+int minorTickCount() const;
+void setTickCount(int count);
+int tickCount() const;
+```
+
+槽函数。
+
+```c++
+void QValueAxis::applyNiceNumbers();//修改轴上刻度线的当前范围和数量，使其看起来不错。该算法认为可以表示为 1*10^n、2*10^n 或 5*10^n 形式的数字是不错的数字。这些数字用于设置刻度线的间距。
+```
+
+信号函数。
+
+```c++
+void labelFormatChanged(const QString &format);
+void maxChanged(qreal max);
+void minChanged(qreal min);
+void minorTickCountChanged(int minorTickCount);
+void rangeChanged(qreal min, qreal max);
+void tickCountChanged(int tickCount);
+```
+
+#### 8.4.2 QCategoryAxis
+
+分组数值坐标轴类。
+
+QCategoryAxis 类将命名范围放在轴上。
+此类可用于通过添加标记类别来解释基础数据。与 QBarCategoryAxis 不同，QCategoryAxis 允许自由指定类别范围的宽度。
+关于如何使用 QCategoryAxis 的示例代码：
+
+```c++
+QChartView *chartView = new QChartView;
+QLineSeries *series = new QLineSeries;
+// ...
+chartView->chart()->addSeries(series);
+
+QCategoryAxis *axisY = new QCategoryAxis;
+axisY->setMin(0);
+axisY->setMax(52);
+axisY->setStartValue(15);
+axisY->append("First", 20);
+axisY->append("Second", 37);
+axisY->append("Third", 52);
+chartView->chart()->setAxisY(axisY, series);
+```
+
+这个枚举描述了类别标签的位置。
+
+```c++
+enum QCategoryAxis::AxisLabelsPosition{
+    QCategoryAxis::AxisLabelsPositionCenter,//标签以类别为中心
+    QCategoryAxis::AxisLabelsPositionOnValue//标签位于类别的上限
+}
+```
+
+成员函数。
+
+```c++
+int count() const;//返回类别数
+void append(const QString &categoryLabel, qreal categoryEndValue);//使用标签 categoryLabel 将新类别附加到轴。类别标签必须是唯一的。 categoryEndValue 指定类别的上限。它必须大于上一个类别的高端限制。否则，该方法返回而不添加新类别。
+void remove(const QString &categoryLabel);//从轴中删除由标签 categoryLabel 指定的类别
+void replaceLabel(const QString &oldLabel, const QString &newLabel);//将 oldLabel 指定的现有类别标签替换为 newLabel。如果旧标签不存在，则该方法返回而不进行任何更改
+QStringList categoriesLabels();//返回类别标签的列表
+
+void setLabelsPosition(QCategoryAxis::AxisLabelsPosition position);//此属性保存类别标签的位置。当定位在值上时，轴开头和结尾的标签可能会与其他轴的标签重叠
+QCategoryAxis::AxisLabelsPosition labelsPosition() const;
+
+void setStartValue(qreal min);
+qreal startValue(const QString &categoryLabel = QString()) const;//返回由 categoryLabel 指定的类别的下限
+qreal endValue(const QString &categoryLabel) const;//返回由 categoryLabel 指定的类别的上限
+```
+
+信号函数。
+
+```c++
+void categoriesChanged();
+void labelsPositionChanged(QCategoryAxis::AxisLabelsPosition position);
+```
+
+#### 8.4.3 QLogValueAxis
+
+对数坐标轴类。
+
+QLogValueAxis 类向图表的轴添加对数刻度。
+对数刻度是基于数量级的非线性刻度，因此轴上的每个刻度线都是前一个刻度线乘以一个值。
+注意：如果 QLogValueAxis 附加到具有一个或多个在相关维度上具有负值或零值的点的系列，则根本不会绘制该系列。这在使用 XYModelMappers 时尤其重要，因为模型中的空单元格通常包含零值。
+
+成员函数。
+
+```c++
+void setBase(qreal base);//此属性保存对数的底。该值必须大于 0 且不能等于 1。
+qreal base() const;
+
+void setRange(qreal min, qreal max);
+void setMax(qreal max);
+void setMin(qreal min);
+qreal max() const;
+qreal min() const;
+
+void setLabelFormat(const QString &format);
+QString labelFormat() const;
+void setMinorTickCount(int minorTickCount);
+int minorTickCount() const;
+int tickCount() const;
+```
+
+信号函数。
+
+```c++
+void baseChanged(qreal base);
+void labelFormatChanged(const QString &format);
+void maxChanged(qreal max);
+void minChanged(qreal min);
+void minorTickCountChanged(int minorTickCount);
+void rangeChanged(qreal min, qreal max);
+void tickCountChanged(int tickCount);
+```
+
+#### 8.4.4 QBarCategoryAxis
+
+类别坐标轴类。
+
+QBarCategoryAxis 类将类别添加到图表的轴。
+QBarCategoryAxis 可以设置为显示带有刻度线、网格线和阴影的轴线。类别在刻度之间绘制。它也可以与线条系列一起使用，如线条和条形图示例所示。
+以下代码说明了如何使用 QBarCategoryAxis：
+
+```c++
+QChartView *chartView = new QChartView;
+QBarSeries *series = new QBarSeries;
+// ...
+chartView->chart()->addSeries(series);
+chartView->chart()->createDefaultAxes();
+
+QBarCategoryAxis *axisX = new QBarCategoryAxis;
+QStringList categories;
+categories << "Jan" << "Feb" << "Mar" << "Apr" << "May" << "Jun";
+axisX->append(categories);
+axisX->setRange("Feb", "May");
+chartView->chart()->setAxisX(axisX, series);
+```
+
+成员函数。
+
+```c++
+void append(const QStringList &categories);
+void append(const QString &category);
+void insert(int index, const QString &category);
+void remove(const QString &category);
+void replace(const QString &oldCategory, const QString &newCategory);
+QString at(int index) const;
+void setCategories(const QStringList &categories);
+QStringList categories();
+void clear();
+int count() const;
+void setMax(const QString &max);
+void setMin(const QString &min);
+void setRange(const QString &minCategory, const QString &maxCategory);
+QString max() const;
+QString min() const;
+```
+
+信号函数。
+
+```c++
+void categoriesChanged();
+void countChanged();
+void maxChanged(const QString &max);
+void minChanged(const QString &min);
+void rangeChanged(const QString &min, const QString &max);
+```
+
+#### 8.4.5 QDateTimeAxis
+
+时间日期轴类。
+
+QDateTimeAxis 类将日期和时间添加到图表的轴。
+QDateTimeAxis 可以设置为显示带有刻度线、网格线和阴影的轴线。可以通过设置适当的 DateTime 格式来配置标签。 QDateTimeAxis 适用于从公元前 4714 年到公元 287396 年的日期。有关与 QDateTime 相关的其他限制，请参阅 QDateTime 文档。
+注意：QDateTimeAxis 在将 qreal 定义为浮点数的平台上被禁用。
+
+QDateTimeAxis 可以与任何 QXYSeries 一起使用。要将数据点添加到系列中，请使用 QDateTime::toMSecsSinceEpoch()：
+
+```c++
+QLineSeries *series = new QLineSeries;
+
+QDateTime xValue;
+xValue.setDate(QDate(2012, 1 , 18));
+xValue.setTime(QTime(9, 34));
+qreal yValue = 12;
+series->append(xValue.toMSecsSinceEpoch(), yValue);
+
+xValue.setDate(QDate(2013, 5 , 11));
+xValue.setTime(QTime(11, 14));
+qreal yValue = 22;
+series->append(xValue.toMSecsSinceEpoch(), yValue);
+```
+
+以下代码片段说明了将系列添加到图表并设置 QDateTimeAxis：
+
+```c++
+QChartView *chartView = new QChartView;
+chartView->chart()->addSeries(series);
+
+// ...
+QDateTimeAxis *axisX = new QDateTimeAxis;
+axisX->setFormat("dd-MM-yyyy h:mm");
+chartView->chart()->setAxisX(axisX, series);
+```
+
+成员函数。
+
+```c++
+QDateTime max() const;
+QDateTime min() const;
+void setMax(QDateTime max);
+void setMin(QDateTime min);
+void setRange(QDateTime min, QDateTime max);
+void setTickCount(int count);
+int tickCount() const;
+void setFormat(QString format);
+QString format() const;
+```
+
+信号函数。
+
+```c++
+void formatChanged(QString format);
+void maxChanged(QDateTime max);
+void minChanged(QDateTime min);
+void rangeChanged(QDateTime min, QDateTime max);
+void tickCountChanged(int tickCount);
+```
+
+### 8.5 关联数据类型
+
+#### 8.5.1 QMargins
+
+常用于设置图表的边距。
+
+QMargins 类定义了一个矩形的四个边距。
+QMargin 定义了一组四个边距； left、top、right 和 bottom，它们描述了矩形周围边框的大小。
+仅当所有边距都设置为零时，isNull() 函数才返回 true。
+QMargin 对象可以进行流式传输和比较。
+
+成员函数。
+
+```c++
+QMargins(int left, int top, int right, int bottom);
+bool isNull() const;
+int bottom() const;
+int left() const;
+int right() const;
+int top() const;
+void setBottom(int bottom);
+void setLeft(int left);
+void setRight(int right);
+void setTop(int Top);
+```
+
+#### 8.5.2 QBoxSet
+
+QBoxSet 类表示盒须图中的一项。
+盒须项是由**五个不同值构成的范围和三个中值的图形表示**。有两种方法可以指定值。第一个是使用构造函数或流运算符 (&lt;&lt;)。这些值必须按以下顺序指定：**下限、下四分位数、中位数、上四分位数和上限。**第二种方法是创建一个空的 QBoxSet 实例并使用 setValue() 方法指定值。
+
+此枚举类型定义盒须项的值。
+
+```c++
+enum QBoxSet::ValuePositions{
+    QBoxSet::LowerExtreme,//下限
+    QBoxSet::LowerQuartile,//下四分位数
+    QBoxSet::Median,//中位数
+    QBoxSet::UpperQuartile,//上四分位数
+    QBoxSet::UpperExtreme//上限
+}
+```
+
+成员函数。
+
+```c++
+QBoxSet(const QString label = QString(), QObject *parent = Q_NULLPTR);
+QBoxSet(const qreal le, const qreal lq, const qreal m, const qreal uq, const qreal ue, const QString label = QString(), QObject *parent = Q_NULLPTR);
+void append(const qreal value);
+void append(const QList<qreal> &values);
+QBoxSet &operator<<(const qreal &value);
+void setValue(const int index, const qreal value);
+qreal operator[](const int index) const;
+qreal at(const int index) const;
+
+void clear();
+int count() const;
+void setBrush(const QBrush &brush);
+void setLabel(const QString label);
+void setPen(const QPen &pen);
+QBrush brush() const;
+QString label() const;
+QPen pen() const;
+```
+
+#### 8.5.3 QBarSet
+
+QBarSet 类表示条形图中的一组条形。
+**条形集包含每个类别的一个数据值**。假设集合的第一个值属于第一个类别，第二个属于第二个类别，依此类推。如果**集合中的值少于类别，则假定缺失值位于集合的末尾**。对于集合中间的缺失值，使用零的数值。不显示零值集的标签。
+
+成员函数。
+
+```c++
+QBarSet(const QString label, QObject *parent = Q_NULLPTR);
+void append(const qreal value);
+void append(const QList<qreal> &values);
+QBarSet &operator<<(const qreal &value);
+qreal operator[](const int index) const;
+void insert(const int index, const qreal value);
+void remove(const int index, const int count = 1);
+void replace(const int index, const qreal value);
+qreal at(const int index) const;
+qreal sum() const;
+int count() const;
+
+void setBorderColor(QColor color);
+void setBrush(const QBrush &brush);
+void setColor(QColor color);
+void setPen(const QPen &pen);
+QColor borderColor();
+QBrush brush() const;
+QColor color();
+QPen pen() const;
+void setLabel(const QString label);
+void setLabelBrush(const QBrush &brush);
+void setLabelColor(QColor color);
+void setLabelFont(const QFont &font);
+QString label() const;
+QBrush labelBrush() const;
+QColor labelColor();
+QFont labelFont() const;
+```
+
+信号函数。
+
+```c++
+void clicked(int index);
+void doubleClicked(int index);
+void pressed(int index);
+void released(int index);
+void penChanged();
+void borderColorChanged(QColor color)
+void brushChanged();
+void colorChanged(QColor color);
+void hovered(bool status, int index);
+void labelBrushChanged();
+void labelChanged();
+void labelColorChanged(QColor color);
+void labelFontChanged();
+void valueChanged(int index);
+void valuesAdded(int index, int count);
+void valuesRemoved(int index, int count);
+```
+
+#### 8.5.4 QPieSlice
+
+QPieSlice 类表示饼系列中的单个切片。
+**饼图有一个值和一个标签**。当切片添加到饼图系列时，QPieSeries 对象计算切片与该系列中所有切片之和的百分比，以确定图表中切片的实际大小。
+**默认情况下，标签是隐藏的**。如果它是可见的，它可以位于切片外部并通过臂连接到切片或水平或平行于切片弧的切线或法线在切片内居中。
+**默认情况下，切片的视觉外观由主题设置，但可以通过指定切片属性来覆盖主题**。但是，如果在**自定义切片后更改主题，则所有自定义都将丢失**。
+为了使用户能够与饼图交互，当用户单击饼图或将鼠标悬停在饼图上时会发出一些基本信号。
+
+这个枚举描述了切片标签的位置。
+
+```c++
+enum QPieSlice::LabelPosition{
+    QPieSlice::LabelOutside,//标签位于用臂连接到它的切片之外。这是默认值
+    QPieSlice::LabelInsideHorizontal,//标签在切片中居中并水平布局
+    QPieSlice::LabelInsideTangential,//标签在切片内居中并旋转为与切片弧的切线平行
+    QPieSlice::LabelInsideNormal//标签在切片中居中并旋转为与切片弧的法线平行
+}
+```
+
+成员函数。
+
+```c++
+QPieSlice(QObject *parent = Q_NULLPTR);
+QPieSlice(QString label, qreal value, QObject *parent = Q_NULLPTR);
+QPieSeries *series() const;//返回所有切片
+qreal percentage() const;//百分比
+// 开始角度和横跨角度
+qreal startAngle() const;
+qreal angleSpan() const;
+// 设置边界颜色、宽度、画刷、颜色、画笔
+void setBorderColor(QColor color);
+void setBorderWidth(int width);
+void setBrush(const QBrush &brush);
+void setColor(QColor color);
+void setPen(const QPen &pen);
+QColor borderColor();
+int borderWidth();
+QBrush brush() const;
+QColor color();
+QPen pen() const;
+// 分开弹出爆照效果因子
+void setExplodeDistanceFactor(qreal factor);
+void setExploded(bool exploded = true);
+qreal explodeDistanceFactor() const;
+bool isExploded() const;
+// 设置标签，标签值，及其颜色、画刷、字体、位置、颜色和可见性
+void setLabel(QString label);
+void setValue(qreal value);
+void setLabelArmLengthFactor(qreal factor);
+void setLabelBrush(const QBrush &brush);
+void setLabelColor(QColor color);
+void setLabelFont(const QFont &font);
+void setLabelPosition(LabelPosition position);
+void setLabelVisible(bool visible = true);
+QString label() const;
+qreal value() const;
+qreal labelArmLengthFactor() const;
+QBrush labelBrush() const;
+QColor labelColor();
+QFont labelFont() const;
+LabelPosition labelPosition();
+bool isLabelVisible() const;
+```
+
+信号函数。
+
+```c++
+void clicked();
+void doubleClicked();
+void pressed();
+void released();
+void hovered(bool state);
+void penChanged();
+void valueChanged();
+void percentageChanged();
+void startAngleChanged();
+void angleSpanChanged();
+void borderColorChanged();
+void borderWidthChanged();
+void brushChanged();
+void colorChanged();
+void labelBrushChanged();
+void labelChanged();
+void labelColorChanged();
+void labelFontChanged();
+void labelVisibleChanged();
+```
 
 ## 布局管理
 
