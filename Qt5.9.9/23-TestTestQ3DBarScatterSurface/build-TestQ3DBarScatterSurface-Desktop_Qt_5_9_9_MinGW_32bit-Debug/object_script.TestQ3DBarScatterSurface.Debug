@@ -1,0 +1,14 @@
+INPUT(
+./debug\Test3DBar.o
+./debug\Test3DMap.o
+./debug\Test3DScatter.o
+./debug\Test3DSurface.o
+./debug\main.o
+./debug\TestQ3DBarScatterSurface.o
+./debug\qrc_images.o
+./debug\moc_Test3DBar.o
+./debug\moc_Test3DMap.o
+./debug\moc_Test3DScatter.o
+./debug\moc_Test3DSurface.o
+./debug\moc_TestQ3DBarScatterSurface.o
+);

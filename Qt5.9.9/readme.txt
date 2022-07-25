@@ -52,6 +52,8 @@
 
 22. TestQchartViewZoom 演示如何定义有鼠标事件的视图，实现通过鼠标拖放一个矩形来控制图表的缩放
 
+23. TestTestQ3DBarScatterSurface 一次性演示书上提到的三维柱状图、三维散点图、三维曲面图和三维地形图的使用
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)

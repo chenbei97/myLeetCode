@@ -9048,7 +9048,7 @@ void addToGroup(QGraphicsItem *item);
 void removeFromGroup(QGraphicsItem *item);
 ```
 
-## 8. 图表
+## 8. 二维图表
 
 QtCharts就是基于QGraphicsView开发的，核心组件是QChartView和QChart。
 
@@ -10628,6 +10628,1483 @@ void labelChanged();
 void labelColorChanged();
 void labelFontChanged();
 void labelVisibleChanged();
+```
+
+## 9. 三维图表
+
+本章只介绍三维图表，需要有相应的三维视图类、三维图表类和三维坐标轴类，最后还有三维代理类。
+
+三维视图类等价于二维的QChartView，三维柱状图、三维散点图和三维曲面图都各自有自己的视图类。
+
+```mermaid
+graph TD
+QWindow-->QAbstract3DGraph
+QAbstract3DGraph-->Q3DBars
+QAbstract3DGraph-->Q3DScatter
+QAbstract3DGraph-->Q3DSurface
+```
+
+每个视图类都对应一个三维序列类，不能交叉使用，例如QBar3DSeries只能用作Q3DBars的序列，而不能作为Q3DScatter的序列。不过同一个视图类可以加多个序列类，例如一个Q3DSurface可以有多个QSurface3DSeries。
+
+```mermaid
+graph TD
+QAbstract3DSeries-->QBar3DSeries
+QAbstract3DSeries-->QScatterSeries
+QAbstract3DSeries-->QSurfaceSeries
+```
+
+三维坐标轴只分为数值和文字型坐标轴。
+
+```mermaid
+graph TD
+QAbstract3DAxis-->QCategory3DAxis
+QAbstract3DAxis-->QValue3DAxis
+```
+
+数据代理类也有，也要和序列对应，用于存储序列数据的类。例如三维散点序列QScatterSeries存储的是一些三维数据点的坐标；QSurface3DSeries存储的数据点是在水平面上均匀网格分布的，就需要二维数组才能存储。这些三维代理类还有基于项数据模型的数据代理子类。特别的QHeightMapSurfaceDataProxy是专门用于显示地图高程数据的数据代理类，可以将一个图片表示的高程数据显示为三维曲面。
+
+```mermaid
+graph TD
+QAbstractDataProxy-->QBarDataProxy
+QAbstractDataProxy-->QScatterDataProxy
+QAbstractDataProxy-->QSurfaceDataProxy
+QBarDataProxy-->QItemModelBarDaraProxy
+QScatterDataProxy-->QItemModelScatterDataProxy
+QSurfaceDataProxy-->QHeightMapSurfaceDataProxy
+QHeightMapSurfaceDataProxy-->QItemModelSurfaceDataProxy
+```
+
+如果要在项目中使用三维图表模块，必须在pro文件加上
+
+```c++
+Qt += datavisualization
+```
+
+同样也有自己的命名空间。
+
+```c++
+#include <QtDataVisualization>
+using namespace QtDataVisualization;
+```
+
+因为三维图形类都是从QWindow继承而来不能简单使用QWidget部件作为Q3DBars组件的容器，也就是不能主窗口放置一个QWidget组件然后作为Q3DBars组件的容器，必须使用QWidget::createWindowContainer动态创建QWidget作为容器。
+
+```c++
+this->graph3D = new Q3DBars();
+this->graphContainer = QWidget::createWindowContainer(this->graph3D); 
+this->graph3D->scene()->activeCamera()>setCameraPreset(Q3DCamera::CameraPresetFrontHigh);
+```
+
+无需任何编程设置，程序运行时就可以在图表中单击左键选择图表中的某个项，按住鼠标右键就可以对观察图表的视角进行调整。关于视角的关联数据类型是Q3DCamera和CameraPreset。
+
+### 9.1 三维视图类
+
+#### 9.1.1 QAbstract3DGraph
+
+QAbstract3DGraph 类为图形提供了一个窗口和渲染循环。
+此类继承 QWindow 并为继承它的图形提供渲染循环。
+您不需要直接使用此类，而是使用其子类之一。
+抗锯齿在 C++ 上默认打开，除了在 OpenGL ES2 环境中，Qt 数据可视化不支持抗锯齿。要为图形指定非默认抗锯齿，请提供自定义表面格式作为构造函数参数。您可以使用便捷函数 QtDataVisualization::qDefaultSurfaceFormat() 来创建表面格式对象。注意：QAbstract3DGraph 默认设置窗口标志 Qt::FramelessWindowHint。如果要将**图形窗口显示为具有常规窗口框架的独立窗口**，请在构建图形后清除此标志。例如：
+
+```c++
+ Q3DBars *graphWindow = new Q3DBars;
+ graphWindow->setFlags(graphWindow->flags() ^ Qt::FramelessWindowHint);
+```
+
+##### 枚举类型
+
+图表中元素的类型。
+
+```c++
+enum QAbstract3DGraph::ElementType{
+    QAbstract3DGraph::ElementNone,//没有定义的元素
+    QAbstract3DGraph::ElementSeries,//一个系列（即系列中的一个项目）
+    QAbstract3DGraph::ElementAxisXLabel,//x轴标签
+    QAbstract3DGraph::ElementAxisYLabel,//Y轴标签
+    QAbstract3DGraph::ElementAxisZLabel,//Z轴标签
+    QAbstract3DGraph::ElementCustomItem//自定义项目
+}
+```
+
+渲染的优化提示。
+
+```c++
+enum QAbstract3DGraph::OptimizationHint{
+    QAbstract3DGraph::OptimizationDefault,//以合理的性能提供完整的功能集
+    QAbstract3DGraph::OptimizationStatic//以牺牲某些功能为代价优化静态数据集的渲染
+}
+```
+
+项目选择模式。此枚举的值可以与 OR 运算符组合。
+
+```c++
+enum QAbstract3DGraph::SelectionFlag{
+    QAbstract3DGraph::SelectionNone,//选择模式已禁用
+    QAbstract3DGraph::SelectionItem,//选择突出显示单个项目
+    QAbstract3DGraph::SelectionRow,//选择突出显示单行
+    QAbstract3DGraph::SelectionItemAndRow,//用不同颜色突出显示项目和行的组合标志
+    QAbstract3DGraph::SelectionColumn,//选择突出显示单个列
+    QAbstract3DGraph::SelectionItemAndColumn,//用不同颜色突出显示项目和列的组合标志
+    QAbstract3DGraph::SelectionRowAndColumn,//用于突出显示行和列的组合标志
+    QAbstract3DGraph::SelectionItemRowAndColumn,//用于突出显示项目、行和列的组合标志
+    QAbstract3DGraph::SelectionSlice,//设置此模式标志表示图形应该自动处理切片视图处理。如果您希望通过 Q3DScene 自己控制切片视图，请不要设置此标志。设置此模式标志时，必须同时设置 SelectionRow 或 SelectionColumn，但不能同时设置。只有 Q3DBars 和 Q3DSurface 支持切片。1.当选择通过系列API显式更改为可见项时；2.当选择模式更改且选定项可见时；3.通过单击图形更改选择时
+    QAbstract3DGraph::SelectionMultiSeries//设置此模式意味着突出显示同一位置的所有系列的项目，而不仅仅是选定的项目。其他系列中的实际选择没有改变。 Q3DScatter 不支持多系列选择
+}
+```
+
+阴影质量。
+
+```c++
+enum QAbstract3DGraph::ShadowQuality{
+    QAbstract3DGraph::ShadowQualityNone,//阴影被禁用
+    QAbstract3DGraph::ShadowQualityLow,//阴影以低质量渲染
+    QAbstract3DGraph::ShadowQualityMedium,//阴影以中等质量渲染
+    QAbstract3DGraph::ShadowQualityHigh,///阴影以高质量渲染
+    QAbstract3DGraph::ShadowQualitySoftLow,//阴影以低质量渲染，边缘柔和
+    QAbstract3DGraph::ShadowQualitySoftMedium,//阴影以中等质量渲染，边缘柔和
+    QAbstract3DGraph::ShadowQualitySoftHigh//阴影以高质量渲染，边缘柔和
+}
+```
+
+##### 成员函数
+
+```c++
+virtual bool shadowsSupported() const;//如果当前配置支持阴影，则返回 true。 OpenGL ES2 配置不支持阴影
+Q3DScene *scene() const;//此属性保存 Q3DScene 指针，可用于操作场景和访问场景元素，例如活动摄像机
+QAbstract3DAxis *selectedAxis() const;//可用于在接收到任意标签类型的 selectedElementChanged 信号后获取选中的轴。选择在下一个 selectedElementChanged 信号之前有效
+ElementType selectedElement() const;//此属性保存图表中选定的元素
+QImage renderToImage(int msaaSamples = 0, const QSize &imageSize = QSize());//将当前帧渲染为 imageSize 的图像。默认大小是窗口大小。使用 msaaSamples 中给出的抗锯齿级别渲染图像。默认级别为 0
+QVector3D queriedGraphPosition() const;//此属性保存沿每个轴的最新查询的图形位置值
+void clearSelection();//清除所有附加系列的选择
+qreal currentFps() const;
+bool hasContext() const;//如果图形的 OpenGL 上下文已成功初始化，则返回 true。在上下文初始化失败时尝试使用图表通常会导致崩溃。上下文初始化失败的一个常见原因是缺乏对 OpenGL 的足够平台支持
+
+void setActiveInputHandler(QAbstract3DInputHandler *inputHandler);//此属性保存图表中使用的活动输入处理程序
+QAbstract3DInputHandler *activeInputHandler() const;
+void addInputHandler(QAbstract3DInputHandler *inputHandler);//将给定的 inputHandler 添加到图中。通过 addInputHandler 添加的输入处理程序不会直接使用。仅将 inputHandler 的所有权赋予图。 inputHandler 不得为 null 或已添加到另一个图中。
+void releaseInputHandler(QAbstract3DInputHandler *inputHandler);//如果 inputHandler 已添加到此图中，则将其所有权释放回调用者。如果释放的 inputHandler 正在使用中，则在此调用之后将没有活动的输入处理程序
+QList<QAbstract3DInputHandler *> inputHandlers() const;//返回所有添加的输入处理程序的列表
+
+QCustom3DItem *selectedCustomItem() const;//可用于在接收到 QAbstract3DGraph::ElementCustomItem 类型的 selectedElementChanged 信号后获取选中的自定义项。项目的所有权保留在图表中。选择在下一个 selectedElementChanged 信号之前有效
+int addCustomItem(QCustom3DItem *item);//将 QCustom3DItem 项添加到图形中。 Graph 拥有所添加项目的所有权。如果添加操作成功，则返回添加项的索引，如果尝试添加空项，则返回 -1，如果尝试添加已添加的项，则返回该项的索引。
+void releaseCustomItem(QCustom3DItem *item);//获取给定项目的所有权并从图表中删除该项目
+void removeCustomItem(QCustom3DItem *item);//删除自定义项。删除分配给它的资源
+void removeCustomItemAt(const QVector3D &position);//删除位置的所有自定义项目。删除分配给它们的资源
+void removeCustomItems(); //删除所有自定义项目。删除分配给它们的资源
+QList<QCustom3DItem *> customItems() const;//返回所有添加的自定义项的列表
+
+int selectedCustomItemIndex() const;//可用于在接收到 QAbstract3DGraph::ElementCustomItem 类型的 selectedElementChanged 信号后查询所选自定义项的索引。选择在下一个 selectedElementChanged 信号之前有效
+int selectedLabelIndex() const;//可用于在接收到任意标签类型的 selectedElementChanged 信号后查询选中标签的索引。选择在下一个 selectedElementChanged 信号之前有效
+
+void setActiveTheme(Q3DTheme *theme);//此属性包含图形的活动主题
+Q3DTheme *activeTheme() const;
+void addTheme(Q3DTheme *theme);//将给定的主题添加到图表中。通过 addTheme 添加的主题不直接使用。只有主题的所有权被赋予图表。主题不得为空或已添加到另一个图表
+QList<Q3DTheme *> themes() const;//返回所有添加主题的列表
+void releaseTheme(Q3DTheme *theme);//如果主题已添加到此图中，则将主题的所有权释放回调用者。如果发布的主题正在使用中，将创建一个新的默认主题并将其设置为活动的
+
+void setAspectRatio(qreal ratio);//此属性保存水平面上最长轴与 y 轴之间的图形缩放比例
+qreal aspectRatio() const;
+
+void setHorizontalAspectRatio(qreal ratio);//此属性保存 x 轴和 z 轴之间的图形缩放比例
+qreal horizontalAspectRatio() const;
+
+void setLocale(const QLocale &locale);//此属性保存用于格式化各种数字标签的语言环境。默认“C”语言环境
+QLocale locale() const;
+
+void setMargin(qreal margin);//此属性保存用于可绘制图形区域边缘和图形背景边缘之间的空间的绝对值
+qreal margin() const；
+
+void setMeasureFps(bool enable);//该属性决定渲染是否连续进行而不是按需进行
+bool measureFps() const;
+
+void setOptimizationHints(OptimizationHints hints);//该属性保存默认或静态模式是否用于渲染优化
+OptimizationHints optimizationHints() const;
+
+void setOrthoProjection(bool enable);//此属性保存是否使用正交投影来显示图形
+bool isOrthoProjection() const;
+
+void setPolar(bool enable);//此属性保存水平轴是否更改为极轴
+bool isPolar() const;
+
+void setRadialLabelOffset(float offset);//此属性保存径向极轴的轴标签的标准化水平偏移
+float radialLabelOffset() const;
+
+void setReflection(bool enable);//这个属性决定了地板反射是打开还是关闭
+bool isReflection() const;
+
+void setReflectivity(qreal reflectivity);//较大的数字使地板更具反射性。有效范围是 [0...1]。默认为 0.5
+qreal reflectivity() const;
+
+void setSelectionMode(SelectionFlags mode);//项目选择模式
+SelectionFlags selectionMode() const;
+
+void setShadowQuality(ShadowQuality quality);//这个属性保存了阴影的质量
+ShadowQuality shadowQuality() const;
+```
+
+##### 信号函数
+
+```c++
+void activeInputHandlerChanged(QAbstract3DInputHandler *inputHandler);
+void activeThemeChanged(Q3DTheme *theme);
+void aspectRatioChanged(qreal ratio);
+void currentFpsChanged(qreal fps);
+void horizontalAspectRatioChanged(qreal ratio);
+void localeChanged(const QLocale &locale);
+void marginChanged(qreal margin);
+void measureFpsChanged(bool enabled);
+void optimizationHintsChanged(QAbstract3DGraph::OptimizationHints hints);
+void orthoProjectionChanged(bool enabled);
+void polarChanged(bool enabled);
+void queriedGraphPositionChanged(const QVector3D &data);
+void radialLabelOffsetChanged(float offset);
+void reflectionChanged(bool enabled);
+void reflectivityChanged(qreal reflectivity);
+void selectedElementChanged(QAbstract3DGraph::ElementType type);
+void selectionModeChanged(QAbstract3DGraph::SelectionFlags mode);
+void shadowQualityChanged(QAbstract3DGraph::ShadowQuality quality);
+```
+
+#### 9.1.2 Q3DBars
+
+Q3DBars 类提供了用于渲染 3D 条形图的方法。
+此类使开发人员能够以 3D 形式呈现条形图并通过自由旋转场景来查看它们。旋转是通过按住鼠标右键并移动鼠标来完成的。缩放是通过鼠标滚轮完成的。选择（如果启用）是通过鼠标左键完成的。可以通过单击鼠标滚轮将场景重置为默认摄像机视图。在触摸设备中，旋转是通过点击和移动来完成的，通过点击和按住进行选择并通过捏合进行缩放。
+如果没有明确地将轴设置为 Q3DBars，则会创建没有标签的临时默认轴。这些默认轴可以通过轴访问器进行修改，但是一旦为方向明确设置了任何轴，该方向的默认轴就会被破坏。
+Q3DBars 支持同时显示多个系列。并非所有系列都必须具有相同数量的行和列。行和列标签取自第一个添加的系列，除非明确定义为行和列轴。
+
+如何构造一个最小的 Q3DBars 图首先，构造一个 Q3DBars 的实例。由于我们在本例中将图形作为顶级窗口运行，我们需要清除默认设置的 Qt::FramelessWindowHint 标志：
+
+```c++
+Q3DBars bars;
+bars.setFlags(bars.flags() ^ Qt::FramelessWindowHint);
+```
+
+构建 Q3DBars 后，您可以通过更改行轴和列轴上的范围来设置数据窗口。这不是强制性的，因为数据窗口将默认显示系列中的所有数据。如果数据量很大，通常最好只显示其中的一部分。例如，让我们将数据窗口设置为显示前五行和前五列：
+
+```c++
+bars.rowAxis()->setRange(0, 4);
+bars.columnAxis()->setRange(0, 4);
+```
+
+现在 Q3DBars 已准备好接收要渲染的数据。创建一个包含一行 5 个值的系列：
+
+```c++
+QBar3DSeries *series = new QBar3DSeries;
+QBarDataRow *data = new QBarDataRow;
+*data << 1.0f << 3.0f << 7.5f << 5.0f << 2.2f;
+series->dataProxy()->addRow(data);
+bars.addSeries(series);
+```
+
+注意：我们将数据窗口设置为 5 x 5，但我们只添加了一行数据。没关系，其余的行将是空白的。
+最后，您需要将其设置为可见
+
+```c++
+bars.show();
+```
+
+创建和显示此图所需的完整代码是：
+
+```c++
+#include <QtDataVisualization>
+
+using namespace QtDataVisualization;
+
+int main(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+
+    Q3DBars bars;
+    bars.setFlags(bars.flags() ^ Qt::FramelessWindowHint);
+    bars.rowAxis()->setRange(0, 4);
+    bars.columnAxis()->setRange(0, 4);
+    QBar3DSeries *series = new QBar3DSeries;
+    QBarDataRow *data = new QBarDataRow;
+    *data << 1.0f << 3.0f << 7.5f << 5.0f << 2.2f;
+    series->dataProxy()->addRow(data);
+    bars.addSeries(series);
+    bars.show();
+
+    return app.exec();
+}
+```
+
+场景可以旋转、放大，并且可以选择一个条形来查看其值，但是这个最小的代码示例中不包含其他交互。
+
+成员函数。
+
+```c++
+Q3DBars(const QSurfaceFormat *format = Q_NULLPTR, QWindow *parent = Q_NULLPTR);
+void addAxis(QAbstract3DAxis *axis);//将轴添加到图表。通过 addAxis 添加的轴尚未使用，addAxis 仅用于将轴的所有权授予图形。轴不得为空或添加到另一个图表。
+QList<QAbstract3DAxis *> axes() const;//返回所有添加轴的列表
+void releaseAxis(QAbstract3DAxis *axis);//如果将轴添加到此图中，则将轴的所有权释放回调用者。如果释放的轴正在使用中，将创建一个新的默认轴并将其设置为活动轴
+
+void addSeries(QBar3DSeries *series);//将系列添加到图表中。一个图表可以包含多个系列，但只有一组轴，因此所有系列的行和列必须匹配，可视化数据才有意义
+void insertSeries(int index, QBar3DSeries *series);//将系列插入系列列表中的位置索引。如果该系列已添加到列表中，则将其移至新索引
+void removeSeries(QBar3DSeries *series);//从图中删除系列。
+QBar3DSeries *selectedSeries() const;//此属性保存选定的系列或空值
+QList<QBar3DSeries *> seriesList() const;//返回添加到此图表的系列列表
+
+QSizeF barSpacing() const;//X 和 Z 尺寸中的条间距
+void setBarSpacing(const QSizeF &spacing);
+
+bool isBarSpacingRelative() const;//这个属性决定了间距是绝对的还是相对于钢筋厚度的
+void setBarSpacingRelative(bool relative);
+
+void setBarThickness(float thicknessRatio);
+float barThickness() const;//此属性保存 X 和 Z 尺寸之间的钢筋厚度比
+
+QCategory3DAxis *columnAxis() const;//此属性保存附加到活动列的轴
+void setColumnAxis(QCategory3DAxis *axis);
+
+float floorLevel() const;//此属性在 Y 轴数据坐标中保存条形图的楼层
+void setFloorLevel(float level);
+
+bool isMultiSeriesUniform() const;//即使显示了多个系列，此属性也保存是否要使用设置为单个系列栏的比例来缩放条
+void setMultiSeriesUniform(bool uniform);
+
+QBar3DSeries *primarySeries() const;//此属性保存图形的主要系列
+void setPrimarySeries(QBar3DSeries *series);
+
+QCategory3DAxis *rowAxis() const;//此属性保存附加到活动行的轴
+void setRowAxis(QCategory3DAxis *axis);
+
+QValue3DAxis *valueAxis() const；//将活动值轴（Y 轴）设置为轴。隐式调用 addAxis() 将轴的所有权转移到此图
+void setValueAxis(QValue3DAxis *axis);
+```
+
+信号函数。
+
+```c++
+void barSpacingChanged(const QSizeF &spacing);
+void barSpacingRelativeChanged(bool relative);
+void barThicknessChanged(float thicknessRatio);
+void columnAxisChanged(QCategory3DAxis *axis);
+void floorLevelChanged(float level);
+void multiSeriesUniformChanged(bool uniform);
+void primarySeriesChanged(QBar3DSeries *series);
+void rowAxisChanged(QCategory3DAxis *axis);
+void selectedSeriesChanged(QBar3DSeries *series);
+void valueAxisChanged(QValue3DAxis *axis);
+```
+
+从上述成员函数来看，一些需要关注的关联数据模型有2个。
+
+第一个是QBarDataArray，它用来保存bar类型的数据，它可以按行添加QBarDataRow这样的数据，并被QBar3DSeries添加，而QBar3DSeries又被Q3DBars添加。
+
+第二个就是QBarDataRow，用于添加列数据，可以被QBarDataArray添加。
+
+```c++
+QBarDataArray *dataSet = new QBarDataArray; //数据代理
+dataSet->reserve(3);// 预留指定的行数
+QBarDataRow *dataRow = new QBarDataRow;
+*dataRow << 1 << 2<< 3<< 4<<5; //第1行数据，有5列
+dataSet->append(dataRow);
+QBarDataRow *dataRow2 = new QBarDataRow;
+*dataRow2 << 5<< 5<< 5<< 5<<5; //第2行数据，有5列
+dataSet->append(dataRow2);
+QBarDataRow *dataRow3 = new QBarDataRow;
+*dataRow3 << 1<< 5<< 9<< 5<<1; //第3行数据，有5列
+dataSet->append(dataRow3);
+this->series->dataProxy()->resetArray(dataSet);
+this->graph3D->addSeries(series);
+```
+
+#### 9.1.3 Q3DScatter
+
+Q3DScatter 类提供了渲染 3D 散点图的方法。
+此类使开发人员能够在 3D 中渲染散点图并通过自由旋转场景来查看它们。旋转是通过按住鼠标右键并移动鼠标来完成的。缩放是通过鼠标滚轮完成的。选择（如果启用）是通过鼠标左键完成的。可以通过单击鼠标滚轮将场景重置为默认摄像机视图。在触摸设备中，旋转是通过点击和移动来完成的，通过点击和按住进行选择并通过捏合进行缩放。
+如果没有明确地将轴设置为 Q3DScatter，则会创建没有标签的临时默认轴。这些默认轴可以通过轴访问器进行修改，但是一旦为方向明确设置了任何轴，该方向的默认轴就会被破坏。
+Q3DScatter 支持同时显示多个系列。
+
+如何构造一个最小的 Q3DScatter 图首先，构造 Q3DScatter。由于我们在本例中将图形作为顶级窗口运行，我们需要清除默认设置的 Qt::FramelessWindowHint 标志：
+
+```c++
+Q3DScatter scatter;
+scatter.setFlags(scatter.flags() ^ Qt::FramelessWindowHint);
+QScatter3DSeries *series = new QScatter3DSeries;
+QScatterDataArray data;
+data << QVector3D(0.5f, 0.5f, 0.5f) << QVector3D(-0.3f, -0.5f, -0.4f) << QVector3D(0.0f, -0.3f, 0.2f);
+series->dataProxy()->addItems(data);
+scatter.addSeries(series);
+scatter.show();
+```
+
+成员函数。
+
+```c++
+Q3DScatter(const QSurfaceFormat *format = Q_NULLPTR, QWindow *parent = Q_NULLPTR);
+void addAxis(QValue3DAxis *axis)
+void addSeries(QScatter3DSeries *series)
+QList<QValue3DAxis *> axes() const
+QValue3DAxis *axisX() const
+QValue3DAxis *axisY() const
+QValue3DAxis *axisZ() const
+void releaseAxis(QValue3DAxis *axis)
+void removeSeries(QScatter3DSeries *series)
+QScatter3DSeries *selectedSeries() const
+QList<QScatter3DSeries *> seriesList() const
+void setAxisX(QValue3DAxis *axis)
+void setAxisY(QValue3DAxis *axis)
+void setAxisZ(QValue3DAxis *axis);
+```
+
+信号函数。
+
+```c++
+void axisXChanged(QValue3DAxis *axis);
+void axisYChanged(QValue3DAxis *axis);
+void axisZChanged(QValue3DAxis *axis);
+void selectedSeriesChanged(QScatter3DSeries *series);
+```
+
+#### 9.1.4 Q3DSurface
+
+Q3DSurface 类提供了渲染 3D 曲面图的方法。
+此类使开发人员能够渲染 3D 曲面图并通过自由旋转场景来查看它们。可以通过 QSurface3DSeries 控制表面的视觉属性，例如绘制模式和阴影。
+Q3DSurface 通过在数据点上显示一个突出显示的球来支持选择，在该数据点上用户使用鼠标左键单击（使用默认输入处理程序时）或通过 QSurface3DSeries 选择。选择指针带有一个标签，默认情况下显示数据点的值和点的坐标。
+轴上显示的数值范围和标签格式可以通过QValue3DAxis来控制。要旋转图形，请按住鼠标右键并移动鼠标。缩放是使用鼠标滚轮完成的。两者都假定默认输入处理程序正在使用中。
+如果没有明确地将轴设置为 Q3DSurface，则会创建没有标签的临时默认轴。这些默认轴可以通过轴访问器进行修改，但是一旦为方向明确设置了任何轴，该方向的默认轴就会被破坏。
+
+一个例子如下。
+
+```c++
+#include <QtDataVisualization>
+using namespace QtDataVisualization;
+int main(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+
+    Q3DSurface surface;
+    surface.setFlags(surface.flags() ^ Qt::FramelessWindowHint);
+    QSurfaceDataArray *data = new QSurfaceDataArray;
+    QSurfaceDataRow *dataRow1 = new QSurfaceDataRow;
+    QSurfaceDataRow *dataRow2 = new QSurfaceDataRow;
+
+    *dataRow1 << QVector3D(0.0f, 0.1f, 0.5f) << QVector3D(1.0f, 0.5f, 0.5f);
+    *dataRow2 << QVector3D(0.0f, 1.8f, 1.0f) << QVector3D(1.0f, 1.2f, 1.0f);
+    *data << dataRow1 << dataRow2;
+
+    QSurface3DSeries *series = new QSurface3DSeries;
+    series->dataProxy()->resetArray(data);
+    surface.addSeries(series);
+    surface.show();
+
+    return app.exec();
+}
+```
+
+成员函数。
+
+```c++
+Q3DSurface(const QSurfaceFormat *format = Q_NULLPTR, QWindow *parent = Q_NULLPTR);
+void addAxis(QValue3DAxis *axis);//将轴添加到图表。通过 addAxis 添加的轴尚未使用，addAxis 仅用于将轴的所有权授予图形。轴不得为空或添加到另一个图表
+void addSeries(QSurface3DSeries *series);//将系列添加到图表中。一个图可以包含多个系列，但只有一组轴。如果新添加的系列指定了一个选定的项目，它将被突出显示并且任何现有的选择都将被清除。只有一个添加的系列可以具有活动选择
+QList<QValue3DAxis *> axes() const;//返回所有添加轴的列表
+QValue3DAxis *axisX() const;
+QValue3DAxis *axisY() const;
+QValue3DAxis *axisZ() const;
+void releaseAxis(QValue3DAxis *axis);//如果将轴添加到此图中，则将轴的所有权释放回调用者。如果释放的轴正在使用中，将创建一个新的默认轴并将其设置为活动轴
+void removeSeries(QSurface3DSeries *series);//从图中删除系列
+QSurface3DSeries *selectedSeries() const;
+QList<QSurface3DSeries *> seriesList() const;//返回添加到此图表的系列列表
+void setAxisX(QValue3DAxis *axis);
+void setAxisY(QValue3DAxis *axis);
+void setAxisZ(QValue3DAxis *axis);
+void setFlipHorizontalGrid(bool flip);
+bool flipHorizontalGrid() const;//此属性保存水平轴网格是否显示在图形顶部而不是底部
+```
+
+信号函数。
+
+```c++
+void axisXChanged(QValue3DAxis *axis);
+void axisYChanged(QValue3DAxis *axis);
+void axisZChanged(QValue3DAxis *axis);
+void flipHorizontalGridChanged(bool flip);
+void selectedSeriesChanged(QSurface3DSeries *series);
+```
+
+### 9.2 三维图表类
+
+#### 9.2.1 QAbstract3DSeries
+
+预定义的网格类型。并非所有样式都可用于所有可视化类型。
+
+```c++
+enum QAbstract3DSeries::Mesh{
+    QAbstract3DSeries::MeshUserDefined,//用户定义的网格，通过 QAbstract3DSeries::userDefinedMesh 属性设置
+    QAbstract3DSeries::MeshBar,//基本矩形条
+    QAbstract3DSeries::MeshCube,//基本立方体
+    QAbstract3DSeries::MeshPyramid,//四面金字塔
+    QAbstract3DSeries::MeshCone,//基本锥
+    QAbstract3DSeries::MeshCylinder,//基本气缸
+    QAbstract3DSeries::MeshBevelBar,//略微斜切（圆形）的矩形条
+    QAbstract3DSeries::MeshBevelCube,//略微倾斜（圆形）的立方体
+    QAbstract3DSeries::MeshSphere,//领域
+    QAbstract3DSeries::MeshMinimal,//最小的 3D 网格：三角锥。仅可用于 Q3DScatter
+    QAbstract3DSeries::MeshArrow,//向上的箭头
+    QAbstract3DSeries::MeshPoint//二维点。仅可用于 Q3DScatter。阴影不影响这种风格。此样式不支持颜色样式 Q3DTheme::ColorStyleObjectGradient
+}
+```
+
+系列的类型。
+
+```c++
+enum QAbstract3DSeries::SeriesType{
+    QAbstract3DSeries::SeriesTypeNone,//无系列类型
+    QAbstract3DSeries::SeriesTypeBar,//Q3DBars 的系列类型
+    QAbstract3DSeries::SeriesTypeScatter,//Q3DScatter 的系列类型
+    QAbstract3DSeries::SeriesTypeSurface//Q3DSurface 的系列类型
+}
+```
+
+成员函数。
+
+```c++
+SeriesType type() const;//该属性保存系列的类型
+QString itemLabel() const;//
+
+void setBaseColor(const QColor &color);//此属性保存系列的基色
+QColor baseColor() const;
+
+void setBaseGradient(const QLinearGradient &gradient);//此属性保存系列的基本渐变
+QLinearGradient baseGradient() const;
+
+void setColorStyle(Q3DTheme::ColorStyle style);//此属性保存系列的颜色样式
+Q3DTheme::ColorStyle colorStyle() const;
+
+void setItemLabelFormat(const QString &format);//此属性保存此系列中数据项的标签格式
+QString itemLabelFormat() const;// @rowTitle,@colTitle,@valueTitle,@rowIdx,@colIdx,@rowLabel,@colLabel,@valueLabel,@seriesName,%<format spec>
+
+void setItemLabelVisible(bool visible);//此属性保存图表中项目标签的可见性
+bool isItemLabelVisible() const;
+
+void setMesh(Mesh mesh);//此属性保存系列中项目的网格
+Mesh mesh() const;
+
+void setMeshAxisAndAngle(const QVector3D &axis, float angle);//从轴和角度构造网格旋转四元数的便捷函数
+
+void setMeshRotation(const QQuaternion &rotation);//此属性保存应用于该系列的所有项目的网格旋转
+QQuaternion meshRotation() const;
+
+void setMeshSmooth(bool enable);//该属性决定是否使用预定义网格的平滑版本。
+bool isMeshSmooth() const;
+
+void setMultiHighlightColor(const QColor &color);//此属性保存系列的多项目突出显示颜色
+QColor multiHighlightColor() const;
+
+void setMultiHighlightGradient(const QLinearGradient &gradient);//此属性保存系列的多项高亮渐变
+QLinearGradient multiHighlightGradient() const;
+
+void setName(const QString &name);//此属性保存系列名称
+QString name() const;
+
+void setSingleHighlightColor(const QColor &color);//此属性保存系列的单个项目突出显示颜色
+QColor singleHighlightColor() const;
+
+void setUserDefinedMesh(const QString &fileName);//此属性保存用户定义的对象自定义网格的文件名
+QString userDefinedMesh() const;
+
+void setVisible(bool visible);//此属性保存系列的可见性
+bool isVisible() const;
+
+void setSingleHighlightGradient(const QLinearGradient &gradient);//此属性保存系列的单项高亮渐变
+QLinearGradient singleHighlightGradient() const;
+```
+
+
+
+#### 9.2.2 QBar3DSeries
+
+QBar3DSeries 类表示 3D 条形图中的数据系列。
+此类管理特定于系列的视觉元素以及系列数据（通过数据代理）。
+如果没有为该系列明确设置数据代理，则该系列会创建一个默认代理。设置另一个代理将破坏现有代理以及添加到其中的所有数据。
+QBar3DSeries 支持 QAbstract3DSeries::setItemLabelFormat() 的以下格式标记：
+
+```c++
+@rowTitle 行轴的标题
+@colTitle 列轴的标题
+@valueTitle 值轴的标题
+@rowIdx 可见行索引。使用图形语言环境进行本地化。
+@colIdx 可见列索引。使用图形语言环境进行本地化。
+@rowLabel 行轴标签
+@colLabel 列轴的标签
+@valueLabel 使用附加到图表的值轴的格式格式化的项目值。有关详细信息，请参阅 QValue3DAxis::labelFormat
+@seriesName 系列名称
+%<format spec> 指定格式的项目值。使用与 QValue3DAxis::labelFormat 相同的规则进行格式化。
+
+pxy->setItemLabelFormat(QStringLiteral("@valueTitle for (@rowLabel, @colLabel): %.1f"))；
+```
+
+成员函数。
+
+```c++
+QBar3DSeries(QObject *parent = Q_NULLPTR);
+QBar3DSeries(QBarDataProxy *dataProxy, QObject *parent = Q_NULLPTR);
+QBarDataProxy *dataProxy() const;//此属性保存活动数据代理
+void setDataProxy(QBarDataProxy *proxy);
+float meshAngle() const;//此属性以度为单位保存系列旋转角度
+void setMeshAngle(float angle);
+QPoint selectedBar() const;//此属性保存所选系列中的栏
+void setSelectedBar(const QPoint &position);
+```
+
+信号函数。
+
+```c++
+void dataProxyChanged(QBarDataProxy *proxy);
+void meshAngleChanged(float angle);
+void selectedBarChanged(const QPoint &position);
+```
+
+静态函数。
+
+```c++
+QPoint invalidSelectionPosition();//返回一个无效的选择位置。此位置设置为 selectedBar 属性以清除此系列中的选择
+```
+
+#### 9.2.3 QScatter3DSeries
+
+成员函数。
+
+```c++
+QScatter3DSeries(QObject *parent = Q_NULLPTR);
+QScatter3DSeries(QScatterDataProxy *dataProxy, QObject *parent = Q_NULLPTR);
+QScatterDataProxy *dataProxy() const;//此属性保存活动数据代理
+void setDataProxy(QScatterDataProxy *proxy);
+int selectedItem() const;//此属性保存在系列中选择的项目
+void setSelectedItem(int index);
+float itemSize() const;//该系列的项目大小
+void setItemSize(float size);
+```
+
+信号函数。
+
+```c++
+void dataProxyChanged(QScatterDataProxy *proxy);
+void itemSizeChanged(float size);
+void selectedItemChanged(int index);
+```
+
+静态函数。
+
+```c++
+int invalidSelectionIndex();//返回用于选择的无效索引。此索引设置为 selectedItem 属性以清除该系列的选择
+```
+
+#### 9.2.4 QSurface3DSeries
+
+QSurface3DSeries 类表示 3D 曲面图中的数据系列。
+此类管理特定于系列的视觉元素以及系列数据（通过数据代理）。
+如果没有为该系列明确设置数据代理，则该系列会创建一个默认代理。设置另一个代理将破坏现有代理以及添加到其中的所有数据。
+通过 QAbstract3DSeries::mesh 属性设置的对象网格定义了表面系列中的选择指针形状。
+QSurface3DSeries 支持 QAbstract3DSeries::setItemLabelFormat() 的以下格式标记：
+
+```c++
+@xTitle 来自 x 轴的标题 
+@yTitle 来自 y 轴的标题 
+@zTitle 来自 z 轴的标题 
+@xLabel 使用 x 轴格式格式化的项目值。有关详细信息，请参阅 QValue3DAxis::setLabelFormat()。
+@yLabel 使用 y 轴格式格式化的项目值。有关详细信息，请参阅 QValue3DAxis::setLabelFormat()。
+@zLabel 使用 z 轴格式格式化的项目值。有关详细信息，请参阅 QValue3DAxis::setLabelFormat()。
+@seriesName 系列名称
+proxy->setItemLabelFormat(QStringLiteral("@valueTitle for (@rowLabel, @colLabel): %.1f"));
+```
+
+曲面的绘制模式。此枚举的值可以与 OR 运算符组合。
+
+```c++
+enum QSurface3DSeries::DrawFlag{   
+    QSurface3DSeries::DrawWireframe,//只绘制线网
+    QSurface3DSeries::DrawSurface,//只绘制曲面
+    QSurface3DSeries::DrawSurfaceAndWireframe//都绘制
+}
+```
+
+成员函数。
+
+```c++
+QSurface3DSeries(QObject *parent = Q_NULLPTR);
+QSurface3DSeries(QSurfaceDataProxy *dataProxy, QObject *parent = Q_NULLPTR);
+QSurfaceDataProxy *dataProxy() const;//此属性保存活动数据代理
+void setDataProxy(QSurfaceDataProxy *proxy);
+QSurface3DSeries::DrawFlags drawMode() const;//绘图模式。可能值是DrawFlag。不允许清除所有标志。
+void setDrawMode(DrawFlags mode);
+bool isFlatShadingEnabled() const;//此属性保存是否启用表面平面着色
+void setFlatShadingEnabled(bool enabled);
+bool isFlatShadingSupported() const;//此属性保存当前系统是否支持表面平面着色
+QPoint selectedPoint() const;//此属性保存在系列中选择的表面网格点
+void setSelectedPoint(const QPoint &position);
+QImage texture() const;//此属性将表面的纹理保存为 QImage
+void setTexture(const QImage &texture);
+void setTextureFile(const QString &filename);//此属性将表面的纹理保存为文件
+QString textureFile() const;
+```
+
+信号函数。
+
+```c++
+void dataProxyChanged(QSurfaceDataProxy *proxy);
+void drawModeChanged(QSurface3DSeries::DrawFlags mode);
+void flatShadingEnabledChanged(bool enable);
+void flatShadingSupportedChanged(bool enable);
+void selectedPointChanged(const QPoint &position);
+void textureChanged(const QImage &image);
+void textureFileChanged(const QString &filename);
+```
+
+静态函数。
+
+```c++
+QPoint invalidSelectionPosition();
+```
+
+### 9.3 三维坐标轴类
+
+#### 9.3.1 QAbstract3DAxis
+
+QAbstract3DAxis 类是图形轴的基类。
+此类指定图轴共享的枚举、属性和函数。它不应直接使用，而应使用其子类之一。
+
+轴对象的方向。
+
+```c++
+enum QAbstract3DAxis::AxisOrientation{
+    QAbstract3DAxis::AxisOrientationNone,
+    QAbstract3DAxis::AxisOrientationX,
+    QAbstract3DAxis::AxisOrientationY,
+    QAbstract3DAxis::AxisOrientationZ
+}
+```
+
+轴对象的类型。
+
+```c++
+enum QAbstract3DAxis::AxisType{
+    QAbstract3DAxis::AxisTypeNone,
+    QAbstract3DAxis::AxisTypeCategory,
+    QAbstract3DAxis::AxisTypeValue
+}
+```
+
+成员函数。
+
+```c++
+AxisType type() const;
+AxisOrientation orientation() const;
+
+void setAutoAdjustRange(bool autoAdjust);//此属性保存轴是否会自动调整范围以使所有数据都适合它
+bool isAutoAdjustRange() const;
+
+void setLabelAutoRotation(float angle);//此属性保存当相机角度发生变化时标签可以自动旋转的最大角度
+float labelAutoRotation() const;
+
+void setLabels(const QStringList &labels);//此属性保存轴的标签
+QStringList labels() const;
+
+void setMax(float max);
+void setMin(float min);
+void setRange(float min, float max);
+float max() const;
+float min() const;
+
+void setTitle(const QString &title);//此属性保存轴的标题
+QString title() const;
+void setTitleFixed(bool fixed);//此属性保存轴标题的旋转
+void setTitleVisible(bool visible);
+bool isTitleFixed() const;//此属性保存轴标题是否在主图表视图中可见
+bool isTitleVisible() const;
+```
+
+信号函数。
+
+```c++
+void autoAdjustRangeChanged(bool autoAdjust);
+void labelAutoRotationChanged(float angle);
+void labelsChanged();
+void maxChanged(float value);
+void minChanged(float value);
+void orientationChanged(QAbstract3DAxis::AxisOrientation orientation);
+void rangeChanged(float min, float max);
+void titleChanged(const QString &newTitle);
+void titleFixedChanged(bool fixed);
+void titleVisibilityChanged(bool visible);
+```
+
+#### 9.3.2 QCategory3DAxis
+
+QCategory3DAxis 类操作图形的轴。
+QCategory3DAxis 提供了一个可以给定标签的轴。根据设置轴范围定义的数据窗口大小，将轴分为大小相等的类别。如果可见，则在类别之间绘制网格线。如果提供，标签将绘制到类别的位置。
+
+成员和信号函数。
+
+```c++
+QCategory3DAxis(QObject *parent = Q_NULLPTR);
+QStringList labels() const;
+void setLabels(const QStringList &labels);
+
+signal void labelsChanged();
+```
+
+#### 9.3.3 QValue3DAxis
+
+QValue3DAxis 类操作图形的轴。
+可以为值轴指定一个值范围以及分段和子分段计数以将范围划分为。
+在每个段之间绘制标签。在每个段和每个子段之间绘制网格线。
+注意：如果可见，总会有至少两条网格线和标签指示范围的最小值和最大值，因为总是至少有一个段。
+
+成员和信号函数。
+
+```c++
+QValue3DAxis(QObject *parent = Q_NULLPTR);
+void setFormatter(QValue3DAxisFormatter *formatter);//此属性保存要使用的轴格式化程序
+QValue3DAxisFormatter *formatter() const;
+
+void setLabelFormat(const QString &format);//此属性保存要用于此轴上的标签的标签格式
+QString labelFormat() const;
+
+void setReversed(bool enable);//此属性保存轴是否反向渲染
+bool reversed() const;
+
+void setSegmentCount(int count);//此属性保存轴上的段数
+int segmentCount() const;
+
+void setSubSegmentCount(int count);//此属性保存轴上每个段内的子段数
+int subSegmentCount() const;
+
+signal void formatterChanged(QValue3DAxisFormatter *formatter)
+signal void labelFormatChanged(const QString &format);
+signal void reversedChanged(bool enable);
+signal void segmentCountChanged(int count);
+signal void subSegmentCountChanged(int count);
+```
+
+### 9.4 三维数据代理类
+
+#### 9.4.1 QAbstractDataProxy
+
+QAbstractDataProxy 类是所有数据可视化数据代理的基类。
+使用以下可视化类型特定继承类代替基类：QBarDataProxy、QScatterDataProxy 和 QSurfaceDataProxy。
+
+此枚举类型指定代理的数据类型。
+
+```c++
+enum QAbstractDataProxy::DataType{ 
+    QAbstractDataProxy::DataTypeNone,
+    QAbstractDataProxy::DataTypeBar,
+    QAbstractDataProxy::DataTypeScatter,
+    QAbstractDataProxy::DataTypeSurface
+}
+// 关联函数
+DataType type() const;
+```
+
+#### 9.4.2 QBarDataProxy
+
+QBarDataProxy 类是 3D 条形图的数据代理。
+条形数据代理处理添加、插入、更改和删除数据行。
+数据数组是 QBarDataItem 实例的向量（行）列表。每行可以包含不同数量的项目，甚至可以为空。
+QBarDataProxy 拥有所有传递给它的 QtDataVisualization::QBarDataRow 对象的所有权，无论是直接还是在 QtDataVisualization::QBarDataArray 容器中。如果在将数组添加到代理后使用条形数据行指针直接修改数据，则必须发出适当的信号来更新图形。QBarDataProxy 可以选择跟踪行和列标签，QCategory3DAxis 可以利用这些标签来显示轴标签。行和列标签存储在与数据不同的数组中，行操作方法提供不影响行标签的替代版本。这使得可以选择与数组中数据的位置相关的行标签，而不是与数据本身相关的行标签。
+
+成员函数。
+
+```c++
+QBarDataProxy(QObject *parent = Q_NULLPTR);
+// 一个柱状图的点就一个Item
+void setItem(int rowIndex, int columnIndex, const QBarDataItem &item);
+void setItem(const QPoint &position, const QBarDataItem &item);
+const QBarDataItem *itemAt(int rowIndex, int columnIndex) const;
+const QBarDataItem *itemAt(const QPoint &position) const;
+QBar3DSeries *series() const;
+// 1行数据由数据和标签组成,可以被QBarDataArray添加
+int addRow(QBarDataRow *row);
+int addRow(QBarDataRow *row, const QString &label);
+int addRows(const QBarDataArray &rows);
+int addRows(const QBarDataArray &rows, const QStringList &labels);
+void setRow(int rowIndex, QBarDataRow *row);
+void setRow(int rowIndex, QBarDataRow *row, const QString &label);
+void setRows(int rowIndex, const QBarDataArray &rows);
+void setRows(int rowIndex, const QBarDataArray &rows, const QStringList &labels);
+void insertRow(int rowIndex, QBarDataRow *row);
+void insertRow(int rowIndex, QBarDataRow *row, const QString &label);
+void insertRows(int rowIndex, const QBarDataArray &rows);
+void insertRows(int rowIndex, const QBarDataArray &rows, const QStringList &labels);
+void removeRows(int rowIndex, int removeCount, bool removeLabels = true);
+const QBarDataRow *rowAt(int rowIndex) const;
+int rowCount() const;
+void setColumnLabels(const QStringList &labels);
+void setRowLabels(const QStringList &labels);
+QStringList columnLabels() const;
+QStringList rowLabels() const;
+// 多个QBarDataRow*构成的QList
+const QBarDataArray *array() const;
+void resetArray();
+void resetArray(QBarDataArray *newArray);
+void resetArray(QBarDataArray *newArray, const QStringList &rowLabels, const QStringList &columnLabels);
+```
+
+信号函数。
+
+```c++
+void arrayReset();
+void columnLabelsChanged();
+void itemChanged(int rowIndex, int columnIndex);
+void rowCountChanged(int count);
+void rowLabelsChanged();
+void rowsAdded(int startIndex, int count);
+void rowsChanged(int startIndex, int count);
+void rowsInserted(int startIndex, int count);
+void rowsRemoved(int startIndex, int count);
+void seriesChanged(QBar3DSeries *series);
+```
+
+#### 9.4.3 QScatterDataProxy
+
+根据空间点的三维坐标绘制三维散点图。
+
+QScatterDataProxy 类是 3D 散点图的数据代理。
+分散数据代理处理添加、插入、更改和删除数据项。
+QScatterDataProxy 拥有所有传递给它的 QtDataVisualization::QScatterDataArray 和 QScatterDataItem 对象。
+
+成员函数。
+
+```c++
+int addItem(const QScatterDataItem &item);
+int addItems(const QScatterDataArray &items);
+void setItem(int index, const QScatterDataItem &item);
+void setItems(int index, const QScatterDataArray &items);
+void insertItem(int index, const QScatterDataItem &item);
+void insertItems(int index, const QScatterDataArray &items);
+const QScatterDataItem *itemAt(int index) const;
+void removeItems(int index, int removeCount);
+int itemCount() const;
+const QScatterDataArray *array() const;
+void resetArray(QScatterDataArray *newArray);
+QScatter3DSeries *series() const;
+```
+
+信号函数。
+
+```c++
+void arrayReset();
+void itemCountChanged(int count);
+void itemsAdded(int startIndex, int count);
+void itemsChanged(int startIndex, int count);
+void itemsInserted(int startIndex, int count);
+void itemsRemoved(int startIndex, int count);
+void seriesChanged(QScatter3DSeries *series);
+```
+
+#### 9.4.4 QSurfaceDataProxy
+
+根据空间点的三维坐标绘制曲面，如一般的三维函数曲面。
+
+QSurfaceDataProxy 类是 3D 表面图的数据代理。
+表面数据代理按行处理表面相关数据。为此它提供了两个辅助类型定义：QtDataVisualization::QSurfaceDataArray 和 QtDataVisualization::QSurfaceDataRow。 QSurfaceDataArray 是一个控制行的 QList。 QSurfaceDataRow 是一个包含 QSurfaceDataItem 对象的 QVector。有关如何将数据提供给代理的更多信息，请参阅 Q3DSurface 文档中的示例代码。
+所有行必须具有相同数量的项目。
+QSurfaceDataProxy 拥有传递给它的所有 QSurfaceDataRow 对象的所有权，无论是直接传递还是在 QSurfaceDataArray 容器中。在将数组添加到代理后，要使用表面数据行指针直接修改数据，必须发出适当的信号来更新图形。
+为了制作一个合理的表面，所有行中每个连续项目的 x 值必须在整个行中升序或降序。同样，所有列中每个连续项目的 z 值必须在整个列中升序或降序。
+注意：目前仅完全支持具有直行和直列的曲面。如果整个表面不完全适合可见的 x 轴或 z- 值，则包含不具有完全相同 z 值的项目的任何行或包含不具有完全相同 x 值的项目的任何列都可能会被错误地剪裁轴范围。
+
+成员函数。
+
+```c++
+void setItem(int rowIndex, int columnIndex, const QSurfaceDataItem &item);
+void setItem(const QPoint &position, const QSurfaceDataItem &item);
+const QSurfaceDataItem *itemAt(int rowIndex, int columnIndex) const;
+const QSurfaceDataItem *itemAt(const QPoint &position) const;
+
+int addRow(QSurfaceDataRow *row);
+int addRows(const QSurfaceDataArray &rows);
+void setRow(int rowIndex, QSurfaceDataRow *row);
+void setRows(int rowIndex, const QSurfaceDataArray &rows);
+void insertRow(int rowIndex, QSurfaceDataRow *row);
+void insertRows(int rowIndex, const QSurfaceDataArray &rows);
+void removeRows(int rowIndex, int removeCount);
+int columnCount() const;
+int rowCount() const;
+
+const QSurfaceDataArray *array() const;
+void resetArray(QSurfaceDataArray *newArray);
+QSurface3DSeries *series() const;
+```
+
+信号函数。
+
+```c++
+void arrayReset();
+void columnCountChanged(int count);
+void itemChanged(int rowIndex, int columnIndex);
+void rowCountChanged(int count);
+void rowsAdded(int startIndex, int count);
+void rowsChanged(int startIndex, int count);
+void rowsInserted(int startIndex, int count);
+void rowsRemoved(int startIndex, int count);
+void seriesChanged(QSurface3DSeries *series);
+```
+
+#### 9.4.5 QItemModelBarDataProxy
+
+用于在带有 Q3DBars 的项目模型中呈现数据的代理类。
+QItemModelBarDataProxy 允许您使用 QAbstractItemModel 派生模型作为 Q3DBars 的数据源。它使用定义的映射将数据从模型映射到 Q3DBars 图的行、列和值。
+每当映射或模型更改时，数据都会异步解析。 QBarDataProxy::arrayReset() 在数据被解析时发出。但是，当 useModelCategories 属性设置为 true 时，会同步解析单个项目的更改，除非同一帧还包含导致解析整个模型的更改。
+可以通过以下方式使用映射： 如果 useModelCategories 属性设置为 true，则此代理会将 QAbstractItemModel 的行和列直接映射到 Q3DBars 的行和列，并默认使用为 Qt::DisplayRole 返回的值作为条形值。如果 Qt::DisplayRole 不合适，可以重新定义要使用的值角色。
+对于尚未将数据整齐地分类为行和列的模型，例如基于 QAbstractListModel 的模型，您可以从模型中定义一个角色以映射每个行、列和值。
+如果您不想包含模型中包含的所有数据，或者自动生成的行和列未按您希望的顺序排列，您可以通过定义明确的类别列表来指定应包含哪些行和列以及以何种顺序或行和列。例如，假设您有一个自定义 QAbstractItemModel 用于存储与业务相关的各种月度值。模型中的每个项目都有“年”、“月”、“收入”和“费用”的角色。您可以执行以下操作以在条形图中显示数据：
+
+```c++
+QStringList years;
+QStringList months;
+years << "2006" << "2007" << "2008" << "2009" << "2010" << "2011" << "2012";
+months << "jan" << "feb" << "mar" << "apr" << "may" << "jun" << "jul" << "aug" << "sep" << "oct" << "nov" << "dec";
+QItemModelBarDataProxy *proxy = new QItemModelBarDataProxy(customModel,
+                                               QStringLiteral("year"), // Row role
+                                               QStringLiteral("month"), // Column role
+                                               QStringLiteral("income"), // Value role
+                                                       years, // Row categories
+                                                       months); // Column categories
+```
+
+如果模型的字段不包含您需要的确切格式的数据，您可以为每个角色指定搜索模式正则表达式和替换规则，以获取所需格式的值。有关使用正则表达式的替换如何工作的更多信息，请参阅 QString::replace(const QRegExp &amp;rx, const QString &amp;after) 函数文档。请注意，使用正则表达式会对性能产生影响，因此在不需要进行搜索和替换以获得所需值的情况下，使用项目模型会更有效。
+
+QItemModelBarDataProxy::multiMatchBehavior 属性的行为类型。
+
+```c++
+enum QItemModelBarDataProxy::MultiMatchBehavior{
+    QItemModelBarDataProxy::MMBFirst,//该值取自与每个行/列组合匹配的项目模型中的第一个项目
+    QItemModelBarDataProxy::MMBLast,//该值取自项模型中与每个行/列组合匹配的最后一项。
+    QItemModelBarDataProxy::MMBAverage,//与每行/列组合匹配的所有项目值一起平均，将平均值用作条形值
+    QItemModelBarDataProxy::MMBCumulative//与每行/列组合匹配的所有项目的值相加，总和用作条形值。
+}
+```
+
+成员函数。
+
+```c++
+bool autoColumnCategories() const;
+bool autoRowCategories() const;
+QStringList columnCategories() const;
+int columnCategoryIndex(const QString &category);
+QString columnRole() const;
+QRegExp columnRolePattern() const;
+QString columnRoleReplace() const;
+QAbstractItemModel *itemModel() const;
+MultiMatchBehavior multiMatchBehavior() const;
+void remap(const QString &rowRole, const QString &columnRole, const QString &valueRole, const QString &rotationRole, const QStringList &rowCategories, const QStringList &columnCategories);
+QString rotationRole() const;
+QRegExp rotationRolePattern() const;
+QString rotationRoleReplace() const;
+QStringList rowCategories() const;
+int rowCategoryIndex(const QString &category);
+QString rowRole() const;
+QRegExp rowRolePattern() const;
+QString rowRoleReplace() const;
+void setAutoColumnCategories(bool enable);
+void setAutoRowCategories(bool enable);
+void setColumnCategories(const QStringList &categories);
+void setColumnRole(const QString &role);
+void setColumnRolePattern(const QRegExp &pattern);
+void setColumnRoleReplace(const QString &replace);
+void setItemModel(QAbstractItemModel *itemModel);
+void setMultiMatchBehavior(MultiMatchBehavior behavior);
+void setRotationRole(const QString &role);
+void setRotationRolePattern(const QRegExp &pattern);
+void setRotationRoleReplace(const QString &replace);
+void setRowCategories(const QStringList &categories);
+void setRowRole(const QString &role);
+void setRowRolePattern(const QRegExp &pattern);
+void setRowRoleReplace(const QString &replace);
+void setUseModelCategories(bool enable);
+void setValueRole(const QString &role);
+void setValueRolePattern(const QRegExp &pattern);
+void setValueRoleReplace(const QString &replace);
+bool useModelCategories() const;
+QString valueRole() const;
+QRegExp valueRolePattern() const;
+QString valueRoleReplace() const;
+```
+
+信号函数。
+
+```c++
+void autoColumnCategoriesChanged(bool enable);
+void autoRowCategoriesChanged(bool enable);
+void columnCategoriesChanged();
+void columnRoleChanged(const QString &role);
+void columnRolePatternChanged(const QRegExp &pattern);
+void columnRoleReplaceChanged(const QString &replace);
+void itemModelChanged(const QAbstractItemModel *itemModel);
+void multiMatchBehaviorChanged(MultiMatchBehavior behavior);
+void rotationRoleChanged(const QString &role);
+void rotationRolePatternChanged(const QRegExp &pattern);
+void rotationRoleReplaceChanged(const QString &replace);
+void rowCategoriesChanged();
+void rowRoleChanged(const QString &role);
+void rowRolePatternChanged(const QRegExp &pattern);
+void rowRoleReplaceChanged(const QString &replace);
+void useModelCategoriesChanged(bool enable);
+void valueRoleChanged(const QString &role);
+void valueRolePatternChanged(const QRegExp &pattern);
+void valueRoleReplaceChanged(const QString &replace);
+```
+
+#### 9.4.6 QItemModelScatterDataProxy
+
+
+
+#### 9.4.7 QHeightMapSurfaceDataProxy
+
+根据一个图片的数据绘制三维曲面，典型的如三维地形图。
+
+#### 9.4.8 QItemModelSurfaceDataProxy
+
+
+
+### 9.5 关联数据类型
+
+#### 9.5.1 QBarDataItem
+
+QBarDataItem 类存储了一个条形的值和角度。
+
+成员函数。
+
+```c++
+QBarDataItem();
+QBarDataItem(float value);
+QBarDataItem(float value, float angle);
+
+float rotation() const;//
+void setRotation(float angle);
+void setValue(float val//
+float value() const;
+QBarDataItem &operator=(const QBarDataItem &other);
+```
+
+#### 9.5.2 QBarDataArray
+
+指向 QBarDataRow 对象的指针列表。
+
+```c++
+typedef QList<QBarDataRow*> QBarDataArray;
+```
+
+#### 9.5.3 QBarDataRow
+
+QBarDataItem 对象的向量。
+
+```c++
+typedef QVector<QBarDatatItem> QBarDataRow;
+```
+
+#### 9.5.4 QScatterDataItem
+
+散点序列的每一个点都是一个QScatterDataItem类，存储一个散点的三维坐标和旋转角度信息。
+
+成员函数。
+
+```c++
+QScatterDataItem(const QVector3D &position);
+QScatterDataItem(const QVector3D &position, const QQuaternion &rotation);
+QVector3D position() const;
+void setPosition(const QVector3D &pos);
+void setRotation(const QQuaternion &rot);
+QQuaternion rotation() const;
+void setX(float value);
+void setY(float value);
+void setZ(float value);
+float x() const;
+float y() const;
+float z() const;
+```
+
+#### 9.5.5 QScatterDataArray
+
+QScatterDataArray是QScatterDataItem类的向量的类型定义，定义如下：
+
+```c++
+typedef QVector<QScatterDatatItem> QScatterDataArray;
+```
+
+#### 9.5.6 QVector3D
+
+QVector3D 类表示 3D 空间中的向量或顶点。
+矢量是 3D 表示和绘图的主要构建块之一。它们由三个坐标组成，传统上称为 x、y 和 z。
+QVector3D 类也可用于表示 3D 空间中的顶点。因此，我们不需要提供单独的顶点类。
+
+成员函数如下。
+
+```c++
+QVector3D(float xpos, float ypos, float zpos);
+QVector3D(const QPoint &point);
+QVector3D(const QPointF &point);
+QVector3D(const QVector2D &vector);
+QVector3D(const QVector2D &vector, float zpos);
+QVector3D(const QVector4D &vector);
+QPoint toPoint() const;//返回此 3D 向量的 QPoint 形式。 z 坐标被删除
+QPointF toPointF() const;//返回此 3D 向量的 QPointF 形式。 z 坐标被删除
+QVector2D toVector2D() const;//返回此 3D 向量的 2D 向量形式，删除 z 坐标
+QVector4D toVector4D() const;//返回此 3D 向量的 4D 形式，其中 w 坐标设置为零
+
+float distanceToLine(const QVector3D &point, const QVector3D &direction) const;//返回此顶点与由点和单位矢量方向定义的线的距离
+float distanceToPlane(const QVector3D &plane, const QVector3D &normal) const;//返回此顶点到由顶点平面和法线单位向量定义的平面的距离。假定法线参数已归一化为单位向量
+float distanceToPlane(const QVector3D &plane1, const QVector3D &plane2, const QVector3D &plane3) const;
+float distanceToPoint(const QVector3D &point) const;//返回从该顶点到该顶点定义的点的距离
+
+bool isNull() const;//如果 x、y 和 z 坐标设置为 0.0，则返回 true，否则返回 false
+float length() const;//如果 x、y 和 z 坐标设置为 0.0，则返回 true，否则返回 false
+float lengthSquared() const;//从原点返回向量的平方长度。这相当于向量与自身的点积
+void normalize();//将当前向量归一化。如果此向量是空向量或向量的长度非常接近 1，则不会发生任何事情
+QVector3D normalized() const;//返回此向量的归一化单位向量形式
+QVector3D project(const QMatrix4x4 &modelView, const QMatrix4x4 &projection, const QRect &viewport) const;//使用模型视图矩阵 modelView、投影矩阵投影和视口尺寸视口，以对象/模型坐标的形式返回此向量的窗口坐标
+QVector3D unproject(const QMatrix4x4 &modelView, const QMatrix4x4 &projection, const QRect &viewport) const;//使用模型视图矩阵 modelView、投影矩阵投影和视口尺寸视口，在窗口坐标中返回此向量的对象/模型坐标
+
+void setX(float x);
+void setY(float y);
+void setZ(float z);
+float x() const;
+float y() const;
+float z() const;
+
+operator QVariant() const;//将 3D 矢量作为 QVariant 返回
+QVector3D &operator*=(float factor);
+QVector3D &operator*=(const QVector3D &vector);
+QVector3D &operator+=(const QVector3D &vector);
+QVector3D &operator-=(const QVector3D &vector);
+QVector3D &operator/=(float divisor);
+QVector3D &operator/=(const QVector3D &vector);
+float &operator[](int i);
+float operator[](int i) const;
+```
+
+静态函数。
+
+```c++
+QVector3D crossProduct(const QVector3D &v1, const QVector3D &v2);//返回向量 v1 和 v2 的叉积，它对应于由 v1 和 v2 定义的平面的法线向量
+float dotProduct(const QVector3D &v1, const QVector3D &v2);//返回 v1 和 v2 的点积
+QVector3D normal(const QVector3D &v1, const QVector3D &v2);//返回由向量 v1 和 v2 定义的平面的法线向量，归一化为单位向量
+QVector3D normal(const QVector3D &v1, const QVector3D &v2, const QVector3D &v3);//返回由向量 v2 - v1 和 v3 - v1 定义的平面的法线向量，归一化为单位向量
+```
+
+#### 9.5.7 QSurfaceDataItem
+
+QSurfaceDataItem 类为要添加到曲面图的解析数据提供了一个容器。
+曲面数据项保存曲面图中单个顶点的数据。表面数据代理将数据解析为 QSurfaceDataItem 实例以进行可视化。
+
+成员函数。
+
+```c++
+QSurfaceDataItem();
+QSurfaceDataItem(const QVector3D &position);
+QVector3D position() const;//返回此数据项的位置
+void setPosition(const QVector3D &pos);
+void setX(float value);
+void setY(float value);
+void setZ(float value);
+float x() const;
+float y() const;
+float z() const;
+QSurfaceDataItem &operator=(const QSurfaceDataItem &other);
+```
+
+#### 9.5.8 QSurfaceDataArray
+
+指向 QSurfaceDataRow 对象的指针列表。
+
+```c++
+typedef QList<QSurfaceDataRow*> QSurfaceDataArray;
+```
+
+#### 9.5.9 QSurfaceDataRow
+
+QSurfaceDataItem 对象的向量。
+
+```c++
+typedef QVector<QSurfaceDataItem> QSurfaceDataRow;
+```
+
+#### 9.5.10 Q3DTheme
+
+Q3DTheme 类为图形提供了一种视觉风格。
+指定影响整个图形的视觉属性。有几个内置主题可以按原样使用或自由修改。
+可以通过使用 QAbstract3DSeries 属性在系列中明确设置它们来覆盖以下属性：baseColors、baseGradients 和 colorStyle。可以使用 ThemeUserDefined 枚举值从头开始创建主题。使用默认构造函数创建主题会生成一个新的用户定义主题。
+
+下表列出了主题控制的属性和 ThemeUserDefined 的默认值。
+
+```c++
+ambientLightStrength 0.25
+backgroundColor Qt::black
+backgroundEnabled true
+baseColors Qt::black
+baseGradients QLinearGradient. Essentially fully black.
+colorStyle ColorStyleUniform
+font QFont
+gridEnabled true
+gridLineColor Qt::white
+highlightLightStrength 7.5
+labelBackgroundColor Qt::gray
+labelBackgroundEnabled true
+labelBorderEnabled true
+labelTextColor Qt::white
+lightColor Qt::white
+lightStrength 5.0
+multiHighlightColor Qt::blue
+multiHighlightGradient QLinearGradient. Essentially fully black.
+singleHighlightColor Qt::red
+singleHighlightGradient QLinearGradient. Essentially fully black.
+windowColor Qt::black
+```
+
+使用的例子如下。
+
+创建一个没有任何修改的内置主题：
+
+```c++
+Q3DTheme *theme = new Q3DTheme(Q3DTheme::ThemeQt);
+```
+
+创建内置主题并修改一些属性：
+
+```c++
+Q3DTheme *theme = new Q3DTheme(Q3DTheme::ThemeQt);
+theme->setBackgroundEnabled(false);
+theme->setLabelBackgroundEnabled(false);
+```
+
+创建自定义主题。
+
+```c++
+Q3DTheme *theme = new Q3DTheme();
+theme->setAmbientLightStrength(0.3f);
+theme->setBackgroundColor(QColor(QRgb(0x99ca53)));
+theme->setBackgroundEnabled(true);
+theme->setBaseColor(QColor(QRgb(0x209fdf)));
+theme->setColorStyle(Q3DTheme::ColorStyleUniform);
+theme->setFont(QFont(QStringLiteral("Impact"), 35));
+theme->setGridEnabled(true);
+theme->setGridLineColor(QColor(QRgb(0x99ca53)));
+theme->setHighlightLightStrength(7.0f);
+theme->setLabelBackgroundColor(QColor(0xf6, 0xa6, 0x25, 0xa0));
+theme->setLabelBackgroundEnabled(true);
+theme->setLabelBorderEnabled(true);
+theme->setLabelTextColor(QColor(QRgb(0x404044)));
+theme->setLightColor(Qt::white);
+theme->setLightStrength(6.0f);
+theme->setMultiHighlightColor(QColor(QRgb(0x6d5fd5)));
+theme->setSingleHighlightColor(QColor(QRgb(0xf6a625)));
+theme->setWindowColor(QColor(QRgb(0xffffff)));
+```
+
+创建内置主题并在设置后修改一些属性：
+
+```c++
+Q3DBars *graph = new Q3DBars();
+graph->activeTheme()->setType(Q3DTheme::ThemePrimaryColors);
+graph->activeTheme()->setBaseColor(Qt::red);
+graph->activeTheme()->setSingleHighlightColor(Qt::yellow);
+```
+
+颜色风格。
+
+```c++
+enum Q3DTheme::ColorStyle{
+    Q3DTheme::ColorStyleUniform,//单一颜色
+    Q3DTheme::ColorStyleObjectGradient,//不考虑对象高度只根据对象渐变
+    Q3DTheme::ColorStyleRangeGradient//根据对象高度渐变
+}
+```
+
+内置的主题。
+
+```c++
+enum Q3DTheme::Theme{
+    Q3DTheme::ThemeQt,
+    Q3DTheme::ThemePrimaryColors,
+    Q3DTheme::ThemeDigia,
+    Q3DTheme::ThemeStoneMoss,
+    Q3DTheme::ThemeArmyBlue,
+    Q3DTheme::ThemeRetro,
+    Q3DTheme::ThemeEbony,
+    Q3DTheme::ThemeIsabelle,
+    Q3DTheme::ThemeUserDefined
+}
+```
+
+成员函数。
+
+```c++
+float ambientLightStrength() const;
+QColor backgroundColor() const;
+QList<QColor> baseColors() const;
+QList<QLinearGradient> baseGradients() const;
+ColorStyle colorStyle() const;
+QFont font() const;
+QColor gridLineColor() const;
+float highlightLightStrength() const;
+bool isBackgroundEnabled() const;
+bool isGridEnabled() const;
+bool isLabelBackgroundEnabled() const;
+bool isLabelBorderEnabled() const;
+QColor labelBackgroundColor() const;
+QColor labelTextColor() const;
+QColor lightColor() const;
+float lightStrength() const;
+QColor multiHighlightColor() const;
+QLinearGradient multiHighlightGradient() const;
+QColor singleHighlightColor() const;
+QLinearGradient singleHighlightGradient() const;
+Theme type() const;
+QColor windowColor() const;
+
+void setAmbientLightStrength(float strength);
+void setBackgroundColor(const QColor &color);
+void setBackgroundEnabled(bool enabled);
+void setBaseColors(const QList<QColor> &colors);
+void setBaseGradients(const QList<QLinearGradient> &gradients);
+void setColorStyle(ColorStyle style);
+void setFont(const QFont &font);
+void setGridEnabled(bool enabled);
+void setGridLineColor(const QColor &color);
+void setHighlightLightStrength(float strength);
+void setLabelBackgroundColor(const QColor &color);
+void setLabelBackgroundEnabled(bool enabled);
+void setLabelBorderEnabled(bool enabled);
+void setLabelTextColor(const QColor &color);
+void setLightColor(const QColor &color);
+void setLightStrength(float strength);
+void setMultiHighlightColor(const QColor &color);
+void setMultiHighlightGradient(const QLinearGradient &gradient);
+void setSingleHighlightColor(const QColor &color);
+void setSingleHighlightGradient(const QLinearGradient &gradient);
+void setType(Theme themeType);
+void setWindowColor(const QColor &color);
+```
+
+信号函数。
+
+```c++
+void ambientLightStrengthChanged(float strength);
+void backgroundColorChanged(const QColor &color);
+void backgroundEnabledChanged(bool enabled);
+void baseColorsChanged(const QList<QColor> &colors);
+void baseGradientsChanged(const QList<QLinearGradient> &gradients);
+void colorStyleChanged(Q3DTheme::ColorStyle style);
+void fontChanged(const QFont &font);
+void gridEnabledChanged(bool enabled);
+void gridLineColorChanged(const QColor &color);
+void highlightLightStrengthChanged(float strength);
+void labelBackgroundColorChanged(const QColor &color);
+void labelBackgroundEnabledChanged(bool enabled);
+void labelBorderEnabledChanged(bool enabled);
+void labelTextColorChanged(const QColor &color);
+void lightColorChanged(const QColor &color);
+void lightStrengthChanged(float strength);
+void multiHighlightColorChanged(const QColor &color);
+void multiHighlightGradientChanged(const QLinearGradient &gradient);
+void singleHighlightColorChanged(const QColor &color);
+void singleHighlightGradientChanged(const QLinearGradient &gradient);
+void typeChanged(Q3DTheme::Theme themeType);
+void windowColorChanged(const QColor &color);
 ```
 
 ## 布局管理

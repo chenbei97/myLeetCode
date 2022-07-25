@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/3DBar.jpg</file>
+        <file>images/3DMap.jpg</file>
+        <file>images/3DScatter.jpg</file>
+        <file>images/3DSurface.jpg</file>
+        <file>images/exit.jpg</file>
+        <file>images/mountain.png</file>
+        <file>images/sea.png</file>
+        <file>images/seagray.png</file>
+    </qresource>
+</RCC>
