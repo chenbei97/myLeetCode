@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_QMetaObjectTest_t {
-    QByteArrayData data[15];
-    char stringdata0[231];
+    QByteArrayData data[11];
+    char stringdata0[179];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -32,28 +32,23 @@ struct qt_meta_stringdata_QMetaObjectTest_t {
 static const qt_meta_stringdata_QMetaObjectTest_t qt_meta_stringdata_QMetaObjectTest = {
     {
 QT_MOC_LITERAL(0, 0, 15), // "QMetaObjectTest"
-QT_MOC_LITERAL(1, 16, 10), // "ageChanged"
-QT_MOC_LITERAL(2, 27, 0), // ""
-QT_MOC_LITERAL(3, 28, 9), // "age_value"
-QT_MOC_LITERAL(4, 38, 15), // "ageChanged_girl"
-QT_MOC_LITERAL(5, 54, 14), // "ageChanged_boy"
-QT_MOC_LITERAL(6, 69, 17), // "spin_valueChanged"
-QT_MOC_LITERAL(7, 87, 9), // "QSpinBox*"
-QT_MOC_LITERAL(8, 97, 3), // "arg"
-QT_MOC_LITERAL(9, 101, 20), // "spinBoy_valueChanged"
-QT_MOC_LITERAL(10, 122, 21), // "spinGirl_valueChanged"
-QT_MOC_LITERAL(11, 144, 19), // "on_btnClear_clicked"
-QT_MOC_LITERAL(12, 164, 20), // "on_btnBoyInc_clicked"
-QT_MOC_LITERAL(13, 185, 21), // "on_btnGirlInc_clicked"
-QT_MOC_LITERAL(14, 207, 23) // "on_btnClassInfo_clicked"
+QT_MOC_LITERAL(1, 16, 17), // "spin_valueChanged"
+QT_MOC_LITERAL(2, 34, 9), // "QSpinBox*"
+QT_MOC_LITERAL(3, 44, 0), // ""
+QT_MOC_LITERAL(4, 45, 3), // "arg"
+QT_MOC_LITERAL(5, 49, 20), // "spinBoy_valueChanged"
+QT_MOC_LITERAL(6, 70, 21), // "spinGirl_valueChanged"
+QT_MOC_LITERAL(7, 92, 19), // "on_btnClear_clicked"
+QT_MOC_LITERAL(8, 112, 20), // "on_btnBoyInc_clicked"
+QT_MOC_LITERAL(9, 133, 21), // "on_btnGirlInc_clicked"
+QT_MOC_LITERAL(10, 155, 23) // "on_btnClassInfo_clicked"
 
     },
-    "QMetaObjectTest\0ageChanged\0\0age_value\0"
-    "ageChanged_girl\0ageChanged_boy\0"
-    "spin_valueChanged\0QSpinBox*\0arg\0"
-    "spinBoy_valueChanged\0spinGirl_valueChanged\0"
-    "on_btnClear_clicked\0on_btnBoyInc_clicked\0"
-    "on_btnGirlInc_clicked\0on_btnClassInfo_clicked"
+    "QMetaObjectTest\0spin_valueChanged\0"
+    "QSpinBox*\0\0arg\0spinBoy_valueChanged\0"
+    "spinGirl_valueChanged\0on_btnClear_clicked\0"
+    "on_btnBoyInc_clicked\0on_btnGirlInc_clicked\0"
+    "on_btnClassInfo_clicked"
 };
 #undef QT_MOC_LITERAL
 
@@ -63,7 +58,7 @@ static const uint qt_meta_data_QMetaObjectTest[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-      10,   14, // methods
+       7,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -71,24 +66,18 @@ static const uint qt_meta_data_QMetaObjectTest[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    1,   64,    2, 0x08 /* Private */,
-       4,    1,   67,    2, 0x08 /* Private */,
-       5,    1,   70,    2, 0x08 /* Private */,
-       6,    1,   73,    2, 0x08 /* Private */,
-       9,    1,   76,    2, 0x08 /* Private */,
-      10,    1,   79,    2, 0x08 /* Private */,
-      11,    0,   82,    2, 0x08 /* Private */,
-      12,    0,   83,    2, 0x08 /* Private */,
-      13,    0,   84,    2, 0x08 /* Private */,
-      14,    0,   85,    2, 0x08 /* Private */,
+       1,    1,   49,    3, 0x08 /* Private */,
+       5,    1,   52,    3, 0x08 /* Private */,
+       6,    1,   55,    3, 0x08 /* Private */,
+       7,    0,   58,    3, 0x08 /* Private */,
+       8,    0,   59,    3, 0x08 /* Private */,
+       9,    0,   60,    3, 0x08 /* Private */,
+      10,    0,   61,    3, 0x08 /* Private */,
 
  // slots: parameters
-    QMetaType::Void, QMetaType::Int,    3,
-    QMetaType::Void, QMetaType::Int,    3,
-    QMetaType::Void, QMetaType::Int,    3,
-    0x80000000 | 7, QMetaType::Int,    8,
-    QMetaType::Void, QMetaType::Int,    8,
-    QMetaType::Void, QMetaType::Int,    8,
+    0x80000000 | 2, QMetaType::Int,    4,
+    QMetaType::Void, QMetaType::Int,    4,
+    QMetaType::Void, QMetaType::Int,    4,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -103,17 +92,14 @@ void QMetaObjectTest::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         QMetaObjectTest *_t = static_cast<QMetaObjectTest *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->ageChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 1: _t->ageChanged_girl((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 2: _t->ageChanged_boy((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 3: { QSpinBox* _r = _t->spin_valueChanged((*reinterpret_cast< int(*)>(_a[1])));
+        case 0: { QSpinBox* _r = _t->spin_valueChanged((*reinterpret_cast< int(*)>(_a[1])));
             if (_a[0]) *reinterpret_cast< QSpinBox**>(_a[0]) = std::move(_r); }  break;
-        case 4: _t->spinBoy_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 5: _t->spinGirl_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 6: _t->on_btnClear_clicked(); break;
-        case 7: _t->on_btnBoyInc_clicked(); break;
-        case 8: _t->on_btnGirlInc_clicked(); break;
-        case 9: _t->on_btnClassInfo_clicked(); break;
+        case 1: _t->spinBoy_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 2: _t->spinGirl_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 3: _t->on_btnClear_clicked(); break;
+        case 4: _t->on_btnBoyInc_clicked(); break;
+        case 5: _t->on_btnGirlInc_clicked(); break;
+        case 6: _t->on_btnClassInfo_clicked(); break;
         default: ;
         }
     }
@@ -144,13 +130,13 @@ int QMetaObjectTest::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 10)
+        if (_id < 7)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 10;
+        _id -= 7;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 10)
+        if (_id < 7)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 10;
+        _id -= 7;
     }
     return _id;
 }

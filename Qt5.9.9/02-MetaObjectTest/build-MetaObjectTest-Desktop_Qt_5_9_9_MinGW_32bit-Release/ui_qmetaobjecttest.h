@@ -36,7 +36,7 @@ public:
     QSpinBox *spinGirl;
     QPushButton *btnGirlInc;
     QPushButton *btnClear;
-    QPlainTextEdit *textEdit;
+    QPlainTextEdit *plainTextEdit;
 
     void setupUi(QWidget *QMetaObjectTest)
     {
@@ -94,9 +94,9 @@ public:
 
         gridLayout->addWidget(btnClear, 1, 3, 1, 1);
 
-        textEdit = new QPlainTextEdit(QMetaObjectTest);
-        textEdit->setObjectName(QStringLiteral("textEdit"));
-        textEdit->setGeometry(QRect(79, 139, 641, 431));
+        plainTextEdit = new QPlainTextEdit(QMetaObjectTest);
+        plainTextEdit->setObjectName(QStringLiteral("plainTextEdit"));
+        plainTextEdit->setGeometry(QRect(80, 160, 651, 421));
 
         retranslateUi(QMetaObjectTest);
 

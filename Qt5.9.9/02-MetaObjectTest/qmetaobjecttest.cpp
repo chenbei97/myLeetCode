@@ -3,6 +3,8 @@
 #include <iostream>
 #include  <string>
 #include    <QMetaProperty>
+#include <QDebug>
+
 // 构造函数
 QMetaObjectTest::QMetaObjectTest(QWidget *parent)
   : QWidget(parent)
@@ -11,22 +13,23 @@ QMetaObjectTest::QMetaObjectTest(QWidget *parent)
     ui->setupUi(this);
     this->initProperty();
     this->initConnect();
+    qDebug()<<"here";
 }
 
 void QMetaObjectTest :: initProperty()// 初始化一些性质
 {
-   // 可以设定Q_PROPERTY已宏定义过的属性age,name和score
-  this->boy = new QPerson("cb"); // 构造函数自动关联可了私有属性myname,而myname宏定义中关联了name属性是其member
-  this->boy->setAge(20); // 方式1使用成员函数设置属性
-  this->boy->setProperty("age",25);// 方式2使用继承的成员函数设置属性,因为age声明为READ和WRITE兼具
-  this->boy->setProperty("score",100);// score同理
-  this->boy->setProperty("sex","Boy"); // 设置宏定义没出现过的是动态属性
-  this->boy->setProperty("isBoy",true);
-  this->girl = new QPerson("baby");
-  this->girl->setProperty("score",60);
-  this->girl->setProperty("age",27);
-  this->girl->setProperty("sex","Girl");//动态属性
-  this->girl->setProperty("isBoy",false);
+       // 可以设定Q_PROPERTY已宏定义过的属性age,name和score
+      this->boy = new QPerson("cb"); // 构造函数自动关联可了私有属性myname,而myname宏定义中关联了name属性是其member
+      this->boy->setAge(20); // 方式1使用成员函数设置属性
+      this->boy->setProperty("age",25);// 方式2使用继承的成员函数设置属性,因为age声明为READ和WRITE兼具
+      this->boy->setProperty("score",100);// score同理
+      this->boy->setProperty("sex","Boy"); // 设置宏定义没出现过的是动态属性
+      this->boy->setProperty("isBoy",true);
+      this->girl = new QPerson("baby");
+      this->girl->setProperty("score",60);
+      this->girl->setProperty("age",27);
+      this->girl->setProperty("sex","Girl");//动态属性
+      this->girl->setProperty("isBoy",false);
 
 }
 void QMetaObjectTest:: initConnect()// 初始化信号连接
@@ -35,8 +38,8 @@ void QMetaObjectTest:: initConnect()// 初始化信号连接
   // 此函数内部通过元对象的sender()函数获取了指向发射者的指针,用其信息反馈给QPlainTextEdit
    connect(this->boy,&QPerson::ageChanged,this,&QMetaObjectTest::ageChanged_boy); // 因为此函数没有重载版本,允许函数指针方式调用
    connect(this->girl,&QPerson::ageChanged,this,&QMetaObjectTest::ageChanged_girl);
-    // connect(this->boy,SIGNAL(ageChanged(int)),this,SLOT(on_ageChanged(int))); // 或者用宏来声明带参数也可以
-   // connect(this->girl,SIGNAL(ageChanged(int)),this,SLOT(on_ageChanged(int)));
+//     connect(this->boy,SIGNAL(ageChanged(int)),this,SLOT(on_ageChanged(int))); // 或者用宏来声明带参数也可以
+//    connect(this->girl,SIGNAL(ageChanged(int)),this,SLOT(on_ageChanged(int)));
 
     // 2. 连接spinbox组件的自带信号和自定义的槽函数
       //  不能使用此形式，因为QSpinBox有两种参数形式的valueChanged()信号,所以不能使用函数指针
@@ -59,7 +62,7 @@ void QMetaObjectTest::ageChanged(int age_value)  // 响应QPerson的ageChanged()
     int hisAge=aPerson->property("age").toInt();//通过属性获得年龄
     int hisScore = aPerson->property("score").toInt();
     bool isBoy = aPerson->property("isBoy").toBool();
-    this->ui->textEdit->appendPlainText("姓名="+hisName+","+"性别="+hisSex
+    this->ui->plainTextEdit->appendPlainText("姓名="+hisName+","+"性别="+hisSex
                                +QString::asprintf(",年龄=%d,分数=%d,isBoy=%d",hisAge,hisScore,isBoy)); // 文本打印信息
 }
 void QMetaObjectTest::ageChanged_girl( int age_value)// 用于girl和boy调用,减少重复代码
@@ -96,7 +99,7 @@ void QMetaObjectTest::spinGirl_valueChanged(int arg)
 // 4个QPushButton的槽函数
 void QMetaObjectTest::on_btnClear_clicked()
 {//"清空文本框"按钮
-    this->ui->textEdit->clear();
+    this->ui->plainTextEdit->clear();
 }
 
 void QMetaObjectTest::on_btnBoyInc_clicked()
@@ -111,22 +114,22 @@ void QMetaObjectTest::on_btnGirlInc_clicked()
 
 void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  sex)
 { // "显示元对象信息"按钮槽函数去调用的,节省重复代码
-  ui->textEdit->appendPlainText("=="+sex+"元对象信息==");
+  ui->plainTextEdit->appendPlainText("=="+sex+"元对象信息==");
   for (int i=meta->classInfoOffset();i<meta->classInfoCount();++i)
   {
      QMetaClassInfo classInfo=meta->classInfo(i);
-      ui->textEdit->appendPlainText(
+      ui->plainTextEdit->appendPlainText(
          QString("classInfo=%1 <=> value=%2").arg(classInfo.name()).arg(classInfo.value()));
   }
-  ui->textEdit->appendPlainText(QString("className <=> %1").arg(meta->className())); // 打印元类
-  ui->textEdit->appendPlainText(sex+" classProperty =>");// 打印属性
+  ui->plainTextEdit->appendPlainText(QString("className <=> %1").arg(meta->className())); // 打印元类
+  ui->plainTextEdit->appendPlainText(sex+" classProperty =>");// 打印属性
     // 1.propertyOffset()返回类的第1个属性的序号,不一定是0;
   //  2.propertyCount();属性的个数,这里是age,name,score 3个
   auto which = sex=="Boy"?boy:girl;
   for (int i=meta->propertyOffset();i<meta->propertyCount();i++) //
   {
       const char* propName=meta->property(i).name(); // 获取姓名
-      ui->textEdit->appendPlainText(
+      ui->plainTextEdit->appendPlainText(
       QString("propertyName=%1，value=%2").arg(propName).arg(which->property(propName).toString()));
   }
 }
@@ -134,7 +137,7 @@ void QMetaObjectTest::on_btnClassInfo_clicked()
 {//"类的元对象信息"按钮
       const QMetaObject *meta1=boy->metaObject();
       const QMetaObject *meta2=girl->metaObject();
-      ui->textEdit->clear();
+      ui->plainTextEdit->clear();
       this->printClassInfo(meta1,"Boy");
       this->printClassInfo(meta2,"Girl");
 }

@@ -90,13 +90,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QPlainTextEdit" name="textEdit">
+  <widget class="QPlainTextEdit" name="plainTextEdit">
    <property name="geometry">
     <rect>
-     <x>79</x>
-     <y>139</y>
-     <width>641</width>
-     <height>431</height>
+     <x>80</x>
+     <y>160</y>
+     <width>651</width>
+     <height>421</height>
     </rect>
    </property>
   </widget>

@@ -27,13 +27,12 @@ private:
     void initProperty(); // 初始化一些属性
     void initConnect();// 初始化信号连接
     void printClassInfo(const QMetaObject *,const QString& sex);
-
-private slots: // 自定义私有槽函数
-    // 自定义信号要连接的自定义槽函数,需要手动connect
     void ageChanged(int age_value);
     void ageChanged_girl(int age_value);  // 此槽函数内部反馈给QPlainTextEdit组件,它绑定的是QPerson的同名信号
-     void ageChanged_boy(int age_value);
+    void ageChanged_boy(int age_value);
 
+private slots:
+    // 自定义信号要连接的自定义槽函数,需要手动connect
     QSpinBox * spin_valueChanged(int arg); // 内部会会获取发射者是哪个QSpinBox组件
     void spinBoy_valueChanged(int arg);
     void spinGirl_valueChanged(int arg);
