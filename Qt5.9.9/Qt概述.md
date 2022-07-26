@@ -12534,6 +12534,8 @@ Qt提供2种设计插件的API，可以拓展Qt功能。一种是高级API用于
 
 在文件-新建项目-其它项目中选择自定义，会出现对话框如下，进行设置。
 
+![customDesigner.jpg](customDesigner.jpg)
+
 ![QtDesignerPlugin.jpg](QtDesignerPlugin.jpg)
 
 

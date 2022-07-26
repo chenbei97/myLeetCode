@@ -56,6 +56,8 @@
 
 24. TestTestCustomBatteryWidget 演示如何使用提升法来自定义新的组件,关键在于重载paintEvent事件
 
+25. TestTestCustomBatteryPlugin 演示如何自定义插件,生成的dll文件复制到安装目录下的2个路径
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
