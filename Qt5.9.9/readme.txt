@@ -54,6 +54,8 @@
 
 23. TestTestQ3DBarScatterSurface 一次性演示书上提到的三维柱状图、三维散点图、三维曲面图和三维地形图的使用
 
+24. TestTestCustomBatteryWidget 演示如何使用提升法来自定义新的组件,关键在于重载paintEvent事件
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)

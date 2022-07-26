@@ -11751,13 +11751,254 @@ void valueRoleReplaceChanged(const QString &replace);
 
 #### 9.4.6 QItemModelScatterDataProxy
 
+使用 Q3DScatter 在项目模型中呈现数据的代理类。
+QItemModelScatterDataProxy 允许您使用 QAbstractItemModel 派生模型作为 Q3DScatter 的数据源。它将 QAbstractItemModel 的角色映射到 Q3DScatter 点的 XYZ 值。
+每当映射或模型更改时，数据都会异步解析。 QScatterDataProxy::arrayReset() 在数据被解析时发出。但是，模型初始化后的插入、删除和单个数据项更改会同步解析，除非同一帧还包含导致整个模型解析的更改。
+映射忽略 QAbstractItemModel 的行和列，并平等对待所有项目。它要求模型为可以映射到散点的 X、Y 和 Z 值的数据项提供角色。
+例如，假设您有一个自定义 QAbstractItemModel 用于存储对材料样本进行的各种测量，为“密度”、“硬度”和“电导率”等角色提供数据。您可以使用此代理在散点图上可视化这些属性：
 
+```c++
+QItemModelScatterDataProxy *proxy = new QItemModelScatterDataProxy(customModel,
+                                             QStringLiteral("density"),
+                                             QStringLiteral("hardness"),
+                                             QStringLiteral("conductivity"));
+```
+
+如果模型的字段不包含您需要的确切格式的数据，您可以为每个角色指定搜索模式正则表达式和替换规则，以获取所需格式的值。有关使用正则表达式的替换如何工作的更多信息，请参阅 QString::replace(const QRegExp &amp;rx, const QString &amp;after) 函数文档。请注意，使用正则表达式会对性能产生影响，因此在不需要进行搜索和替换以获得所需值的情况下，使用项目模型会更有效。
+
+成员函数。
+
+```c++
+QItemModelScatterDataProxy(QObject *parent = Q_NULLPTR);
+QItemModelScatterDataProxy(QAbstractItemModel *itemModel, QObject *parent = Q_NULLPTR);
+QItemModelScatterDataProxy(QAbstractItemModel *itemModel, const QString &xPosRole, const QString &yPosRole, const QString &zPosRole, QObject *parent = Q_NULLPTR);
+QItemModelScatterDataProxy(QAbstractItemModel *itemModel, const QString &xPosRole, const QString &yPosRole, const QString &zPosRole, const QString &rotationRole, QObject *parent = Q_NULLPTR);
+QAbstractItemModel *itemModel() const;
+void remap(const QString &xPosRole, const QString &yPosRole, const QString &zPosRole, const QString &rotationRole);
+QString rotationRole() const;
+QRegExp rotationRolePattern() const;
+QString rotationRoleReplace() const;
+void setItemModel(QAbstractItemModel *itemModel);
+void setRotationRole(const QString &role);
+void setRotationRolePattern(const QRegExp &pattern);
+void setRotationRoleReplace(const QString &replace);
+void setXPosRole(const QString &role);
+void setXPosRolePattern(const QRegExp &pattern);
+void setXPosRoleReplace(const QString &replace);
+void setYPosRole(const QString &role);
+void setYPosRolePattern(const QRegExp &pattern);
+void setYPosRoleReplace(const QString &replace);
+void setZPosRole(const QString &role);
+void setZPosRolePattern(const QRegExp &pattern);
+void setZPosRoleReplace(const QString &replace);
+QString xPosRole() const;
+QRegExp xPosRolePattern() const;
+QString xPosRoleReplace() const;
+QString yPosRole() const;
+QRegExp yPosRolePattern() const;
+QString yPosRoleReplace() const;
+QString zPosRole() const;
+QRegExp zPosRolePattern() const;
+QString zPosRoleReplace() const;
+```
+
+信号函数。
+
+```c++
+void itemModelChanged(const QAbstractItemModel *itemModel);
+void rotationRoleChanged(const QString &role);
+void rotationRolePatternChanged(const QRegExp &pattern);
+void rotationRoleReplaceChanged(const QString &replace);
+void xPosRoleChanged(const QString &role);
+void xPosRolePatternChanged(const QRegExp &pattern);
+void xPosRoleReplaceChanged(const QString &replace);
+void yPosRoleChanged(const QString &role);
+void yPosRolePatternChanged(const QRegExp &pattern);
+void yPosRoleReplaceChanged(const QString &replace);
+void zPosRoleChanged(const QString &role);
+void zPosRolePatternChanged(const QRegExp &pattern);
+void zPosRoleReplaceChanged(const QString &replace);
+```
 
 #### 9.4.7 QHeightMapSurfaceDataProxy
 
+Q3DSurface 的基本代理类。
+QHeightMapSurfaceDataProxy 负责表面相关的高度图数据处理。它提供了一种将高度图可视化为曲面图的方法。由于高度图不包含 X 或 Z 轴的值，因此需要使用 minXValue、maxXValue、minZValue 和 maxZValue 属性分别给出这些值。 X 值对应图像水平方向，Z 值对应垂直方向。设置这些属性中的任何一个都会触发任何现有高度图的异步重新解析。
+
+一个例子。
+
+```c++
+QHeightMapSurfaceDataProxy *proxy = new QHeightMapSurfaceDataProxy;
+QString filename = "xxx";
+QImage heightMapImage(filename);
+this->proxy->setValueRanges(-5000, 5000, -5000, 5000);
+auto series = new QSurface3DSeries(this->proxy);
+series->setItemLabelFormat("(@xLabel, @zLabel): @yLabel");
+series->setFlatShadingEnabled(false);
+series->setMeshSmooth(true);
+series->setDrawMode(QSurface3DSeries::DrawSurface);
+auto graph3D = new Q3DSurface;
+graph3D->addSeries(this->series);
+```
+
 根据一个图片的数据绘制三维曲面，典型的如三维地形图。
 
+成员函数。
+
+```c++
+QHeightMapSurfaceDataProxy(QObject *parent = Q_NULLPTR);
+QHeightMapSurfaceDataProxy(const QImage &image, QObject *parent = Q_NULLPTR);
+QHeightMapSurfaceDataProxy(const QString &filename, QObject *parent = Q_NULLPTR);
+QImage heightMap() const;
+QString heightMapFile() const;
+void setHeightMap(const QImage &image);// 设置地形图图片
+void setHeightMapFile(const QString &filename);//指定文件路径
+float maxXValue() const;
+float maxZValue() const;
+float minXValue() const;
+float minZValue() const;
+void setMaxXValue(float max);
+void setMaxZValue(float max);
+void setMinXValue(float min);
+void setMinZValue(float min);
+void setValueRanges(float minX, float maxX, float minZ, float maxZ);//同时设置所有最小值（minX 和 minZ）和最大值（maxX 和 maxZ）值的便捷功能。最小值必须小于相应的最大值。否则，这些值会被调整以使其有效
+```
+
+信号函数。
+
+```c++
+void heightMapChanged(const QImage &image);
+void heightMapFileChanged(const QString &filename);
+void maxXValueChanged(float value);
+void maxZValueChanged(float value);
+void minXValueChanged(float value);
+void minZValueChanged(float value);
+```
+
 #### 9.4.8 QItemModelSurfaceDataProxy
+
+用于在带有 Q3DSurface 的项目模型中呈现数据的代理类。
+QItemModelSurfaceDataProxy 允许您使用 QAbstractItemModel 派生模型作为 Q3DSurface 的数据源。它使用定义的映射将数据从模型映射到 Q3DSurface 图形的行、列和表面点。
+每当映射或模型更改时，数据都会异步解析。 QSurfaceDataProxy::arrayReset() 在数据被解析时发出。但是，当 useModelCategories 属性设置为 true 时，会同步解析单个项目的更改，除非同一帧还包含导致解析整个模型的更改。
+可以通过以下方式使用映射： 如果 useModelCategories 属性设置为 true，则此代理会将 QAbstractItemModel 的行和列映射到 Q3DSurface 的行和列，并默认使用 Qt::DisplayRole 返回的值作为 Y 位置。默认情况下，行和列标题用于 Z 位置和 X 位置，如果它们可以转换为浮点数。否则使用行和列索引。如果 Qt::DisplayRole 不合适，可以重新定义要使用的 Y 位置角色。如果标题或索引不合适，可以重新定义要使用的 Z 位置和 X 位置角色。
+对于尚未将数据整齐地分类为行和列的模型，例如基于 QAbstractListModel 的模型，您可以从模型中定义一个角色以映射每个行、列和 Y 位置。
+如果您不想包含模型中包含的所有数据，或者自动生成的行和列未按您希望的顺序排列，您可以通过定义明确的类别列表来指定应包含哪些行和列以及以何种顺序或行和列。
+例如，假设您有一个存储表面地形数据的自定义 QAbstractItemModel。模型中的每个项目都有“经度”、“纬度”和“高度”的角色。项目模型已经包含正确排序的数据，以便首先以正确的顺序遇到经度和纬度，这使我们能够利用行和列类别自动生成。您可以执行以下操作以在曲面图中显示数据：
+
+```c++
+QItemModelSurfaceDataProxy *proxy = new QItemModelSurfaceDataProxy(customModel,
+                                            QStringLiteral("longitude"), // Row role
+                                            QStringLiteral("latitude"),// Column role
+                                            QStringLiteral("height")); // Y-position role
+```
+
+如果模型的字段不包含您需要的确切格式的数据，您可以为每个角色指定搜索模式正则表达式和替换规则，以获取所需格式的值。有关使用正则表达式的替换如何工作的更多信息，请参阅 QString::replace(const QRegExp &amp;rx, const QString &amp;after) 函数文档。请注意，使用正则表达式会对性能产生影响，因此在不需要进行搜索和替换以获得所需值的情况下，使用项目模型会更有效。
+
+QItemModelSurfaceDataProxy::multiMatchBehavior 属性的行为类型。
+
+```c++
+enum QItemModelSurfaceDataProxy::MultiMatchBehavior{
+    QItemModelSurfaceDataProxy::MMBFirst,//位置值取自项目模型中与每个行/列组合匹配的第一个项目
+    QItemModelSurfaceDataProxy::MMBLast,//位置值取自项模型中与每个行/列组合匹配的最后一项
+    QItemModelSurfaceDataProxy::MMBAverage,//将匹配每个行/列组合的所有项目的位置值一起平均，并将平均值用作表面点位置
+    QItemModelSurfaceDataProxy::MMBCumulativeY//对于 X 和 Z 值，这就像 MMBAverage 一样，但 Y 值被加在一起而不是平均，并且总和用作表面点 Y 位置
+}
+```
+
+成员函数。
+
+```c++
+QItemModelSurfaceDataProxy(QObject *parent = Q_NULLPTR);
+QItemModelSurfaceDataProxy(QAbstractItemModel *itemModel, QObject *parent = Q_NULLPTR);
+QItemModelSurfaceDataProxy(QAbstractItemModel *itemModel, const QString &yPosRole, QObject *parent = Q_NULLPTR);
+QItemModelSurfaceDataProxy(QAbstractItemModel *itemModel, const QString &rowRole, const QString &columnRole, const QString &yPosRole, QObject *parent = Q_NULLPTR);
+QItemModelSurfaceDataProxy(QAbstractItemModel *itemModel, const QString &rowRole, const QString &columnRole, const QString &xPosRole, const QString &yPosRole, const QString &zPosRole, QObject *parent = Q_NULLPTR);
+QItemModelSurfaceDataProxy(QAbstractItemModel *itemModel, const QString &rowRole, const QString &columnRole, const QString &yPosRole, const QStringList &rowCategories, const QStringList &columnCategories, QObject *parent = Q_NULLPTR);
+QItemModelSurfaceDataProxy(QAbstractItemModel *itemModel, const QString &rowRole, const QString &columnRole, const QString &xPosRole, const QString &yPosRole, const QString &zPosRole, const QStringList &rowCategories, const QStringList &columnCategories, QObject *parent = Q_NULLPTR);
+
+void remap(const QString &rowRole, const QString &columnRole, const QString &xPosRole, const QString &yPosRole, const QString &zPosRole, const QStringList &rowCategories, const QStringList &columnCategories);//将 rowRole、columnRole、xPosRole、yPosRole、zPosRole、rowCategories 和 columnCategories 更改为指定映射
+
+void setAutoColumnCategories(bool enable);//设置是否自动生成列类别
+bool autoColumnCategories() const;
+void setAutoRowCategories(bool enable);//同理，只是变成行
+bool autoRowCategories() const;
+void setColumnCategories(const QStringList &categories);//设置映射的列类别
+QStringList columnCategories() const;
+void setRowCategories(const QStringList &categories);//同理，只是变成行
+QStringList rowCategories() const;
+
+void setColumnRole(const QString &role);//设置项目模型角色映射到列类别
+QString columnRole() const;
+void setRowRole(const QString &role);//同理，只是变成行
+QString rowRole() const;
+void setColumnRolePattern(const QRegExp &pattern);//在用作列类别之前，是否对列角色映射的值进行搜索和替换
+QRegExp columnRolePattern() const;
+void setRowRolePattern(const QRegExp &pattern);//同理，只是变成行
+QRegExp rowRolePattern() const;
+void setColumnRoleReplace(const QString &replace);//设置与列角色模式结合使用的替换内容
+QString columnRoleReplace() const;
+void setRowRoleReplace(const QString &replace);//同理，只是变成行
+QString rowRoleReplace() const;
+
+void setItemModel(QAbstractItemModel *itemModel);//设置用作 3D 表面数据源的项目模型
+QAbstractItemModel *itemModel() const;
+void setMultiMatchBehavior(MultiMatchBehavior behavior);//如何处理每个行/列组合的多个匹配项
+MultiMatchBehavior multiMatchBehavior() const;
+
+int columnCategoryIndex(const QString &category);//返回列类别列表中指定类别的索引。如果未找到该类别，则返回 -1
+int rowCategoryIndex(const QString &category); // 同理变成行
+void setUseModelCategories(bool enable);// 设置是否使用行列角色和类别进行映射
+bool useModelCategories() const;
+
+// 设置要映射到X/Y/Z位置的项目模型角色
+void setXPosRole(const QString &role);
+QString xPosRole() const;
+void setYPosRole(const QString &role);
+QString yPosRole() const;
+void setZPosRole(const QString &role);
+QString zPosRole() const;
+// 设置将X/Y/Z位置角色映射的值用作项目位置值之前对其进行搜索和替换
+void setXPosRolePattern(const QRegExp &pattern);
+QRegExp xPosRolePattern() const;
+void setYPosRolePattern(const QRegExp &pattern);
+QRegExp yPosRolePattern() const;
+void setZPosRolePattern(const QRegExp &pattern);
+QRegExp zPosRolePattern() const;
+// 设置要与X/Y/Z位置角色模式结合使用的替换内容
+void setXPosRoleReplace(const QString &replace);
+QString xPosRoleReplace() const;
+void setYPosRoleReplace(const QString &replace);
+QString yPosRoleReplace() const;
+void setZPosRoleReplace(const QString &replace);
+QString zPosRoleReplace() const;
+```
+
+信号函数。
+
+```c++
+void autoColumnCategoriesChanged(bool enable);
+void autoRowCategoriesChanged(bool enable);
+void columnCategoriesChanged();
+void columnRoleChanged(const QString &role);
+void columnRolePatternChanged(const QRegExp &pattern);
+void columnRoleReplaceChanged(const QString &replace);
+void itemModelChanged(const QAbstractItemModel *itemModel);
+void multiMatchBehaviorChanged(MultiMatchBehavior behavior);
+void rowCategoriesChanged();
+void rowRoleChanged(const QString &role);
+void rowRolePatternChanged(const QRegExp &pattern);
+void rowRoleReplaceChanged(const QString &replace);
+void useModelCategoriesChanged(bool enable);
+void xPosRoleChanged(const QString &role);
+void xPosRolePatternChanged(const QRegExp &pattern);
+void xPosRoleReplaceChanged(const QString &replace);
+void yPosRoleChanged(const QString &role);
+void yPosRolePatternChanged(const QRegExp &pattern);
+void yPosRoleReplaceChanged(const QString &replace);
+void zPosRoleChanged(const QString &role);
+void zPosRolePatternChanged(const QRegExp &pattern);
+void zPosRoleReplaceChanged(const QString &replace);
+```
 
 
 
@@ -12106,6 +12347,266 @@ void singleHighlightGradientChanged(const QLinearGradient &gradient);
 void typeChanged(Q3DTheme::Theme themeType);
 void windowColorChanged(const QColor &color);
 ```
+
+## 10 数据库
+
+此部分内容跳过，未来学过数据库后再进行补充。（2022/07/26/8:43）
+
+### 10.1 QSqlTableModel
+
+
+
+### 10.2 QSqlQueryModel
+
+
+
+### 10.3 QSqlQuery
+
+
+
+#### 10.4 QSqlRelationalTableModel
+
+
+
+## 11 自定义插件和库
+
+UI设计器提供的界面组件不满足需求时可以从QWidget继承自定义界面组件。一种是提升法(promotion)，例如之前讲过的将1个QGraphicsView提升为自定义的视图，不过提升法不够直观不能立即在界面显示自定义组件的效果；另一种是为UI设计器设计自定义界面组件的Widget插件，直接安装到UI设计器的组件面板里，但是编译额运行时需要使用到插件的动态链接库(Windows下)。
+
+### 11.1 自定义Widget组件
+
+具体做法就是继承QWidget之后重定义paintEvent()事件，利用Qt绘图功能绘制组件外观，然后实现需要的其他功能。这里以设计一个电池来说明如何自定义Widget组件。
+
+自定义电池组件的头文件如下。
+
+一般而言定义自己的组件都会使用**Q_PROPERTY声明组件具备的属性，属性名称，绑定的读写函数名称，以及通知的信号函数**，如果有槽函数的话也可以设置。
+
+```c++
+class customBattery : public QWidget
+{
+    Q_OBJECT
+    //自定义属性: 类型 属性名称 READ 读取函数名称 WRITE 设置函数名称 属性改变的信号函数
+    Q_PROPERTY(int  powerLevel READ powerLevel WRITE setPowerLevel NOTIFY powerLevelChanged)
+private:
+    QColor  mColorBack=Qt::white;//背景颜色
+    QColor  mColorBorder=Qt::black;//电池边框颜色
+    QColor  mColorPower=Qt::green;//电量柱颜色
+    QColor  mColorWarning=Qt::red;//电量短缺时的颜色
+    int mPowerLevel=60;//电量0-100
+    int mWarnLevel=20;//电量低警示阈值
+protected:
+    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE; // 重载绘图事件
+public:
+    explicit customBattery(QWidget * parent);
+    void setPowerLevel(int pow);//设置当前电量
+    int powerLevel(); // 读取当前电量
+    void setWarnLevel(int warn);//设置电量低阈值
+    int warnLevel();// 读取阈电量低值
+    QSize sizeHint();//报告缺省大小
+signals:
+    void   powerLevelChanged(int powerlevel); // 属性值变化以后信号发射
+};
+```
+
+源文件如下，关键就是重定义paintEvent事件。
+
+```c++
+// 1. 自定义电池外观
+void customBattery::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+
+    QPainter    painter(this);
+    QRect rect(0,0,this->width(),this->height()); //viewport矩形区
+    painter.setViewport(rect);//设置Viewport
+    painter.setWindow(0,0,120,50); // 设置窗口大小，逻辑坐标
+    painter.setRenderHint(QPainter::Antialiasing); // 设置渲染提示
+    painter.setRenderHint(QPainter::TextAntialiasing);
+
+    // 绘制电池边框
+    QPen pen;//设置画笔
+    pen.setWidth(2); //线宽
+    pen.setColor(this->mColorBorder); //用于绘制边界的颜色
+    pen.setStyle(Qt::SolidLine);//线的类型，实线、虚线等
+    pen.setCapStyle(Qt::FlatCap);//线端点样式
+    pen.setJoinStyle(Qt::BevelJoin);//线的连接点样式
+    painter.setPen(pen);
+
+    QBrush  brush;//设置画刷
+    brush.setColor(this->mColorBack); // 背景的画刷颜色
+    brush.setStyle(Qt::SolidPattern); // 画刷填充样式
+    painter.setBrush(brush);
+
+    // 绘制1个矩形作为背景,到上下左边界距离1,到右边界距离0
+    // 背景颜色就是mColorBack,边框颜色mColorBorder
+    rect.setRect(1,1,109,48);// 所以起点变成(1,1),宽度是109,高度48
+    painter.drawRect(rect);//绘制电池边框
+
+    // 现在是绘制电池的正极头,背景和边框都是相同颜色均为mColorBorder
+    rect.setRect(110,15,10,20); // 这个位置和宽度长度需要事先自己设计好
+    brush.setColor(this->mColorBorder); // 重设画刷颜色
+    painter.setBrush(brush);
+    painter.drawRect(rect); //画电池正极头
+
+    //画电池柱
+    if (this->mPowerLevel>this->mWarnLevel)
+    {  //正常颜色电量柱
+        brush.setColor(this->mColorPower); //画刷颜色设为绿色
+        pen.setColor(this->mColorPower); //划线颜色设为绿色
+    }
+    else
+    { //电量低电量柱
+        brush.setColor(this->mColorWarning); //画刷颜色设为红色
+        pen.setColor(this->mColorWarning); //划线颜色设为红色
+    }
+    painter.setBrush(brush);
+    painter.setPen(pen);
+
+    if (this->mPowerLevel>0)
+    {
+        rect.setRect(5,5,this->mPowerLevel,40);
+        painter.drawRect(rect);//画电池柱
+    }
+
+    // 绘制电量百分比文字
+    QFontMetrics textSize(this->font()); // 这个类可以将字符串的字体格式进行像素级量化
+    QString powStr=QString::asprintf("%d%%",this->mPowerLevel);
+    QRect textRect=textSize.boundingRect(powStr);//得到字符串的rect范围
+
+    painter.setFont(this->font());
+    pen.setColor(this->mColorBorder); //划线颜色
+    painter.setPen(pen);
+
+    painter.drawText(55-textRect.width()/2, // 把字体格式占据的像素宽度和长度考虑进去
+               23+textRect.height()/2,
+               powStr);
+}
+```
+
+其它的就是一些读写函数，用于使用访问组件属性。
+
+```c++
+// 2. 设置组件缺省大小调整比例
+QSize customBattery::sizeHint()
+{
+    // 此属性保存小部件的推荐大小 如果此属性的值是无效大小，则不推荐大小
+    // 如果此小部件没有布局，则 sizeHint() 的默认实现返回无效大小，否则返回布局的首选大小
+    int H=this->height(); // 获取主窗口的高度(总是保持一致)
+    int W=H * 1000 / 618; // 黄金比例
+    QSize   size(W,H);
+    return size;
+}
+
+// 3.设置当前电量值
+void customBattery::setPowerLevel(int pow)
+{
+    this->mPowerLevel=pow;
+    emit powerLevelChanged(pow); //触发信号
+    this->repaint(); // 重新绘制外观
+}
+
+// 4. 读取当前电量值
+int customBattery::powerLevel()
+{
+    return this->mPowerLevel;
+}
+
+// 5. 设置电量低阈值
+void customBattery::setWarnLevel(int warn)
+{
+    this->mWarnLevel = warn;
+    this->repaint();
+}
+
+// 6. 读取电量低阈值
+int customBattery::warnLevel()
+{
+    return this->mWarnLevel;
+}
+```
+
+不过这个组件并没有安装到UI的组件面板里，这就需要借助自定义QtDesigner插件来实现。
+
+### 11.2 自定义QtDesigner插件
+
+Qt提供2种设计插件的API，可以拓展Qt功能。一种是高级API用于拓展Qt功能，如定制数据库驱动、图像格式、文本编码和定制样式等，这类插件可以在help-about plugins看到；低级API则是为了拓展自己编写应用程序的功能，最常见的就是将自定义的Widget组件安装到UI设计器里，可以直观的进行调用。
+
+这里创建一个同样的Battery类。
+
+在文件-新建项目-其它项目中选择自定义，会出现对话框如下，进行设置。
+
+![QtDesignerPlugin.jpg](QtDesignerPlugin.jpg)
+
+
+
+### 11.4 关联数据类型
+
+#### 11.4.1 QFontMetrics
+
+QFontMetrics 类提供字体度量信息。
+QFontMetrics 函数计算给定字体的字符和字符串的大小。您可以通过三种方式创建 QFontMetrics 对象： 使用 QFont 调用 QFontMetrics 构造函数为屏幕兼容字体创建字体度量对象，即字体不能是打印机字体。如果稍后更改字体，则不会更新字体度量对象。
+（注意：如果您使用打印机字体，则返回的值可能不准确。打印机字体并不总是可访问的，因此如果提供了打印机字体，则使用最近的屏幕字体。） QWidget::fontMetrics() 返回小部件的字体度量字体。这相当于 QFontMetrics(widget-&gt;font())。如果稍后更改小部件的字体，则不会更新字体度量对象。
+QPainter::fontMetrics() 返回画家当前字体的字体度量。如果后来更改了画家的字体，则不会更新字体度量对象。
+
+创建后，该对象提供了访问字体、其字符以及在字体中呈现的字符串的各个度量的函数。
+有几个函数对字体进行操作：ascent()、descent()、height()、leading() 和 lineSpacing() 返回字体的基本大小属性。 underlinePos()、overlinePos()、strikeOutPos() 和 lineWidth() 函数返回下划线、上划线或删除字符的线的属性。这些功能都很快。
+还有一些函数对字体中的字形集进行操作：minLeftBearing()、minRightBearing() 和 maxWidth()。这些必然很慢，我们建议尽可能避免使用它们。
+对于每个字符，您可以获取它的宽度（）、leftBearing（）和rightBearing（），并使用inFont（）找出它是否在字体中。您还可以将字符视为字符串，并在其上使用字符串函数。
+字符串函数包括 width()，返回以像素为单位的字符串的宽度（或点，对于打印机），boundingRect()，返回一个足够大的矩形来包含渲染的字符串，和 size()，返回该矩形的大小。
+例子：
+
+```c++
+QFont font("times", 24);
+QFontMetrics fm(font);
+int pixelsWide = fm.width("What's the width of this text?");
+int pixelsHigh = fm.height();
+```
+
+成员函数。
+
+```c++
+QFontMetrics(const QFont &font);
+QFontMetrics(const QFont &font, QPaintDevice *paintdevice);
+QFontMetrics(const QFontMetrics &fm);
+
+int ascent() const;//返回字体的上升
+int descent() const;//返回字体的下降
+
+// 得到字符串的矩形范围
+QRect boundingRect(QChar ch) const;
+QRect boundingRect(const QString &text) const;
+QRect boundingRect(const QRect &rect, int flags, const QString &text, int tabStops = 0, int *tabArray = Q_NULLPTR) const;
+QRect boundingRect(int x, int y, int width, int height, int flags, const QString &text, int tabStops = 0, int *tabArray = Q_NULLPTR) const;
+QRect tightBoundingRect(const QString &text) const;//返回由 text 指定的字符串中的字符周围的紧密边界矩形。如果在 (0, 0) 处绘制，边界矩形始终至少覆盖文本将覆盖的像素集
+
+QString elidedText(const QString &text, Qt::TextElideMode mode, int width, int flags = 0) const;//如果字符串文本比宽度宽，则返回字符串的省略版本（即，其中包含“...”的字符串）。否则，返回原始字符串
+
+bool inFont(QChar ch) const;//如果字符 ch 是字体中的有效字符，则返回 true；否则返回假
+bool inFontUcs4(uint ucs4) const;//如果以 UCS-4/UTF-32 编码的字符 ucs4 是字体中的有效字符，则返回 true；否则返回假
+
+int leading() const;//返回字体的前导
+int lineSpacing() const;//返回从一条基线到另一条基线的距离
+
+int minLeftBearing() const;//返回字体的最小左方位角
+int minRightBearing() const;//返回字体的最小右方位角
+int leftBearing(QChar ch) const;//返回字体中字符 ch 的左方位角
+int rightBearing(QChar ch) const;//返回字体中字符 ch 的右方位
+
+QSize size(int flags, const QString &text, int tabStops = 0, int *tabArray = Q_NULLPTR) const;//返回文本的大小（以像素为单位）
+int overlinePos() const;//返回从基线到应绘制上划线的距离
+int strikeOutPos() const;//返回从基线到应绘制三振线的位置的距离
+int underlinePos() const;//返回从基线到应绘制下划线的位置的距离
+
+int width(const QString &text, int len = -1) const;//返回文本前 len 个字符的宽度（以像素为单位）。如果 len 为负数（默认值），则使用整个字符串
+int width(QChar ch) const;//返回字符 ch 的逻辑宽度（以像素为单位）。这是适合在 ch 之后绘制后续字符的距离
+int maxWidth() const;//返回字体中最宽字符的宽度
+int lineWidth() const;//返回下划线和删除线的宽度，根据字体的磅值进行调整
+int averageCharWidth() const;//返回字体中字形的平均宽度
+int height() const;//返回字体的高度
+int capHeight() const;//返回字体的大写高度
+int xHeight() const;//返回字体的“x”高度。这通常但并不总是与字符“x”的高度相同
+```
+
+
 
 ## 布局管理
 
