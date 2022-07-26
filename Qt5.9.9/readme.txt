@@ -56,7 +56,28 @@
 
 24. TestTestCustomBatteryWidget 演示如何使用提升法来自定义新的组件,关键在于重载paintEvent事件
 
-25. TestTestCustomBatteryPlugin 演示如何自定义插件,生成的dll文件复制到安装目录下的2个路径
+25. TestTestCustomBatteryPlugin 演示如何自定义插件
+    坑1：创建插件项目后，编译此项目和的和编译QtCreator的编译器必须一致(可以查看帮助-关于QtCreator)
+    坑2: 笔者是Qt5.9.9版本,编译QtCreator的编译器是MSVC-2017-32bit版本,实际上安装Qt5.9.9的时候没有MSVC-2017-32bit！只有MSVC-2017-64bit
+    坑3：然而无论如何必须满足是MSVC-2017-32bit，所以只能降低Qt版本为Qt5.14.2,此时发现安装过程是有MSVC-2017-32bit版本的，现在版本一致了但是会发现这个版本不能用
+    坑4：坑3的问题笔者尝试用VisualStudio Installer安装单个组件"MSVCv140=VS2015C++生成工具(v14.00)",
+        "MSVCv141=VS2017C++ x86/x64生成工具(v14.16)","MSVCv142=VS2019C++ x86/x64生成工具(v14.29-16.11)"的编译器来设定MSVC-2017-32bit
+        但是都失败了，因为这些不具备MSVC-2017-32bit编译器
+    坑5：笔者最后尝试可能是必须安装VS2017的原因，所以我安装了社区版，发现确实如此，MSVC-2017-32bit都不要设置自动被Qt扫描出来
+    坑6：有了正确的Qt版本，正确的编译器版本，正确的编译器设置，按照书上的过程编译好了插件，把插件在debug和release2个模式下生成的dll文件都放在指定目录下
+        这里的2个目录是E:\Qt5.1.4\Tools\QtCreator\bin\plugins\designer； E:\Qt5.1.4\5.14.2\msvc2017\plugins\designer；
+        会发现还是不行，重启QtCreator后UI设计器没有生成自定义的组件，根据https://www.cnblogs.com/feiyangqingyun/p/6182320.html的说明，我可能是掉入了坑7
+    坑7：在插件项目的内置项目头文件中，Qt5.7以下版本为#include <QtDesigner/QDesignerExportWidget>，以上版本为#include <QtUiPlugin/QDesignerExportWidget>
+        所以这里是#include <QtDesigner/QDesignerExportWidget>，而不是书上的#include <QtUiPlugin/QDesignerExportWidget>，因为书上用的5.9版本
+        但是为啥它5.9的版本却用MSVC2015-32bit的编译器我是不知道怎么做到的，这里不深究了
+    坑8：现在坑7解决，重新编译，把dll文件放入2个目录后，UI设计器能出现自定义组件了，之后就是怎么使用这个组件，按照书上说明，要在项目新建include文件把lib+自定义组件头文件都放进去
+        然后引入外部库，设定为include，再把dll文件放在可执行目录下就能运行
+    坑9：按照书上一样的做法但是不行，笔者发现dll文件不应该放在可执行目录下，直接放在include就行，也就是include会有5个文件
+        2个lib文件：qbatteryplugind.lib，qbatteryplugin.lib
+        2个dll文件：qbatteryplugind.dll，qbatteryplugin.dll
+        1个头文件：qbattery.h(注意是插件内置项目的头文件而不是插件项目本身头文件)
+    坑10：即使如此也可能还是会出现链接错误问题，你可以试试把include文件作为外部目录整体加入到项目中，笔者就是这样解决了问题
+    坑11：最后要强调，MSVC是本地windows下的字符集GB2312而不是UTF8，但是书上提供的中文乱码解决方案不成功，笔者也不想找了，就用英文就行了
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
