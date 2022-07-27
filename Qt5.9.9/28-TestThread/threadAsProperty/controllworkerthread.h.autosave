@@ -1,0 +1,22 @@
+#ifndef CONTROLLWORKERTHREAD_H
+#define CONTROLLWORKERTHREAD_H
+
+#include <QObject>
+#include <QThread>
+class controllWorkerThread:public QObject
+{
+    Q_OBJECT
+    QThread workerThread;
+public:
+    controllWorkerThread();
+    ~controllWorkerThread(){
+        workerThread.quit(); // 控制器的析构函数控制线程停止和无限期等待
+        workerThread.wait();
+    }
+public slots:
+    void handleReady(const QString&result);
+signals:
+    void operate(int select);
+};
+
+#endif // CONTROLLWORKERTHREAD_H

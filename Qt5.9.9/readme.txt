@@ -83,6 +83,8 @@
 
 27. TestCreateShareLib 演示如何创建动态库，和创建静态库的方式一样，但是不需要头文件放入include，需要QLibrary进行解析
 
+28. TestThread 简单的QThread2种方式应用,Qt文档例子的具体化,也是对8-TestQThread的补充
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)

@@ -12538,7 +12538,69 @@ Qt提供2种设计插件的API，可以拓展Qt功能。一种是高级API用于
 
 ![QtDesignerPlugin.jpg](QtDesignerPlugin.jpg)
 
+自定义插件，一定一定要首先使用和QtCreator对应的编译器。
+因为QtCreator用的是MSVC2017 32bit，而Qt5.9.9版本没有这个版本的，只有MSVC2017 64bit那么就会出问题
 
+但是Qt5.14.2版本有MSVC2017 32bit，且这个编译器能够使用的前提是必须安装的是VS2017(社区版也可以)，无论是VS2019还是VS2022均不行。
+有了VS2017+MSVC2017_32bit编译好插件后，把插件生成的2个dll文件(debug+release)都放在Qt的指定路径下(下文提到)，这样UI面板就能够直接看到自己设计的组件了，否则是看不到的。
+
+后边的问题就是使用这个插件，需要添加外部库，外部库就是include目录，这个目录把dll、lib和自定义组件的头文件都放进去，之后就可以正常编译运行了。
+
+以release方式编译生成dll文件名称为qbatteryplugin.dll（也可以以debug模式，生成的是qbatteryplugind.dll）
+将其复制到2个路径下（1个是编译器下的插件目录，一个是工具下的插件目录）
+E:\Qt5.1.4\Tools\QtCreator\bin\plugins\designer
+E:\Qt5.1.4\5.14.2\msvc2017\plugins\designer
+
+此时重启QtCreator再打开任何一个项目，UI设计器面板就可以存在这个组件了
+现在想要使用这个插件的话，新建一个项目之后要做三件事：
+1、项目下新建include文件夹，把dll、lib（debug和release版本都放进去2个文件
+2、把插件内置项目也就是电池五头文件qbattery.h也放在include文件夹下
+
+3、对应的dll文件也放在include文件夹下
+书上说把dll文件放在可执行目录下，就是exe所在的目录下，但是我试过不行，之后我把dll文件只有放在include文件夹下，也就是和lib放在一起，且项目文件必须把这dll文件加进来才能编译运行成功
+4、项目文件右击添加外部库，按照向导执行
+
+具体的例子可见[25-TestTestCustomBatteryPlugin](25-TestTestCustomBatteryPlugin)。
+
+### 11.3 编译静态库和动态库
+
+关于静态库的编译可见这个例子，[26-TestCreateStaticLib](26-TestCreateStaticLib)，这里使用了MSVC-2017-64下的编译器进行编译，使用debug-release版本都进行了编译，但是2个模式编译的名字是相同的，所以debug模式下需要手动改名26-TestCreateStaticLibd.lib，使用库的项目新建include文件，把26-TestCreateStaticLib.libd、26-TestCreateStaticLib.lib和setPenDialog.h都放进去。一方面新建外部库，使用windows-static，添加d作为尾缀区分，此外还需要把include文件包含进来作为项目一部分，不然可能识别不出来。
+
+关于动态库的编译可见这个例子，[27-TestCreateShareLib](27-TestCreateShareLib)，这里和上个例子创建静态库的区别是没有使用MSVC，使用Mingw编译，这是为了说明2个编译器都是可以的，区别只是生成的.a文件而不是.lib文件。
+
+因为是动态库，所以除了.a文件还额外生成.dll文件，因为有debug和release模式，所以是4个文件，这里注意改名，在debug模式下改名多加个d，共享库调用有2种方式，一种是隐式链接库调用，一种是显示链接调用。
+
+**隐式链接库调用：**
+编译程序时有动态库的lib文件(或.a文件)+h头文件，知道dll有哪些接口函数，编译时就可以生成必要的链接信息
+使用DLL中的类或函数时根据头文件中的定义使用即可，这种方式主要用于同一种编程软件(如Qt)生成的代码之间的共享。使用动态库的项目下的include文件夹需要放入6个文件，debug和release模式的2个.a文件和2个.dll文件以及创建共享库时用到的2个头文件。但是会发现总是release版本成功，但是debug版本不成功，会提示QWidget: Must construct a QApplication before a QWidget猜测是2个dll文件不同名字的原因，虽然.a文件进行了区分，但是.dll并没有区分。**所以按照书上的解决方式，我把2个dll文件（注意名字改回来去掉d，2个dll是T同名的），然后各自放在exe的目录下**，发现就能运行成功了，所以现在include只有4个文件。
+
+还要提到一点，使用共享库的文件编译时也最好和共享库的版本一致，也就是都使用mingw32，否则可能要考虑二进制兼容问题
+
+**显示链接调用：**
+
+第一种方式，应用程序编译时将自动加载DLL文件，本方式应用程序运行时才加载共享库文件，所以本方式编译时无需共享库的任何文件，只需要知道函数名称和原型即可。所以本方式可以调用其他语言编写的DLL文件，本方式需要借助QLibrary实现，QLibrary与平台无关，用于运行时加入共享库，一个QLibrary对象只对一个共享库进行操作一般QLibrary的构造函数中传递一个文件名，可以带绝对路径的文件名，也可以是不带后缀的单独文件名。
+
+QLibrary会根据运行的平台自动查找不同后缀的共享库文件，例如UNIX的.so文件，MAC的.dylib文件，Windows的.dll文件按照书上的示例，在书的配套资源中可以找到Delphi写的DLL文件，只有1个函数，函数原型为
+
+```Delphi
+function triple(N:integer):integer; // 用于计算N的3倍值
+```
+
+这个函数生成的DLL库在DelphiDLL文件夹下。调用此DLL库的核心代码是：
+
+```c++
+QLibrary myLib("DelphiDLL"); // 绑定当前路径下的文件夹DelphiDLL
+if (myLib.isLoaded())
+    QMessageBox::information(this,"信息","DelphiDLL.DLL已经被载入,第1处");
+typedef int (*FunDef)(int); //函数原型定义
+FunDef myTriple = (FunDef) myLib.resolve("triple"); //解析DLL中的函数
+int V=myTriple(ui->spinInput->value()); //调用函数
+ui->spinOutput->setValue(V);
+if (myLib.isLoaded())
+    QMessageBox::information(this,"信息","DelphiDLL.DLL已经被载入,第2处");
+```
+
+但是直接执行还是会错误，必须把DelphiDLL文件夹下的DelphiDLL.dll文件放在debug和release可执行目录下就不会再出错了。
 
 ### 11.4 关联数据类型
 
@@ -12608,6 +12670,264 @@ int capHeight() const;//返回字体的大写高度
 int xHeight() const;//返回字体的“x”高度。这通常但并不总是与字符“x”的高度相同
 ```
 
+#### 11.4.2 QLibrary
+
+QLibrary 类在运行时加载共享库。
+QLibrary 对象的实例对单个共享对象文件（我们称之为“库”，但也称为“DLL”）进行操作。 QLibrary 以独立于平台的方式提供对库中功能的访问。**您可以在构造函数中传递文件名，也可以使用 setFileName() 显式设置它**。加载库时，QLibrary 会搜索所有系统特定的库位置（例如 Unix 上的 LD_LIBRARY_PATH），除非文件名具有绝对路径。如果文件名是绝对路径，则首先尝试加载此路径。如果找不到文件，QLibrary 会尝试使用不同平台特定文件前缀的名称，如 Unix 和 Mac 上的“lib”，以及后缀，如 Unix 上的“.so”、Mac 上的“.dylib”或“. dll”在 Windows 上。如果文件路径不是绝对的，那么 QLibrary 会修改搜索顺序以首先尝试系统特定的前缀和后缀，然后是指定的文件路径。这使得指定仅由其基本名称（即没有后缀）标识的共享库成为可能，因此相同的代码将在不同的操作系统上工作，但仍将尝试查找库的次数降至最低。
+**最重要的函数是 load() 动态加载库文件，isLoaded() 检查加载是否成功，resolve() 解析库中的符号**。**如果尚未加载，则 resolve() 函数会隐式尝试加载库**。 **QLibrary 的多个实例可用于访问同一个物理库。加载后，库将保留在内存中，直到应用程序终止**。您可以尝试**使用 unload() 卸载库，但如果 QLibrary 的其他实例正在使用同一个库，则调用将失败，并且只有在每个实例都调用了 unload() 时才会发生卸载**。
+QLibrary 的一个典型用途是解析库中的导出符号，并调用该符号表示的 C 函数。与“隐式链接”相比，这称为“显式链接”，后者是在将可执行文件链接到库时通过构建过程中的链接步骤完成的。
+以下代码片段加载一个库，解析符号“mysymbol”，并在一切成功时调用该函数。如果出现问题，例如库文件不存在或符号未定义，函数指针将为0，不会被调用。
+
+```c++
+QLibrary myLib("mylib");
+typedef void (*MyPrototype)(); // 一个输入输出为空的函数指针
+MyPrototype myFunction = (MyPrototype) myLib.resolve("mysymbol");
+if (myFunction)
+    myFunction();
+```
+
+**符号必须作为 C 函数从库中导出，resolve() 才能工作。这意味着如果库是使用 C++ 编译器编译的，则该函数必须包装在 extern &quot;C&quot; 块中**。在 Windows 上，这也需要使用 dllexport 宏；有关如何完成此操作的详细信息，请参见 resolve()。为方便起见，如果您**只想调用库中的函数而不首先显式加载库，则可以使用静态 resolve() 函数**：
+
+```c++
+typedef void (*MyPrototype)();
+MyPrototype myFunction =
+    (MyPrototype) QLibrary::resolve("mylib", "mysymbol");
+if (myFunction)
+    myFunction();
+```
+
+##### 枚举值
+
+此枚举描述了可用于更改加载库时处理库的方式的可能提示。这些值指示加载库时符号的解析方式，并使用 setLoadHints() 函数指定。
+
+```c++
+enum QLibrary::LoadHint{
+    QLibrary::ResolveAllSymbolsHint,//导致库中的所有符号在加载时被解析，而不仅仅是在调用 resolve() 时
+    QLibrary::ExportExternalSymbolsHint,//导出库中未解析的和外部符号，以便它们可以在稍后加载的其他动态加载的库中解析
+    QLibrary::LoadArchiveMemberHint,//允许库的文件名指定归档文件中的特定对象文件。如果给出此提示，则库的文件名由路径组成，路径是对归档文件的引用，后跟对归档成员的引用
+    QLibrary::PreventUnloadHint,//如果调用 close()，则防止库从地址空间中卸载。如果稍后调用 open()，则不会重新初始化库的静态变量
+    QLibrary::DeepBindHint//指示链接器在解析加载库中的外部符号时，优先选择加载库中的定义而不是加载应用程序中导出的定义。此选项仅在 Linux 上受支持
+}
+```
+
+##### 成员函数
+
+```c++
+QLibrary(QObject *parent = Q_NULLPTR);
+QLibrary(const QString &fileName, QObject *parent = Q_NULLPTR);
+//使用给定的父对象构造一个库对象，该对象将加载由 fileName 指定的库
+QLibrary(const QString &fileName, QObject *parent = Q_NULLPTR);
+//使用给定的父对象构造一个库对象，该对象将加载由 fileName 和主要版本号 verNum 指定的库。目前，版本号在 Windows 上被忽略
+QLibrary(const QString &fileName, int verNum, QObject *parent = Q_NULLPTR);
+//使用给定的父对象构造一个库对象，该对象将加载由 fileName 和完整版本号 version 指定的库。目前，版本号在 Windows 上被忽略
+QLibrary(const QString &fileName, const QString &version, QObject *parent = Q_NULLPTR);
+QString errorString() const;//返回一个文本字符串，其中包含对发生的最后一个错误的描述。目前，只有在 load()、unload() 或 resolve() 出于某种原因失败时才会设置 errorString
+QString fileName() const;//该属性保存库的文件名
+bool isLoaded() const;//如果库已加载，则返回 true；否则返回假
+bool load();//加载库，如果库加载成功则返回true；否则返回假。由于 resolve() 总是在解析任何符号之前调用此函数，因此无需显式调用它。在某些情况下，您可能希望提前加载库，在这种情况下，您将使用此函数
+LoadHints loadHints() const;//
+QFunctionPointer resolve(const char *symbol);//返回导出符号符号的地址。如有必要，将加载库。如果无法解析符号或无法加载库，则该函数返回 0
+void setFileName(const QString &fileName);//设置保存库的文件名
+void setFileNameAndVersion(const QString &fileName, int versionNumber);//将 fileName 属性和主要版本号分别设置为 fileName 和 versionNumber。在 Windows 上忽略 versionNumber
+void setFileNameAndVersion(const QString &fileName, const QString &version);//将 fileName 属性和完整版本号分别设置为 fileName 和 version。在 Windows 上忽略 version 参数
+void setLoadHints(LoadHints hints);//给 load() 函数一些关于它应该如何表现的提示
+bool unload();//如果可以卸载库，则卸载库并返回 true；否则返回假
+```
+
+##### 静态函数
+
+```c++
+bool isLibrary(const QString &fileName);//如果 fileName 具有可加载库的有效后缀，则返回 true；否则返回假
+//加载库文件名并返回导出符号符号的地址。请注意，fileName 不应包含特定于平台的文件后缀； （见文件名）。该库保持加载状态，直到应用程序退出。如果无法解析符号或无法加载库，则该函数返回 0
+QFunctionPointer resolve(const QString &fileName, const char *symbol);
+//加载主版本号为 verNum 的库文件名，并返回导出符号符号的地址。请注意，fileName 不应包含特定于平台的文件后缀； （见文件名）。该库保持加载状态，直到应用程序退出。 verNum 在 Windows 上被忽略。如果无法解析符号或无法加载库，则该函数返回 0
+QFunctionPointer resolve(const QString &fileName, int verNum, const char *symbol);
+//加载具有完整版本号版本的库文件名并返回导出符号符号的地址。请注意，fileName 不应包含特定于平台的文件后缀； （见文件名）。该库保持加载状态，直到应用程序退出。版本在 Windows 上被忽略。如果无法解析符号或无法加载库，则该函数返回 0
+QFunctionPointer resolve(const QString &fileName, const QString &version, const char *symbol);
+```
+
+## 12. 多线程
+
+### 12.1 线程同步的概念
+
+
+
+### 12.2 基于QMutex的线程同步
+
+
+
+### 12.3 基于QReadWriteLock的线程同步
+
+
+
+### 12.4 基于QWaitConditon的线程同步
+
+
+
+### 12.5 基于QSemaphore的线程同步
+
+
+
+### 12.6 关联线程数据类型
+
+#### 12.6.1 QThread
+
+QThread 类提供了一种独立于平台的方式来管理线程。
+QThread 对象管理程序中的一个控制线程。 QThreads 在 run() 中开始执行。默认情况下，run() 通过调用 exec() 启动事件循环，并在线程内运行 Qt 事件循环。
+您可以通过使用 QObject::moveToThread() 将工作对象移动到线程来使用它们。
+
+**第一种使用方法是QThread作为私有属性来使用**。
+
+Worker 槽函数doWork内的代码将在单独的线程中执行，**doWork可以连接到来自任何对象、任何线程中的任何信号**。由于一种称为队列连接的机制，跨不同线程连接信号和槽是安全的。
+
+```c++
+ class Worker : public QObject // 一个独立的工作类
+  {
+      Q_OBJECT
+
+  public slots:
+      void doWork(const QString &parameter) { // doWork可以被任何线程/对象的信号所连接
+          QString result;
+          //...
+          emit resultReady(result); // 执行doWork就会发射此信号
+      }
+
+  signals:
+      void resultReady(const QString &result); // 把doWork获得信息传播出去
+  };
+
+  class Controller : public QObject // 一个管理Worker的类
+  {
+      Q_OBJECT
+      QThread workerThread;// 线程对象作为私有属性使用
+  public:
+      Controller() {
+          Worker *worker = new Worker; // 新建1个工作对象
+          worker->moveToThread(&workerThread);//工作对象要做的事情都会在独立线程完成
+          // 这个线程工作是否完成是由工作对象的析构函数进行控制，但是线程本身的停止是当前析构函数控制
+          connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+          // operate是个信号,任何信号都可以连接到doWork,只要以某种方式触发operate就会执行doWork
+          connect(this, &Controller::operate, worker, &Worker::doWork);
+          // 同时wdoWork反馈的信息想要被拿到,resultReady连接到这个槽函数就可以进行处理
+          connect(worker, &Worker::resultReady, this, &Controller::handleResults);
+          workerThread.start(); // 一经构造就开启了独立线程
+      }
+      ~Controller() {
+          workerThread.quit(); // 当前的析构函数来控制线程的停止和无限期等待
+          workerThread.wait();
+      }
+  public slots:
+      void handleResults(const QString &); // 处理doWork得到的结果
+  signals:
+      void operate(const QString &); // 能够执行doWork需要触发的信号
+  };
+```
+
+**第二种方法是继承QThread，定义自己的线程类重载run函数**。
+
+在该示例中，线程将在 run 函数返回后退出。除非您调用 exec()，否则线程中不会运行任何事件循环。**重要的是要记住 QThread 实例存在于实例化它的主线程中，而不是调用 run() 的新线程中**。这意味着 QThread 的所有槽函数将在主线程中执行。因此，希望在新线程中调用槽函数的开发人员必须使用工作对象方法；不应将新插槽直接实现到子类 QThread 中。
+子类化 QThread 时，**请记住构造函数在主线程中执行，而 run() 在新线程中执行**。如果两个函数都访问一个成员变量，则该变量是从两个不同的线程访问的。检查这样做是否安全。
+
+```c++
+class WorkerThread : public QThread
+  {
+      Q_OBJECT
+      void run() override {
+          QString result;
+          //...
+          emit resultReady(result);
+      }
+  signals:
+      void resultReady(const QString &s);
+  };
+
+// 直接使用工作线程,而不是作为私有属性
+void MainWindow::startWorkInAThread()
+{
+    WorkerThread *workerThread = new WorkerThread(this);// 实例在主线程中
+    // 检测到resultReady信号后就会调用handleResults处理(),handleResults在主线程执行
+    connect(workerThread, &WorkerThread::resultReady, this, &MainWindow::handleResults);
+    // 检测到线程结束后,就释放掉,注意这里是workerThread的信号和workerThread的槽函数(主线程中调用)
+    connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
+    workerThread->start(); // run()函数执行,是子线程
+}
+```
+
+枚举类型如下。
+
+此枚举类型指示操作系统应如何调度新创建的线程。
+
+```c++
+enum QThread::Priority = {
+    QThread::IdlePriority,// 仅在没有其他线程运行时调度
+    QThread::LowestPriority,// 安排的频率低于 LowPriority
+    QThread::LowPriority,//安排的频率低于 NormalPriority
+    QThread::NormalPriority,//操作系统的默认优先级
+    QThread::HighPriority,//比 NormalPriority 更频繁地安排
+    QThread::HighestPriority,//比 HighPriority 更频繁地安排
+    QThread::TimeCriticalPriority,//尽可能经常安排
+    QThread::InheritPriority//使用与创建线程相同的优先级。这是默认设置
+}
+```
+
+成员函数如下。
+
+```c++
+// 信号函数(都是私人信号,不能通过用户发射)
+void finished();// 线程结束之前发射，可连接QObject::deleteLater()以释放该线程中的对象
+void started();// 调用run函数时发射
+
+// 槽函数
+void quit();// 等价于QThread::exit(0)
+void start(Priority priority = InheritPriority);// start()内部会调用run(),进入工作现场
+void terminate();//主线程中可以调用终止工作线程,使用之后应使用wait()
+
+// 保护函数
+int exec();//run()函数会调用exec(),进入工作线程等待exit()退出
+virtual void run();// start()调用此函数执行线程任务,线程离开事件循环调用exec()返回
+static void setTerminationEnabled(bool enabled = true);//决定未来使用terminate()函数终止线程是否起作用,所以此函数使用前提是线程已经启动
+
+// 静态函数
+QThread *currentThread();//返回指向当前执行线程的QThread的指针
+Qt::HANDLE currentThreadId();//返回当前执行线程的线程句柄
+int idealThreadCount();//返回可以在系统上运行的理想线程数
+void msleep(unsigned long msecs);//强制当前线程休眠 msecs 毫秒
+void sleep(unsigned long secs);//强制当前线程休眠 secs 秒
+void usleep(unsigned long usecs);//强制当前线程休眠 usecs 微秒
+void yieldCurrentThread();//将当前线程的执行交给另一个可运行线程（如果有）
+
+// 普通成员函数
+void exit(int returnCode = 0);// 退出事件循环,0表示成功退出,exit(0)等价于quit()
+bool isFinished() const; // 线程完成返回true
+bool isRunning() const;//线程正在运行返回true
+void setPriority(Priority priority);// 设置和返回线程优先级
+Priority priority() const;
+bool wait(unsigned long time = ULONG_MAX);//阻塞线程直到线程结束从run函数返回,返回true;或者等待超时(默认永远不会超时),超时返回false
+
+void setStackSize(uint stackSize);// 设置和返回线程最大堆栈大小
+uint stackSize() const;
+int loopLevel() const;//返回线程的当前事件循环级别
+bool isInterruptionRequested() const;//能够该停止在此线程上运行的任务则返回 true
+void requestInterruption();//请求中断线程,该请求是建议性的
+//返回指向线程的事件分派器对象的指针，如果线程不存在事件分派器，则此函数返回0
+QAbstractEventDispatcher *eventDispatcher() const;
+void setEventDispatcher(QAbstactEventDispatcher *eventDispatcher);
+```
+
+#### 12.6.2 QMutex
+
+
+
+#### 12.6.3 QReadWriteLock
+
+
+
+#### 12.6.4 QWaitCondition
+
+
+
+#### 12.6.5 QSemaphore
+
 
 
 ## 布局管理
@@ -12649,175 +12969,7 @@ window->show();
 
 
 
-## 13. 多线程
-
-### QThread
-
-QThread 类提供了一种独立于平台的方式来管理线程。
-QThread 对象管理程序中的一个控制线程。 QThreads 在 run() 中开始执行。默认情况下，run() 通过调用 exec() 启动事件循环，并在线程内运行 Qt 事件循环。
-您可以通过使用 QObject::moveToThread() 将工作对象移动到线程来使用它们。
-
-一个使用的例子如下。Worker 插槽内的代码将在单独的线程中执行。但是，您可以自由地将 Worker 的插槽连接到来自任何对象、任何线程中的任何信号。由于一种称为队列连接的机制，跨不同线程连接信号和槽是安全的。
-
-```c++
- class Worker : public QObject
-  {
-      Q_OBJECT
-
-  public slots:
-      void doWork(const QString &parameter) {
-          QString result;
-          /* ... here is the expensive or blocking operation ... */
-          emit resultReady(result);
-      }
-
-  signals:
-      void resultReady(const QString &result);
-  };
-
-  class Controller : public QObject
-  {
-      Q_OBJECT
-      QThread workerThread;// 1个线程
-  public:
-      Controller() {
-          Worker *worker = new Worker; // new1个worker实例
-          worker->moveToThread(&workerThread);//实例调用移动至线程去执行
-          // 连接线程的结束和worker实例的析构
-          connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
-          // 连接this的operate信号和worker实例的doWork函数
-          connect(this, &Controller::operate, worker, &Worker::doWork);
-          // 连接work的信号等待结果和this的处理结果函数
-          connect(worker, &Worker::resultReady, this, &Controller::handleResults);
-          workerThread.start();
-      }
-      ~Controller() {
-          workerThread.quit(); // 停止线程
-          workerThread.wait(); // 等待开启
-      }
-  public slots:
-      void handleResults(const QString &); // 和resultReady信号连接
-  signals:
-      void operate(const QString &); // 信号连接doWork
-  };
-```
-
-使代码在单独的线程中运行的另一种方法是继承 QThread 并重新实现 run()。在该示例中，线程将在 run 函数返回后退出。除非您调用 exec()，否则线程中不会运行任何事件循环。重要的是要记住 QThread 实例存在于实例化它的旧线程中，而不是调用 run() 的新线程中。这意味着 QThread 的所有排队槽都将在旧线程中执行。因此，希望在新线程中调用槽的开发人员必须使用工作对象方法；不应将新插槽直接实现到子类 QThread 中。
-子类化 QThread 时，请记住构造函数在旧线程中执行，而 run() 在新线程中执行。如果两个函数都访问一个成员变量，则该变量是从两个不同的线程访问的。检查这样做是否安全。
-
-```c++
-class WorkerThread : public QThread
-  {
-      Q_OBJECT
-      void run() override {
-          QString result;
-          /* ... here is the expensive or blocking operation ... */
-          emit resultReady(result);
-      }
-  signals:
-      void resultReady(const QString &s);
-  };
-
-  void MyObject::startWorkInAThread()
-  {
-      WorkerThread *workerThread = new WorkerThread(this);
-      // 检测到resultReady信号后MyObject就会调用handleResults处理
-      connect(workerThread, &WorkerThread::resultReady, this, &MyObject::handleResults);
-      // 检测到线程结束后,就析构线程
-      connect(workerThread, &WorkerThread::finished, workerThread, &QObject::deleteLater);
-      workerThread->start(); // 线程开始
-  }
-```
-
-注意：跨不同线程与对象交互时必须小心。有关详细信息，请参阅同步线程。
-
-QThread 会在线程started() 和finished() 时通过信号通知你，或者你可以使用isFinished() 和isRunning() 来查询线程的状态。
-您可以通过调用exit() 或quit() 来停止线程。在极端情况下，您可能希望强制terminate（）正在执行的线程。然而，这样做是危险的和不鼓励的。有关详细信息，请阅读 terminate() 和 setTerminationEnabled() 的文档。
-从 Qt 4.8 开始，可以通过将 finished() 信号连接到 QObject::deleteLater() 来释放刚刚结束的线程中的对象。
-使用 wait() 阻塞调用线程，直到另一个线程完成执行（或直到经过指定的时间）。
-
-QThread 还提供静态的、平台独立的睡眠函数：sleep()、msleep() 和 usleep() 分别允许整秒、毫秒和微秒分辨率。这些函数在 Qt 5.0 中公开。
-注意：通常不需要 wait() 和 sleep() 函数，因为 Qt 是一个事件驱动的框架。考虑监听finished() 信号，而不是wait()。考虑使用 QTimer，而不是 sleep() 函数。
-
-静态函数 currentThreadId() 和 currentThread() 返回当前执行线程的标识符。前者返回线程的平台特定 ID；后者返回一个 QThread 指针。要选择线程的名称（例如，在 Linux 上由命令 ps -L 标识），您可以在启动线程之前调用 setObjectName()。如果您不调用 setObjectName()，则为线程指定的名称将是线程对象的运行时类型的类名（例如，在 Mandelbrot 示例中为“RenderThread”，因为这是QThread 子类）。请注意，这目前不适用于 Windows 上的发布版本。
-
-#### 枚举类型
-
-此枚举类型指示操作系统应如何调度新创建的线程。
-
-```c++
-enum QThread::Priority = {
-    QThread::IdlePriority,// 仅在没有其他线程运行时调度
-    QThread::LowestPriority,// 安排的频率低于 LowPriority
-    QThread::LowPriority,//安排的频率低于 NormalPriority
-    QThread::NormalPriority,//操作系统的默认优先级
-    QThread::HighPriority,//比 NormalPriority 更频繁地安排
-    QThread::HighestPriority,//比 HighPriority 更频繁地安排
-    QThread::TimeCriticalPriority,//尽可能经常安排
-    QThread::InheritPriority//使用与创建线程相同的优先级。这是默认设置
-}
-```
-
-#### 子类函数
-
-```c++
-QAbstractEventDispatcher *eventDispatcher() const;//返回指向线程的事件分派器对象的指针。如果线程不存在事件分派器，则此函数返回 0
-void setEventDispatcher(QAbstractEventDispatcher *eventDispatcher);
-
-void exit(int returnCode = 0);// 退出事件循环,0表示成功退出,exit(0)等价于quit()
-
-bool isFinished() const; // 如果线程完成则返回真；否则返回 false
-bool isRunning() const;//如果线程正在运行，则返回 true；否则返回 false
-
-bool isInterruptionRequested() const;//如果应该停止在此线程上运行的任务，则返回 true。 requestInterruption() 可以请求中断。此功能可用于使长时间运行的任务完全可中断。永远不要检查或操作此函数返回的值是安全的，但是建议在长时间运行的函数中定期这样做。注意不要经常调用它，以保持低开销。
-void requestInterruption();//请求中断线程。该请求是建议性的，由线程上运行的代码决定是否以及如何根据此类请求采取行动。此函数不会停止线程上运行的任何事件循环，也不会以任何方式终止它。
-
-int loopLevel() const;//返回线程的当前事件循环级别。注意：这只能在线程本身内调用，即当它是当前线程时
-Priority priority() const;//返回正在运行的线程的优先级。如果线程没有运行，这个函数返回 InheritPriority
-void setPriority(Priority priority);
-
-void setStackSize(uint stackSize);//将线程的最大堆栈大小设置为 stackSize。如果 stackSize 大于零，则将最大堆栈大小设置为 stackSize 字节，否则最大堆栈大小由操作系统自动确定
-uint stackSize() const;//
-
-bool wait(unsigned long time = ULONG_MAX);//阻塞线程，直到满足以下任一条件： 与此 QThread 对象关联的线程已完成执行（即，当它从 run() 返回时）。如果线程已完成，此函数将返回 true。如果线程尚未启动，它也会返回 true。time 毫秒已经过去。如果时间为 ULONG_MAX（默认值），则等待永远不会超时（线程必须从 run() 返回）。如果等待超时，此函数将返回 false。这提供了与 POSIX pthread_join() 函数类似的功能。
-```
-
-#### 信号和槽函数
-
-```c++
-void quit();// 公共槽函数,相当于调用 QThread::exit(0)
-void start(Priority priority = InheritPriority);// 公共槽函数,内部调用run()执行线程。操作系统会根据优先级参数调度线程。如果线程已经在运行，这个函数什么也不做
-void terminate();//公共槽函数,终止线程的执行。线程可能会或可能不会立即终止，具体取决于操作系统的调度策略。在 terminate()之后应使用wait()
-
-void finished();// 该信号在完成执行之前从关联线程发出。该信号可以连接到QObject::deleteLater()，以释放该线程中的对象。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出。
-void started();// 在调用 run()函数之前，该信号从关联线程开始执行时发出。注意：这是一个私人信号。它可以用于信号连接，但不能由用户发出
-```
-
-#### 静态函数
-
-```c++
-QThread *currentThread();//返回一个指向管理当前执行线程的 QThread 的指针
-Qt::HANDLE currentThreadId();//返回当前执行线程的线程句柄
-int idealThreadCount();//返回可以在系统上运行的理想线程数。这是通过查询系统中实际和逻辑处理器核心的数量来完成的。如果无法检测到处理器内核数，此函数返回 -1
-void msleep(unsigned long msecs);//强制当前线程休眠 msecs 毫秒
-void sleep(unsigned long secs);//强制当前线程休眠 secs 秒
-void usleep(unsigned long usecs);//强制当前线程休眠 usecs 微秒
-void yieldCurrentThread();//将当前线程的执行交给另一个可运行线程（如果有）。请注意，操作系统决定切换到哪个线程
-```
-
-#### 继承函数
-
-```c++
-int exec();//进入事件循环并等待直到exit()被调用
-
-virtual void run();// start()调用此函数执行线程任务,线程离开事件循环调用QEventLoop::exec()返回。
-
-[static protected] void QThread::setTerminationEnabled(bool enabled = true);//根据 enabled 参数启用或禁用当前线程的终止
-```
-
-
-
-### QMutex
+### 
 
 
 

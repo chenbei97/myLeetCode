@@ -1,0 +1,17 @@
+#ifndef WORKERTHREAD_H
+#define WORKERTHREAD_H
+
+#include <QObject>
+
+class WorkerThread : public QObject
+{
+    Q_OBJECT
+public:
+    WorkerThread();
+public slots:
+    void doWork(int select);
+signals:
+    void resultReady(const QString& result);
+};
+
+#endif // WORKERTHREAD_H
