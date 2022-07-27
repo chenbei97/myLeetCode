@@ -79,6 +79,9 @@
     坑10：即使如此也可能还是会出现链接错误问题，你可以试试把include文件作为外部目录整体加入到项目中，笔者就是这样解决了问题
     坑11：最后要强调，MSVC是本地windows下的字符集GB2312而不是UTF8，但是书上提供的中文乱码解决方案不成功，笔者也不想找了，就用英文就行了
 
+26. TestCreateStaticLib 演示如何创建静态库，这里不需和QtCreator的编译器保持一致，只需库和使用库的编译器保持一致(MSVC的debug-release)
+
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
