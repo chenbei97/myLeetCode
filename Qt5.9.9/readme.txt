@@ -85,6 +85,8 @@
 
 28. TestThread 简单的QThread2种方式应用,Qt文档例子的具体化,也是对8-TestQThread的补充
 
+29. TestThreadSynchronization 提及了线程同步的几种方法(基于互斥量、读写锁、条件变量以及信号量)
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)

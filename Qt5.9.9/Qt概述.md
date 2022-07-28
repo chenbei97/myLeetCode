@@ -12750,15 +12750,153 @@ QFunctionPointer resolve(const QString &fileName, const QString &version, const 
 
 ### 12.1 线程同步的概念
 
+由于多个线程的存在，可能线程之间需要同时访问同一个变量，或者一个线程需要等待另外一个线程完成某个操作之后才产生相应的动作。例如下方的实例，工作线程需要产生一个随机点数发射出去，然后主线程的槽函数去获取它，因为使用了信号与槽机制，所以这种反馈是非常及时的，不会出现问题。可见[08-TestQThread](08-TestQThread)。
 
+```c++
+void rollDice::run() // 工作线程
+{
+    this->dstop = false; // 开启状态
+    qsrand(QTime::currentTime().msec()); // 以返回的毫秒时间作为随机种子
+
+    while (!dstop)  // 只要外部没有停止它就执行
+    {
+        if (!dpause) // 只要外部没点暂停就执行
+        {
+            this->diceValue = qrand()% 6 +1; // 随机数,转换到数字[1,6]之间
+
+            ++ this->diceFrequency; // 次数+1
+
+            emit this->transmit_dice_val_fre(diceValue,diceFrequency); // 把数据传递出去
+        }
+        msleep(500); // 工作线程不要太快,500ms掷骰子1次
+    }
+    quit(); // 等价于exit(0),表示成功退出线程
+}
+
+// 主线程的槽函数
+// 4.骰子点数、次数和图片显示，回应thread自定义的信号transmit_dice_val_fre
+void TestQThread::dice_show(int val,int fre)
+{
+    QString str = QString::asprintf("第 %d 次掷骰子，点数为 %d",fre,val);
+    ui->plainTextEdit->appendPlainText(str);
+    QPixmap pix; // 图片显示
+    QString filename = QString::asprintf(":/images/d%d.jpg",val);
+    pix.load(filename);
+    ui->LabPic->setPixmap(pix);
+}
+```
+
+如果不借助信号与槽机制，那么工作线程必须定义2个用于读取diceValue和diceFrequency的公共函数，然后主线程能够调用这2个公共函数去获取2个数据。不过主线程调用2个函数的获取的是this->diceValue和this->diceFrequency，这2个值在工作线程中可能被修改，**即一个线程在读取，一个线程在写入就会造成问题**，可能读取的数值是个错误的值，所以这样的代码是必须保护起来的，在执行过程中不能被其他线程打断，这就是线程同步的概念。
+
+```c++
+int rollDice::getDiceValue(){return this->diceValue}
+int rollDice::getDiceFrequency(){return this->diceFrequency}
+```
 
 ### 12.2 基于QMutex的线程同步
 
+QMutex和QMutexLocker是基于互斥量的线程同步类，QMutex的实例就是一个互斥量。
 
+QMutex主要提供3个函数。
+
+lock()：锁定互斥量，如果另外一个线程锁定了此互斥量，它将阻塞执行直到其它线程解锁这个互斥量；
+
+unlock()：解锁1个互斥量，需要与lock配对使用
+
+tryLock()：**试图锁定一个互斥量，成功返回true；如果其它线程已经锁定了，则返回false，但不阻塞程序执行**。
+
+现在为了演示如何基于QMutex的线程同步，不采用信号槽机制，而是提供1个函数用于主线程读取。
+
+例子具体可见[29-TestThreadSynchronization/TestQMutexBase](29-TestThreadSynchronization/TestQMutexBase)。
+
+工作线程的代码主要改动。
+
+```c++
+void rollDice::run() // 工作线程
+{
+    this->dstop = false; // 开启状态
+    qsrand(QTime::currentTime().msec()); // 以返回的毫秒时间作为随机种子
+
+    while (!dstop)  // 只要外部没有停止它就执行
+    {
+        if (!dpause) // 只要外部没点暂停就执行
+        {
+            // 第3个区别,使用互斥量保护关键代码
+            // QMutexLocker Locker(&this->mutex); // 只用这句简化代码也可以
+            this->mutex.lock(); // 第1个区别:关键代码处锁定互斥量
+            this->diceValue = qrand()% 6 +1; // 随机数,转换到数字[1,6]之间
+            ++ this->diceFrequency; // 次数+1
+            // emit this->transmit_dice_val_fre(diceValue,diceFrequency); // 把数据传递出去
+            this->mutex.unlock(); // 第2个区别:配对使用解锁互斥量
+        }
+        msleep(500); // 工作线程不要太快,500ms掷骰子1次
+    }
+    quit(); // 等价于exit(0),表示成功退出线程
+}
+
+// 第4个区别,不使用信号槽机制就需要提供公共函数访问
+bool rollDice::transmit_dice_val_fre(int *val, int *fre)
+{
+    if (this->mutex.tryLock()) // 读取的时候尝试锁定互斥量,如果锁定成功说明可以读取,不会发生读取的时候工作线程修改这2个值
+    {
+        *val = this->diceValue;
+        *fre = this->diceFrequency;
+        mutex.unlock();
+        return true;
+    }
+    return false;
+}
+```
+
+主线程代码的主要改动，新增了定时器，定时器初始化连接时绑定到了onTimeOut函数，定时器的启动和关断是在掷骰子和暂停掷骰子这里控制。
+
+```c++
+// 第5个区别,onTimeOut()代替dice_show(int val,int fre)的功能
+void TestQMutexBased::onTimeOut()
+{
+    int val = 0 , fre = 0;
+    bool valid = this->rolldice->transmit_dice_val_fre(&val,&fre); //定时读取返回的值,但是不保证每次读取的就是新的数据,很可能工作线程来不及修改
+    if (valid && (this->diceFrequency != fre)) // 数据有效,而且是新数据
+    {
+        this->diceFrequency = fre;
+        this->diceValue = val; // 保存2个值用于下次比较
+        QString str = QString::asprintf("第 %d 次掷骰子，点数为 %d",this->diceFrequency,this->diceValue);
+        ui->plainTextEdit->appendPlainText(str);
+        QPixmap pix; // 图片显示
+        QString filename = QString::asprintf(":/images/d%d.jpg",this->diceValue);
+        pix.load(filename);
+        ui->LabPic->setPixmap(pix);
+    }
+}
+
+// 7. 开始掷骰子=>pushbutton的槽函数
+void TestQMutexBased::on_btnDiceBegin_clicked()
+{
+        this->rolldice->startDice(); // 开始掷骰子,内部设置dpause=false,run()就会执行
+        this->mTimer.start(100);// 第6个区别,定时器设置定时,在开始掷骰子而不是开启线程设置,因为此时才会有新数据准备读取它
+        ui->btnDiceBegin->setEnabled(false); // 开始掷骰子
+        ui->btnDicePause->setEnabled(true); // 暂停掷骰子
+}
+
+// 8.暂停掷骰子=>pushbutton的槽函数
+void TestQMutexBased::on_btnDicePause_clicked()
+{
+        this->rolldice->pauseDice(); // 开始掷骰子,内部设置dpause=false,run()就会执行
+        this->mTimer.stop(); // 第7个区别,不掷骰子了没有数据没必要再定时读取
+        ui->btnDiceBegin->setEnabled(true); // 开始掷骰子
+        ui->btnDicePause->setEnabled(false); // 暂停掷骰子
+}
+```
 
 ### 12.3 基于QReadWriteLock的线程同步
 
+具体的实例可见[29-TestThreadSynchronization/TestQReadWriteLockBase](29-TestThreadSynchronization/TestQReadWriteLockBase)。
 
+简单来说，这个读写锁相比QMutex能够提高互斥量的效率，多个读操作可以持有一把锁，不会冲突阻塞。
+
+写操作会阻塞任何读操作，读操作也会阻塞写操作，但是只有读和写会阻塞，多个读不会阻塞，但是多个写依然会阻塞，这是相对于QMutex提升效率的一点。
+
+相应的，如果不想手动unlock，使用QReadLocker和QWriteLocker都是ok的，和QMutexLocker效果一样。
 
 ### 12.4 基于QWaitConditon的线程同步
 
@@ -12916,17 +13054,316 @@ void setEventDispatcher(QAbstactEventDispatcher *eventDispatcher);
 
 #### 12.6.2 QMutex
 
+QMutex 类提供线程之间的访问序列化。
+QMutex 的目的是保护对象、数据结构或代码段，以便一次只有一个线程可以访问它（这类似于 Java 的同步关键字）。通常最好将互斥锁与 QMutexLocker 一起使用，因为这样可以轻松确保一致地执行锁定和解锁。
+例如，假设有一种方法可以在两行上向用户打印一条消息：
+
+```c++
+int number = 6;
+void method1()
+{
+    number *= 5;
+    number /= 4;
+}
+
+void method2()
+{
+    number *= 3;
+    number /= 2;
+}
+```
+
+如果连续调用这两个方法，会发生以下情况：
+
+```c++
+// method1()
+number *= 5;        // number is now 30
+number /= 4;        // number is now 7
+
+// method2()
+number *= 3;        // number is now 21
+number /= 2;        // number is now 10
+```
+
+如果从两个线程同时调用这两个方法，则可能产生以下序列：
+
+```c++
+// Thread 1 calls method1()
+number *= 5;        // 执行线程1的第1个乘法操作变成了30
+
+// Thread 2 calls method2().
+// 线程1很可能已被操作,系统允许线程2运行
+number *= 3;        // 3*30=90
+number /= 2;        // 90/2=45
+
+// 线程1完成执行
+number /= 4;        // 现在才执行线程1的第2个除法操作45/4=11,而不是一开始的6*5/4*3/2=10
+```
+
+如果添加一个互斥体，就保证不会出现上述情况。
+
+```c++
+QMutex mutex;
+int number = 6;
+void method1()
+{
+    mutex.lock();
+    number *= 5;
+    number /= 4;
+    mutex.unlock();
+}
+
+void method2()
+{
+    mutex.lock();
+    number *= 3;
+    number /= 2;
+    mutex.unlock();
+}
+```
+
+那么在任何给定时间只有一个线程可以修改数字并且结果是正确的。当然，这是一个简单的例子，但适用于需要以特定顺序发生的任何其他情况。当您在**一个线程中调用 lock() 时，其他尝试在同一位置调用 lock() 的线程将阻塞**，直到获得锁的线程调用 unlock()。 **lock() 的非阻塞替代方法是 tryLock()**。QMutex 经过优化以在非竞争情况下快速运行。如果该互斥体上没有争用，则非递归 QMutex 将不会分配内存。它的构建和销毁几乎没有开销，这意味着可以将许多互斥锁作为其他类的一部分。
+
+枚举类型。
+
+```c++
+enum QMutex::RecursionMode{
+    QMutex::Recursive,//在这种模式下，一个线程可以多次锁定同一个互斥体，并且在进行相应数量的 unlock() 调用之前，互斥体不会被解锁
+    QMutex::NonRecursive//在这种模式下，一个线程只能锁定一个互斥锁一次(默认)
+}
+```
+
+成员函数。
+
+```c++
+QMutex(RecursionMode mode = NonRecursive);//构造一个新的互斥体。互斥锁是在解锁状态下创建的
+bool isRecursive() const;//如果互斥体是递归的，则返回 true
+void lock();//锁定互斥体。如果另一个线程已锁定互斥锁，则此调用将阻塞，直到该线程将其解锁
+bool tryLock(int timeout = 0);//尝试锁定互斥锁。如果获得了锁，这个函数返回true；否则返回false。如果另一个线程锁定了互斥锁，此函数将最多等待超时毫秒，以使互斥锁可用
+bool try_lock();//尝试锁定互斥锁。如果获得了锁，这个函数返回true；否则返回false
+bool try_lock_for(std::chrono::duration<Rep, Period> duration);//尝试锁定互斥锁。如果获得了锁，这个函数返回true；否则返回false。如果另一个线程已锁定互斥锁，此函数将等待至少一段时间，以使互斥锁可用
+bool try_lock_until(std::chrono::time_point<Clock, Duration> timePoint);//尝试锁定互斥锁。如果获得了锁，这个函数返回true；否则返回false。如果另一个线程已锁定互斥锁，此函数将至少等待到 timePoint 以使互斥锁可用
+void unlock();//解锁互斥锁。尝试在与锁定它的线程不同的线程中解锁互斥锁会导致错误。解锁未锁定的互斥锁会导致未定义的行为
+```
+
+#### 12.6.3 QMutexLocker
+
+QMutexLocker 类是简化锁定和解锁互斥锁的便利类。
+在复杂的函数和语句或异常处理代码中锁定和解锁 QMutex 容易出错且难以调试。在这种情况下可以使用 QMutexLocker 来确保互斥锁的状态始终是明确定义的。
+QMutexLocker 应该在需要锁定 QMutex 的函数中创建。在**创建 QMutexLocker 时，互斥锁被锁定**。**可以使用 unlock() 和 relock() 解锁和重新锁定互斥锁**。如果被锁定，则当 QMutexLocker 被销毁时，互斥锁将被解锁。
+例如，这个复杂的函数在进入函数时锁定一个 QMutex 并在所有退出点解锁互斥锁：
+
+```c++
+int complexFunction(int flag)
+{
+    mutex.lock(); // 手动锁定
+
+    int retVal = 0;
+    switch (flag) {
+        case 0:
+        case 1:
+            retVal = moreComplexFunction(flag);
+            break;
+        case 2:
+            {
+                int status = anotherFunction();
+                if (status < 0) {
+                    mutex.unlock();
+                    return -2;
+                }
+                retVal = status + flag;
+            }
+            break;
+        default:
+            if (flag > 10) {
+                mutex.unlock();
+                return -1;
+            }
+            break;
+    }
+
+    mutex.unlock();// 手动解锁
+    return retVal;
+}
+```
+
+这个示例函数在开发过程中会变得更加复杂，这会增加发生错误的可能性。使用 QMutexLocker 极大地简化了代码，并使其更具可读性：
+
+```c++
+int complexFunction(int flag)
+{
+    QMutexLocker locker(&mutex); //创建时已经锁定
+
+    int retVal = 0;
+
+    switch (flag) {
+        case 0:
+        case 1:
+            return moreComplexFunction(flag);
+        case 2:
+            {
+                int status = anotherFunction();
+                if (status < 0)
+                    return -2;
+                retVal = status + flag;
+            }
+            break;
+        default:
+            if (flag > 10)
+                return -1;
+            break;
+    }
+
+    return retVal;
+    // 离开作用域时会自动解锁
+}
+```
+
+现在，当 QMutexLocker 对象被销毁时，互斥锁总是会被解锁（当函数返回时，因为 locker 是一个自动变量）。
+同样的原则也适用于抛出和捕获异常的代码。未在已锁定互斥锁的函数中捕获的异常在异常向上传递到调用函数的堆栈之前无法解锁互斥锁。
+QMutexLocker 还提供了一个 **mutex() 成员函数，该函数返回 QMutexLocker 正在操作的互斥锁**。这对于需要访问互斥锁的代码很有用，例如 QWaitCondition::wait()。例如：
+
+```c++
+class SignalWaiter
+{
+private:
+    QMutexLocker locker;
+public:
+    SignalWaiter(QMutex *mutex): locker(mutex){}//构造函数绑定了传进来的互斥量
+    void waitForSignal()
+    {
+        ...
+            while (!signalled)
+                waitCondition.wait(locker.mutex());//等待这个互斥量
+        ...
+    }
+};
+```
+
+成员函数。
+
+```c++
+QMutexLocker(QMutex *mutex);
+QMutex *mutex() const;
+void relock();//重新锁定未锁定的互斥锁
+void unlock();
+```
+
+#### 12.6.4 QReadWriteLock
+
+QReadWriteLock 类提供读写锁定。
+读写锁是一种同步工具，用于保护可读写的资源。如果您想允许多个线程同时进行只读访问，这种类型的锁很有用，但是一旦一个线程想要写入资源，所有其他线程都必须被阻塞，直到写入完成。
+在许多情况下，QReadWriteLock 是 QMutex 的直接竞争对手。 QReadWriteLock 是一个不错的选择，如果有很多并发读取和写入不频繁发生。
+例子：
+
+```c++
+QReadWriteLock lock;
+void ReaderThread::run()
+{
+    ...
+        lock.lockForRead(); // 读取线程
+    read_file();
+    lock.unlock();
+    ...
+}
+void WriterThread::run()
+{
+    ...
+        lock.lockForWrite();//写入线程
+    write_file();
+    lock.unlock();
+    ...
+}
+```
+
+为了确保写入线程永远不会被读取线程阻塞，如果有阻塞的写入线程等待访问，即使当前只有其他读取线程访问锁，尝试获取锁的读取线程也不会成功。此外，如果一个写线程访问了锁，而另一个写线程进入，则该写线程将优先于任何可能也在等待的读线程。与 QMutex 一样，当使用 QReadWriteLock::Recursive 构造为 QReadWriteLock::RecursionMode 时，QReadWriteLock 可以被同一线程递归锁定。在这种情况下，unlock() 的调用次数必须与 lockForWrite() 或 lockForRead() 的调用次数相同。请注意，尝试递归锁定时无法更改锁定类型，即无法在已经锁定写入的线程中锁定读取（反之亦然）。
+
+枚举类型，含义和QMutex的相同。
+
+```c++
+enum RecursionMode { Recursive, NonRecursive }
+```
+
+成员函数。
+
+```c++
+QReadWriteLock(RecursionMode recursionMode = NonRecursive);
+void lockForRead(); // 只用于读操作,多个线程都使用lockForRead不会阻塞,写操作会阻塞所有线程的lockForRead
+void lockForWrite();// 只用于本线程的写操作,其它线程的写和读都会阻塞当前线程的lockForWrite
+bool tryLockForRead();// 是lockForRead非阻塞版本
+bool tryLockForRead(int timeout);
+bool tryLockForWrite();// lockForWrite非阻塞版本
+bool tryLockForWrite(int timeout);
+void unlock();
+```
+
+#### 12.6.5 QReadLocker
+
+类似于QMutexLocker，是一种简便的无需手动unlock的锁定器，例子如下。
+
+```c++
+QReadWriteLock lock; // 读写的lock
+QByteArray readData()
+{
+    QReadLocker locker(&lock);//读绑定
+    ...
+        return data;
+}
+// 等价于
+QReadWriteLock lock;
+QByteArray readData()
+{
+    lock.lockForRead();//直接使用lockForRead()+unlock()
+    ...
+        lock.unlock();
+    return data;
+}
+```
+
+成员函数。
+
+```c++
+QReadLocker(QReadWriteLock *lock);
+QReadWriteLock *readWriteLock() const;
+void relock();
+void unlock();
+```
+
+#### 12.6.6 QWriteLocker
+
+类似于QMutexLocker，是一种简便的无需手动unlock的锁定器，例子如下。
+
+```c++
+QReadWriteLock lock;// 读写的lock
+void writeData(const QByteArray &data)
+{
+    QWriteLocker locker(&lock);//写绑定
+    ...
+}
+// 等价于
+QReadWriteLock lock;
+void writeData(const QByteArray &data)
+{
+    lock.lockForWrite();
+    ...
+        lock.unlock();
+}
+```
+
+成员函数。
+
+```c++
+QWriteLocker(QReadWriteLock *lock);
+QReadWriteLock *readWriteLock() const;
+void relock();
+void unlock();
+```
+
+#### 12.6.7 QWaitCondition
 
 
-#### 12.6.3 QReadWriteLock
 
-
-
-#### 12.6.4 QWaitCondition
-
-
-
-#### 12.6.5 QSemaphore
+#### 12.6.8 QSemaphore
 
 
 
