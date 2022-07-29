@@ -12890,15 +12890,127 @@ void TestQMutexBased::on_btnDicePause_clicked()
 
 ### 12.3 基于QReadWriteLock的线程同步
 
+假设有1个数据采集程序，一个线程专门用于写入缓冲区，一个线程用于读取数据显示，一个线程用于读取缓冲数据保存到文件。实际上，2个读取线程是不会冲突的，但是使用互斥量会导致3个线程任何时候都只能有1个持有互斥量，所以会降低程序的性能。
+
+```c++
+int buffer[100]; // 全局缓存
+QMutex mutex; //全局互斥量
+void writeThread::run()
+{
+    //...
+    mutex.lock();
+    writeData();
+    mutex.unlock();
+    //...
+}
+void readThread::run()
+{
+    //...
+    mutex.lock();
+    readData();
+    mutex.unlock();
+    //...
+}
+void saveThread::run()
+{
+    //...
+    mutex.lock();
+    saveData();
+    mutex.unlock();
+    //...
+}
+```
+
+改进的方法就是使用基于读写的锁。
+
+```c++
+int buffer[100]; // 全局缓存
+QReadWriteLock Lock; // 全局读写锁
+void writeThread::run()
+{
+    //...
+    Lock.lockForWrite();
+    writeData();
+    Lock.unlock();
+    //...
+}
+void readThread::run()
+{
+    //...
+    Lock.lockForRead();
+    readData();
+    Lock.unlock();
+    //...
+}
+void saveThread::run()
+{
+    //...
+    Lock.lockForRead();
+    saveData();
+    Lock.unlock();
+    //...
+}
+```
+
+如果不想手动unlock，使用以下方法也是可以的，和QMutexLocker的用法相同。
+
+```c++
+int buffer[100]; // 全局缓存
+QReadWriteLock Lock; // 全局读写锁
+void writeThread::run()
+{
+    //...
+    QWriteLocker Locker(&Lock);
+    writeData();
+    //...
+}
+void readThread::run()
+{
+    //...
+    QReadLocker Locker(&Lock);
+    readData();
+    //...
+}
+void saveThread::run()
+{
+    //...
+    QReadLocker Locker(&Lock);
+    saveData();
+    //...
+}
+```
+
+原书的代码只是1个伪代码示例，不能运行，下方是模拟这种代码编写的例子。
+
 具体的实例可见[29-TestThreadSynchronization/TestQReadWriteLockBase](29-TestThreadSynchronization/TestQReadWriteLockBase)。
+
+在[29-TestThreadSynchronization/TestQReadWriteLockBase](29-TestThreadSynchronization/TestQReadWriteLockBase)的例子中，运行界面就是6个按钮（开始写入数据、停止写入数据、开始读取数据、停止读取数据、开始保存数据、停止保存数据）和一个QPlainText组件。
+
+运行测试效果是这样的：
+
+① 点击开始写入数据，就会往全局buffer写数据，使用的随机数往里写，为了避免过快导致内存炸，工作线程会100ms执行一次写数据。如果先点的写入数据，这个时候点击读取数据和保存数据之后，是阻塞状态，只有停止了写数据，读取和保存数据才会执行，而且是交替的，2个都可执行。
+
+② 停止写数据，会暂停往里写数据。
+
+③ 开始读取数据，会在plaintext组件显示，读取了多少条数据，经实际测试，写入的数据是多少，读出来的也是多少，没有偏差。如果读取完了，在plaintext会有提示。如果先点的读取数据，没有数据的话会提示；如果有数据没读完，点击读取数据后再点击写入数据，同样会阻塞写线程，除非暂停读线程才会继续写。
+
+④ 暂停读取数据，暂停后内部会保存读取的进度，此时再开始读取数据，会接着之前的进度继续读取直到读取的数据全部完成。
+
+⑤ 开始保存数据，和开始读取数据一样，也会显示已经保存了多少条数据，不会有偏差，如果保存完了也会提示保存完毕。
+
+⑥ 暂停保存数据，和暂停读取一样，会存档保存进度，再次保存会继续之前的进度。
 
 简单来说，这个读写锁相比QMutex能够提高互斥量的效率，多个读操作可以持有一把锁，不会冲突阻塞。
 
 写操作会阻塞任何读操作，读操作也会阻塞写操作，但是只有读和写会阻塞，多个读不会阻塞，但是多个写依然会阻塞，这是相对于QMutex提升效率的一点。
 
-相应的，如果不想手动unlock，使用QReadLocker和QWriteLocker都是ok的，和QMutexLocker效果一样。
+### 12.4 基于QWaitCondition的线程同步
 
-### 12.4 基于QWaitConditon的线程同步
+基于上方的例子，假设必须写满缓冲区后才能读取和保存数据。前边基于QMutex和QReadWriteLock的方法都是对资源的锁定和解锁来避免同时访问资源发生冲突，但是缺点在于一个线程解锁资源之后不能及时通知其他线程。
+
+上方的6个按钮，是需要手动的，点击读取数据以后，如果读取完毕或者暂停读取，会有人为的提示，才能继续点击写入数据。 如果希望没有人为的提示，一旦读取完毕或暂停读取数据就自动通知可以写入数据，而不是事先需要人点击按钮。
+
+现在希望缓冲区一旦满了就通知2个读线程及时读取数据，就需要使用QWaitCondition机制。
 
 
 
@@ -13360,6 +13472,82 @@ void unlock();
 ```
 
 #### 12.6.7 QWaitCondition
+
+QWaitCondition 类为同步线程提供了一个条件变量。
+QWaitCondition 允许一个线程告诉其他线程某种条件已经满足。一个或多个线程可以阻塞等待 QWaitCondition 使用 wakeOne() 或 wakeAll() 设置条件。使用 wakeOne() 随机唤醒一个线程或使用 wakeAll() 唤醒所有线程。
+例如，假设我们有三个任务，只要用户按下一个键就应该执行。每个任务都可以拆分为一个线程，每个线程都有一个 run() 主体，如下所示：
+
+```c++
+forever {
+    mutex.lock();
+    keyPressed.wait(&mutex);
+    do_something();
+    mutex.unlock();
+}
+```
+
+这里，keyPressed 变量是一个 QWaitCondition 类型的全局变量。
+第四个线程会读取按键并在每次接收到按键时唤醒其他三个线程，如下所示：
+
+```c++
+forever {
+    getchar();
+    keyPressed.wakeAll();
+}
+```
+
+三个线程被唤醒的顺序是未定义的。此外，如果**某些线程在按下键时仍在 do_something() 中，则它们不会被唤醒（因为它们没有等待条件变量）**，因此不会为该键执行任务.可以**使用计数器和 QMutex 来保护它**来解决这个问题。例如，这里是工作线程的新代码：
+
+```c++
+forever {
+    mutex.lock();
+    keyPressed.wait(&mutex);
+    ++count;
+    mutex.unlock();
+
+    do_something();
+
+    mutex.lock();
+    --count;
+    mutex.unlock();
+}
+```
+
+这是第四个线程的代码：
+
+```c++
+forever {
+    getchar();
+
+    mutex.lock();
+    // 只有count=0时才会跳过while,count=0意味着线程的do_something已经执行完了处于等待条件变量状态
+    while (count > 0) {
+        mutex.unlock();
+        sleep(1);
+        mutex.lock();
+    }
+    keyPressed.wakeAll();
+    mutex.unlock();
+}
+```
+
+互斥锁是必要的，因为尝试同时更改同一变量的值的两个线程的结果是不可预测的。
+等待条件是一个强大的线程同步原语。**等待条件示例示例展示了如何使用 QWaitCondition 作为 QSemaphore 的替代方法来控制对生产者线程和消费者线程共享的循环缓冲区的访问**。
+
+关于这个示例可见。
+
+成员函数。
+
+```c++
+QWaitCondition();
+
+void notify_all();
+void notify_one();
+bool wait(QMutex *lockedMutex, unsigned long time = ULONG_MAX);
+bool wait(QReadWriteLock *lockedReadWriteLock, unsigned long time = ULONG_MAX);
+void wakeAll();
+void wakeOne();
+```
 
 
 

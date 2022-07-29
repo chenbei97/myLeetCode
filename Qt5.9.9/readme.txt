@@ -200,6 +200,22 @@ if (file.open(QFile::ReadOnly)) {
         else
             event->ignore();
     }
+    还可以用来停止可能还在运行的子线程
+    void TestOneQWaitConditionBase::closeEvent(QCloseEvent *event)
+    {
+        if (threadProducer.isRunning())
+        {
+            threadProducer.stopDice(); // 生产者模型直接停止生产即可
+            threadProducer.wait();
+        }
+
+        if (threadConsumer.isRunning())
+        {
+            threadConsumer.terminate(); //消费者模型可能处于等待生产的状态,所以用terminate强制结束
+            threadConsumer.wait();//
+        }
+        event->accept();
+    }
     5.2 paintEvent():窗口绘制事件,可以用来加入背景图片
     5.3 showEvent():窗口显示时触发的事件
     5.4 mouseMoveEvent():鼠标移动事件
