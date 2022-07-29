@@ -13382,131 +13382,111 @@ void Consumer::run()
 class Producer : public QThread
 {
     Q_OBJECT
-private:
-    bool    isProduce=false; //停止生产
 protected:
     void    run() Q_DECL_OVERRIDE;
 public:
-    explicit Producer();
-    void    stopProduce();
+    void stopProduce();
+private:
+    bool isProduce;
 };
 // （2）消费者模型
 class Consumer : public QThread
 {
     Q_OBJECT
-private:
-    bool    isConsume=false; //停止线程
 protected:
     void    run() Q_DECL_OVERRIDE;
 public:
-    explicit Consumer();
-    void    stopConsume();
+    void stopConsume();
+private:
+    bool isConsumed;
 signals:
-    void    newValue(int *data,int count, int bufId);
+    void  newValue(int *data,int count, int bufId);
 };
 ```
 
 生产-消费者模型源文件代码。
 
 ```c++
-#include "producerConsumerThread.h"
-#include    <QSemaphore>
-
 const int BufferSize = 8;
 int buffer1[BufferSize]; // 双缓冲区
 int buffer2[BufferSize];
-int curBuf=1; //当前正在写入的Buffer
-
-int bufCount=0; // 表示累计的缓冲区个数编号
-
-quint8   counter=0;// 数据生成器
-
-QSemaphore emptyBufs(2);//信号量:空缓冲区资源数量为2
-QSemaphore fullBufs; // 满缓冲区资源数量为0
+int curBuf; //当前正在写入的Buffer
+int bufCount; // 表示累计的缓冲区个数编号
+quint8   counter;// 数据生成器(模拟采集数据)
+QSemaphore emptyBufs(2);//初始空缓冲区资源数量为2
+QSemaphore fullBufs; // 初始满缓冲区资源数量为0
 
 // （1）生产者模型
-Producer::Producer()
-{
-
-}
-
 void Producer::stopProduce()
 {
-    isProduce=false;
+    isProduce = false;
 }
-
 void Producer::run()
 {
-    isProduce=true;
-    bufCount=0;// 从0开始计算
+    bufCount=0;// 累计缓冲区数量从0开始计算
     curBuf=1; //当前写入使用的缓冲区
-    counter=0;//数据生成器
-
+    counter=0;// 初始化写入的数据为0
+    this->isProduce = true;
+    // 因为首次读取数据的时候,必然是2个空的缓冲资源
+    // 但是为了避免可能的意外导致并不是2个非空缓冲区,可以先初始化为2
+    // 不过一般不会出现这种意外,注释掉也没什么
     int n=emptyBufs.available(); // 空缓冲资源个数
-    if (n<2)  //写入数据要求具备2个空缓冲资源
-      emptyBufs.release(2-n); // 如果不是2个先释放掉,以便写入数据可以使用
+    if (n<2)  //初始化
+        emptyBufs.release(2-n); // 如果不是2个先释放掉,以便写入数据可以使用
 
-    while(isProduce)//循环主体
+    while (isProduce)
     {
-        emptyBufs.acquire(1);//尝试锁定一个空缓冲区,如果没有会在这里阻塞
+        emptyBufs.acquire(1);//尝试获取1个空缓冲区用于写入数据,如果没有会在这里阻塞
         for(int i=0;i<BufferSize;i++) //产生一个缓冲区的数据
         {
             if (curBuf==1) buffer1[i]=counter; // 向1号缓冲区写入数据
             else buffer2[i]=counter; // 向1号缓冲区写入数据
-
             counter++; // 模拟数据采集卡产生数据
-            msleep(50); //每50ms产生一个数
+            msleep(20); //每20ms产生一个数
         }
 
         // 这里for循环结束后,表示一个缓冲数组满了
-        bufCount++; // 累积缓冲区个数++
+        bufCount++; // 累积缓冲区个数++(为了后边传递数据用)
 
         if (curBuf==1) curBuf=2; // 切换当前写入缓冲区用于下次使用
         else curBuf=1;
 
-        fullBufs.release(); // 对于release,如果资源已全部可以用(因为初始化为0)就会增加可用资源个数
-        // 这样的话本来只有0个满缓冲区,现在有了1个满缓冲区,可以被读取资源去acquire(锁定)
+        // 对于release,如果资源已全部可以用(因为初始化为0)就会增加可用资源个数
+        fullBufs.release(); // 一个满缓冲区资源被释放,就会从变成1,可以被消费者acquire
+        msleep(50);
     }
     quit();
 }
 
 // （2）消费者模型
-Consumer::Consumer()
-{
-
-}
-
 void Consumer::stopConsume()
 {
-    isConsume=false;
+    isConsumed = false;
 }
-
 void Consumer::run()
 {
-    isConsume=true;
+    this->isConsumed = true;
+    // 下方3行代码可以注释掉,仅仅是为了第1次读取数据时初始化满缓冲区资源为0
+    // 避免意外读取了并非生产者提供的满缓冲区资源,因为读取的前提必须先写入
+    // 所以最初最初的时候,fullBufs.acquire(1);是一定会阻塞并等待通知的
+    // 不过一般不会出现这种意外,所以注释掉也没什么影响
     int n=fullBufs.available();
     if (n>0)
-       fullBufs.acquire(n); // 如果n>0就先锁定,这样满缓冲区资源数初始化为0
-    // 这是为了第一次开始读取数据时有1个等待过程,如果之前有了满缓冲区这种资源可能就会读取错误
-    // 当n=0,在下方的fullBufs.acquire(1);就会等待写入缓冲区释放1个满缓冲区资源
-    // 一直没有就会阻塞,直到获得第1个满缓冲区资源
-    while(isConsume)//循环主体
+        fullBufs.acquire(n); // 如果n>0就先锁定,这样满缓冲区资源数初始化为0
+    while (isConsumed)
     {
-        fullBufs.acquire(1); // 如没有满缓冲区会阻塞,不会执行后面的代码
-
+        fullBufs.acquire(1); // 尝试获取1个可用的满缓冲区,如果没有会阻塞
         int bufferData[BufferSize]; // 用于传递数据的临时数组
-
         int id=bufCount;
-
         if(curBuf==1) //当前在写入的缓冲区是1，那么满的缓冲区是2
             for (int i=0;i<BufferSize;i++)
-               bufferData[i]=buffer2[i]; //快速拷贝缓冲区数据
+                bufferData[i]=buffer2[i]; //快速拷贝缓冲区数据
         else
             for (int i=0;i<BufferSize;i++)
-               bufferData[i]=buffer1[i];
-
-        emptyBufs.release();// 一个满的缓冲区读取完毕了,可以增加新的空缓冲区资源
-        emit    newValue(bufferData,BufferSize,id);//给主线程传递数据(一维数组,数组长度,缓冲区编号)
+                bufferData[i]=buffer1[i];
+        emptyBufs.release();// 读取完毕,缓冲区空闲,还回去给生产者使用
+        emit  newValue(bufferData,BufferSize,id);//给主线程传递数据(一维数组,数组长度,缓冲区编号)
+        msleep(10);
     }
     quit();
 }
@@ -13622,6 +13602,8 @@ class Consumer : public QThread
 DataSize 是生产者将生成的数据量。为了使示例尽可能简单，我们将其设为常量。 BufferSize 是循环缓冲区的大小。它小于 DataSize，这意味着在某些时候生产者将到达缓冲区的末尾并从头开始重新启动。
 为了同步生产者和消费者，我们需要两个信号量。 **freeBytes 信号量控制缓冲区的“空闲”区域（生产者尚未填充数据或消费者已读取的区域）**。 **usedBytes 信号量控制缓冲区的“已使用”区域（生产者已填充但消费者尚未读取的区域）**。2个信号量确保生产者永远不会超过消费者的 BufferSize 字节，并且消费者永远不会读取生产者尚未生成的数据。freeBytes 信号量是用 BufferSize 初始化的，因为最初整个缓冲区是空的。 usedBytes 信号量初始化为 0（如果未指定，则为默认值）。
 
+生产消费模型的主要代码。
+
 ```c++
 // DataSize 是生产者将生成的数据量,为了尽可能简单,将其设为常量
  const int DataSize = 1000;
@@ -13663,7 +13645,39 @@ void Consumer::run()
 }
 ```
 
+UI界面的代码，也很简单。
 
+```c++
+TestTwoQSemaphoreBase::TestTwoQSemaphoreBase(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::TestTwoQSemaphoreBase)
+{
+    ui->setupUi(this);
+    connect(&producer,SIGNAL(stringProduced(const QString)),this,SLOT(on_stringProduced(const QString)));
+    connect(&consumer,SIGNAL(stringConsumed(const QString)),this,SLOT(on_stringConsumed(const QString)));
+}
+
+void TestTwoQSemaphoreBase::on_stringProduced(const QString&text)
+{
+    ui->plainTextEdit->appendPlainText(QString::asprintf("正在生产第%d个数据：",++count1)+text);
+}
+
+void TestTwoQSemaphoreBase::on_stringConsumed(const QString& text)
+{
+    ui->plainTextEdit->appendPlainText(QString::asprintf("正在读取生产的第%d个数据：",++count2)+text);
+}
+
+TestTwoQSemaphoreBase::~TestTwoQSemaphoreBase()
+{
+    delete ui;
+}
+
+void TestTwoQSemaphoreBase::on_pushButton_clicked()
+{
+    producer.start();
+    consumer.start();
+}
+```
 
 ### 12.6 关联线程数据类型
 
@@ -14194,9 +14208,42 @@ void wakeAll();
 void wakeOne();
 ```
 
-
-
 #### 12.6.8 QSemaphore
+
+QSemaphore 类提供了一个通用的计数信号量。
+信号量是互斥体的泛化。虽然互斥锁只能锁定一次，但可以多次获取信号量。信号量通常用于保护一定数量的相同资源。信号量支持两个基本操作，acquire() 和 release()：acquire(n) 尝试获取 n 个资源。如果没有那么多可用资源，调用将阻塞，直到出现这种情况。release(n) 释放 n 个资源。
+还有一个 tryAcquire() 函数可以在无法获取资源时立即返回，还有一个 available() 函数可以随时返回可用资源的数量。例子：
+
+```c++
+QSemaphore sem(5);      // sem.available() == 5
+
+sem.acquire(3);         // sem.available() == 2
+sem.acquire(2);         // sem.available() == 0
+sem.release(5);         // sem.available() == 5
+sem.release(5);         // sem.available() == 10
+
+sem.tryAcquire(1);      // sem.available() == 9, returns true
+sem.tryAcquire(250);    // sem.available() == 9, returns false
+```
+
+信号量的一个典型应用是控制对生产者线程和消费者线程共享的循环缓冲区的访问。信号量示例展示了如何使用 QSemaphore 来解决该问题。信号量的一个非计算示例是在餐厅用餐。使用餐厅中椅子的数量初始化信号量。当人们到达时，他们想要一个座位。随着座位被填满，available() 递减。当人们离开时，available() 会增加，允许更多人进入。如果 10 人的聚会想要入座，但只有 9 个座位，那 10 人会等待，但 4 人的聚会会坐下（将可用座位增加到 5 个，让 10 人的聚会等待更长的时间） 。
+
+成员函数。
+
+```c++
+QSemaphore(int n = 0);//创建一个新的信号量并将其保护的资源数初始化为 n（默认为 0）
+void acquire(int n = 1);//尝试获取由信号量保护的n个资源。如果n>available()，此调用将阻塞，直到有足够的资源可用
+int available() const;//返回信号量当前可用的资源数量。这个数字永远不会是负数
+void release(int n = 1);//释放由信号量保护的 n 个资源
+bool tryAcquire(int n = 1);//尝试获取由信号量保护的 n 个资源，并在成功时返回 true。如果available() &lt; n，此调用立即返回false，不获取任何资源
+bool tryAcquire(int n, int timeout);//尝试获取由信号量保护的 n 个资源，并在成功时返回 true。如果available()<n，此调用将最多等待超时毫秒以使资源可用
+
+QSemaphore sem(5);  // sem.available() == 5
+sem.tryAcquire(250, 1000); // sem.available() == 5, 等待 1000 毫秒并返回 false
+sem.tryAcquire(3, 30000);// sem.available() == 2,无需等待即可返回 true
+```
+
+## 13.网络编程
 
 
 
