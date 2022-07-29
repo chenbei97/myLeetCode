@@ -13012,9 +13012,656 @@ void saveThread::run()
 
 现在希望缓冲区一旦满了就通知2个读线程及时读取数据，就需要使用QWaitCondition机制。
 
+第一个具体的示例可见[29-TestThreadSynchronization/TestOneQWaitConditionBase](29-TestThreadSynchronization/TestOneQWaitConditionBase)。
 
+使用生产者模型，专门生产掷骰子的总次数和骰子值；消费者模型专门用于取出2个数据，关键代码如下。
+
+定义2个模型的头文件。
+
+```c++
+// 专门用于生成骰子点数的线程
+class QThreadProducer : public QThread
+{
+    Q_OBJECT
+private:
+    bool    stopdice=false; //停止线程
+protected:
+    void    run() Q_DECL_OVERRIDE;
+public:
+    QThreadProducer();
+    void    stopDice();
+};
+
+// 专门用于读取骰子点数的线程
+class QThreadConsumer : public QThread
+{
+    Q_OBJECT
+private:
+    bool    stopread=false; //停止线程
+protected:
+    void    run() Q_DECL_OVERRIDE;
+public:
+    QThreadConsumer();
+    void    stopRead();
+signals:
+    void    readDiceValue(int frequency,int diceValue);
+};
+```
+
+定义2个模型的源文件。
+
+```c++
+#include "rollDiceThread.h"
+#include <QWaitCondition>
+#include <QTime>
+#include <QMutex>
+#include <QDebug>
+
+QMutex  mutex; // 全局互斥量
+QWaitCondition  newdataAvailable; // 全局等待条件变量(读取的数据是否有效)
+// 生产者模型中,有了新数据后要唤醒其他所有线程(发布条件满足通知)
+// 消费者模型中,要等待条件满足通知,接收到信号后就可以读取数据了
+
+int     frequency;//掷骰子的次数累计
+int     diceValue; // 骰子点数
+
+// （1）生产者模型
+QThreadProducer::QThreadProducer()
+{
+
+}
+
+void QThreadProducer::run()
+{
+    this->stopdice=false;//启动线程时令m_stop=false
+    frequency=-1; // 启动线程时就初始化全局掷骰子总次数为-1
+    // (不知道为啥初始化为0的话frequency第1次传播出去的时候变成了2)
+    // 从测试结果来看now fre =  -1; now fre =  0连续执行了2次,也就是now fre =  -1;时消费者模型没有读取到这个数据
+    qsrand(QTime::currentTime().msec());//随机数初始化，qsrand是线程安全的
+
+    while(!stopdice)//循环主体
+    {
+        mutex.lock();
+        diceValue=qrand(); //获取随机数
+        diceValue=(diceValue % 6)+1;
+        qDebug()<<"now fre = "<<frequency;
+        frequency++; // 掷骰子次数增加
+        mutex.unlock();
+
+        newdataAvailable.wakeAll();// 唤醒所有线程,有新数据了,给所有线程发布通知
+        msleep(100); //线程休眠100ms
+    }
+}
+
+void QThreadProducer::stopDice()
+{
+    // 停止掷骰子
+    QMutexLocker  locker(&mutex);
+    this->stopdice=true;
+}
+
+// （2）消费者模型
+QThreadConsumer::QThreadConsumer()
+{
+
+}
+
+void QThreadConsumer::run()
+{
+    this->stopread=false;// 读取数据的线程
+    while(!stopread)//循环主体
+    {
+        mutex.lock(); // 先锁定
+        // 然后wait内部会先解锁使其可被生产者模型使用,然后等待通知,处于阻塞状态
+        newdataAvailable.wait(&mutex);// 当生产者模型有了数据就会发布通知,wait内部就会锁定这个互斥量先执行后续语句读取这个数据
+        qDebug()<<frequency<<" "<<diceValue;
+        emit    readDiceValue(frequency,diceValue); // 把此时的数据传播出去
+        mutex.unlock(); // 然后再次解锁,这样生产者模型就能再次使用互斥量,再次发布新数据,如此反复
+        // msleep(100); //线程休眠100ms
+    }
+}
+
+void QThreadConsumer::stopRead()
+{
+    QMutexLocker  locker(&mutex);
+    this->stopread=true;
+}
+```
+
+UI界面的头文件代码。
+
+```c++
+#include <QMainWindow>
+#include <QTimer>
+#include "rollDiceThread.h"
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class TestOneQWaitConditionBase; }
+QT_END_NAMESPACE
+
+class TestOneQWaitConditionBase : public QMainWindow
+{
+    Q_OBJECT
+private:
+    QThreadProducer   threadProducer;
+    QThreadConsumer   threadConsumer;
+    void initSignalSlotConnection();
+protected:
+    void    closeEvent(QCloseEvent *event);
+public:
+    explicit TestOneQWaitConditionBase(QWidget *parent = nullptr);
+    ~TestOneQWaitConditionBase();
+private slots:
+    // 3个按钮的槽函数
+    void on_btnStartThread_clicked();
+    void on_btnStopThread_clicked();
+    void on_btnClear_clicked();
+    // 绑定到生产者和消费者线程的started/finshed信号通知状态栏
+    void on_producerThread_started();
+    void on_consumerThread_started();
+    void on_producerThread_finshed();
+    void on_consumerThread_finshed();
+    // 绑定到消费者模型线程的readDiceValue信号
+    void on_producerThread_readDiceValue(int frequency,int diceValue);
+private:
+    Ui::TestOneQWaitConditionBase *ui;
+};
+```
+
+UI界面的源文件实现代码。
+
+```c++
+#include "TestOneQWaitConditionBase.h"
+#include "ui_TestOneQWaitConditionBase.h"
+
+TestOneQWaitConditionBase::TestOneQWaitConditionBase(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::TestOneQWaitConditionBase)
+{
+        ui->setupUi(this);
+        this->initSignalSlotConnection();
+        ui->btnStartThread->setEnabled(true);
+        ui->btnStopThread->setEnabled(false);
+}
+
+TestOneQWaitConditionBase::~TestOneQWaitConditionBase()
+{
+    delete ui;
+}
+
+// 1. 关闭窗口事件,防止线程还在运行
+void TestOneQWaitConditionBase::closeEvent(QCloseEvent *event)
+{
+    if (threadProducer.isRunning())
+    {
+        threadProducer.stopDice(); // 生产者模型直接停止生产即可
+        threadProducer.wait();
+    }
+
+    if (threadConsumer.isRunning())
+    {
+        threadConsumer.terminate(); //消费者模型可能处于等待生产的状态,所以用terminate强制结束
+        threadConsumer.wait();
+    }
+    event->accept();
+}
+
+// 2. 初始化信号绑定
+void TestOneQWaitConditionBase::initSignalSlotConnection()
+{
+    // 1. 生产者和消费者模型启动,就通知状态栏
+    connect(&threadProducer,SIGNAL(started()),this,SLOT(on_producerThread_started()));
+    connect(&threadConsumer,SIGNAL(started()),this,SLOT(on_consumerThread_started()));
+    // 2. 生产者和消费者模型结束,就通知状态栏
+    connect(&threadProducer,SIGNAL(finished()),this,SLOT(on_producerThread_finshed()));
+    connect(&threadConsumer,SIGNAL(finished()),this,SLOT(on_consumerThread_finshed()));
+    // 3. 消费者模型读取的骰子数和掷骰子总次数
+    connect(&threadConsumer,SIGNAL(readDiceValue(int,int)),this,SLOT(on_producerThread_readDiceValue(int,int)));
+}
+
+// 3. 生产者和消费者模型启动通知状态栏
+void TestOneQWaitConditionBase::on_producerThread_started()
+{
+    ui->LabA->setText("生产者模型线程已经启动");
+}
+void TestOneQWaitConditionBase::on_consumerThread_started()
+{
+    ui->LabB->setText("消费者模型线程已经启动");
+}
+
+// 4. 生产者和消费者模型结束通知状态栏
+void TestOneQWaitConditionBase::on_producerThread_finshed()
+{
+    ui->LabA->setText("生产者模型线程已经结束");
+}
+void TestOneQWaitConditionBase::on_consumerThread_finshed()
+{
+    ui->LabB->setText("消费者模型线程已经结束");
+}
+
+// 5. 消费者模型读取数据
+void TestOneQWaitConditionBase::on_producerThread_readDiceValue(int frequency,int diceValue)
+{
+    QString  str=QString::asprintf("第 %d 次掷骰子，点数为：%d",
+                                   frequency,diceValue);
+    ui->plainTextEdit->appendPlainText(str);
+    QPixmap pic;
+    QString filename=QString::asprintf(":/images/d%d.jpg",diceValue);
+    pic.load(filename);
+    ui->LabPic->setPixmap(pic);
+}
+
+// 6. 启动线程
+void TestOneQWaitConditionBase::on_btnStartThread_clicked()
+{
+    threadConsumer.start();
+    threadProducer.start();
+    ui->btnStartThread->setEnabled(false);
+    ui->btnStopThread->setEnabled(true);
+}
+
+// 7. 结束线程
+void TestOneQWaitConditionBase::on_btnStopThread_clicked()
+{
+    threadProducer.stopDice();// 结束生产者模型线程的run()函数执行
+    threadProducer.wait();// 让其无限期等待
+
+    // threadConsumer.stopRead();//结束消费者模型线程的run()函数执行,可能结束不了
+    threadConsumer.terminate(); //因为消费者模型线程可能处于等待状态,所以用terminate强制结束
+    threadConsumer.wait();//让其无限期等待
+
+    ui->btnStartThread->setEnabled(true);
+    ui->btnStopThread->setEnabled(false);
+}
+
+// 8. 清空文本
+void TestOneQWaitConditionBase::on_btnClear_clicked()
+{
+    ui->plainTextEdit->clear();
+}
+```
+
+第二个具体的示例可见[29-TestThreadSynchronization/TestTwoQWaitConditionBase](29-TestThreadSynchronization/TestTwoQWaitConditionBase)，这个例子来源于Qt文档。
+
+生产者将数据写入缓冲区，直到到达缓冲区的末尾，此时它从头开始重新启动，覆盖现有数据。消费者线程在生成数据时读取数据并将其写入标准错误。与单独使用互斥锁相比，等待条件可以实现更高级别的并发性。
+
+如果对缓冲区的访问仅由 QMutex 保护，则消费者线程无法与生产者线程同时访问缓冲区。然而，让两个线程同时在缓冲区的不同部分工作并没有什么坏处。
+
+该示例包含两个类：生产者和消费者，两者都继承自 QThread。用于这两个类之间通信的循环缓冲区和保护它的同步工具是全局变量。使用 QWaitCondition 和 QMutex 解决生产者-消费者问题的替代方法是使用 QSemaphore
+
+这就是信号量示例所做的，这个示例不在这里说明。
+
+这里给出核心代码，可以通过调整缓冲区大小，读取的速度和存取的速度来观察UI界面的情况。
+
+例如这里缓存大小为900，读取速率为200ms，写入速率100ms时会发现最后生产的都完毕了，但是还在读取第600个数据，这是因为缓冲区很大的原因。
+
+如果写入速率没有延迟，一有新数据就立刻被读取，总会提示"缓冲区已空,等待数据生产!"，如果适当的减少缓存大小会减轻这种情况，不过从实际测试来看，即使缓冲大小是1，也没有满的情况发生，这说明如果没有限制的话，读取的速度非常的快，进来一个读一个，所以缓存大小1也够用。但是如果提高写的速度那就不一定了，因为写的速度100ms一次，如果写的很快，就可能发生缓存满的情况。但是数据读取的暂时还是会正确，因为写入的位置正在追读取的位置，一旦追上这时候数据就会真正的被覆盖丢失了。
+
+```c++
+// DataSize 是生产者将生成的数据量
+const int DataSize = 1000; // 最大数据大小
+// BufferSize 是循环缓冲区的大小,它小于 DataSize
+const int BufferSize = 900; // 缓冲大小
+// 生产者到达缓冲区的末尾时会从头开始重新启动
+char buffer[BufferSize]; // 全局缓存
+
+//为了同步生产者和消费者,我们需要两个等待条件和一个互斥锁
+QMutex mutex;
+// 当生产者生成一些数据时,会发出bufferNotEmpty条件,告诉消费者它可以开始读取它
+QWaitCondition bufferNotEmpty; // 全局条件变量：缓存不为空（生产者负责发布，消费者负责等待）
+// 当消费者读取了一些数据时，会发出 bufferNotFull 条件，告诉生产者它可以生成更多数据
+QWaitCondition bufferNotFull;// 全局条件变量：缓存不为满（消费者负责发布，生产者负责等待）
+// numUsedBytes 是缓冲区中当前包含数据的字节数
+int numUsedBytes = 0;
+
+// 等待条件、互斥体和 numUsedBytes 计数器一起确保生产者永远不会在缓存区满时还继续生产数据
+// 并且消费者永远不会读取生产者尚未生成的数据
+
+void Producer::run()
+{
+    qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+    for (int i = 0; i < DataSize; ++i) {
+        mutex.lock();
+        if (numUsedBytes == BufferSize) // 如果缓存满了不能再写入数据必须先等待读取
+        {
+            qDebug()<<"缓冲区已满,新的一轮开始!";
+            bufferNotFull.wait(&mutex); // 这里阻塞,等待消费者读取后通知的bufferNotFull信号
+        }
+
+        mutex.unlock();// 生产者接收到才会解锁执行后边的代码继续生产数据
+
+        // i % BufferSize可以保证没存满之前都会按照顺序依次存取,一旦i=BufferSize就会从头覆盖数据
+        buffer[i % BufferSize] = "ACGT"[(int)qrand() % 4]; // "ACGT"随机选择1个字母存进去
+        emit stringProduced(QString(buffer[i % BufferSize]));
+        mutex.lock();
+        ++numUsedBytes; // 写入数据,计数器++
+        bufferNotEmpty.wakeAll(); // 生产者需要发布buffer不为空通知以便于消费者接收到才会读取有效的数据
+        mutex.unlock();
+
+        msleep(100);
+    }
+}
+
+void Consumer::run()
+{
+    for (int i = 0; i < DataSize; ++i) {
+        mutex.lock();
+        if (numUsedBytes == 0) // 如果缓存区没有数据就不要继续读取
+        {
+            qDebug()<<"缓冲区已空,等待数据生产!";
+            bufferNotEmpty.wait(&mutex); // 这里阻塞线程,等待生产者发布缓冲区不为空的信号
+        }
+        mutex.unlock(); // 接收到信号以后消费者才会继续读取数据
+        fprintf(stderr, "%c", buffer[i % BufferSize]);
+        emit stringConsumed(QString(buffer[i % BufferSize]));
+        mutex.lock();
+        --numUsedBytes; // 读取数据,计数器--
+        bufferNotFull.wakeAll();  // 消费者需要发布buffer不为满通知以便于生产者接收到才会继续生产数据
+        mutex.unlock();
+        msleep(200);
+    }
+    fprintf(stderr, "\n");
+}
+```
 
 ### 12.5 基于QSemaphore的线程同步
+
+互斥量可看成是火车上的卫生间，每次最多进去一个人，外边的人想进去必须等待，或者不等待直接离开。
+
+信号量则是多人卫生间，比如有5个位置，有3个人用了以后，信号量锁定3个，还剩余2个可用。如果都被使用了，外边的人可以等待也可以不等待，但是进不去。
+
+信号量通常用来保护一定数量的相同资源，如数据采集时的双缓冲区，适用于生产-消费模型。
+
+基于QSemaphore的线程同步的第一个例子可见[29-TestThreadSynchronization/TestOneQSemaphoreBase](29-TestThreadSynchronization/TestOneQSemaphoreBase)。
+
+生产-消费者模式头文件代码。
+
+```c++
+#include <QThread>
+// （1）生产者模型
+class Producer : public QThread
+{
+    Q_OBJECT
+private:
+    bool    isProduce=false; //停止生产
+protected:
+    void    run() Q_DECL_OVERRIDE;
+public:
+    explicit Producer();
+    void    stopProduce();
+};
+// （2）消费者模型
+class Consumer : public QThread
+{
+    Q_OBJECT
+private:
+    bool    isConsume=false; //停止线程
+protected:
+    void    run() Q_DECL_OVERRIDE;
+public:
+    explicit Consumer();
+    void    stopConsume();
+signals:
+    void    newValue(int *data,int count, int bufId);
+};
+```
+
+生产-消费者模型源文件代码。
+
+```c++
+#include "producerConsumerThread.h"
+#include    <QSemaphore>
+
+const int BufferSize = 8;
+int buffer1[BufferSize]; // 双缓冲区
+int buffer2[BufferSize];
+int curBuf=1; //当前正在写入的Buffer
+
+int bufCount=0; // 表示累计的缓冲区个数编号
+
+quint8   counter=0;// 数据生成器
+
+QSemaphore emptyBufs(2);//信号量:空缓冲区资源数量为2
+QSemaphore fullBufs; // 满缓冲区资源数量为0
+
+// （1）生产者模型
+Producer::Producer()
+{
+
+}
+
+void Producer::stopProduce()
+{
+    isProduce=false;
+}
+
+void Producer::run()
+{
+    isProduce=true;
+    bufCount=0;// 从0开始计算
+    curBuf=1; //当前写入使用的缓冲区
+    counter=0;//数据生成器
+
+    int n=emptyBufs.available(); // 空缓冲资源个数
+    if (n<2)  //写入数据要求具备2个空缓冲资源
+      emptyBufs.release(2-n); // 如果不是2个先释放掉,以便写入数据可以使用
+
+    while(isProduce)//循环主体
+    {
+        emptyBufs.acquire(1);//尝试锁定一个空缓冲区,如果没有会在这里阻塞
+        for(int i=0;i<BufferSize;i++) //产生一个缓冲区的数据
+        {
+            if (curBuf==1) buffer1[i]=counter; // 向1号缓冲区写入数据
+            else buffer2[i]=counter; // 向1号缓冲区写入数据
+
+            counter++; // 模拟数据采集卡产生数据
+            msleep(50); //每50ms产生一个数
+        }
+
+        // 这里for循环结束后,表示一个缓冲数组满了
+        bufCount++; // 累积缓冲区个数++
+
+        if (curBuf==1) curBuf=2; // 切换当前写入缓冲区用于下次使用
+        else curBuf=1;
+
+        fullBufs.release(); // 对于release,如果资源已全部可以用(因为初始化为0)就会增加可用资源个数
+        // 这样的话本来只有0个满缓冲区,现在有了1个满缓冲区,可以被读取资源去acquire(锁定)
+    }
+    quit();
+}
+
+// （2）消费者模型
+Consumer::Consumer()
+{
+
+}
+
+void Consumer::stopConsume()
+{
+    isConsume=false;
+}
+
+void Consumer::run()
+{
+    isConsume=true;
+    int n=fullBufs.available();
+    if (n>0)
+       fullBufs.acquire(n); // 如果n>0就先锁定,这样满缓冲区资源数初始化为0
+    // 这是为了第一次开始读取数据时有1个等待过程,如果之前有了满缓冲区这种资源可能就会读取错误
+    // 当n=0,在下方的fullBufs.acquire(1);就会等待写入缓冲区释放1个满缓冲区资源
+    // 一直没有就会阻塞,直到获得第1个满缓冲区资源
+    while(isConsume)//循环主体
+    {
+        fullBufs.acquire(1); // 如没有满缓冲区会阻塞,不会执行后面的代码
+
+        int bufferData[BufferSize]; // 用于传递数据的临时数组
+
+        int id=bufCount;
+
+        if(curBuf==1) //当前在写入的缓冲区是1，那么满的缓冲区是2
+            for (int i=0;i<BufferSize;i++)
+               bufferData[i]=buffer2[i]; //快速拷贝缓冲区数据
+        else
+            for (int i=0;i<BufferSize;i++)
+               bufferData[i]=buffer1[i];
+
+        emptyBufs.release();// 一个满的缓冲区读取完毕了,可以增加新的空缓冲区资源
+        emit    newValue(bufferData,BufferSize,id);//给主线程传递数据(一维数组,数组长度,缓冲区编号)
+    }
+    quit();
+}
+```
+
+界面UI的主要代码。
+
+```c++
+TestOneQSemaphoreBase::TestOneQSemaphoreBase(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::TestOneQSemaphoreBase)
+{
+        ui->setupUi(this);
+        // 生产和消费者线程的开始和结束反馈到状态栏
+        connect(&producer,SIGNAL(started()),this,SLOT(on_producer_started()));
+        connect(&producer,SIGNAL(finished()),this,SLOT(on_producer_finished()));
+        connect(&consumer,SIGNAL(started()),this,SLOT(on_consumer_started()));
+        connect(&consumer,SIGNAL(finished()),this,SLOT(on_consumer_finished()));
+        // 消费者拿到的数据用于文本显示
+        connect(&consumer,SIGNAL(newValue(int*,int,int)),this,SLOT(on_consumer_newValue(int*,int,int)));
+}
+
+// 1. 生产和消费者线程的开始和结束反馈到状态栏
+void TestOneQSemaphoreBase::on_producer_started()
+{
+    ui->LabA->setText("生产者模型线程开始运行!");
+}
+void TestOneQSemaphoreBase::on_producer_finished()
+{
+    ui->LabA->setText("生产者模型线程已经结束!");
+}
+void TestOneQSemaphoreBase::on_consumer_started()
+{
+    ui->LabB->setText("消费者模型线程开始运行!");
+}
+void TestOneQSemaphoreBase::on_consumer_finished()
+{
+    ui->LabB->setText("消费者模型线程已经结束!");
+}
+
+// 2. 处理消费者拿到的数据
+void TestOneQSemaphoreBase::on_consumer_newValue(int *data,int count, int bufId)
+{
+    QString  str=QString::asprintf("第 %d 个缓冲区：",bufId);
+    for (int i=0;i<count;i++)
+    {
+        str=str+QString::asprintf("%d, ",*data);
+        data++;
+    }
+    str=str+'\n';
+    ui->plainTextEdit->appendPlainText(str);
+}
+
+void TestOneQSemaphoreBase::on_btnStartThread_clicked()
+{
+    consumer.start(); // 启动线程时必须先启动消费者,否则可能会丢失数据
+    producer.start();
+    ui->btnStartThread->setEnabled(false);
+    ui->btnStopThread->setEnabled(true);
+}
+
+void TestOneQSemaphoreBase::on_btnStopThread_clicked()
+{
+    // consumer.stopProduce();//结束线程的run()函数执行
+    consumer.terminate(); //可能处于等待状态,所以用terminate强制结束
+    consumer.wait();
+
+    producer.terminate();//结束线程的run()函数执行
+    producer.wait();
+
+    ui->btnStartThread->setEnabled(true);
+    ui->btnStopThread->setEnabled(false);
+}
+
+void TestOneQSemaphoreBase::on_btnClear_clicked()
+{
+        ui->plainTextEdit->clear();
+}
+
+```
+
+
+
+第2个例子是Qt文档给出的例子，可见[29-TestThreadSynchronization/TestTwoQSemaphoreBase](29-TestThreadSynchronization/TestTwoQSemaphoreBase)。
+
+生产者将数据写入缓冲区，直到到达缓冲区的末尾，此时它从头开始重新启动，覆盖现有数据。消费者线程在生成数据时读取数据并将其写入标准错误。信号量可以实现比互斥锁更高级别的并发性。如果对缓冲区的访问由 QMutex 保护，则消费者线程无法与生产者线程同时访问缓冲区。然而，让两个线程同时在缓冲区的不同部分工作并没有什么坏处。该示例包含两个类：生产者和消费者。两者都继承自 QThread。用于这两个类之间通信的循环缓冲区和保护它的信号量是全局变量。使用 QSemaphore 解决生产者-消费者问题的替代方法是使用 QWaitCondition 和 QMutex。这就是上一节的第2个示例所做的。
+
+生产-消费模型的头文件代码如下，比较简单。
+
+```c++
+#include <QThread>
+class Producer : public QThread
+{
+    Q_OBJECT
+public:
+    void run() override;
+signals:
+    void stringProduced(const QString &text);
+};
+
+class Consumer : public QThread
+ {
+     Q_OBJECT
+ public:
+     void run() override;
+ signals:
+     void stringConsumed(const QString &text);
+ protected:
+     bool finish;
+ };
+```
+
+DataSize 是生产者将生成的数据量。为了使示例尽可能简单，我们将其设为常量。 BufferSize 是循环缓冲区的大小。它小于 DataSize，这意味着在某些时候生产者将到达缓冲区的末尾并从头开始重新启动。
+为了同步生产者和消费者，我们需要两个信号量。 **freeBytes 信号量控制缓冲区的“空闲”区域（生产者尚未填充数据或消费者已读取的区域）**。 **usedBytes 信号量控制缓冲区的“已使用”区域（生产者已填充但消费者尚未读取的区域）**。2个信号量确保生产者永远不会超过消费者的 BufferSize 字节，并且消费者永远不会读取生产者尚未生成的数据。freeBytes 信号量是用 BufferSize 初始化的，因为最初整个缓冲区是空的。 usedBytes 信号量初始化为 0（如果未指定，则为默认值）。
+
+```c++
+// DataSize 是生产者将生成的数据量,为了尽可能简单,将其设为常量
+ const int DataSize = 1000;
+// BufferSize是循环缓冲区的大小,小于 DataSize,生产者到达缓冲区末尾时重新启动
+const int BufferSize = 200;
+char buffer[BufferSize];
+
+// 为了同步生产者和消费者需要两个信号量
+// freeBytes信号量控制缓冲区的"空闲"区域(生产者尚未填充数据或消费者已读取的区域)
+QSemaphore freeBytes(BufferSize); //用 BufferSize初始化的,因为最初整个缓冲区是空的
+// usedBytes信号量控制缓冲区的"已使用"区域(生产者已填充但消费者尚未读取的区域)
+QSemaphore usedBytes; // 初始已使用字节为0
+// 2个信号量确保生产者永远不会超过消费者的 BufferSize 字节
+// 且消费者永远不会读取生产者尚未生成的数据
+
+// 生产者生成 DataSize字节的数据,在向循环缓冲区写入一个字节之前
+// 它必须使用 freeBytes 信号量获取一个"空闲"字节
+// usedBytes信号量释放一个字节,"空闲"字节转换为"已使用"字节供消费者读取
+void Producer::run()
+{
+    qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+    for (int i = 0; i < DataSize; ++i) {
+        freeBytes.acquire(); // 获取一个空闲的字节来写入数据,如果不空闲会阻塞
+        buffer[i % BufferSize] = "ACGT"[(int)qrand() % 4];
+        emit stringProduced(QString(buffer[i%BufferSize]));
+        usedBytes.release(); // 同时释放1个已使用字节可供消费者acquire读取
+    }
+}
+// 代码与生产者非常相似,只是这次获取一个"已使用"字节,并释放一个"空闲"字节
+void Consumer::run()
+{
+    for (int i = 0; i < DataSize; ++i) {
+        usedBytes.acquire(); // 如果有已经使用字节说明可以读取了,否则可能阻塞
+        fprintf(stderr, "%c", buffer[i % BufferSize]);
+        emit stringConsumed(QString(buffer[i%BufferSize]));
+        freeBytes.release(); // 读取完毕之后,字节空闲要释放掉供生产者使用
+    }
+    fprintf(stderr, "\n");
+}
+```
 
 
 
@@ -13533,8 +14180,6 @@ forever {
 
 互斥锁是必要的，因为尝试同时更改同一变量的值的两个线程的结果是不可预测的。
 等待条件是一个强大的线程同步原语。**等待条件示例示例展示了如何使用 QWaitCondition 作为 QSemaphore 的替代方法来控制对生产者线程和消费者线程共享的循环缓冲区的访问**。
-
-关于这个示例可见。
 
 成员函数。
 
