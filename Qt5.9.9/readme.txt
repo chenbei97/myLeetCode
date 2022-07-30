@@ -87,6 +87,7 @@
 
 29. TestThreadSynchronization 提及了线程同步的几种方法(基于互斥量、读写锁、条件变量以及信号量)
 
+30. TestHostInformationQuery 演示如何使用QHostInfo和QNetworkInterface获取本机或指定域名IP地址
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
