@@ -14249,7 +14249,153 @@ Qt模块提供了用于编写TCP/IP客户端和服务器端程序的各种类。
 
 ### 13.1 主机信息查询
 
+使用QHostInfo获取主机信息的代码。
 
+```c++
+void TestHostInformationQuery::on_btnGetHostInfo_clicked()
+{
+    QString hostName=QHostInfo::localHostName();// 静态函数,本地主机名
+    ui->plainTextEdit->appendPlainText("本机主机名为："+hostName);
+
+    QHostInfo hostInfo=QHostInfo::fromName(hostName); // 从主机名获取本机IP地址(非异步方式)
+    QList<QHostAddress> addList=hostInfo.addresses();// IP地址列表
+
+    if (!addList.isEmpty())
+    {
+        ui->plainTextEdit->appendPlainText("IP地址个数为："+QString::asprintf("%d",addList.count()));
+        for (int i=0;i<addList.count();i++)
+        {
+            QHostAddress aHost=addList.at(i); //每一项是一个QHostAddress
+            bool show=ui->chkOnlyIPv4->isChecked();// 是否只显示IPv4协议类型
+            if (show) // 如果只想显示IPV4,当前的协议类型是IPV4的时候再显示
+                show=(QAbstractSocket::IPv4Protocol==aHost.protocol()); // 判断IP地址的协议类型,是IPV4为true否则false
+            else
+                show=true; // 不只显示IPV4(都显示)就为true
+            if (show) { // 如果确实为IPV4的协议类型,想要显示的话可以显示; 或者不想显示IPV4
+                ui->plainTextEdit->appendPlainText(QString::asprintf("第%d个协议类型为：",i+1)+this->protocolName(aHost.protocol()));//协议类型
+                ui->plainTextEdit->appendPlainText("其IP地址为："+aHost.toString()); // IP地址转为字符串显示
+                ui->plainTextEdit->appendPlainText("----------------------------------------");
+            }
+        }
+    }
+}
+```
+
+使用QNetworkInterface异步获取本机所有IP地址。功能和QHostInfo::addresses()类似，只是会返回更多地址，例如返回本机的127.0.0.1，但是QHostInfo::addresses()是不会返回这个地址的。
+
+```c++
+void TestHostInformationQuery::on_btnDetail_clicked()
+{
+    QList<QHostAddress> addList=QNetworkInterface::allAddresses();
+    if (!addList.isEmpty())
+    for (int i=0;i<addList.count();i++)
+    {
+        QHostAddress aHost=addList.at(i);
+        bool show=ui->chkOnlyIPv4->isChecked();//只显示IPv4
+        if (show)
+            show=QAbstractSocket::IPv4Protocol==aHost.protocol();
+        else
+            show=true;
+
+        if (show)
+        {
+            ui->plainTextEdit->appendPlainText(QString::asprintf("第%d个协议类型为：",i+1)+this->protocolName(aHost.protocol()));//协议类型
+            ui->plainTextEdit->appendPlainText("其IP地址为："+aHost.toString()); // IP地址转为字符串显示
+            ui->plainTextEdit->appendPlainText("----------------------------------------");
+        }
+    }
+}
+```
+
+使用QNetworkInterface异步获取本机所有网络接口列表。
+
+```c++
+void TestHostInformationQuery::on_btnALLInterface_clicked()
+{
+
+    QList<QNetworkInterface>    list=QNetworkInterface::allInterfaces();
+    for(int i=0;i<list.count();i++)
+    {
+        QNetworkInterface aInterface=list.at(i);
+        if (!aInterface.isValid()) // 如果无效跳过
+           continue;
+
+        ui->plainTextEdit->appendPlainText("设备名称："+aInterface.humanReadableName());
+        ui->plainTextEdit->appendPlainText("硬件地址："+aInterface.hardwareAddress());
+        QList<QNetworkAddressEntry> entryList=aInterface.addressEntries(); // 某个网络接口的所有关联的网络掩码和广播地址
+        for(int j=0;j<entryList.count();j++)
+        {
+            QNetworkAddressEntry aEntry=entryList.at(j);
+            ui->plainTextEdit->appendPlainText("   其IP 地址："+aEntry.ip().toString());
+            ui->plainTextEdit->appendPlainText("   其子网掩码："+aEntry.netmask().toString());
+            ui->plainTextEdit->appendPlainText("   其广播地址："+aEntry.broadcast().toString()+"\n");
+        }
+        ui->plainTextEdit->appendPlainText("\n");
+    }
+}
+```
+
+以上是查找本地主机IP的有关信息，如果还希望查找指定域名的IP地址信息，例如www.baidu.com也是可以的。
+
+```c++
+void TestHostInformationQuery::on_btnLookup_clicked()
+{
+    QString hostname=ui->editHost->text(); // 要查找的域名
+    ui->plainTextEdit->appendPlainText("正在查找指定的域名IP地址信息："+hostname);
+    QHostInfo::lookupHost(hostname,this,SLOT(lookedUpHostInfo(QHostInfo)));
+}
+// 是lookupHost的槽函数,查找域名的IP地址
+void TestHostInformationQuery::lookedUpHostInfo(const QHostInfo &host)
+{
+    QList<QHostAddress> addList=host.addresses();//拿到查询到的所有IP地址
+    if (!addList.isEmpty()) // 和on_btnGetHostInfo_clicked()代码类似
+        for (int i=0;i<addList.count();i++)
+        {
+            QHostAddress aHost=addList.at(i);
+            bool show=ui->chkOnlyIPv4->isChecked();//只显示IPv4
+            if (show)
+                show=QAbstractSocket::IPv4Protocol==aHost.protocol();
+            else
+                show=true;
+
+            if (show) {
+                ui->plainTextEdit->appendPlainText(QString::asprintf("第%d个协议类型为：",i+1)+this->protocolName(aHost.protocol()));
+                ui->plainTextEdit->appendPlainText("其IP地址为："+aHost.toString());
+                ui->plainTextEdit->appendPlainText("----------------------------------------");
+            }
+        }
+}
+```
+
+### 13.2 TCP通信
+
+TCP通信需要客户端和服务器端。客户端是QTcpSocket负责建立TCP通信程序；服务器端是QTcpServer建立网络监听并创建网络Socket连接，内部也会使用QTcpSocket对象和客户端匹配。
+
+```mermaid
+sequenceDiagram
+	participant QTcpSocket
+    participant QTcpServer
+	QTcpSocket ->> QTcpServer: client to server
+	QTcpServer -->> QTcpSocket: server to client
+```
+
+首先是服务器的程序QTcpServer::listen开始服务器监听（需要指定IP地址和端口），有新的客户端接入时，QTcpServer::incomingConnection就会也创建1个QTcpSocket对象并发生信号newConnection。
+
+在newConnection的槽函数中，可以使用nextPendingConnection()接受客户端的连接，然后使用QTcpSocket与客户端通信，一旦建立连接，具体的数据通信都是QTcpSocket完成的。
+
+客户端和服务器端建立通信，需要connectToHost连接到服务器（需要指定服务器IP地址和端口），如果是异步方式连接不会阻塞程序运行，连接后发射connected信号。
+
+```mermaid
+graph LR
+QTcpServer-->|1.监听|QTcpSocket
+QTcpSocket-.->|2.有新的客户端接入|QTcpServer
+QTcpServer-.->|3.初始化连接并同时发射信号|槽函数
+槽函数-.->|4.建立对等套接字|newQTcpSocket
+newQTcpSocket==>|连接客户端相互通信|QTcpSocket
+QTcpSocket==>|连接服务端相互通信|newQTcpSocket
+```
+
+建立连接以后，如果缓冲区有数据，就会发射readyRead信号，此信号的槽函数里可以读取数据。
 
 ### 13.5 关联网络类
 
@@ -14498,6 +14644,430 @@ int interfaceIndexFromName(const QString &name);
 // 返回索引为 index 的接口的名称，如果没有具有该索引的接口，则返回空字符串。此函数应产生与以下代码相同的结果，但可能会执行得更快
 QString interfaceNameFromIndex(int index);
 ```
+
+#### 13.5.4 QAbstractSocket
+
+QAbstractSocket 类提供所有套接字类型共有的基本功能。
+**QAbstractSocket 是 QTcpSocket 和 QUdpSocket 的基类**，包含这两个类的所有通用功能。如果你需要一个套接字，你有两个选择：实例化 QTcpSocket 或 QUdpSocket。
+创建原生套接字描述符，实例化 QAbstractSocket，调用 setSocketDescriptor() 封装原生套接字。TCP（传输控制协议）是一种可靠的、面向流的、面向连接的传输协议。 UDP（用户数据报协议）是一种不可靠的、面向数据报的、无连接的协议。在实践中，这意味着 TCP 更适合连续传输数据，而更轻量级的 UDP 可以在可靠性不重要时使用。QAbstractSocket 的 API 统一了两种协议之间的大部分差异。例如，虽然 UDP 是无连接的，但 **connectToHost() 为 UDP 套接字建立了一个虚拟连接**，使您能够以或多或少相同的方式使用 QAbstractSocket，而不管底层协议如何。在内部，QAbstractSocket 记住传递给 connectToHost() 的地址和端口，并且 **read() 和 write() 等函数使用这些值**。
+
+继承关系如下。
+
+```mermaid
+graph LR
+QIODevice-->QAbstractSocket
+QAbstractSocket-->QTcpSocket
+QAbstractSocket-->QUdpSocket
+QTcpSocket-->QSctpSocket
+QTcpSocket-->QSslSocket
+```
+
+在任何时候，**QAbstractSocket 都有一个状态（由 state() 返回）**,**初始状态是 UnconnectedState**。调用connectToHost()后，socket**首先进入HostLookupState状态**。如果找到主机，QAbstractSocket 进入 **ConnectingState 状态并发出 hostFound() 信号**。建立连接后，它进入 **已连接ConnectedState 状态并发出 connected()**。如果在**任何阶段发生错误，则会发出 error()**。每当**状态发生变化时，都会发出 stateChanged()**。为方便起见，如果套接字已准备好进行读写，isValid() 将返回 true，但请注意，**套接字的状态必须为 ConnectedState，然后才能进行读写**。
+
+**通过调用 read() 或 write() 读取或写入数据，或使用便捷函数 readLine() 和 readAll()**。 QAbstractSocket 还从 QIODevice 继承了 getChar()、putChar() 和 ungetChar()，它们适用于单个字节。当**数据写入套接字时，会发出 bytesWritten() 信号**。请注意，Qt 不限制写入缓冲区的大小。您可以通过收听此信号来监控其大小。
+**每次新的数据块到达时都会发出 readyRead() 信号**。 **bytesAvailable() 然后返回可供读取的字节数**。通常，您会将 readyRead() 信号连接到一个插槽并在那里读取所有可用数据。如果您不一次读取所有数据，则剩余数据稍后仍然可用，并且任何**新传入的数据都将附加到 QAbstractSocket 的内部读取缓冲区**。要限制内部读取缓冲区的大小，请调用 setReadBufferSize()。
+
+**要关闭套接字，请调用 disconnectFromHost()**。 **QAbstractSocket 进入 QAbstractSocket::ClosingState**。在所有挂起的数据都写入套接字之后，QAbstractSocket 实际上关闭了套接字，**进入 QAbstractSocket::UnconnectedState，并发出 disconnected()**。如果您想**立即中止连接，丢弃所有未决数据，请改为调用 abort()**。
+
+如果远程主机关闭连接，QAbstractSocket 会发出错误(QAbstractSocket::RemoteHostClosedError)，期间socket 状态仍为ConnectedState，然后发出disconnected() 信号。
+**通过调用 peerPort() 和 peerAddress() 获取连接的对等体的端口和地址**。 **peerName() 返回对等方的主机名，传递给 connectToHost()**。 **localPort() 和 localAddress() 返回本地套接字的端口和地址**。
+
+QAbstractSocket 提供一组函数，这些函数可暂停调用线程直到发出某些信号。这些函数可用于实现阻塞套接字：
+
+**waitForConnected() 阻塞，直到建立连接**。
+waitForReadyRead() 阻塞，直到有新数据可供读取。
+waitForBytesWritten() 阻塞，直到一个有效负载数据被写入套接字。
+waitForDisconnected() 阻塞，直到连接关闭。
+
+一个例子：
+
+```c++
+int numRead = 0, numReadTotal = 0;
+char buffer[50];
+forever {
+    numRead  = socket.read(buffer, 50);
+    // 处理读取的数据
+    numReadTotal += numRead;
+    if (numRead == 0 && !socket.waitForReadyRead()) // 如果读取的数据为0或没有新数据读取
+        break;
+}
+```
+
+**如果 waitForReadyRead() 返回 false，则连接已关闭或发生错误**。
+使用阻塞套接字编程与使用非阻塞套接字编程完全不同。**阻塞套接字不需要事件循环**，通常会导致更简单的代码。但是，在 GUI 应用程序中，**阻塞套接字只能在非 GUI 线程中使用，以避免冻结用户界面**。有关这两种方法的概述，请参阅 fortuneclient 和 blockingfortuneclient 示例。
+
+注意：我们**不鼓励将阻塞函数与信号一起使用**。应该使用两种可能性之一。
+QAbstractSocket 可以与 QTextStream 和 QDataStream 的流操作符（operator&lt;&lt;() 和 operator&gt;&gt;()）一起使用。**但是，有一个问题需要注意：在尝试使用 operator>>() 读取数据之前，必须确保有足够的数据可用**。
+
+##### 枚举类型
+
+这个枚举描述了你可以传递的不同标志来修改 QAbstractSocket::bind() 的行为。
+
+```c++
+enum QAbstractSocket::BindFlag{
+    QAbstractSocket::ShareAddress,//允许其他服务绑定到相同的地址和端口。当多个进程通过侦听相同的地址和端口来共享单个服务的负载时，这很有用（例如，具有多个预分叉侦听器的 Web 服务器可以大大提高响应时间）。但是，由于允许重新绑定任何服务，因此此选项受制于某些安全考虑。请注意，通过将此选项与 ReuseAddressHint 结合使用，您还将允许您的服务重新绑定现有的共享地址。在 Unix 上，这等效于 SO_REUSEADDR 套接字选项。在 Windows 上，此选项被忽略。
+    QAbstractSocket::DontShareAddress,//独占绑定地址和端口，不允许其他服务重新绑定。通过将此选项传递给 QAbstractSocket::bind()，您可以保证在成功时，您的服务是唯一侦听地址和端口的服务。任何服务都不允许重新绑定，即使它们通过了 ReuseAddressHint。此选项提供比 ShareAddress 更高的安全性，但在某些操作系统上，它要求您以管理员权限运行服务器。在 Unix 和 macOS 上，不共享是绑定地址和端口的默认行为，因此忽略此选项。在 Windows 上，此选项使用 SO_EXCLUSIVEADDRUSE 套接字选项。
+    QAbstractSocket::ReuseAddressHint,//向 QAbstractSocket 提供提示，即使地址和端口已经被另一个套接字绑定，它也应该尝试重新绑定服务。在 Windows 和 Unix 上，这相当于 SO_REUSEADDR 套接字选项
+    QAbstractSocket::DefaultForPlatform//当前平台的默认选项。在 Unix 和 macOS 上，这相当于 (DontShareAddress + ReuseAddressHint)，在 Windows 上，它相当于 ShareAddress
+}
+```
+
+这个枚举描述了 Qt 中使用的网络层协议值。
+
+```c++
+enum QAbstractSocket::NetworkLayerProtocol{
+    QAbstractSocket::IPv4Protocol,
+    QAbstractSocket::IPv6Protocol,
+    QAbstractSocket::AnyIPProtocol,
+    QAbstractSocket::UnknownNetworkLayerProtocol
+}
+```
+
+这个枚举描述了当套接字应该阻止继续数据传输时的行为。当前支持的唯一通知是 QSslSocket::sslErrors()。
+
+```c++
+enum QAbstractSocket::PauseMode{
+    QAbstractSocket::PauseNever,//不要暂停套接字上的数据传输
+    QAbstractSocket::PauseOnSslErrors//收到SSL错误通知后暂停套接字上的数据传输
+}
+```
+
+此枚举描述了可能发生的套接字错误。
+
+```c++
+enum QAbstractSocket::SocketError{
+    QAbstractSocket::ConnectionRefusedError,//连接被对等方拒绝（或超时）
+    QAbstractSocket::RemoteHostClosedError,//远程主机关闭了连接
+    QAbstractSocket::HostNotFoundError,//找不到主机地址
+    QAbstractSocket::SocketAccessError,//套接字操作失败，因为应用程序缺少所需的权限
+    QAbstractSocket::SocketResourceError,//本地系统资源不足（例如，套接字过多）
+    QAbstractSocket::SocketTimeoutError,//套接字操作超时
+    QAbstractSocket::DatagramTooLargeError,//数据报大于操作系统的限制（可以低至 8192 字节）
+    QAbstractSocket::NetworkError,//网络出现错误（例如，网络电缆被意外拔出）
+    QAbstractSocket::AddressInUseError,//指定给 QAbstractSocket::bind() 的地址已经在使用中并且被设置为独占
+    QAbstractSocket::SocketAddressNotAvailableError,//指定给 QAbstractSocket::bind() 的地址不属于主机
+    QAbstractSocket::UnsupportedSocketOperationError,//本地操作系统不支持请求的套接字操作（例如，缺乏 IPv6 支持）
+    QAbstractSocket::ProxyAuthenticationRequiredError,//套接字正在使用代理，并且代理需要身份验证
+    QAbstractSocket::SslHandshakeFailedError,//SSL/TLS 握手失败所以连接被关闭
+    QAbstractSocket::UnfinishedSocketOperationError,//仅由 QAbstractSocketEngine 使用，尝试的最后一个操作尚未完成（仍在后台进行）
+    QAbstractSocket::ProxyConnectionRefusedError,//无法联系代理服务器，因为与该服务器的连接被拒绝
+    QAbstractSocket::ProxyConnectionClosedError,//与代理服务器的连接意外关闭（在与最终对等方建立连接之前）
+    QAbstractSocket::ProxyConnectionTimeoutError,//与代理服务器的连接超时或代理服务器在身份验证阶段停止响应
+    QAbstractSocket::ProxyNotFoundError,//未找到使用 setProxy()（或应用程序代理）设置的代理地址
+    QAbstractSocket::ProxyProtocolError,//与代理服务器的连接失败，因为无法理解来自代理服务器的响应
+    QAbstractSocket::OperationError,//在套接字处于不允许的状态时尝试了操作
+    QAbstractSocket::SslInternalError,//正在使用的SSL库报告了一个内部错误。这可能是库安装错误或配置错误的结果
+    QAbstractSocket::SslInvalidUserDataError,//提供了无效数据（证书、密钥、密码等），其使用导致 SSL 库出错
+    QAbstractSocket::TemporaryError,//发生了临时错误（例如，操作将阻塞并且套接字是非阻塞的）
+    QAbstractSocket::UnknownSocketError//发生不明错误
+}
+```
+
+此枚举表示可以在套接字上设置的选项。如果需要，可以在从套接字接收到 connected() 信号或从 QTcpServer 接收到新套接字之后设置它们。
+
+```c++
+enum QAbstractSocket::SocketOption{
+    QAbstractSocket::LowDelayOption,//尝试优化套接字以实现低延迟。对于 QTcpSocket，这将设置 TCP_NODELAY 选项并禁用 Nagle 算法。将此设置为 1 以启用
+    QAbstractSocket::KeepAliveOption,//将此设置为 1 以启用 SO_KEEPALIVE 套接字选项
+    QAbstractSocket::MulticastTtlOption,//将此设置为整数值以设置 IP_MULTICAST_TTL（多播数据报的 TTL）套接字选项
+    QAbstractSocket::MulticastLoopbackOption,//将此设置为 1 以启用 IP_MULTICAST_LOOP（多播环回）套接字选项
+    QAbstractSocket::TypeOfServiceOption,//Windows 不支持此选项。这映射到 IP_TOS 套接字选项。有关可能的值，请参见下表
+    QAbstractSocket::SendBufferSizeSocketOption,//在操作系统级别设置套接字发送缓冲区大小（以字节为单位）。这映射到 SO_SNDBUF 套接字选项。此选项不影响 QIODevice 或 QAbstractSocket 缓冲区
+    QAbstractSocket::ReceiveBufferSizeSocketOption//在操作系统级别设置套接字接收缓冲区大小（以字节为单位）。这映射到 SO_RCVBUF 套接字选项。此选项不影响 QIODevice 或 QAbstractSocket 缓冲区（请参阅 setReadBufferSize()）
+}
+TypeOfServiceOption 的可能值为：
+224 Network control
+192 Internetwork control
+160 CRITIC/ECP
+128 Flash override
+96 Flash
+64 Immediate
+32 Priority
+0 Routine
+```
+
+此枚举描述了套接字可以处于的不同状态。
+
+```c++
+enum QAbstractSocket::SocketState{
+    QAbstractSocket::UnconnectedState,//套接字未连接
+    QAbstractSocket::HostLookupState,//套接字正在执行主机名查找
+    QAbstractSocket::ConnectingState,//套接字已开始建立连接
+    QAbstractSocket::ConnectedState,//建立连接
+    QAbstractSocket::BoundState,//套接字绑定到地址和端口
+    QAbstractSocket::ClosingState,//套接字即将关闭（数据可能仍在等待写入）
+    QAbstractSocket::ListeningState//仅限内部使用
+}
+```
+
+这个枚举描述了传输层协议。
+
+```c++
+enum QAbstractSocket::SocketType{
+    QAbstractSocket::TcpSocket,
+    QAbstractSocket::UdpSocket,
+    QAbstractSocket::SctpSocket,
+    QAbstractSocket::UnknownSocketType
+}
+```
+
+##### 普通成员函数
+
+```c++
+QAbstractSocket(SocketType socketType, QObject *parent);
+
+SocketType socketType() const;//返回套接字类型（TCP、UDP 或其他）
+
+// 中止当前连接并重置套接字。与 disconnectFromHost() 不同，此函数立即关闭套接字，丢弃写入缓冲区中的任何未决数据
+void abort();
+// 该函数尽可能多地从内部写入缓冲区写入底层网络套接字，而不阻塞。如果写入了任何数据，则此函数返回 true；否则返回 false
+bool flush();
+// 如果套接字有效并且可以使用，则返回 true；否则返回假
+bool isValid() const;
+// 继续在套接字上传输数据。此方法仅应在套接字设置为暂停通知并收到通知后使用。当前支持的唯一通知是 QSslSocket::sslErrors()。如果套接字未暂停，则调用此方法会导致未定义的行为
+virtual void resume();
+
+// 将连接本地端的地址设置为地址
+void QAbstractSocket::setLocalAddress(const QHostAddress &address);
+QHostAddress localAddress() const;
+// 将连接本地端的端口设置为port
+ void QAbstractSocket::setLocalPort(quint16 port);
+quint16 localPort() const;
+
+// 控制是否在收到通知时暂停。 pauseMode 参数指定应该暂停套接字的条件。当前支持的唯一通知是 QSslSocket::sslErrors()。如果设置为 PauseOnSslErrors，则套接字上的数据传输将暂停，需要通过调用 resume() 再次显式启用。默认情况下，此选项设置为 PauseNever。该选项必须在连接到服务器之前调用，否则会导致未定义的行为
+void QAbstractSocket::setPauseMode(PauseModes pauseMode);
+PauseModes pauseMode() const;
+// 将连接的远程端的地址设置为address
+void QAbstractSocket::setPeerAddress(const QHostAddress &address);
+QHostAddress peerAddress() const;
+//将远程对等方的主机名设置为 name
+void QAbstractSocket::setPeerName(const QString &name);
+QString peerName() const;
+//将连接的远程端的端口设置为port
+void QAbstractSocket::setPeerPort(quint16 port);
+quint16 peerPort() const;
+
+// 使用 BindMode 模式绑定到端口端口上的地址。将此套接字绑定到地址地址和端口端口。
+// 对于 UDP 套接字，绑定后，只要 UDP 数据报到达指定的地址和端口，就会发出信号 QUdpSocket::readyRead()。因此，此函数对于编写 UDP 服务器很有用。
+// 对于 TCP 套接字，此函数可用于指定用于传出连接的接口，这在多个网络接口的情况下很有用。
+// 默认情况下，使用 DefaultForPlatform BindMode 绑定套接字。如果未指定端口，则选择随机端口。成功时，函数返回 true，套接字进入 BoundState；否则返回false。
+bool bind(const QHostAddress &address, quint16 port = 0, BindMode mode = DefaultForPlatform);
+bool bind(quint16 port = 0, BindMode mode = DefaultForPlatform);
+
+// 尝试在给定端口上建立与 hostName 的连接。协议参数可用于指定要使用的网络协议（例如 IPv4 或 IPv6）
+virtual void connectToHost(const QString &hostName, quint16 port, OpenMode openMode = ReadWrite, NetworkLayerProtocol protocol = AnyIPProtocol);
+virtual void connectToHost(const QHostAddress &address, quint16 port, OpenMode openMode = ReadWrite);
+// 尝试关闭套接字。如果有等待写入的未决数据，QAbstractSocket 将进入 ClosingState 并等待直到所有数据都已写入。最终，它将进入 UnconnectedState 并发出 disconnected() 信号
+virtual void disconnectFromHost();
+
+// 设置和返回错误类型
+void QAbstractSocket::setSocketError(SocketError socketError)；
+SocketError error() const;
+
+// 设置和返回套接字的状态
+void setSocketState(SocketState state)
+SocketState state() const;
+
+// 将此套接字的显式网络代理设置为 networkProxy，要禁用此套接字的代理，请使用 QNetworkProxy::NoProxy 代理类型
+void setProxy(const QNetworkProxy &networkProxy);
+QNetworkProxy proxy() const;
+
+// 将 QAbstractSocket 的内部读取缓冲区的大小设置为 size 字节
+virtual void setReadBufferSize(qint64 size);
+qint64 readBufferSize() const;
+
+//设置和返回 QAbstractSocket对象的本机套接字描述符，不可用返回-1。如果套接字正在使用QNetworkProxy，则返回的描述符可能无法与本机套接字函数一起使用
+virtual bool setSocketDescriptor(qintptr socketDescriptor, SocketState socketState = ConnectedState, OpenMode openMode = ReadWrite);
+virtual qintptr socketDescriptor() const;
+
+// 设置和返回套接字选项
+virtual void setSocketOption(QAbstractSocket::SocketOption option, const QVariant &value)
+virtual QVariant socketOption(QAbstractSocket::SocketOption option);
+
+// 等待套接字连接和断开，最多 mssecs 毫秒。如果连接已经建立，这个函数返回true；否则返回false
+// 如果 msecs 为 -1，则此函数不会超时， 在它返回false的情况下，您可以调用error()来确定错误的原因
+virtual bool waitForConnected(int msecs = 3000);
+virtual bool waitForDisconnected(int msecs = 30000);
+socket->connectToHost("imap", 143);
+if (socket->waitForConnected(1000))
+    qDebug("Connected!");
+socket->disconnectFromHost();
+if (socket->state() == QAbstractSocket::UnconnectedState ||
+    socket->waitForDisconnected(1000))
+    qDebug("Disconnected!");
+```
+
+##### 继承函数
+
+这些函数从QIODevice继承而来，也是可以使用的函数，其含义可见[6.1.1 QIODevice](#6.1.1 QIODevice)。
+
+```c++
+virtual bool atEnd() const;
+virtual qint64 bytesAvailable() const;
+virtual qint64 bytesToWrite() const;
+virtual bool canReadLine() const;
+virtual void close();
+virtual bool isSequential() const;
+virtual bool waitForBytesWritten(int msecs = 30000);
+virtual bool waitForReadyRead(int msecs = 30000);
+```
+
+##### 信号函数
+
+```c++
+void connected();
+void disconnected();
+void error(QAbstractSocket::SocketError socketError);
+void hostFound();
+void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator);
+void stateChanged(QAbstractSocket::SocketState socketState);
+```
+
+#### 13.5.5 QTcpSocket
+
+QTcpSocket 类提供了一个 TCP 套接字。
+TCP（传输控制协议）是一种可靠的、面向流的、面向连接的传输协议。它特别适用于数据的连续传输。
+QTcpSocket 是 QAbstractSocket 的一个便利子类，它允许您建立 TCP 连接并传输数据流。有关详细信息，请参阅 QAbstractSocket 文档。
+注意：不能在 QIODevice::Unbuffered 模式下打开 TCP 套接字。
+
+```c++
+QTcpSocket(QObject *parent = Q_NULLPTR)
+virtual ~QTcpSocket();
+```
+
+#### 13.5.6 QUdpSocket
+
+QUdpSocket 类提供了一个 UDP 套接字。
+UDP（用户数据报协议）是一种轻量级的、不可靠的、面向数据报的、无连接的协议。当可靠性不重要时可以使用它。 QUdpSocket 是 QAbstractSocket 的子类，允许您发送和接收 UDP 数据报。
+使用该类最**常见的方法是使用 bind() 绑定到地址和端口，然后调用 writeDatagram() 和 readDatagram() / receiveDatagram() 来传输数据。如果要使用标准 QIODevice 函数 read()、readLine()、write() 等，必须首先通过调用 connectToHost() 将套接字直接连接到对等方**。
+每次将数据报写入网络时，套接字都会发出 bytesWritten() 信号。如果你只是想发送数据报，你不需要调用bind()。每当数据报到达时，就会发出 readyRead() 信号。在这种情况下，hasPendingDatagrams() 返回 true。调用pendingDatagramSize() 获取第一个未决数据报的大小，调用readDatagram() 或receiveDatagram() 来读取它。注意：当您收到 readyRead() 信号时，应读取传入的数据报，否则将不会为下一个数据报发出此信号。
+
+```c++
+void Server::initSocket()
+{
+    udpSocket = new QUdpSocket(this);
+    udpSocket->bind(QHostAddress::LocalHost, 7755);
+
+    connect(udpSocket, SIGNAL(readyRead()),
+            this, SLOT(readPendingDatagrams()));
+}
+
+void Server::readPendingDatagrams()
+{
+    while (udpSocket->hasPendingDatagrams()) {
+        QNetworkDatagram datagram = udpSocket->receiveDatagram();
+        processTheDatagram(datagram);
+    }
+}
+```
+
+QUdpSocket 还支持 UDP 多播。使用 joinMulticastGroup() 和 leaveMulticastGroup() 控制组成员，使用 QAbstractSocket::MulticastTtlOption 和 QAbstractSocket::MulticastLoopbackOption 设置 TTL 和环回套接字选项。使用 setMulticastInterface() 控制多播数据报的传出接口，并使用 multicastInterface() 查询它。
+使用 QUdpSocket，您还可以使用 connectToHost() 建立到 UDP 服务器的虚拟连接，然后使用 read() 和 write() 来交换数据报，而无需为每个数据报指定接收者。
+
+成员函数如下。
+
+```c++
+QUdpSocket(QObject *parent = Q_NULLPTR);
+virtual ~QUdpSocket();
+
+// 如果至少有一个数据报正在等待读取，则返回 true；否则返回假
+bool hasPendingDatagrams() const;
+// 返回第一个挂起的 UDP 数据报的大小。如果没有可用的数据报，此函数返回 -1
+qint64 pendingDatagramSize() const;
+
+// 在操作系统选择的默认接口上加入由 groupAddress 指定的多播组。套接字必须处于BoundState，否则会出错
+bool joinMulticastGroup(const QHostAddress &groupAddress);
+bool joinMulticastGroup(const QHostAddress &groupAddress, const QNetworkInterface &iface);
+// 将由 groupAddress 指定的多播组留在操作系统选择的默认接口上。套接字必须处于BoundState，否则会出错
+bool leaveMulticastGroup(const QHostAddress &groupAddress);
+bool leaveMulticastGroup(const QHostAddress &groupAddress, const QNetworkInterface &iface);
+
+//返回多播数据报的传出接口的接口。这对应于 IPv4 套接字的 IP_MULTICAST_IF 套接字选项和 IPv6 套接字的 IPV6_MULTICAST_IF 套接字选项。如果之前没有设置接口，这个函数返回一个无效的 QNetworkInterface。套接字必须处于 BoundState，否则返回无效的 QNetworkInterface
+void setMulticastInterface(const QNetworkInterface &iface);
+QNetworkInterface multicastInterface() const;
+
+//接收不大于 maxSize 字节的数据报并将其存储在数据中。发送者的主机地址和端口存储在 *address 和 *port 中（除非指针为 0）
+qint64 readDatagram(char *data, qint64 maxSize, QHostAddress *address = Q_NULLPTR, quint16 *port = Q_NULLPTR);
+// 接收不大于 maxSize 字节的数据报，并在 QNetworkDatagram 对象中返回它，以及发送者的主机地址和端口。如果可能，此函数还将尝试确定数据报的目标地址、端口和接收时的跳数
+QNetworkDatagram receiveDatagram(qint64 maxSize = -1);
+// 将数据大小大小的数据报发送到端口端口的主机地址地址。返回成功发送的字节数；否则返回 -1
+qint64 writeDatagram(const char *data, qint64 size, const QHostAddress &address, quint16 port);
+// 将数据报数据报发送到数据报中包含的主机地址和端口号，使用也设置在那里的网络接口和跳数限制。如果未设置目标地址和端口号，此函数将发送到传递给 connectToHost() 的地址
+qint64 writeDatagram(const QNetworkDatagram &datagram);
+// 将数据报数据报发送到主机地址主机和端口端口
+qint64 writeDatagram(const QByteArray &datagram, const QHostAddress &host, quint16 port);
+```
+
+#### 13.5.7 QTcpServer
+
+QTcpServer 类提供了一个基于 TCP 的服务器。这个类使得接受传入的 TCP 连接成为可能。您可以指定端口或让 QTcpServer 自动选择一个。您可以监听特定地址或所有机器的地址。
+**调用listen() 让服务器监听传入的连接。然后每次客户端连接到服务器时都会发出 newConnection() 信号**。
+**调用 nextPendingConnection() 以接受挂起的连接作为已连接的 QTcpSocket。该函数返回指向 QAbstractSocket::ConnectedState 中的 QTcpSocket 的指针**，您可以使用该指针与客户端进行通信。
+如果发生错误，serverError() 返回错误的类型，并且可以调用 errorString() 来获得对所发生事件的可读描述。
+在侦听连接时，**服务器正在侦听的地址和端口可用作 serverAddress() 和 serverPort(**)。
+调用 close() 使 QTcpServer 停止侦听传入连接。
+尽管 QTcpServer 主要是为与事件循环一起使用而设计的，**但也可以在没有事件循环的情况下使用它。在这种情况下，您必须使用 waitForNewConnection()**，它会阻塞直到连接可用或超时到期。
+
+成员函数。
+
+```c++
+QTcpServer(QObject *parent = Q_NULLPTR);
+// 关闭服务器。服务器将不再侦听传入连接
+void close();
+// 返回发生的最后一个错误的人类可读描述
+QString errorString() const;
+
+// 此函数由 QTcpServer::incomingConnection() 调用以将套接字添加到待处理的传入连接列表中
+void addPendingConnection(QTcpSocket *socket);
+// 当有新连接可用时，QTcpServer 会调用此虚拟函数。 socketDescriptor 参数是接受连接的本机套接字描述符
+virtual void incomingConnection(qintptr socketDescriptor);
+// 如果服务器有挂起的连接，则返回 true；否则返回假
+virtual bool hasPendingConnections() const;
+// 将下一个挂起的连接作为已连接的 QTcpSocket 对象返回
+virtual QTcpSocket *nextPendingConnection();
+// 将挂起的已接受连接的最大数量设置为 numConnections。在调用 nextPendingConnection() 之前，QTcpServer 将接受不超过 numConnections 的传入连接。默认情况下，限制为 30 个挂起的连接
+void setMaxPendingConnections(int numConnections);
+int maxPendingConnections() const;
+
+// 如果服务器当前正在侦听传入连接，则返回 true；否则返回假
+bool isListening() const;
+// 告诉服务器侦听地址地址和端口端口上的传入连接。如果端口为 0，则自动选择一个端口。如果地址是 QHostAddress::Any，服务器将侦听所有网络接口
+bool listen(const QHostAddress &address = QHostAddress::Any, quint16 port = 0);
+
+// 暂停接受新连接。排队的连接将保留在队列中
+void pauseAccepting();
+// 恢复接受新连接
+void resumeAccepting();
+
+// 返回发生的最后一个错误的错误代码
+QAbstractSocket::SocketError serverError() const;
+// 如果服务器正在侦听连接，则返回服务器的地址；否则返回 QHostAddress::Null
+QHostAddress serverAddress() const;
+// 如果服务器正在侦听连接，则返回服务器的端口；否则返回 0
+quint16 serverPort() const;
+
+// 将此套接字的显式网络代理设置为 networkProxy
+void setProxy(const QNetworkProxy &networkProxy);
+QNetworkProxy proxy() const;
+
+// 设置此服务器在侦听到 socketDescriptor 的传入连接时应使用的套接字描述符。如果套接字设置成功，则返回 true；否则返回假
+bool setSocketDescriptor(qintptr socketDescriptor);
+qintptr socketDescriptor() const;
+
+// 最多等待 msec 毫秒或直到传入连接可用。如果连接可用，则返回 true；否则返回假。如果操作超时且 timedOut 不为 0，*timedOut 将设置为 true
+bool waitForNewConnection(int msec = 0, bool *timedOut = Q_NULLPTR);
+```
+
+信号函数。
+
+```c++
+// 当接受新连接导致错误时发出此信号。 socketError 参数描述了发生的错误类型
+void acceptError(QAbstractSocket::SocketError socketError);
+// 当有新连接可用时，QTcpServer 会调用此虚拟函数。 socketDescriptor 参数是接受连接的本机套接字描述符
+void newConnection();
+```
+
+
 
 ## 布局管理
 
