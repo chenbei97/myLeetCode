@@ -1,4 +1,4 @@
-## 1. 认识Qt和GUI应用程序基础
+1. 认识Qt和GUI应用程序基础
 
 1-2章关于Qt的安装和简单复习可见[01-hello_world](01-hello_world)的内容，其运行结果图片可见[01-hello_world/app.png](01-hello_world/app.png)。
 
@@ -14403,9 +14403,198 @@ newQTcpSocket==>|连接客户端相互通信|QTcpSocket
 QTcpSocket==>|连接服务端相互通信|newQTcpSocket
 ```
 
-建立连接以后，如果缓冲区有数据，就会发射readyRead信号，此信号的槽函数里可以读取数据。
+建立连接以后，如果缓冲区有数据，就会发射readyRead信号，此信号的槽函数里可以读取数据。一般来说,Socket之间通信有2种方式，基于行的或者基于数据块的，需要规定好服务器和客户端的通信协议。
 
+基于行的数据协议一般用于纯文本数据的通信，每行数据以一个换行符结束，canReadLine函数继承自QIODevice可以使用，判定是否有新的一行数据可以读取，再用readLine函数读取。
 
+基于块的数据协议一般用于二进制数据传输，需要自定义具体的格式。
+
+这里给出了一个实例，可见[31-TestTcpServerClient/TCPServer](31-TestTcpServerClient/TCPServer)。
+
+服务器TCPServer的头文件如下。
+
+```c++
+#include <QMainWindow>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QLabel>
+class TCPServer : public QMainWindow
+{
+  Q_OBJECT
+public:
+  explicit TCPServer(QWidget *parent = nullptr);
+  ~TCPServer();
+protected:
+  void closeEvent(QCloseEvent *event);
+private slots:
+  void on_actStart_triggered();
+  void on_actStop_triggered();
+  void on_actHostInfo_triggered();
+  void on_actClear_triggered();
+  void on_btnSend_clicked();
+private:
+  Ui::TCPServer *ui;
+  QLabel * LabListen;
+  QLabel * LabSocketState;
+  QTcpServer *tcpServer; //TCP服务器
+  QTcpSocket *tcpSocket;//TCP通讯的Socket
+  QString getLocalIP();//获取本机IP地址
+private slots: // 自定义槽函数
+  void onNewConnection(); // 响应QTcpServer的newConnection信号
+  void onSocketStateChange(QAbstractSocket::SocketState socketState); // 响应stateChanged信号
+  void onClientConnected(); // 响应客户端连接信号
+  void onClientDisconnected();// 响应客户端断开连接信号
+  void onSocketReadyRead();// 读取客户端传入的数据
+  void on_comboIP_currentTextChanged(const QString &arg1);
+  void on_spinPort_valueChanged(const QString &arg1);
+};
+```
+
+源文件只给出核心的3个函数。重点在于这里定义的tcpSocket需要接收来自客户端的tcpSocket，如果没有连接，直接发送消息会有问题。
+
+```c++
+// 1.用于响应newConnection信号的槽函数
+void TCPServer::onNewConnection()
+{
+    qDebug()<<"new connection...";
+    // 在newConnection的槽函数中,应该使用nextPendingConnection()接受客户端的连接
+    // nextPendingConnection()会返回下一个挂起的连接(因为可能连接处于排队状态)
+    // ui->plainTextEdit->appendPlainText("有新连接");
+    this->tcpSocket = this->tcpServer->nextPendingConnection(); //创建socket
+	if (this->tcpSocket == nullptr) // 没有连接的时候
+        return;
+    // 有新的连接以后,tcpSocket会有已连接connected信号发出
+    connect(this->tcpSocket, SIGNAL(connected()),this, SLOT(onClientConnected()));
+    this->onClientConnected();// 调用响应槽函数
+
+    // 断开连接信号disconnected先绑定好槽函数
+    connect(tcpSocket, SIGNAL(disconnected()), this, SLOT(onClientDisconnected()));
+
+    // 状态改变信号stateChanged绑定好槽函数,这里需要调用1次
+    connect(tcpSocket,SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+            this,SLOT(onSocketStateChange(QAbstractSocket::SocketState)));
+    this->onSocketStateChange(tcpSocket->state());// 调用响应槽函数
+
+    // 如果socket有数据会发出readyRead信号,绑定好槽函数
+    connect(tcpSocket,SIGNAL(readyRead()),this,SLOT(onSocketReadyRead()));
+}
+// 2.发送消息（这里是服务器端发给客户端）
+void TCPServer::on_btnSend_clicked()
+{
+    // 发送1行字符串,以换行符结束
+    // 一般来说,Socket之间通信有2种方式,基于行的或者基于数据块的
+    QString msg=ui->editMsg->text();
+    ui->plainTextEdit->appendPlainText("[发送给客户端的消息：] "+msg);
+    ui->editMsg->clear();
+    ui->editMsg->setFocus();
+    QByteArray str=msg.toUtf8();
+    str.append('\n');//添加一个换行符
+    this->tcpSocket->write(str); // 写入获取的客户端套接字
+}
+// 3.接收消息(接收来自客户端的消息)
+void TCPServer::onSocketReadyRead()
+{
+    while(tcpSocket->canReadLine())
+    {
+        ui->plainTextEdit->appendPlainText("[来自客户端的消息：] "+tcpSocket->readLine()); // 读取服务器端写入的数据
+    }
+}
+```
+
+客户端TCPClient的源文件如下，例子可见[31-TestTcpServerClient/TCPClient](31-TestTcpServerClient/TCPClient)。
+
+```c++
+#include <QMainWindow>
+#include <QTcpSocket>
+#include <QLabel>
+class TCPClient : public QMainWindow
+{
+  Q_OBJECT
+private:
+    QTcpSocket  *tcpClient;  // 客户端套接字,会在服务器端的nextPendingConnection被服务器拿到
+    QLabel  *LabSocketState;  //状态栏显示标签
+    QString getLocalIP();//获取本机IP地址
+protected:
+    void closeEvent(QCloseEvent *event);
+public:
+  explicit TCPClient(QWidget *parent = nullptr);
+  ~TCPClient();
+private slots:
+  void on_actConnect_triggered();
+  void on_actDisconnect_triggered();
+  void on_actClear_triggered();
+  void on_btnSend_clicked();
+private slots: // 自定义槽函数
+  void onConnected();
+  void onDisconnected();
+  void onSocketStateChange(QAbstractSocket::SocketState socketState);
+  void onSocketReadyRead();//读取服务端传入的数据
+  void on_comboServer_currentIndexChanged(const QString &arg1);
+  void on_spinPort_valueChanged(const QString &arg1);
+private:
+  Ui::TCPClient *ui;
+};
+```
+
+TCPClient源文件如下，给出核心的3个函数代码。
+
+```c++
+// 1.连接服务器
+void TCPClient::on_actConnect_triggered()
+{
+    QString  addr=ui->comboServer->currentText();
+    quint16  port=ui->spinPort->value();
+    tcpClient->connectToHost(addr,port);//连接本机,本机作为服务器,同时本机也作为客户端
+}
+// 2.客户端发送消息给服务器
+void TCPClient::on_btnSend_clicked()
+{
+    QString msg=ui->editMsg->text();
+    ui->plainTextEdit->appendPlainText("[发送给服务器的消息：] "+msg);
+    ui->editMsg->clear();
+    ui->editMsg->setFocus();
+    QByteArray  str=msg.toUtf8();
+    str.append('\n');
+    tcpClient->write(str);
+}
+// 10.接收来自服务器的消息
+void TCPClient::onSocketReadyRead()
+{
+    while(this->tcpClient->canReadLine())
+        ui->plainTextEdit->appendPlainText("[来自服务器的消息：] "+tcpClient->readLine());
+}
+```
+
+### 13.3 UDP通信
+
+与TCP不同，无需预先建立持久的socket，UDP每次发送数据报都需要指定目标地址和端口。
+
+UDP以数据报传输数据，而不是以连续的数据流，发送数据报需要使用函数QUdpSocket::writeDatagram()，数据报的长度一般少于512字节，每个数据报包含发送者和接收者的IP地址和端口等信息。
+
+UDP传送有3种方式，单播、广播和组播模式。
+
+单播模式：一对一的数据传输
+
+广播模式：一个UDP客户端发出的数据报，同一网络范围内其他所有UDP客户端都可以收到。QUdpSocket支持IPV4广播，广播经常用于实现网络发现的协议，要获取广播数据只需要在数据报指定接收端地址为QHostAddress::Broadcast，一般的广播地址是255.255.255.255
+
+组播模式：UDP客户端加入到另一个组播IP地址指定的多播组，成员向组播地址发送的数据报组内成员都可以接收到，类似于QQ群的功能。QUdpSocket::joinMulticastGroup函数实现加入多播组的功能，加入多播组后UDP数组的收发与正常的UDP数据收发一样。
+
+这里给出UDP通信的例子，记得在工具-构建与运行这里设置stop applications before building为None，这样就可以多实例运行了，UDP的2个例子之间是可以互相通信的，它们可以在同一台电脑也可以不在同一台电脑。
+
+同一台电脑，因为IP地址都是相同的，在任意一个实例角度来看对方的IP地址都是当地地址，所以如果想要通信必须要绑定不同的端口，否则会造成冲突。
+
+![](udpSocket.jpg)
+
+这里一共出现4个地址，但是都是本机的IP地址，也就是完全一样的。
+
+```c++
+本机IP地址：192.168.17.1
+本机IP地址：192.168.157.1
+本机IP地址：192.168.0.138
+本机IP地址：127.0.0.1
+```
+
+不过一般的UDP通信程序都是不同的计算机上运行，所以约定一个固定的端口作为通信就可以，也即是端口可以一样，因为IP地址是不同的，不会造成冲突。
 
 ### 13.5 关联网络类
 

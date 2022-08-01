@@ -91,6 +91,8 @@
 
 31. TestTcpServerClient 演示如何进行TCP通信(本机作为服务器也作为客户端)
 
+32. TestUdpUnitMultiBroadCast 演示如何进行UDP通信(单播、广播和组播模式)
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
