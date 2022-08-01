@@ -14612,11 +14612,19 @@ UDP传送有3种方式，单播、广播和组播模式。
 
 测试的时候，这里只能使用2台计算机分别运行实例进行测试，同一台的话如果一个实例已经加入多组播，另一个就无法加入了，因为本质上都是一个IP地址。具体的例子可见[32-TestUdpUnitMultiBroadCast/UdpMultiCast](32-TestUdpUnitMultiBroadCast/UdpMultiCast)。
 
-### 13.4 基于HTTP协议的网络应用程序
+### 13.4 基于HTTP协议
 
+这里涉及到3个网络数据类型：QNetWorkRequest、QNetWorkReply和QNetWorkAccessManager，以及QUrl。
 
+QNetWorkRequest可以通过一个URL发起网络协议请求，保存了网络请求的信息，目前支持HTTP、FTP和局部文件URLs的下载或者上传。这个URL地址可以是任何类型的文件，如html、pdf、doc和exe等。
 
-### 13.5 关联网络类
+QNetWorkAccessManager用于协调网络操作，在QNetWorkRequest发起一个网络请求后，负责发送这个网络请求，创建网络响应。
+
+QNetWorkReply用于处理网络请求后的响应，提供了信号finshed、readyRead、downloadProgress等检测网络响应的执行情况。因为是QIODevice的子类，所以支持流读写功能，也支持同步或者异步工作模式。
+
+例子可见[33-TestNetworkHttp](33-TestNetworkHttp)。
+
+### 13.5 关联网络数据类型
 
 #### 13.5.1 QHostInfo
 
@@ -15285,6 +15293,529 @@ void acceptError(QAbstractSocket::SocketError socketError);
 // 当有新连接可用时，QTcpServer 会调用此虚拟函数。 socketDescriptor 参数是接受连接的本机套接字描述符
 void newConnection();
 ```
+
+#### 13.5.8 QNetworkAccessManager
+
+QNetworkAccessManager 类允许应用程序发送网络请求和接收回复 网络访问 API 是围绕一个 QNetworkAccessManager 对象构建的，该对象包含它发送的请求的通用配置和设置。它包含代理和缓存配置，以及与此类问题相关的信号，以及可用于监控网络操作进度的回复信号。**一个 QNetworkAccessManager 对于整个 Qt 应用程序应该足够了**。一旦创建了 QNetworkAccessManager 对象，应用程序就可以使用它通过网络发送请求。提供了一组标准函数，它们接受请求和可选数据，**每个函数都返回一个 QNetworkReply 对象**。返回的对象用于获取响应相应请求而返回的任何数据。
+可以通过以下方式完成简单的网络下载：
+
+```c++
+QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+connect(manager, SIGNAL(finished(QNetworkReply*)),
+        this, SLOT(replyFinished(QNetworkReply*)));
+manager->get(QNetworkRequest(QUrl("http://qt-project.org")));
+```
+
+QNetworkAccessManager 有一个异步 API。当上面的replyFinished slot被调用时，它接受的参数是包含下载数据以及元数据（headers等）的QNetworkReply对象。
+注意：请求完成后，用户有责任在适当的时候删除 QNetworkReply 对象。不要在连接到finished()的槽内直接删除它。您可以使用 deleteLater() 函数。
+注意：QNetworkAccessManager 将它收到的请求排队。并行执行的请求数取决于协议。目前，对于桌面平台上的 HTTP 协议，一个主机/端口组合并行执行 6 个请求。
+一个更复杂的例子，假设管理网络已经存在，可以是：
+
+```c++
+QNetworkRequest request;
+request.setUrl(QUrl("http://qt-project.org"));
+request.setRawHeader("User-Agent", "MyOwnBrowser 1.0");
+
+QNetworkReply *reply = manager->get(request);
+connect(reply, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),
+        this, SLOT(slotError(QNetworkReply::NetworkError)));
+connect(reply, SIGNAL(sslErrors(QList<QSslError>)),
+        this, SLOT(slotSslErrors(QList<QSslError>)));
+```
+
+网络和漫游支持。通过在 Qt 4.7 中添加承载管理 API，QNetworkAccessManager 获得了管理网络连接的能力。 QNetworkAccessManager 可以在设备离线时启动网络接口，如果当前进程是最后一个使用上行链路的进程，则终止接口。请注意，某些平台使用从最后一个应用程序停止使用上行链路到系统实际终止连接链路的宽限期。漫游同样透明。任何排队/待处理的网络请求都会自动传输到新的接入点。
+希望使用此功能的客户不需要任何更改。事实上，现有平台特定的连接代码很可能可以简单地从应用程序中删除。
+注意：QNetworkAccessManager 中的网络和漫游支持取决于支持连接管理的平台。 QNetworkConfigurationManager::NetworkSessionRequired 可以用来检测 QNetworkAccessManager 是否利用了这个特性。
+
+##### 枚举类型
+
+此枚举类型指示网络是否可通过此网络访问管理器访问。
+
+```c++
+enum QNetworkAccessManager::NetworkAccessibility{
+    QNetworkAccessManager::UnknownAccessibility,//无法确定网络可访问性
+	QNetworkAccessManager::NotAccessible,//网络当前不可访问，要么是因为当前没有网络覆盖，要么网络访问已通过调用 setNetworkAccessible() 显式禁用
+	QNetworkAccessManager::Accessible//网络是可访问的
+}
+```
+
+此枚举类型指示此回复正在处理的操作。
+
+```c++
+enum QNetworkAccessManager::Operation{
+    QNetworkAccessManager::HeadOperation,//检索标头操作（使用 head() 创建
+    QNetworkAccessManager::GetOperation,//检索标头并下载内容（使用 get() 创建）
+    QNetworkAccessManager::PutOperation,//上传内容操作（使用 put() 创建）
+    QNetworkAccessManager::PostOperation,//通过 HTTP POST（使用 post() 创建）发送 HTML 表单的内容以进行处理
+    QNetworkAccessManager::DeleteOperation,//删除内容操作（使用 deleteResource() 创建）
+    QNetworkAccessManager::CustomOperation//自定义操作（使用 sendCustomRequest() 创建）
+}
+```
+
+##### 成员函数
+
+```c++
+QNetworkAccessManager(QObject *parent = Q_NULLPTR);
+// 在端口端口启动与 hostName 给定的主机的连接。此功能有助于在发出 HTTP 请求之前完成与主机的 TCP 握手，从而降低网络延迟
+void connectToHost(const QString &hostName, quint16 port = 80);
+// 使用 sslConfiguration 在端口端口发起与 hostName 给定的主机的连接。此功能有助于在发出 HTTPS 请求之前完成与主机的 TCP 和 SSL 握手，从而降低网络延迟
+void connectToHostEncrypted(const QString &hostName, quint16 port = 443, const QSslConfiguration &sslConfiguration = QSslConfiguration::defaultConfiguration());
+
+// 发送删除请求的 URL 标识的资源的请求
+QNetworkReply *deleteResource(const QNetworkRequest &request);
+// 发布请求以获取目标请求的内容并返回一个新的 QNetworkReply 对象，该对象打开以供读取，每当新数据到达时，该对象就会发出 readyRead() 信号
+QNetworkReply *get(const QNetworkRequest &request);
+// 发布请求以获取请求的网络标头并返回一个新的 QNetworkReply 对象，该对象将包含此类标头
+QNetworkReply *head(const QNetworkRequest &request);
+QStringList supportedSchemes() const;//列出访问管理器支持的所有 URL 方案
+
+// 向 request 指定的目的地发送一个 HTTP POST 请求，并返回一个新的 QNetworkReply 对象，该对象打开以供读取，其中包含服务器发送的回复。数据设备的内容将被上传到服务器
+QNetworkReply *post(const QNetworkRequest &request, QIODevice *data);
+QNetworkReply *post(const QNetworkRequest &request, const QByteArray &data);
+QNetworkReply *post(const QNetworkRequest &request, QHttpMultiPart *multiPart);
+
+// 将数据内容上传到目标请求并返回一个新的 QNetworkReply 对象，该对象将打开以进行回复
+QNetworkReply *put(const QNetworkRequest &request, QIODevice *data);
+QNetworkReply *put(const QNetworkRequest &request, const QByteArray &data);
+QNetworkReply *put(const QNetworkRequest &request, QHttpMultiPart *multiPart);
+
+// 向请求的 URL 标识的服务器发送自定义请求
+QNetworkReply *sendCustomRequest(const QNetworkRequest &request, const QByteArray &verb, QIODevice *data = Q_NULLPTR);
+QNetworkReply *sendCustomRequest(const QNetworkRequest &request, const QByteArray &verb, const QByteArray &data);
+QNetworkReply *sendCustomRequest(const QNetworkRequest &request, const QByteArray &verb, QHttpMultiPart *multiPart);
+
+// 将管理器的网络缓存设置为指定的缓存。缓存用于管理器分派的所有请求
+void setCache(QAbstractNetworkCache *cache);
+QAbstractNetworkCache *cache() const;
+// 刷新身份验证数据和网络连接的内部缓存
+void clearAccessCache();
+// 刷新网络连接的内部缓存。与 clearAccessCache() 相比，保留了身份验证数据
+void clearConnectionCache();
+
+// 将创建网络会话时使用的网络配置设置为 config
+void setConfiguration(const QNetworkConfiguration &config);
+// 返回当前活动的网络配置
+QNetworkConfiguration activeConfiguration() const;
+QNetworkConfiguration configuration() const;
+
+// 将经理的 cookie jar 设置为指定的 cookieJar。 cookie jar 被管理器发送的所有请求使用
+void setCookieJar(QNetworkCookieJar *cookieJar);
+QNetworkCookieJar *cookieJar() const;
+
+// 覆盖报告的网络可访问性。如果可访问是 NotAccessible，则报告的网络可访问性将始终为 NotAccessible。否则，报告的网络可访问性将反映实际的设备状态
+void setNetworkAccessible(NetworkAccessibility accessible);
+NetworkAccessibility networkAccessible() const;
+
+// 将将来请求中使用的代理设置为代理。这不会影响已经发送的请求。如果代理请求身份验证，将发出 proxyAuthenticationRequired() 信号
+void setProxy(const QNetworkProxy &proxy);
+QNetworkProxy proxy() const;
+// 将此类的代理工厂设置为工厂。代理工厂用于确定要用于给定请求的更具体的代理列表，而不是尝试对所有请求使用相同的代理值
+void setProxyFactory(QNetworkProxyFactory *factory);
+QNetworkProxyFactory *proxyFactory() const;
+
+// 将管理器的重定向策略设置为指定的策略。此策略将影响管理器创建的所有后续请求
+void setRedirectPolicy(QNetworkRequest::RedirectPolicy policy);
+QNetworkRequest::RedirectPolicy redirectPolicy() const;
+
+// 如果启用为真，QNetworkAccessManager 遵循 HTTP 严格传输安全策略（HSTS，RFC6797）。处理请求时，QNetworkAccessManager 自动将“http”方案替换为“https”，并为 HSTS 主机使用安全传输。如果明确设置，则端口 80 将替换为端口 443。
+void setStrictTransportSecurityEnabled(bool enabled);
+bool isStrictTransportSecurityEnabled() const;
+// 将 HTTP 严格传输安全策略添加到 HSTS 缓存中
+void addStrictTransportSecurityHosts(const QVector<QHstsPolicy> &knownHosts);
+QVector<QHstsPolicy> strictTransportSecurityHosts() const;
+```
+
+##### 信号函数
+
+```c++
+void authenticationRequired(QNetworkReply *reply, QAuthenticator *authenticator);
+void encrypted(QNetworkReply *reply);
+void finished(QNetworkReply *reply);
+void networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
+void preSharedKeyAuthenticationRequired(QNetworkReply *reply, QSslPreSharedKeyAuthenticator *authenticator);
+void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator);
+void sslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
+```
+
+#### 13.5.9 QNetWorkRequest
+
+QNetworkRequest 类保存一个请求，该请求将与 QNetworkAccessManager 一起发送。
+QNetworkRequest 是网络访问 API 的一部分，是保存通过网络发送请求所需信息的类。它包含一个 URL 和一些可用于修改请求的辅助信息。
+
+##### 枚举值
+
+QNetworkRequest 和 QNetworkReply 的属性代码。属性是额外的元数据，用于控制请求的行为并将更多信息从回复传递回应用程序。属性也是可扩展的，允许自定义实现传递自定义值。下表解释了默认属性代码是什么、关联的 QVariant 类型、缺少所述属性时的默认值以及它是否用于请求或回复中。
+
+```c++
+enum QNetworkRequest::Attribute{
+    QNetworkRequest::HttpStatusCodeAttribute,//仅回复，类型：QMetaType::Int（无默认值）表示从 HTTP 服务器接收到的 HTTP 状态码（如 200、304、404、401 等）。如果连接不是基于HTTP的，则该属性将不存在
+    QNetworkRequest::HttpReasonPhraseAttribute,//仅回复，类型：QMetaType::QByteArray（无默认值）指示从 HTTP 服务器接收到的 HTTP 原因短语（如“Ok”、“Found”、“Not Found”、“Access Denied”等）这是状态代码的人类可读表示（见上文）。如果连接不是基于 HTTP 的，则该属性将不存在
+    QNetworkRequest::RedirectionTargetAttribute,//仅回复，类型：QMetaType::QUrl（无默认值）如果存在，则表明服务器正在将请求重定向到不同的 URL。默认情况下，网络访问 API 不遵循重定向：应用程序可以根据其安全策略确定是否应允许请求的重定向，或者可以将 QNetworkRequest::FollowRedirectsAttribute 设置为 true（在这种情况下，将遵循重定向，并且此属性不会出现在回复中）。返回的 URL 可能是相对的。使用 QUrl::resolved() 从中创建一个绝对 URL
+    QNetworkRequest::ConnectionEncryptedAttribute,//仅回复，类型：QMetaType::Bool（默认值：false） 指示数据是否通过加密（安全）连接获得
+    QNetworkRequest::CacheLoadControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::PreferNetwork）控制应该如何访问缓存。可能的值是 QNetworkRequest::CacheLoadControl 的值。请注意，默认的 QNetworkAccessManager 实现不支持缓存。但是，某些后端可以使用此属性来修改其请求（例如，用于缓存代理）
+    QNetworkRequest::CacheSaveControlAttribute,//仅限请求，类型：QMetaType::Bool（默认值：true）控制是否应将获得的数据保存到缓存以供将来使用。如果值为false，则获取的数据不会被自动缓存。如果为 true，则数据可能会被缓存，前提是它是可缓存的（可缓存的内容取决于所使用的协议）
+    QNetworkRequest::SourceIsFromCacheAttribute,//仅回复，类型：QMetaType::Bool （默认：false） 指示数据是否从缓存中获取
+    QNetworkRequest::DoNotBufferUploadDataAttribute,//仅限请求，类型：QMetaType::Bool（默认：false） 表示是否允许 QNetworkAccessManager 代码缓冲上传数据，例如在进行 HTTP POST 时。当将此标志用于顺序上传数据时，必须设置 ContentLengthHeader 标头
+    QNetworkRequest::HttpPipeliningAllowedAttribute,//仅限请求，类型：QMetaType::Bool （默认值：false） 指示是否允许 QNetworkAccessManager 代码对这个请求使用 HTTP 流水线
+    QNetworkRequest::HttpPipeliningWasUsedAttribute,//仅回复，类型：QMetaType::Bool 指示是否使用 HTTP 管道来接收此回复
+    QNetworkRequest::CustomVerbAttribute,//仅限请求，类型：QMetaType::QByteArray 保存要发送的自定义 HTTP 动词的值（用于使用 GET、POST、PUT 和 DELETE 之外的其他动词）。这个动词在调用 QNetworkAccessManager::sendCustomRequest() 时设置
+    QNetworkRequest::CookieLoadControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic）指示是否在请求中发送“Cookie”标头。在创建跨域 XMLHttpRequest 时，Qt WebKit 将此属性设置为 false，其中创建请求的 Javascript 未将 withCredentials 显式设置为 true。浏览此处获取更多信息
+    QNetworkRequest::CookieSaveControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic） 指示是否保存从服务器接收到的“Cookie”标头以响应请求。在创建跨域 XMLHttpRequest 时，Qt WebKit 将此属性设置为 false，其中创建请求的 Javascript 未将 withCredentials 显式设置为 true
+    QNetworkRequest::AuthenticationReuseAttribute，//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic）指示是否在请求中使用缓存的授权凭证（如果可用）。如果将其设置为 QNetworkRequest::Manual 并且身份验证机制是“基本”或“摘要”，Qt 将不会发送一个“授权”HTTP 标头以及它可能对请求的 URL 具有的任何缓存凭据。在创建跨域 XMLHttpRequest 时，此属性由 Qt WebKit 设置为 QNetworkRequest::Manual，其中创建请求的 Javascript 未将 withCredentials 显式设置为 true。浏览此处获取更多信息
+    QNetworkRequest::BackgroundRequestAttribute,//类型：QMetaType::Bool（默认值：false）表示这是一个后台传输，而不是用户发起的传输。根据平台的不同，后台传输可能会受制于不同的政策。 QNetworkSession ConnectInBackground 属性将根据该属性进行设置
+    QNetworkRequest::SpdyAllowedAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否允许 QNetworkAccessManager 代码在此请求中使用 SPDY。这仅适用于 SSL 请求，并且取决于支持 SPDY 的服务器
+    QNetworkRequest::SpdyWasUsedAttribute,//仅回复，类型：QMetaType::Bool 指示 SPDY 是否用于接收此回复
+    QNetworkRequest::HTTP2AllowedAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否允许 QNetworkAccessManager 代码使用 HTTP/2 处理此请求。这适用于 SSL 请求或“明文”HTTP/2
+    QNetworkRequest::HTTP2WasUsedAttribute,//仅回复，类型：QMetaType::Bool（默认值：false）指示是否使用 HTTP/2 来接收此回复
+    QNetworkRequest::EmitAllUploadProgressSignalsAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否应发出所有上传信号。默认情况下，uploadProgress 信号仅以 100 毫秒的间隔发出
+    QNetworkRequest::FollowRedirectsAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示网络访问 API 是否应自动遵循 HTTP 重定向响应。目前不允许不安全的重定向，即从“https”重定向到“http”协议
+    QNetworkRequest::OriginalContentLengthAttribute,//仅回复，类型 QMetaType::Int 在数据被压缩并且请求被标记为自动解压缩时，保留原始内容长度属性，然后使其失效并从标头中删除。
+    QNetworkRequest::RedirectPolicyAttribute,//仅限请求，类型：QMetaType::Int，应该是 QNetworkRequest::RedirectPolicy 值之一（默认值：ManualRedirectPolicy）。此属性已废弃 FollowRedirectsAttribute。
+    QNetworkRequest::User,//特种。附加信息可以在 QVariants 中传递，类型从 User 到 UserMax。网络访问的默认实现将忽略此范围内的任何请求属性，并且不会在回复中生成此范围内的任何属性。该范围是为 QNetworkAccessManager 的扩展保留的
+    QNetworkRequest::UserMax//特种。请参阅用户
+}
+```
+
+控制 QNetworkAccessManager 的缓存机制。
+
+```c++
+enum QNetworkRequest::CacheLoadControl
+{
+    QNetworkRequest::AlwaysNetwork,//始终从网络加载，不检查缓存是否有有效条目（类似于浏览器中的“重新加载”功能）；此外，强制中间缓存重新验证
+    QNetworkRequest::PreferNetwork,//默认值;如果缓存的条目早于网络条目，则从网络加载。这永远不会从缓存中返回陈旧的数据，而是重新验证已经陈旧的资源
+    QNetworkRequest::PreferCache,//如果可用，从缓存加载，否则从网络加载。请注意，这可能会从缓存中返回可能陈旧（但未过期）的项目
+    QNetworkRequest::AlwaysCache//仅从缓存加载，如果项目未缓存（即离线模式）则指示错误
+}
+```
+
+QNetworkRequest 解析的已知标头类型列表。每个已知的标头也以其完整的 HTTP 名称以原始形式表示。
+
+```c++
+enum QNetworkRequest::KnownHeaders{
+    QNetworkRequest::ContentDispositionHeader,//对应于 HTTP Content-Disposition 标头，并包含一个字符串，其中包含处置类型（例如，附件）和一个参数（例如，文件名）
+    QNetworkRequest::ContentTypeHeader,//对应于 HTTP Content-Type 标头，包含一个包含媒体 (MIME) 类型和任何辅助数据（例如，字符集）的字符串
+    QNetworkRequest::ContentLengthHeader,//对应于 HTTP Content-Length 标头，包含传输数据的字节长度
+    QNetworkRequest::LocationHeader,//对应于 HTTP Location 标头，包含一个表示数据实际位置的 URL，包括重定向时的目标 URL
+    QNetworkRequest::LastModifiedHeader,//对应于 HTTP Last-Modified 标头并包含一个 QDateTime 表示内容的最后修改日期
+    QNetworkRequest::CookieHeader,//对应于 HTTP Cookie 标头并包含一个 QList&lt;QNetworkCookie&gt; 表示要发送回服务器的 cookie
+    QNetworkRequest::SetCookieHeader,//对应于 HTTP Set-Cookie 标头，包含一个 QList&lt;QNetworkCookie&gt; 表示服务器发送的要存储在本地的 cookie
+    QNetworkRequest::UserAgentHeader,//HTTP 客户端发送的 User-Agent 标头
+    QNetworkRequest::ServerHeader//HTTP 客户端收到的 Server 标头
+}
+```
+
+指示请求的加载机制的某个方面是否已被手动覆盖，例如由 Qt WebKit 提供。
+
+```c++
+enum QNetworkRequest::LoadControl{
+    QNetworkRequest::Automatic,//默认值：表示默认行为
+    QNetworkRequest::Manual//表示行为已被手动覆盖
+}
+```
+
+这个枚举列出了可能的网络请求优先级。
+
+```c++
+enum QNetworkRequest::Priority{
+    QNetworkRequest::HighPriority,//高
+    QNetworkRequest::NormalPriority,//正常
+    QNetworkRequest::LowPriority//低
+}
+```
+
+指示网络访问 API 是否应自动遵循 HTTP 重定向响应。
+
+```c++
+enum QNetworkRequest::RedirectPolicy{
+    QNetworkRequest::ManualRedirectPolicy,//默认值：不遵循任何重定向
+    QNetworkRequest::NoLessSafeRedirectPolicy,//只允许“http”->“http”、“http”->“https”或“https”->“https”重定向。相当于将旧的 FollowRedirectsAttribute 设置为 true
+    QNetworkRequest::SameOriginRedirectPolicy,//需要相同的协议、主机和端口。请注意，http://example.com 和 http://example.com:80 将在此策略下失败（隐式/显式端口被视为不匹配）
+    QNetworkRequest::UserVerifiedRedirectPolicy//客户端通过处理 redirected() 信号来决定是否遵循每个重定向，在 QNetworkReply 对象上发出 redirectAllowed() 以允许重定向或中止/完成它以拒绝重定向。例如，这可以用来询问用户是否接受重定向，或者根据某些特定于应用程序的配置来决定
+}
+```
+
+##### 成员函数
+
+```c++
+QNetworkRequest(const QUrl &url = QUrl());
+// 返回标头 headerName 的原始形式。如果不存在这样的标头，则返回一个空的 QByteArray，这可能与存在但没有内容的标头无法区分（使用 hasRawHeader() 来确定标头是否存在）
+QByteArray rawHeader(const QByteArray &headerName) const;
+// 返回此网络请求中设置的所有原始标头的列表。该列表按照设置标题的顺序排列
+QList<QByteArray> rawHeaderList() const;
+
+// 将与代码代码关联的属性设置为值值。如果该属性已设置，则丢弃先前的值。特别是，如果 value 是无效的 QVariant，则该属性未设置
+void setAttribute(Attribute code, const QVariant &value);
+QVariant attribute(Attribute code, const QVariant &defaultValue = QVariant()) const;
+
+// 将已知标头标头的值设置为值，覆盖任何先前设置的标头。此操作还设置等效的原始 HTTP 标头
+void setHeader(KnownHeaders header, const QVariant &value);
+QVariant header(KnownHeaders header) const;
+
+// 将此请求允许遵循的最大重定向数设置为 maxRedirectsAllowed
+void setMaximumRedirectsAllowed(int maxRedirectsAllowed);
+int maximumRedirectsAllowed() const;
+
+//允许设置对发起请求的对象的引用
+void setOriginatingObject(QObject *object);
+QObject *originatingObject() const;
+
+// 将此请求的优先级设置为优先级
+void setPriority(Priority priority);
+Priority priority() const;
+
+// 将标头 headerName 设置为值 headerValue。如果 headerName 对应于一个已知的标头（参见 QNetworkRequest::KnownHeaders），原始格式将被解析并且相应的“cooked”标头也将被设置
+void setRawHeader(const QByteArray &headerName, const QByteArray &headerValue);
+bool hasRawHeader(const QByteArray &headerName) const;
+
+// 将此网络请求的 SSL 配置设置为 config。适用的设置是私钥、本地证书、SSL 协议（适用时为 SSLv2、SSLv3、TLSv1.0）、CA 证书和允许 SSL 后端使用的密码
+void setSslConfiguration(const QSslConfiguration &config);
+QSslConfiguration sslConfiguration() const;
+
+// 设置此网络请求引用的 URL 为 url
+void setUrl(const QUrl &url);
+QUrl url() const;
+```
+
+#### 13.5.10 QNetworkReply
+
+QNetworkReply 类包含使用 QNetworkAccessManager 发送的请求的数据和标头 QNetworkReply 类包含与使用 QNetworkAccessManager 发布的请求相关的数据和元数据。与 QNetworkRequest 一样，它包含一个 URL 和标头（解析和原始形式）、有关回复状态的一些信息以及回复本身的内容。
+QNetworkReply 是一个顺序访问的 QIODevice，这意味着一旦从对象中读取数据，它就不再由设备保存。因此，如果需要，应用程序有责任保留这些数据。每当从网络接收到更多数据并进行处理时，就会发出 readyRead() 信号。接收到数据时也会发出 downloadProgress() 信号，但如果对内容进行任何转换（例如，解压缩和删除协议开销），则其中包含的字节数可能不代表实际接收到的字节数。
+尽管 QNetworkReply 是一个连接到回复内容的 QIODevice，它也会发出 uploadProgress() 信号，该信号指示具有此类内容的操作的上传进度。
+注意：不要删除连接到 error() 或 finished() 信号的槽中的对象。使用 deleteLater()。
+
+##### 枚举值
+
+指示在处理请求期间发现的所有可能的错误情况。
+
+```c++
+enum QNetworkReply::NetworkError{
+	QNetworkReply::NoError,
+    QNetworkReply::ConnectionRefusedError,
+    QNetworkReply::RemoteHostClosedError,
+    QNetworkReply::HostNotFoundError,
+    QNetworkReply::TimeoutError,
+    QNetworkReply::OperationCanceledError,
+    QNetworkReply::SslHandshakeFailedError,
+    QNetworkReply::TemporaryNetworkFailureError,
+    QNetworkReply::NetworkSessionFailedError,
+    QNetworkReply::BackgroundRequestNotAllowedError,
+    QNetworkReply::TooManyRedirectsError,
+    QNetworkReply::InsecureRedirectError,
+    QNetworkReply::ProxyConnectionRefusedError,
+    QNetworkReply::ProxyConnectionClosedError,
+    QNetworkReply::ProxyNotFoundError,
+    QNetworkReply::ProxyTimeoutError,
+    QNetworkReply::ProxyAuthenticationRequiredError,
+    QNetworkReply::ContentAccessDenied,
+    QNetworkReply::ContentOperationNotPermittedError,
+    QNetworkReply::ContentNotFoundError,
+    QNetworkReply::AuthenticationRequiredError,
+    QNetworkReply::ContentReSendError,
+    QNetworkReply::ContentConflictError,
+    QNetworkReply::ContentGoneError,
+    QNetworkReply::InternalServerError,
+    QNetworkReply::OperationNotImplementedError,
+    QNetworkReply::ServiceUnavailableError,
+    QNetworkReply::ProtocolUnknownError,
+    QNetworkReply::ProtocolInvalidOperationError,
+    QNetworkReply::UnknownNetworkError,
+    QNetworkReply::UnknownProxyError,
+    QNetworkReply::UnknownContentError,
+    QNetworkReply::ProtocolFailure,
+    QNetworkReply::UnknownServerError
+}
+```
+
+##### 成员函数
+
+```c++
+QVariant attribute(QNetworkRequest::Attribute code) const;
+NetworkError error() const;
+bool hasRawHeader(const QByteArray &headerName) const;
+QVariant header(QNetworkRequest::KnownHeaders header) const;
+void ignoreSslErrors(const QList<QSslError> &errors);
+bool isFinished() const;
+bool isRunning() const;
+QNetworkAccessManager *manager() const;
+QNetworkAccessManager::Operation operation() const;
+QByteArray rawHeader(const QByteArray &headerName) const;
+QList<QByteArray> rawHeaderList() const;
+const QList<RawHeaderPair> &rawHeaderPairs() const;
+qint64 readBufferSize() const;
+QNetworkRequest request() const;
+virtual void setReadBufferSize(qint64 size);
+void setSslConfiguration(const QSslConfiguration &config);
+QSslConfiguration sslConfiguration() const;
+QUrl url() const;
+
+// 继承而来的函数
+virtual void ignoreSslErrorsImplementation(const QList<QSslError> &errors);
+void setAttribute(QNetworkRequest::Attribute code, const QVariant &value);
+void setError(NetworkError errorCode, const QString &errorString);
+void setFinished(bool finished);
+void setHeader(QNetworkRequest::KnownHeaders header, const QVariant &value);
+void setOperation(QNetworkAccessManager::Operation operation);
+void setRawHeader(const QByteArray &headerName, const QByteArray &value);
+void setRequest(const QNetworkRequest &request);
+virtual void setSslConfigurationImplementation(const QSslConfiguration &configuration);
+void setUrl(const QUrl &url);
+virtual void sslConfigurationImplementation(QSslConfiguration &configuration) const;
+```
+
+##### 信号函数
+
+```c++
+void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+void encrypted();
+void error(QNetworkReply::NetworkError code);
+void finished()
+void metaDataChanged();
+void preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator *authenticator)
+void redirectAllowed();
+void redirected(const QUrl &url);
+void sslErrors(const QList<QSslError> &errors);
+void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
+```
+
+#### 13.5.11 QUrl
+
+QUrl 类为处理 URL 提供了一个方便的接口。
+它可以解析和构造编码和未编码形式的 URL。 QUrl 还支持国际化域名 (IDN)。
+使用 QUrl 最常见的方法是通过构造函数通过传递一个 **QString 来初始化它**。否则，**也可以使用 setUrl()**。
+URL 可以用两种形式表示：编码的或未编码的。未编码的表示适合向用户展示，但编码的表示通常是您将发送到 Web 服务器的内容。也可以通过调用 **setScheme()、setUserName()、setPassword()、setHost()、setPort()、setPath()、setQuery() 和 setFragment() 逐个构建 URL**。还提供了一些便利功能：**setAuthority() 设置用户名、密码、主机和端口。 setUserInfo() 一次设置用户名和密码**。
+调用 isValid() 检查 URL 是否有效。这可以在构建 URL 期间的任何时候完成。如果 isValid() 返回 false，您应该在继续之前清除（） URL，或者通过使用 setUrl() 解析新 URL 重新开始。
+通过使用 QUrlQuery 类及其方法 QUrlQuery::setQueryItems()、QUrlQuery::addQueryItem() 和 QUrlQuery::removeQueryItem() 构造查询特别方便。使用 QUrlQuery::setQueryDelimiters() 自定义用于生成查询字符串的分隔符。
+为了方便生成编码的 URL 字符串或查询字符串，有两个静态函数 fromPercentEncoding() 和 toPercentEncoding() 处理 QString 对象的百分比编码和解码。
+**fromLocalFile() 通过解析本地文件路径构造一个 QUrl。 toLocalFile() 将 URL 转换为本地文件路径**。
+**使用 toString() 获取 URL 的人类可读表示**。此表示适用于以未编码的形式向用户显示 URL。然而，由 toEncoded() 返回的编码形式供内部使用，传递给 Web 服务器、邮件客户端等。这两种形式在技术上都是正确的，并且明确地表示相同的 URL —— 事实上，将任何一种形式传递给 QUrl 的构造函数或 setUrl() 都会产生相同的 QUrl 对象。
+
+##### 枚举值
+
+组件格式化选项定义了 URL 的组件在写成文本时如何格式化。在 toString() 和 toEncoded() 中使用时，它们可以与来自 QUrl::FormattingOptions 的选项结合使用。
+
+```c++
+enum QUrl::ComponentFormattingOption{
+    QUrl::PrettyDecoded,
+    QUrl::EncodeSpaces,
+    QUrl::EncodeUnicode,
+    QUrl::EncodeDelimiters,
+    QUrl::EncodeReserved,
+    QUrl::DecodeReserved,
+    QUrl::FullyEncoded,
+    QUrl::FullyDecoded
+}
+```
+
+解析模式控制 QUrl 解析字符串的方式。
+
+```c++
+enum QUrl::ParsingMode{
+    QUrl::TolerantMode,//QUrl 将尝试纠正 URL 中的一些常见错误。此模式对于解析来自未知严格符合标准的来源的 URL 很有用
+    QUrl::StrictMode,//只接受有效的 URL。此模式对于常规 URL 验证很有用
+    QUrl::DecodedMode//QUrl 将以完全解码的形式解释 URL 组件，其中百分比字符代表自己，而不是百分比编码序列的开头。此模式仅对 URL 的 setter 设置组件有效；在 QUrl 构造函数、fromEncoded() 或 setUrl() 中是不允许的。
+}
+```
+
+格式化选项定义了 URL 在写成文本时的格式。请注意，QUrl 遵循的 Nameprep 中的大小写折叠规则要求主机名始终转换为小写，而不管使用的 Qt::FormattingOptions 是什么。
+
+```c++
+enum QUrl::UrlFormattingOption{
+    QUrl::None,
+    QUrl::RemoveScheme,
+    QUrl::RemovePassword,
+    QUrl::RemoveUserInfo,
+    QUrl::RemovePort,
+    QUrl::RemoveAuthority,
+    QUrl::RemovePath,
+    QUrl::RemoveQuery,
+    QUrl::RemoveFragment,
+    QUrl::RemoveFilename,
+    QUrl::PreferLocalFile,
+    QUrl::StripTrailingSlash,
+    QUrl::NormalizePathSegments
+}
+```
+
+用户输入解析选项定义 fromUserInput() 应该如何解释可能是相对路径或 HTTP URL 的短格式的字符串。例如 file.pl 可以是本地文件或 URL http://file.pl。
+
+```c++
+enum QUrl::UserInputResolutionOption{
+    QUrl::DefaultResolution,//默认的解析机制是检查本地文件是否存在，在给 fromUserInput 的工作目录中，在这种情况下只返回本地路径。否则假定一个 URL
+	QUrl::AssumeLocalFile//此选项使 fromUserInput() 始终返回本地路径，除非输入包含方案，例如 http://file.pl。这对于诸如文本编辑器之类的应用程序很有用，它们能够在文件不存在时创建文件
+}
+```
+
+##### 成员函数
+
+```c++
+QUrl adjusted(FormattingOptions options) const;
+QString authority(ComponentFormattingOptions options = PrettyDecoded) const;
+void clear();
+QString errorString() const;
+QString fileName(ComponentFormattingOptions options = FullyDecoded) const;
+QString fragment(ComponentFormattingOptions options = PrettyDecoded) const;
+bool hasFragment() const;
+bool hasQuery() const;
+QString host(ComponentFormattingOptions options = FullyDecoded) const
+bool isEmpty() const;
+bool isLocalFile() const;
+bool isParentOf(const QUrl &childUrl) const;
+bool isRelative() const;
+bool isValid() const;
+bool matches(const QUrl &url, FormattingOptions options) const;
+void setAuthority(const QString &authority, ParsingMode mode = TolerantMode);
+void setFragment(const QString &fragment, ParsingMode mode = TolerantMode);
+void setHost(const QString &host, ParsingMode mode = DecodedMode);
+void setPassword(const QString &password, ParsingMode mode = DecodedMode);
+void setPath(const QString &path, ParsingMode mode = DecodedMode);
+void setPort(int port);
+void setQuery(const QString &query, ParsingMode mode = TolerantMode);
+void setQuery(const QUrlQuery &query);
+void setScheme(const QString &scheme);
+void setUrl(const QString &url, ParsingMode parsingMode = TolerantMode);
+void setUserInfo(const QString &userInfo, ParsingMode mode = TolerantMode);
+void setUserName(const QString &userName, ParsingMode mode = DecodedMode);
+void swap(QUrl &other);
+QString password(ComponentFormattingOptions options = FullyDecoded) const;
+QString path(ComponentFormattingOptions options = FullyDecoded) const;
+int port(int defaultPort = -1) const;
+QString query(ComponentFormattingOptions options = PrettyDecoded) const;
+QUrl resolved(const QUrl &relative) const;
+CFURLRef toCFURL() const;
+QString toDisplayString(FormattingOptions options = FormattingOptions( PrettyDecoded )) const;
+QByteArray toEncoded(FormattingOptions options = FullyEncoded) const;
+QString toLocalFile() const;
+NSURL *toNSURL() const;
+QString toString(FormattingOptions options = FormattingOptions( PrettyDecoded )) const;
+QString topLevelDomain(ComponentFormattingOptions options = FullyDecoded) const;
+QString url(FormattingOptions options = FormattingOptions( PrettyDecoded )) const;
+QString userInfo(ComponentFormattingOptions options = PrettyDecoded) const;
+QString userName(ComponentFormattingOptions options = FullyDecoded) const;
+```
+
+##### 静态成员函数
+
+```c++
+QString fromAce(const QByteArray &domain);
+QUrl fromCFURL(CFURLRef url);
+QUrl fromEncoded(const QByteArray &input, ParsingMode parsingMode = TolerantMode);
+QUrl fromLocalFile(const QString &localFile);
+QUrl fromNSURL(const NSURL *url);
+QString fromPercentEncoding(const QByteArray &input);
+QList<QUrl> fromStringList(const QStringList &urls, ParsingMode mode = TolerantMode)
+QUrl fromUserInput(const QString &userInput);
+QUrl fromUserInput(const QString &userInput, const QString &workingDirectory, UserInputResolutionOptions options = DefaultResolution);
+QStringList idnWhitelist();
+void setIdnWhitelist(const QStringList &list);
+QByteArray toAce(const QString &domain);
+QByteArray toPercentEncoding(const QString &input, const QByteArray &exclude = QByteArray(), const QByteArray &include = QByteArray());
+QStringList toStringList(const QList<QUrl> &urls, FormattingOptions options = FormattingOptions( PrettyDecoded ));
+```
+
+## 14. 多媒体
+
+
 
 ## 布局管理
 
