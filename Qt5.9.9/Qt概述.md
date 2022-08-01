@@ -14383,7 +14383,15 @@ sequenceDiagram
 
 在newConnection的槽函数中，可以使用nextPendingConnection()接受客户端的连接，然后使用QTcpSocket与客户端通信，一旦建立连接，具体的数据通信都是QTcpSocket完成的。
 
-客户端和服务器端建立通信，需要connectToHost连接到服务器（需要指定服务器IP地址和端口），如果是异步方式连接不会阻塞程序运行，连接后发射connected信号。
+客户端和服务器端建立通信，需要connectToHost连接到服务器（需要指定服务器IP地址和端口），如果是异步方式连接不会阻塞程序运行，连接后发射connected信号。connectToHost是异步方式连接服务器，不会阻塞程序运行，如果需要使用阻塞方式应当使用waitForConnected函数直到成功或者失败。
+
+```c++
+socket->connectToHost("192.168.1.100",1340);
+if (socket->waitForConnected(1000))
+    qDebug()<<"Connnected!";
+```
+
+由于QTcpSocket是从QIODevice继承的，所以也可以使用流数据读写功能。一个QTcpSocket实例既可以接收数据也可以发送数据，且接收和发送是异步的，有各自缓冲区。
 
 ```mermaid
 graph LR
@@ -14396,6 +14404,8 @@ QTcpSocket==>|连接服务端相互通信|newQTcpSocket
 ```
 
 建立连接以后，如果缓冲区有数据，就会发射readyRead信号，此信号的槽函数里可以读取数据。
+
+
 
 ### 13.5 关联网络类
 
@@ -15066,8 +15076,6 @@ void acceptError(QAbstractSocket::SocketError socketError);
 // 当有新连接可用时，QTcpServer 会调用此虚拟函数。 socketDescriptor 参数是接受连接的本机套接字描述符
 void newConnection();
 ```
-
-
 
 ## 布局管理
 
