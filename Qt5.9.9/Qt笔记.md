@@ -16034,11 +16034,7 @@ QMultimedia::SupportEstimate
 hasSupport(const QString &mimeType, const QStringList &codecs = QStringList(), Flags flags = Flags());// 返回媒体播放器对 mimeType 和一组编解码器的支持级别
 ```
 
-
-
-### 14.5 关联数据类型
-
-#### 14.5.1 QMediaPlaylist
+#### 14.1.2 QMediaPlaylist
 
 QMediaPlaylist 类提供要播放的媒体内容列表。
 QMediaPlaylist 旨在与其他媒体对象一起使用，例如 QMediaPlayer。
@@ -16171,6 +16167,531 @@ void mediaInserted(int start, int end);
 void mediaRemoved(int start, int end);
 void playbackModeChanged(QMediaPlaylist::PlaybackMode mode);
 ```
+
+#### 14.1.3 QSoundEffect
+
+QSoundEffect 类提供了一种播放低延迟音效的方法。
+此类允许您以通常较低延迟的方式播放未压缩的音频文件（通常是 WAV 文件），并且适用于响应用户操作的“反馈”类型声音（例如，虚拟键盘声音、弹出对话框的正面或负面反馈，或游戏声音）。如果低延迟不重要，请考虑改用 QMediaPlayer 类，因为它支持更广泛的媒体格式并且资源占用较少。
+这个例子展示了如何播放一个循环的、有点安静的声音效果：
+
+```c++
+QSoundEffect effect;
+effect.setSource(QUrl::fromLocalFile("engine.wav"));
+effect.setLoopCount(QSoundEffect::Infinite);
+effect.setVolume(0.25f);
+effect.play();
+```
+
+通常应该重用音效，这样可以提前完成所有解析和准备工作，并且只在必要时触发。这有助于降低延迟音频播放。由于 QSoundEffect 需要稍多的资源来实现更低延迟的播放，因此平台可能会限制同时播放音效的数量。
+
+```c++
+MyGame(): m_explosion(this)
+{
+    m_explosion.setSource(QUrl::fromLocalFile("explosion.wav"));
+    m_explosion.setVolume(0.25f);
+    // Set up click handling etc.
+    connect(clickSource, SIGNAL(clicked()), &m_explosion, SLOT(play()));
+}
+private:
+QSoundEffect m_explosion;
+```
+
+枚举类型。
+
+```c++
+enum QSoundEffect::Loop{
+	QSoundEffect::Infinite//用作 setLoopCount() 的参数以进行无限循环
+}
+```
+
+```c++
+enum QSoundEffect::Status{
+    QSoundEffect::Null,//未设置源或源为空
+    QSoundEffect::Loading,//SoundEffect 正在尝试加载源
+    QSoundEffect::Ready,//源已加载并准备好播放
+    QSoundEffect::Error//运行过程中出现错误，例如加载源失败
+}
+```
+
+成员函数。
+
+```c++
+bool isLoaded() const;//返回音效是否已完成加载 source()
+bool isPlaying() const;//如果当前正在播放音效，则返回 true，否则返回 false
+int loopsRemaining() const;//此属性包含在音效自行停止之前剩余的循环数，或者 QSoundEffect::Infinite 如果这是在循环中设置的
+Status status() const;//返回此音效的当前状态
+
+void setCategory(const QString &category);//设置音效的类别,分组功能
+QString category() const;
+
+void setLoopCount(int loopCount);//播放次数
+int loopCount() const;
+
+void setMuted(bool muted);//静音
+bool isMuted() const;
+
+void setSource(const QUrl &url);//播放文件
+QUrl source() const;
+
+void setVolume(qreal volume);//音量
+qreal volume() const;
+```
+
+信号与槽与静态函数。
+
+```c++
+// 槽函数
+void play();
+void stop();
+//信号函数
+void categoryChanged();
+void loadedChanged();
+void loopCountChanged();
+void loopsRemainingChanged();
+void mutedChanged();
+void playingChanged();
+void sourceChanged();
+void statusChanged();
+void volumeChanged();
+// 静态函数
+static QStringList supportedMimeTypes();//返回此平台支持的 mime 类型列表
+```
+
+#### 14.1.4 QSound
+
+QSound 类提供了一种播放 .wav 声音文件的方法。
+Qt 提供了 GUI 应用程序中最常用的音频操作：异步播放声音文件。使用静态 play() 函数最容易做到这一点：
+
+```c++
+ QSound::play("mysounds/bells.wav");
+```
+
+或者，首先从声音文件创建一个 QSound 对象，然后调用 play() 槽：
+
+```c++
+QSound bells("mysounds/bells.wav");
+bells.play();
+```
+
+一旦创建了 QSound 对象，就可以查询它的 fileName() 和 loops() 总数（即声音播放的次数）。可以使用 setLoops() 函数更改重复次数。播放声音时，loopsRemaining() 函数返回剩余的重复次数。使用 isFinished() 函数来确定声音是否播放完毕。
+使用 QSound 对象播放的声音可能会比静态 play() 函数使用更多的内存，但它也可能播放得更快（取决于底层平台的音频设施）。如果您需要更好地控制播放声音，请考虑 QSoundEffect 或 QAudioOutput 类。
+
+枚举类型。
+
+```c++
+enum Loop { Infinite }//可用作 setLoops() 的参数以无限循环
+```
+
+成员函数。
+
+```c++
+// 从给定文件名和给定父级指定的文件构造一个 QSound 对象
+QSound(const QString &filename, QObject *parent = Q_NULLPTR);
+QString fileName() const;// 返回与此 QSound 对象关联的文件名
+bool isFinished() const;// 如果声音已播放完毕，则返回 true；否则返回false
+int loops() const;// 返回声音播放的次数。 QSound::Infinite 的返回值表示无限循环
+void setLoops（int number);
+int loopsRemaining() const;// 返回声音循环的剩余次数（对于所有正值，每次播放声音时该值都会减小）。 QSound::Infinite 的返回值表示无限循环
+
+// 槽函数
+void play();
+void stop();
+
+// 静态函数
+static void play(const QString& filename);
+```
+
+### 14.2 音频输入
+
+#### 14.2.1 QAudioRecorder
+
+高层次实现，输入的音频数据直接保存文件。
+
+需要使用QAudioEncoderSettings来进行输入音频设置，**主要是编码格式、采样率、通道数、音频质量等高级设置**。设置好输出保存的文件就可以一开始录制文件，音频输入设备自动确定底层的采样参数，使用QQAudioProbe可以访问原始的音频数据和输入缓冲区的参数，这些参数包括缓冲字节数、帧数、采样数、采样字长和采样率等，这样就可以从缓冲区读取原始的音频数据。
+
+```c++
+audioRecorder = new QAudioRecorder;
+QAudioEncoderSettings audioSettings;
+audioSettings.setCodec("audio/amr");
+audioSettings.setQuality(QMultimedia::HighQuality);
+
+audioRecorder->setEncodingSettings(audioSettings);
+audioRecorder->setOutputLocation(QUrl::fromLocalFile("test.amr"));
+audioRecorder->record();
+//-----------------------------------------------
+QStringList inputs = audioRecorder->audioInputs();
+QString selectedInput = audioRecorder->defaultAudioInput();
+foreach (QString input, inputs) {
+    QString description = audioRecorder->audioInputDescription(input);
+    selectedInput = input;// 向用户显示描述并允许选择
+}
+audioRecorder->setAudioInput(selectedInput);
+```
+
+成员函数。
+
+```c++
+QAudioRecorder(QObject *parent = Q_NULLPTR);
+
+void setAudioInput(const QString &name);
+QString audioInput() const;//返回活动音频输入名称
+QString audioInputDescription(const QString &name) const;//返回带有名称的音频输入设备的可读翻译描述
+QStringList audioInputs() const;//返回可用音频输入的列表
+QString defaultAudioInput() const;//返回默认的音频输入名设备称
+```
+
+信号函数。
+
+```c++
+void audioInputChanged(const QString &name);//当活动音频输入更改为名称时发出的信号
+void availableAudioInputsChanged();//当可用的音频输入改变时发出信号
+```
+
+#### 14.2.2 QAudioInput
+
+低层次的实现，直接控制音频输入设备的参数，并将音频录制数据写入一个流设备。
+
+### 14.5 关联数据类型
+
+#### QMediaObject 
+
+QMediaObject 类为多媒体对象提供了一个公共基础。
+它提供了其他高级类（如 QMediaPlayer、QAudioDecoder 和 QCamera）共有的一些基本功能，包括可用性和元数据功能，以及将媒体对象与 QMediaPlaylist 等支持类连接的功能。
+更高级别的 QMediaObject 派生类通过在内部使用 QMediaService 来提供实际的多媒体功能。每个媒体对象承载一个 QMediaService 并使用该服务实现的 QMediaControl 接口来实现其 API。如有必要，可以从媒体对象访问这些控件，但通常可以从更高级别的类访问有用的功能。
+大多数媒体对象在构造时会请求一个新的 QMediaService 实例，但有些像 QMediaRecorder 和 QAudioRecorder 会与另一个对象共享一个服务。
+
+成员函数。
+
+```c++
+//返回此对象提供的功能的可用性
+virtual QMultimedia::AvailabilityStatus availability() const;
+//如果服务可用，则返回 true
+virtual bool isAvailable() const;
+//如果存在与此媒体对象关联的元数据，则返回 true，否则返回 false
+bool isMetaDataAvailable() const;
+//返回有可用元数据的键列表
+QStringList availableMetaData() const;
+//返回与元数据键关联的值
+QVariant metaData(const QString &key) const;
+//返回提供此多媒体对象功能的媒体服务
+virtual QMediaService *service() const;
+//通知属性更新的时间间隔,间隔以毫秒表示，默认值为1000
+void setNotifyInterval(int milliSeconds);
+int notifyInterval() const;
+//将对象绑定到此 QMediaObject 实例,此方法在此媒体对象和辅助对象之间建立关系。关系的性质取决于双方。如果帮助程序成功绑定，此方法返回 true，否则返回 false
+virtual bool bind(QObject *object);
+virtual void unbind(QObject *object);
+```
+
+信号函数。
+
+```c++
+void availabilityChanged(bool available)
+void availabilityChanged(QMultimedia::AvailabilityStatus availability)
+void metaDataAvailableChanged(bool available)
+void metaDataChanged()
+void metaDataChanged(const QString &key, const QVariant &value)
+void notifyIntervalChanged(int milliseconds);
+```
+
+#### QMediaService
+
+QMediaService 类为媒体服务实现提供了一个通用基类。
+媒体服务提供媒体对象承诺的功能的实现，并允许多个提供者实现一个 QMediaObject。
+为了提供 QMediaObject 媒体服务的功能，实现 QMediaControl 接口。服务通常实现一个提供媒体对象的核心特征的核心媒体控件，以及提供媒体对象的可选特征或辅助媒体对象或外围对象的特征的一些附加控件。
+通过将控件的接口名称传递给 requestControl() 函数，可以获得指向媒体服务的 QMediaControl 实现的指针。
+
+```c++
+QMediaPlayerControl *control = qobject_cast<QMediaPlayerControl *>(
+          mediaService->requestControl("org.qt-project.qt.mediaplayercontrol/5.0"));
+```
+
+媒体对象可以使用从插件动态加载或在应用程序中静态实现的服务。基于插件的服务也应该实现 QMediaServiceProviderPlugin 接口。静态服务应该实现 QMediaServiceProvider 接口。一般来说，实现 QMediaService 超出了本文档的范围，应寻求相关邮件列表或 IRC 频道的支持。
+
+成员函数。
+
+```c++
+virtual void releaseControl(QMediaControl *control) = 0;//将控件释放回服务
+virtual QMediaControl *requestControl(const char *interface) = 0;//返回指向媒体控制实现接口的指针
+T requestControl();//返回指向由媒体服务实现的类型 T 的媒体控件的指针
+```
+
+#### QMediaControl
+
+QMediaControl 类为媒体服务控件提供了一个基本接口。
+媒体控件为媒体服务提供的各个功能提供接口。大多数服务实现了一个暴露服务核心功能的主体控件和一些暴露任何附加功能的可选控件。
+可以使用 QMediaService 的 QMediaService::requestControl() 成员获得指向由媒体服务实现的控件的指针。如果服务没有实现控件，它将返回一个空指针。
+
+```c++
+QMediaPlayerControl *control = qobject_cast<QMediaPlayerControl *>(
+    mediaService->requestControl("org.qt-project.qt.mediaplayercontrol/5.0"));
+```
+
+或者，如果控件的 IId 已使用 Q_MEDIA_DECLARE_CONTROL 声明，则可以使用 QMediaService::requestControl() 的模板版本来请求服务，而无需显式传递 IId 或使用 qobject_cast()。
+
+```c++
+QMediaPlayerControl *control = mediaService->requestControl<QMediaPlayerControl *>();
+```
+
+大多数应用程序代码不会直接与媒体服务的控件交互，而是拥有该服务的 QMediaObject 充当一个或多个控件与应用程序之间的中介。
+
+宏定义。
+
+```c++
+Q_MEDIA_DECLARE_CONTROL(Class, IId)
+    
+QMediaPlayerControl *control = mediaService->requestControl<QMediaPlayerControl *>();
+```
+
+Q_MEDIA_DECLARE_CONTROL 宏为继承自 QMediaControl 的类声明 IId。
+为 QMediaControl 声明 IId 允许从 QMediaService::requestControl() 请求该控件的实例，而无需显式传递 IId。
+
+#### QMultimedia
+
+QMultimedia 命名空间包含在整个 Qt Multimedia 库中使用的各种标识符。
+
+枚举服务状态错误。
+
+```c++
+enum QMultimedia::AvailabilityStatus{
+    QMultimedia::Available,//运行正常
+    QMultimedia::ServiceMissing,//没有可用的服务来提供请求的功能
+    QMultimedia::ResourceError,//服务无法分配正常运行所需的资源
+    QMultimedia::Busy//该服务必须等待对必要资源的访问
+}
+```
+
+枚举编码模式
+
+```c++
+enum QMultimedia::EncodingMode{
+    QMultimedia::ConstantQualityEncoding,//编码的目标是具有恒定的质量，调整比特率以适应服务
+    QMultimedia::ConstantBitRateEncoding,//编码将使用恒定的比特率，调整质量以适应
+    QMultimedia::AverageBitRateEncoding,//编码将尝试保持平均比特率设置，但会根据需要或多或少地使用
+    QMultimedia::TwoPassEncoding//媒体将首先被处理以确定特征，然后进行第二次处理，将更多位分配给需要它的区域
+}
+```
+
+枚举质量编码级别。
+
+```c++
+enum QMultimedia::EncodingQuality{ 
+    QMultimedia::VeryLowQuality,//
+    QMultimedia::LowQuality,//
+    QMultimedia::NormalQuality,//
+    QMultimedia::HighQuality,//
+    QMultimedia::VeryHighQuality//
+}
+```
+
+枚举媒体服务提供商可能对某个功能具有的支持级别。
+
+```c++
+enum QMultimedia::SupportEstimate{
+    QMultimedia::NotSupported,//不支持该功能
+    QMultimedia::MaybeSupported,//可能支持该功能
+    QMultimedia::ProbablySupported,//该功能可能受支持
+    QMultimedia::PreferredService//服务是服务的首选提供者
+}
+```
+
+#### QMediaRecorder
+
+QMediaRecorder 类用于记录媒体内容。
+QMediaRecorder 类是高级媒体记录类。它不能单独使用，而是用于访问其他媒体对象的媒体录制功能，如 QRadioTuner 或 QCamera。
+
+```c++
+recorder = new QMediaRecorder(camera);
+QAudioEncoderSettings audioSettings;
+audioSettings.setCodec("audio/amr");
+audioSettings.setQuality(QMultimedia::HighQuality);
+recorder->setAudioSettings(audioSettings);
+recorder->setOutputLocation(QUrl::fromLocalFile(fileName));
+recorder->record();
+```
+
+枚举类型。
+
+```c++
+enum QMediaRecorder::Error{
+    QMediaRecorder::NoError,
+    QMediaRecorder::ResourceError,
+    QMediaRecorder::FormatError,
+    QMediaRecorder::OutOfSpaceError,
+}
+```
+
+```c++
+enum QMediaRecorder::State{
+    QMediaRecorder::StoppedState,
+    QMediaRecorder::RecordingState,
+    QMediaRecorder::PausedState
+}
+```
+
+```c++
+enum QMediaRecorder::Status{
+    QMediaRecorder::UnavailableStatus,
+    QMediaRecorder::UnloadedStatus,
+    QMediaRecorder::LoadingStatus,
+    QMediaRecorder::LoadedStatus,
+    QMediaRecorder::StartingStatus,
+    QMediaRecorder::RecordingStatus,
+    QMediaRecorder::PausedStatus,
+    QMediaRecorder::FinalizingStatus
+}
+```
+
+成员函数。
+
+```c++
+QString audioCodecDescription(const QString &codec) const;//返回音频编解码器的描述
+QString videoCodecDescription(const QString &codec) const;// 返回视频可以编码的分辨率列表
+QString containerDescription(const QString &format) const;//返回容器格式的描述
+
+State state() const;
+Status status() const;
+qint64 duration() const;
+Error error() const;
+QString errorString() const;
+qreal volume() const;
+bool isAvailable() const;//如果媒体记录器服务准备好使用，则返回 true
+bool isMetaDataAvailable() const;//此属性保存对媒体对象的元数据的访问是否可用
+bool isMetaDataWritable() const;//该属性保存媒体对象的元数据是否可写
+bool isMuted() const;
+
+// 返回此功能的可用性
+QMultimedia::AvailabilityStatus availability() const;
+// 返回有可用元数据的键列表
+QStringList availableMetaData() const;
+
+// 返回正在使用的音频编码器设置
+void setAudioSettings(const QAudioEncoderSettings &settings);
+QAudioEncoderSettings audioSettings() const;
+
+// 返回选定的容器格式
+void setContainerFormat(const QString &container);
+QString containerFormat() const;
+
+// 设置音频编码器设置
+void setEncodingSettings(const QAudioEncoderSettings &audio, const QVideoEncoderSettings &video = QVideoEncoderSettings(), const QString &container = QString());
+
+// 返回与元数据键关联的值
+void setMetaData(const QString &key, const QVariant &value);
+QVariant metaData(const QString &key) const;
+
+// 此属性保存最后一个媒体内容的实际位置
+QUrl actualLocation() const;
+// 此属性保存媒体内容的目标位置
+bool setOutputLocation(const QUrl &location);
+QUrl outputLocation() const;
+
+// 设置视频编码器设置
+void setVideoSettings(const QVideoEncoderSettings &settings);
+QVideoEncoderSettings videoSettings() const;
+
+// 获取支持的编码格式、采样率、容器格式、帧率、分辨率、解码器列表
+QStringList supportedAudioCodecs() const;
+QList<int> supportedAudioSampleRates(const QAudioEncoderSettings &settings = QAudioEncoderSettings(), bool *continuous = Q_NULLPTR) const;
+QStringList supportedContainers() const;
+QList<qreal> supportedFrameRates(const QVideoEncoderSettings &settings = QVideoEncoderSettings(), bool *continuous = Q_NULLPTR) const;
+QList<QSize> supportedResolutions(const QVideoEncoderSettings &settings = QVideoEncoderSettings(), bool *continuous = Q_NULLPTR) const;
+QStringList supportedVideoCodecs() const
+```
+
+信号与槽函数。
+
+```c++
+// 槽函数
+void pause();
+void record();
+void setMuted(bool muted);
+void setVolume(qreal volume);
+void stop();
+
+// 信号函数
+void actualLocationChanged(const QUrl &location);
+void availabilityChanged(bool available);
+void availabilityChanged(QMultimedia::AvailabilityStatus availability);
+void durationChanged(qint64 duration);//常用
+void error(QMediaRecorder::Error error);
+void metaDataAvailableChanged(bool available);
+void metaDataChanged();
+void metaDataChanged(const QString &key, const QVariant &value);
+void metaDataWritableChanged(bool writable);
+void mutedChanged(bool muted);//常用
+void stateChanged(QMediaRecorder::State state);//常用
+void statusChanged(QMediaRecorder::Status status);//常用
+void volumeChanged(qreal volume);//常用
+```
+
+#### 14.5.1 QAudioEncoderSettings
+
+QAudioEncoderSettings 类提供了一组音频编码器设置。
+音频编码器设置对象用于指定 QMediaRecorder 使用的音频编码器设置。通过构造 QAudioEncoderSettings 对象，设置所需的属性，然后使用 QMediaRecorder::setEncodingSettings() 函数将其传递给 QMediaRecorder 实例来选择音频编码器设置。
+
+成员函数。
+
+```c++
+bool isNull() const;//是否为空
+
+void setBitRate(int rate);//压缩音频流比特率
+int bitRate() const;
+
+void setChannelCount(int channels);//通道数
+int channelCount() const;
+
+void setCodec(const QString &codec);//音频编解码器
+QString codec() const;
+
+void setEncodingMode(QMultimedia::EncodingMode mode);//编码模式
+QMultimedia::EncodingMode encodingMode() const;
+
+// 设置编码选项值
+void setEncodingOption(const QString &option, const QVariant &value);
+void setEncodingOptions(const QVariantMap &options);
+QVariant encodingOption(const QString &option) const;
+QVariantMap encodingOptions() const;
+
+void setQuality(QMultimedia::EncodingQuality quality);//音频编码质量
+QMultimedia::EncodingQuality quality() const;
+
+void setSampleRate(int rate);//采样率
+int sampleRate() const;
+```
+
+#### 14.5.4 QAudioProbe
+
+QAudioProbe 类允许您监视正在播放或录制的音频。
+
+```c++
+QAudioRecorder *recorder = new QAudioRecorder();
+QAudioProbe *probe = new QAudioProbe;
+// ... configure the audio recorder (skipped)
+connect(probe, SIGNAL(audioBufferProbed(QAudioBuffer)), this, SLOT(processBuffer(QAudioBuffer)));
+probe->setSource(recorder); 
+recorder->record(); //现在我们可以做一些事情，比如计算水平或执行FFT
+```
+
+成员函数。
+
+```c++
+QAudioProbe(QObject *parent = Q_NULLPTR);
+bool isActive() const;//如果此探测器正在监视某些内容，则返回 true，否则返回 false
+bool setSource(QMediaObject *source);
+bool setSource(QMediaRecorder *mediaRecorder);
+```
+
+信号函数。
+
+```c++
+void audioBufferProbed(const QAudioBuffer &buffer);//当在媒体服务中处理音频缓冲区时，应发出此信号
+void flush();//当需要释放所有缓冲区时，应发出此信号。应用程序必须释放对音频缓冲区的所有未完成的引用
+```
+
+#### QAudioBuffer
+
+
 
 ## 布局管理
 
