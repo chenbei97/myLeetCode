@@ -15815,7 +15815,362 @@ QStringList toStringList(const QList<QUrl> &urls, FormattingOptions options = Fo
 
 ## 14. 多媒体
 
+多媒体功能指计算机的音视频输入输出、显示和播放功能，如果需要使用需要在pro文件加入Qt+=multimedia。
 
+多媒体涉及的类如下。
+
+```mermaid
+graph LR
+播放压缩音频MP3,AAC等-->QMediaPlayer
+播放压缩音频MP3,AAC等-->QMediaPlaylist
+播放音效文件WAV-->QSoundEffect
+播放音效文件WAV-->QSound
+播放低延迟音频-->QAudioOutput
+访问原始音频输入数据-->QAudioInput
+录制编码音频数据-->QAudioRecorder
+发现音频设备-->QAudioFrviceInfo
+视频播放-->QMediaPlayer
+视频播放-->QVideoWidget
+视频播放-->QGraphicsVideoItem
+视频处理-->QMediaPlayer
+视频处理-->QVideoFrame
+视频处理-->QAbstractVideoSurface
+摄像头取景框-->QCamera
+摄像头取景框-->QVideoWidget
+摄像头取景框-->QGraphicsVideoItem
+取景框预览处理-->QCamera
+取景框预览处理-->QAbstractVideoSurface
+取景框预览处理-->QVideoFrame
+摄像头拍照-->QCamera
+摄像头拍照-->QCameraImageCapture
+摄像头录像-->QCamera
+摄像头录像-->QMediaRecorder
+收听数字广播-->QRadioTuner
+收听数字广播-->QRadioData
+```
+
+### 14.1 音频播放
+
+#### 14.1.1 QMediaPlayer
+
+这个类可以进行视频播放和视频处理，还可以播放MP3、AAC等压缩音频。这个例子可见[34-TestQMediaPlayer](34-TestQMediaPlayer)。
+
+播放可以单个文件，也可以和QMediaPlaylist结合，对一个播放列表进行播放。
+
+QMediaPlayer 类允许播放媒体源。
+QMediaPlayer 类是高级媒体播放类。它可用于播放歌曲、电影和网络广播等内容。要播放的内容被指定为 QMediaContent 对象，可以将其视为带有附加信息的主要或规范 URL。当提供 QMediaContent 时，播放可能能够开始。
+
+```c++
+player = new QMediaPlayer;
+connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+player->setMedia(QUrl::fromLocalFile("/Users/me/Music/coolsong.mp3"));
+player->setVolume(50);
+player->play();
+```
+
+QVideoWidget 可以与 QMediaPlayer 一起用于视频渲染和 QMediaPlaylist 用于访问播放列表功能。
+
+```c++
+playlist = new QMediaPlaylist;
+playlist->addMedia(QUrl("http://example.com/movie1.mp4"));
+playlist->addMedia(QUrl("http://example.com/movie2.mp4"));
+playlist->addMedia(QUrl("http://example.com/movie3.mp4"));
+playlist->setCurrentIndex(1);
+
+player = new QMediaPlayer;
+player->setPlaylist(playlist);
+
+videoWidget = new QVideoWidget;
+player->setVideoOutput(videoWidget);
+videoWidget->show();
+
+player->play();
+```
+
+由于 QMediaPlayer 是一个 QMediaObject，你可以使用几个 QMediaObject 函数来做以下事情： 访问当前正在播放的媒体的元数据（QMediaObject::metaData() 和预定义的元数据键）；检查媒体播放服务当前是否可用（ QMediaObject::availability())。
+
+枚举类型。
+
+定义媒体播放器的当前状态。
+
+```c++
+enum QMediaPlayer::State{
+    QMediaPlayer::StoppedState,
+    QMediaPlayer::PlayingState,
+    QMediaPlayer::PausedState
+}
+```
+
+定义媒体播放器错误条件。
+
+```c++
+enum QMediaPlayer::Error{
+    QMediaPlayer::NoError,
+    QMediaPlayer::ResourceError,
+    QMediaPlayer::FormatError,
+    QMediaPlayer::NetworkError,
+    QMediaPlayer::AccessDeniedError,
+    QMediaPlayer::ServiceMissingError
+}
+```
+
+定义媒体播放器的标记。
+
+```c++
+enum QMediaPlayer::Flag{
+    QMediaPlayer::LowLatency,//该播放器应与简单的音频格式一起使用，但播放开始时应该没有明显的延迟。这种播放服务可用于哔哔声、铃声等
+    QMediaPlayer::StreamPlayback,//该播放器应播放基于 QIODevice 的流。如果传递给 QMediaPlayer 构造函数，将选择支持流播放的服务
+    QMediaPlayer::VideoSurface//播放器应该能够渲染到 QAbstractVideoSurface 输出
+}
+```
+
+定义媒体播放器当前媒体的状态。
+
+```c++
+enum QMediaPlayer::MediaStatus{   
+    QMediaPlayer::UnknownMediaStatus,//无法确定媒体的状态
+    QMediaPlayer::NoMedia,//不是当前的媒体。播放器处于 StoppedState
+    QMediaPlayer::LoadingMedia,//正在加载当前媒体。玩家可以处于任何状态
+    QMediaPlayer::LoadedMedia,//当前媒体已加载。播放器处于 StoppedState
+    QMediaPlayer::StalledMedia,//由于缓冲不足或其他一些临时中断，当前媒体的播放已停止。播放器处于 PlayingState 或 PausedState
+    QMediaPlayer::BufferingMedia,//播放器正在缓冲数据，但缓冲了足够的数据以供播放以在不久的将来继续播放。播放器处于 PlayingState 或 PausedState
+    QMediaPlayer::BufferedMedia,//播放器已完全缓冲当前媒体。播放器处于 PlayingState 或 PausedState
+    QMediaPlayer::EndOfMedia,//播放已到达当前媒体的结尾。播放器处于 StoppedState
+    QMediaPlayer::InvalidMedia//无法播放当前媒体。播放器处于 StoppedState
+}
+```
+
+成员函数。
+
+```c++
+QMediaPlayer(QObject *parent = Q_NULLPTR, Flags flags = Flags());
+// 此属性保存在播放开始或恢复之前填充的临时缓冲区的百分比，从 0（空）到 100（满）
+int bufferStatus() const;
+// 此属性保存当前播放音量
+int volume() const;
+// 该属性保存当前媒体的播放位置
+qint64 position() const;
+// 此属性保存当前媒体的持续时间
+qint64 duration() const;
+// 此属性保存当前媒体的播放速率
+qreal playbackRate() const;
+// 此属性包含一个描述最后一个错误条件的字符串
+Error error() const;
+QString errorString() const;
+// 此属性保存媒体播放器的播放状态
+State state() const;
+// 此属性保存当前媒体的音频可用性状态
+bool isAudioAvailable() const;
+// 此属性保存当前媒体的视频可用性状态
+bool isVideoAvailable() const;
+// 此属性保存当前媒体的静音状态
+bool isMuted() const;
+// 该属性保存当前媒体的可搜索状态
+bool isSeekable() const;
+// 该属性保存当前媒体流的状态
+MediaStatus mediaStatus() const;
+const QIODevice *mediaStream() const;
+// 此属性保存播放器对象正在使用的媒体播放列表
+QMediaPlaylist *playlist() const;
+// 此属性保存播放器对象正在播放的当前活动媒体内容。如果使用播放列表，此值可能与 QMediaPlayer::media 属性不同。在这种情况下，currentMedia 表示播放器正在处理的当前媒体内容，而 QMediaPlayer::media 属性包含原始播放列表
+QMediaContent currentMedia() const;
+// 此属性保存播放器对象正在使用的活动媒体源
+QMediaContent media() const;
+// 此属性持有媒体播放器播放的音频流的角色
+void setAudioRole(QAudio::Role audioRole);
+QAudio::Role audioRole() const;
+// 返回支持的音频角色列表
+QList<QAudio::Role> supportedAudioRoles() const;
+// 返回当前使用的网络接入点。如果返回默认构造的 QNetworkConfiguration，则此功能不可用或当前提供的配置均未使用
+QNetworkConfiguration currentNetworkConfiguration() const;
+// 将 QVideoWidget 视频输出附加到媒体播放器
+void setVideoOutput(QVideoWidget *output);
+// 将 QGraphicsVideoItem 视频输出附加到媒体播放器
+void setVideoOutput(QGraphicsVideoItem *output);
+// 将视频表面设置为媒体播放器的视频输出
+void setVideoOutput(QAbstractVideoSurface *surface);
+```
+
+槽函数。
+
+```c++
+void pause();
+void play();
+void setMedia(const QMediaContent &media, QIODevice *stream = Q_NULLPTR);
+void setMuted(bool muted);
+void setNetworkConfigurations(const QList<QNetworkConfiguration> &configurations);
+void setPlaybackRate(qreal rate);
+void setPlaylist(QMediaPlaylist *playlist);
+void setPosition(qint64 position);
+void setVolume(int volume);
+void stop();
+```
+
+信号函数。
+
+```c++
+void audioAvailableChanged(bool available);
+void audioRoleChanged(QAudio::Role role);
+void bufferStatusChanged(int percentFilled);
+void currentMediaChanged(const QMediaContent &media);//当前播放文件切换时发射
+void durationChanged(qint64 duration);//文件总播放时长变化,切换文件时发射
+void error(QMediaPlayer::Error error);
+void mediaChanged(const QMediaContent &media);
+void mediaStatusChanged(QMediaPlayer::MediaStatus status);
+void mutedChanged(bool muted);//静音状态改变时发射
+void networkConfigurationChanged(const QNetworkConfiguration &configuration);
+void playbackRateChanged(qreal rate);//播放速率变化时发射
+void positionChanged(qint64 position);// 反应播放进度
+void seekableChanged(bool seekable);
+void stateChanged(QMediaPlayer::State state);//播放开始、暂停和停止都会发射
+void videoAvailableChanged(bool videoAvailable);
+void volumeChanged(int volume);//音量改变时发射
+```
+
+静态成员函数。
+
+```c++
+QMultimedia::SupportEstimate 
+hasSupport(const QString &mimeType, const QStringList &codecs = QStringList(), Flags flags = Flags());// 返回媒体播放器对 mimeType 和一组编解码器的支持级别
+```
+
+
+
+### 14.5 关联数据类型
+
+#### 14.5.1 QMediaPlaylist
+
+QMediaPlaylist 类提供要播放的媒体内容列表。
+QMediaPlaylist 旨在与其他媒体对象一起使用，例如 QMediaPlayer。
+QMediaPlaylist 允许访问服务内部播放列表功能（如果可用），否则它提供本地内存播放列表实现。
+
+```c++
+playlist = new QMediaPlaylist;
+playlist->addMedia(QUrl("http://example.com/movie1.mp4"));
+playlist->addMedia(QUrl("http://example.com/movie2.mp4"));
+playlist->addMedia(QUrl("http://example.com/movie3.mp4"));
+playlist->setCurrentIndex(1);
+
+player = new QMediaPlayer;
+player->setPlaylist(playlist);
+
+videoWidget = new QVideoWidget;
+player->setVideoOutput(videoWidget);
+videoWidget->show();
+
+player->play();
+```
+
+枚举类型。
+
+此枚举描述 QMediaPlaylist 错误代码。
+
+```c++
+enum QMediaPlaylist::Error{
+    QMediaPlaylist::NoError,
+    QMediaPlaylist::FormatError,
+    QMediaPlaylist::FormatNotSupportedError,
+    QMediaPlaylist::NetworkError,
+    QMediaPlaylist::AccessDeniedError,
+}
+```
+
+QMediaPlaylist::PlaybackMode 描述了播放列表中的播放顺序。
+
+```c++
+enum QMediaPlaylist::PlaybackMode{
+    QMediaPlaylist::CurrentItemOnce,// 播放1次
+    QMediaPlaylist::CurrentItemInLoop,//单曲循环
+    QMediaPlaylist::Sequential, // 顺序播放
+    QMediaPlaylist::Loop,//循环播放
+    QMediaPlaylist::Random// 随机播放
+}
+```
+
+成员函数。
+
+```c++
+// 将媒体内容附加到播放列表
+bool addMedia(const QMediaContent &content);
+bool addMedia(const QList<QMediaContent> &items);
+
+// 从头到尾删除播放列表中的项目
+bool removeMedia(int pos);
+bool removeMedia(int start, int end);
+// 将媒体内容插入播放列表的位置 pos
+bool insertMedia(int pos, const QMediaContent &content);
+bool insertMedia(int pos, const QList<QMediaContent> &items);
+// 将项目从位置移动到位置
+bool moveMedia(int from, int to);
+
+// 从播放列表中删除所有项目
+bool clear();
+
+// 返回当前媒体内容在播放列表中的位置
+int currentIndex() const;
+// 返回项目的索引，在调用 previous() 步骤后该索引将是当前的
+int previousIndex(int steps = 1) const;
+// 返回项目的索引，在调用 next() 步骤后将是当前的
+int nextIndex(int steps = 1) const;
+
+// 返回最后一个错误条件
+Error error() const;
+// 返回描述最后一个错误条件的字符串
+QString errorString() const;
+
+// 如果播放列表不包含任何项目，则返回 true，否则返回 false
+bool isEmpty() const;
+// 如果可以修改播放列表，则返回 true，否则返回 false
+bool isReadOnly() const;
+
+// 使用网络请求加载播放列表。如果指定了格式，则使用它，否则从播放列表名称和数据中猜测格式
+void load(const QNetworkRequest &request, const char *format = Q_NULLPTR);
+// 从位置加载播放列表。如果指定了格式，则使用它，否则从位置名称和数据中猜测格式
+void load(const QUrl &location, const char *format = Q_NULLPTR);
+// 从 QIODevice 设备加载播放列表。如果指定了格式，则使用它，否则从设备数据中猜测格式
+void load(QIODevice *device, const char *format = Q_NULLPTR);
+
+QMediaContent media(int index) const;
+QMediaContent currentMedia() const;
+int mediaCount() const;
+
+// 此属性定义播放列表中项目的播放顺序
+void setPlaybackMode(PlaybackMode mode);
+PlaybackMode playbackMode() const;
+
+// 将播放列表保存到位置。如果指定了格式，则使用它，否则从位置名称中猜测格式
+bool save(const QUrl &location, const char *format = Q_NULLPTR);
+// 使用 format 格式将播放列表保存到 QIODevice 设备
+bool save(QIODevice *device, const char *format);
+```
+
+槽函数如下。
+
+```c++
+// 前进到播放列表中的下一个媒体内容
+void next();
+// 返回播放列表中的上一个媒体内容
+void previous();
+// 在 playlistPosition 位置激活播放列表中的媒体内容
+void setCurrentIndex(int playlistPosition);
+// 随机播放播放列表中的项目
+void shuffle();
+```
+
+信号函数。
+
+```c++
+void currentIndexChanged(int position);
+void currentMediaChanged(const QMediaContent &content);
+void loadFailed();
+void loaded();
+void mediaAboutToBeInserted(int start, int end);
+void mediaAboutToBeRemoved(int start, int end);
+void mediaChanged(int start, int end);
+void mediaInserted(int start, int end);
+void mediaRemoved(int start, int end);
+void playbackModeChanged(QMediaPlaylist::PlaybackMode mode);
+```
 
 ## 布局管理
 
