@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TestVideoPlayBack</class>
+ <widget class="QMainWindow" name="TestVideoPlayBack">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>992</width>
+    <height>213</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Times New Roman</family>
+    <pointsize>12</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>TestVideoPlayBack</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actVideoWidget"/>
+   <addaction name="actGraphicsVideoItem"/>
+   <addaction name="actOperateCamera"/>
+  </widget>
+  <action name="actVideoWidget">
+   <property name="text">
+    <string>基于QVideoWidget的视频播放器</string>
+   </property>
+   <property name="toolTip">
+    <string>基于QVideoWidget的视频播放器</string>
+   </property>
+  </action>
+  <action name="actGraphicsVideoItem">
+   <property name="text">
+    <string>基于QGraphicsVideoItem的视频播放器</string>
+   </property>
+   <property name="toolTip">
+    <string>基于QGraphicsVideoItem的视频播放器</string>
+   </property>
+  </action>
+  <action name="actOperateCamera">
+   <property name="text">
+    <string>摄像头操作</string>
+   </property>
+   <property name="toolTip">
+    <string>摄像头操作</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

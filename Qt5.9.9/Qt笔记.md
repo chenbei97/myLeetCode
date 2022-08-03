@@ -1,4 +1,4 @@
-1. 认识Qt和GUI应用程序基础
+## 1. 认识Qt和GUI应用程序基础
 
 1-2章关于Qt的安装和简单复习可见[01-hello_world](01-hello_world)的内容，其运行结果图片可见[01-hello_world/app.png](01-hello_world/app.png)。
 
@@ -3241,44 +3241,6 @@ QCheckBox *checkbox = new QCheckBox("C&ase sensitive", this);
 
 ### 3.7 其他类
 
-需要了解的枚举类型如下。
-
-```c++
-
-```
-
-常见的性质如下。
-
-```c++
-
-```
-
-常见的公共成员函数如下。
-
-```c++
-
-```
-
-常见的槽函数如下。
-
-```c++
-
-```
-
-常见的信号如下。
-
-```c++
-
-```
-
-示例代码。
-
-```c++
-
-```
-
-
-
 这些类不再赘述，自行查看Qt文档。
 
 **Layouts类：**Vertical Layout、Horizontal Layout、Grid Layout和Form Layout，布局方向；
@@ -6517,7 +6479,7 @@ void fileChanged(const QString &path);
 
 
 
-### 6.4 关联数据类型
+### 6.4 本章其它数据类型
 
 #### 6.4.1 QByteArray
 
@@ -10418,7 +10380,7 @@ void rangeChanged(QDateTime min, QDateTime max);
 void tickCountChanged(int tickCount);
 ```
 
-### 8.5 关联数据类型
+### 8.5 本章其它数据类型
 
 #### 8.5.1 QMargins
 
@@ -12002,7 +11964,7 @@ void zPosRoleReplaceChanged(const QString &replace);
 
 
 
-### 9.5 关联数据类型
+### 9.5 本章其它数据类型
 
 #### 9.5.1 QBarDataItem
 
@@ -12602,7 +12564,7 @@ if (myLib.isLoaded())
 
 但是直接执行还是会错误，必须把DelphiDLL文件夹下的DelphiDLL.dll文件放在debug和release可执行目录下就不会再出错了。
 
-### 11.4 关联数据类型
+### 11.4 本章数据类型
 
 #### 11.4.1 QFontMetrics
 
@@ -13679,7 +13641,7 @@ void TestTwoQSemaphoreBase::on_pushButton_clicked()
 }
 ```
 
-### 12.6 关联线程数据类型
+### 12.6 本章其它数据类型
 
 #### 12.6.1 QThread
 
@@ -14624,7 +14586,7 @@ QNetWorkReply用于处理网络请求后的响应，提供了信号finshed、rea
 
 例子可见[33-TestNetworkHttp](33-TestNetworkHttp)。
 
-### 13.5 关联网络数据类型
+### 13.5 本章数据类型
 
 #### 13.5.1 QHostInfo
 
@@ -15983,11 +15945,11 @@ QAudio::Role audioRole() const;
 QList<QAudio::Role> supportedAudioRoles() const;
 // 返回当前使用的网络接入点。如果返回默认构造的 QNetworkConfiguration，则此功能不可用或当前提供的配置均未使用
 QNetworkConfiguration currentNetworkConfiguration() const;
-// 将 QVideoWidget 视频输出附加到媒体播放器
+//设置QVideoWidget类型输出设备
 void setVideoOutput(QVideoWidget *output);
-// 将 QGraphicsVideoItem 视频输出附加到媒体播放器
+// 设置QGraphicsVideoItem类型输出设备
 void setVideoOutput(QGraphicsVideoItem *output);
-// 将视频表面设置为媒体播放器的视频输出
+// 一个抽象输出设备
 void setVideoOutput(QAbstractVideoSurface *surface);
 ```
 
@@ -16776,9 +16738,618 @@ void notify();
 void stateChanged(QAudio::State state);
 ```
 
-### 14.5 关联数据类型
+### 14.3 视频播放
 
-#### QMediaObject 
+视频播放有2个用于播放视频的组件可以使用，即QVideoWidget和QGraphicsVideoItem。
+
+#### 14.3.1 QVideoWidget
+
+QVideoWidget 类提供了一个展示由媒体对象生成的视频的小部件。
+将 QVideoWidget 附加到 QMediaObject 允许它显示该媒体对象的视频或图像输出。 QVideoWidget 通过在其构造函数中传递指向 QMediaObject 的指针附加到媒体对象，并通过销毁 QVideoWidget 来分离。
+
+```c++
+player = new QMediaPlayer;
+
+playlist = new QMediaPlaylist(player);
+playlist->addMedia(QUrl("http://example.com/myclip1.mp4"));
+playlist->addMedia(QUrl("http://example.com/myclip2.mp4"));
+
+videoWidget = new QVideoWidget;
+player->setVideoOutput(videoWidget);
+
+videoWidget->show();
+playlist->setCurrentIndex(1);
+player->play();
+```
+
+成员函数。
+
+```c++
+QVideoWidget(QWidget *parent = Q_NULLPTR);
+Qt::AspectRatioMode aspectRatioMode() const;//视频如何根据其纵横比进行缩放
+int brightness() const;//此属性用于调整显示视频的亮度
+int contrast() const;//此属性用于调整显示视频的对比度
+int hue() const;//此属性用于调整显示视频的色调
+bool isFullScreen() const;//是Widget部件也可以全屏显示
+int saturation() const;//饱和度
+```
+
+槽函数。
+
+```c++
+void setAspectRatioMode(Qt::AspectRatioMode mode);
+void setBrightness(int brightness);
+void setContrast(int contrast);
+void setFullScreen(bool fullScreen);
+void setHue(int hue);
+void setSaturation(int saturation);
+```
+
+信号函数。
+
+```c++
+void brightnessChanged(int brightness);
+void contrastChanged(int contrast);
+void fullScreenChanged(bool fullScreen);
+void hueChanged(int hue);
+void saturationChanged(int saturation);
+```
+
+可以重载事件实现自己想要的效果，例如单击可以视频暂停或继续播放，ESC来控制全屏退出等。
+
+```c++
+virtual void hideEvent(QHideEvent *event) override;
+virtual void moveEvent(QMoveEvent *event) override;
+virtual void paintEvent(QPaintEvent *event) override;
+virtual void resizeEvent(QResizeEvent *event) override;
+virtual void showEvent(QShowEvent *event) override;
+```
+
+例子。
+
+```c++
+// 按键事件,按下ESC可以退出全屏状态
+void myVideoWidget::keyPressEvent(QKeyEvent *event)
+{
+    if ((event->key() == Qt::Key_Escape)&&(this->isFullScreen()))
+    {
+        this->setFullScreen(false);
+        event->accept();
+        QVideoWidget::keyPressEvent(event);
+    }
+}
+
+// 鼠标单击可以控制暂停和继续播放
+void myVideoWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button()==Qt::LeftButton)
+    {
+        if (thePlayer->state()==QMediaPlayer::PlayingState) //如果是播放状态,视频暂停
+          thePlayer->pause();
+        else
+          thePlayer->play();
+    }
+    QVideoWidget::mousePressEvent(event); // 事件传递给父对象
+}
+```
+
+#### 14.3.2 QGraphicsVideoItem
+
+也是图形项的一种，继承自QGraphicsObject。
+
+QGraphicsVideoItem 类提供了一个显示由 QMediaObject 生成的视频的图形项。
+将 QGraphicsVideoItem 附加到 QMediaObject 允许它显示该媒体对象的视频或图像输出。通过将指向 QMediaObject 的指针传递给 setMediaObject() 函数，将 QGraphicsVideoItem 附加到媒体对象。
+
+```c++
+player = new QMediaPlayer(this);
+QGraphicsVideoItem *item = new QGraphicsVideoItem;
+player->setVideoOutput(item);
+graphicsView->scene()->addItem(item);
+graphicsView->show();
+player->setMedia(QUrl("http://example.com/myclip4.ogv"));
+player->play();
+```
+
+成员函数。
+
+```c++
+QGraphicsVideoItem(QGraphicsItem *parent = Q_NULLPTR);
+Qt::AspectRatioMode aspectRatioMode() const;//如何缩放视频以适应图形项的大小
+QSizeF nativeSize() const;//此属性保存视频的原始大小
+QPointF offset() const;//此属性保存视频项的偏移量
+void setAspectRatioMode(Qt::AspectRatioMode mode);
+void setOffset(const QPointF &offset);
+void setSize(const QSizeF &size);
+QSizeF size() const;//此属性保存视频项的大小
+```
+
+可利用的重载函数。
+
+```c++
+virtual QRectF boundingRect() const override;
+virtual QMediaObject *mediaObject() const override;
+virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = Q_NULLPTR) override;
+```
+
+唯一的信号函数。
+
+```c++
+void nativeSizeChanged(const QSizeF &size);
+```
+
+#### 14.3.3 QCameraViewfinder
+
+QCameraViewfinder 类提供了一个相机取景器小部件，也可以作为视频播放使用。
+
+```c++
+camera = new QCamera;
+viewfinder = new QCameraViewfinder();
+viewfinder->show();
+
+camera->setViewfinder(viewfinder);
+
+imageCapture = new QCameraImageCapture(camera);
+
+camera->setCaptureMode(QCamera::CaptureStillImage);
+camera->start();
+```
+
+### 14.4 摄像头使用
+
+#### 14.4.1 QCameraInfo
+
+QCameraInfo 类提供有关相机设备的一般信息。QCameraInfo 允许您查询系统上当前可用的相机设备。
+静态函数 defaultCamera() 和 availableCameras() 为您提供所有可用相机的列表。
+此示例打印所有可用相机的名称：
+
+```c++
+QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
+foreach (const QCameraInfo &cameraInfo, cameras)
+    qDebug() << cameraInfo.deviceName();
+```
+
+QCameraInfo 可用于构造 QCamera。以下示例实例化了一个相机设备名为“mycamera”的 QCamera：
+
+```c++
+QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
+foreach (const QCameraInfo &cameraInfo, cameras) {
+    if (cameraInfo.deviceName() == "mycamera")
+        camera = new QCamera(cameraInfo);
+}
+```
+
+您还可以使用 QCameraInfo 获取有关相机设备的一般信息，例如描述、系统上的物理位置或相机传感器方向。
+
+```c++
+QCamera myCamera;
+QCameraInfo cameraInfo(myCamera);
+if (cameraInfo.position() == QCamera::FrontFace)
+    qDebug() << "摄像头位于硬件系统的正面";
+else if (cameraInfo.position() == QCamera::BackFace)
+    qDebug() << "摄像头位于硬件系统的背面";
+qDebug() << "相机传感器方向是" << cameraInfo.orientation() << " 度";
+```
+
+成员函数。
+
+```c++
+QCameraInfo(const QByteArray &name = QByteArray());
+QString description() const;
+QString deviceName() const;
+bool isNull() const;
+int orientation() const;
+QCamera::Position position() const;
+```
+
+静态成员函数。
+
+```c++
+QList<QCameraInfo> availableCameras(QCamera::Position position = QCamera::UnspecifiedPosition);
+QCameraInfo defaultCamera();
+```
+
+#### 14.4.2 QCamera
+
+QCamera 类为系统相机设备提供接口。QCamera 可以与 QCameraViewfinder 一起用于取景器显示，QMediaRecorder 用于视频录制和 QCameraImageCapture 用于图像拍摄。
+您可以使用 QCameraInfo 列出可用的相机并选择要使用的相机。
+
+```c++
+QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
+foreach (const QCameraInfo &cameraInfo, cameras) {
+    if (cameraInfo.deviceName() == "mycamera")
+        camera = new QCamera(cameraInfo);
+}
+```
+
+##### 嵌套类FrameRateRange
+
+FrameRateRange 将帧速率范围表示为最小和最大速率。如果最小帧速率等于最大帧速率，则帧速率是固定的。如果不是，则实际帧速率在最小值和最大值之间波动。
+
+成员函数。
+
+```c++
+FrameRateRange();//构造一个空帧率范围，其中 minimumFrameRate 和 maximumFrameRate 都等于 0.0
+FrameRateRange(qreal minimum, qreal maximum);
+```
+
+##### 枚举类型
+
+捕获类型。
+
+```c++
+enum QCamera::CaptureMode{
+    QCamera::CaptureViewfinder//相机仅配置为显示取景器
+    QCamera::CaptureStillImage//相机配置为静态帧捕获
+    QCamera::CaptureVideo//相机配置为视频捕获
+}
+```
+
+摄像机的错误。
+
+```c++
+enum QCamera::Error{
+    QCamera::NoError//没有发生错误
+    QCamera::CameraError//发生了错误
+    QCamera::InvalidRequestError//系统资源不支持请求的功能
+    QCamera::ServiceMissingError//没有可用的相机服务
+    QCamera::NotSupportedFeatureError//不支持该功能
+}
+```
+
+摄像机锁定改变原因。
+
+```c++
+enum QCamera::LockChangeReason{
+    QCamera::UserRequest//锁定状态因用户请求而改变，通常是为了解锁相机设置
+    QCamera::LockAcquired//锁定状态成功更改为 QCamera::Locked
+    QCamera::LockFailed//由于自动对焦失败、曝光超出支持范围等，相机未能获得请求的锁定
+    QCamera::LockLost//相机无法再维持请求的锁定。锁定状态更改为 QCamera::Unlocked
+    QCamera::LockTemporaryLost//锁丢失了，但相机正在努力重新获取它。该值可能用于连续对焦模式，当相机失去焦点时，对焦锁定状态变为Qcamera::Searching with LockTemporaryLost reason
+}
+```
+
+摄像机锁状态。
+
+```c++
+enum QCamera::LockStatus{
+    QCamera::Unlocked//应用程序对相机设置值不感兴趣。相机可以保持这个参数不变，这在相机对焦时很常见，或者不断调整曝光和白平衡以保持取景器图像良好
+    QCamera::Searching//应用程序已请求使用 QCamera::searchAndLock() 锁定相机焦点、曝光或白平衡。此状态表示相机正在对焦或计算曝光和白平衡
+    QCamera::Locked//相机对焦、曝光或白平衡被锁定。相机已准备好捕捉，应用程序可能会检查曝光参数
+}
+```
+
+摄像机锁定类型。
+
+```c++
+enum QCamera::LockType{
+    QCamera::NoLock//没锁定
+    QCamera::LockExposure//锁定相机曝光
+    QCamera::LockWhiteBalance//锁定白平衡
+    QCamera::LockFocus//锁定相机焦点
+}
+```
+
+此枚举指定相机在系统硬件上的物理位置。
+
+```c++
+enum QCamera::Position{
+    QCamera::UnspecifiedPosition//摄像机位置未指定或未知
+    QCamera::BackFace//摄像头位于系统硬件的背面。例如在移动设备上，这意味着它位于屏幕的另一侧
+    QCamera::FrontFace//摄像头位于系统硬件的正面。例如在移动设备上，这意味着它与屏幕在同一侧。前置摄像头的取景器框架是水平镜像的，因此用户可以看到自己在照镜子。捕获的图像或视频不会被镜像
+}
+```
+
+摄像机状态。
+
+```c++
+enum QCamera::State{
+	QCamera::UnloadedState//初始相机状态，未加载相机，除了支持的捕获模式之外的相机功能是未知的
+    QCamera::LoadedState//相机已加载并准备好进行配置
+	QCamera::ActiveState//在激活状态下，一旦相机启动，取景器就会显示视频帧，并且相机已准备好捕捉
+}
+```
+
+根据后端，在 ActiveState 中更改某些相机设置（如捕获模式、编解码器或分辨率）可能会导致在应用设置时将相机状态更改为 LoadedStatus 和 StartingStatus，并在相机准备就绪时更改为 ActiveStatus。
+
+```c++
+enum QCamera::Status{
+	QCamera::ActiveStatus//摄像头已经启动，可以产生数据了。取景器显示处于活动状态的视频帧
+    QCamera::StartingStatus//由于状态转换到 QCamera::ActiveState，相机正在启动。相机服务尚未准备好捕捉
+    QCamera::StoppingStatus//由于从 QCamera::ActiveState 到 QCamera::LoadedState 或 QCamera::UnloadedState 的状态转换，相机正在停止
+    QCamera::StandbyStatus//相机处于省电待机模式。在 QCamera::LoadedState 状态下不活动一段时间后，相机可能会进入待机模式
+    QCamera::LoadedStatus//相机已加载并准备好进行配置。此状态表示相机设备已打开，并且可以查询支持的图像和视频捕获设置，例如分辨率、帧速率和编解码器
+    QCamera::LoadingStatus//从 QCamera::UnloadedState 到 QCamera::LoadedState 或 QCamera::ActiveState 的状态转换结果中加载的相机设备
+    QCamera::UnloadingStatus//由于从 QCamera::LoadedState 或 QCamera::ActiveState 到 QCamera::UnloadedState 的状态转换，相机设备正在卸载
+    QCamera::UnloadedStatus//初始相机状态，未加载相机。包括支持的捕捉设置在内的相机功能可能未知
+    QCamera::UnavailableStatus//相机或相机后端不可用
+}
+```
+
+##### 成员函数
+
+```c++
+QCamera(QObject *parent = Q_NULLPTR);
+QCamera(const QByteArray &deviceName, QObject *parent = Q_NULLPTR);
+QCamera(const QCameraInfo &cameraInfo, QObject *parent = Q_NULLPTR);
+QCamera(QCamera::Position position, QObject *parent = Q_NULLPTR);
+
+State state() const;
+Status status() const;
+CaptureModes captureMode() const;
+bool isCaptureModeSupported(CaptureModes mode) const;
+Error error() const;
+QString errorString() const;
+QCameraExposure *exposure() const;
+QCameraFocus *focus() const;
+QCameraImageProcessing *imageProcessing() const;//返回相机图像处理控制对象
+QCamera::LockStatus lockStatus() const;
+QCamera::LockStatus lockStatus(QCamera::LockType lockType) const;//返回给定 lockType 的锁定状态
+QCamera::LockTypes requestedLocks() const;//返回请求的锁类型
+// 设置取景器，也就是相机输出的设备组件或者QCameraViewfinder
+void setViewfinder(QVideoWidget *viewfinder);
+void setViewfinder(QGraphicsVideoItem *viewfinder);
+void setViewfinder(QAbstractVideoSurface *surface);
+// 用于设置相机参数
+void setViewfinderSettings(const QCameraViewfinderSettings &settings);
+QCameraViewfinderSettings viewfinderSettings() const;
+// 返回相机支持的：锁类型、取景器帧速率范围列表、取景器像素格式列表、取景器分辨率列表、取景器设置列表
+QCamera::LockTypes supportedLocks() const;
+QList<FrameRateRange> supportedViewfinderFrameRateRanges(const QCameraViewfinderSettings &settings = QCameraViewfinderSettings()) const;
+QList<QVideoFrame::PixelFormat> supportedViewfinderPixelFormats(const QCameraViewfinderSettings &settings = QCameraViewfinderSettings()) const;
+QList<QSize> supportedViewfinderResolutions(const QCameraViewfinderSettings &settings = QCameraViewfinderSettings()) const;
+QList<QCameraViewfinderSettings> supportedViewfinderSettings(const QCameraViewfinderSettings &settings = QCameraViewfinderSettings()) const;
+```
+
+##### 信号与槽函数
+
+信号函数。
+
+```c++
+void load();
+void searchAndLock();
+void searchAndLock(QCamera::LockTypes locks);
+void setCaptureMode(QCamera::CaptureModes mode);
+void start();
+void stop();
+void unload();
+void unlock();
+void unlock(QCamera::LockTypes locks);
+```
+
+槽函数。
+
+```c++
+void captureModeChanged(QCamera::CaptureModes mode);
+void error(QCamera::Error value);
+void lockFailed();
+void lockStatusChanged(QCamera::LockStatus status, QCamera::LockChangeReason reason);
+void lockStatusChanged(QCamera::LockType lock, QCamera::LockStatus status, QCamera::LockChangeReason reason);
+void locked();
+void stateChanged(QCamera::State state);
+void statusChanged(QCamera::Status status);
+```
+
+#### 14.4.3 QCameraViewfinderSettings
+
+QCameraViewfinderSettings 类提供了一组取景器设置。
+取景器设置对象用于指定 QCamera 使用的取景器设置。通过构造 QCameraViewfinderSettings 对象来选择取景器设置，设置所需的属性，然后使用 QCamera::setViewfinderSettings() 函数将其传递给 QCamera 实例。不同的相机可能具有不同的功能。应用程序应在设置参数之前查询相机功能。例如，应用程序应该在调用 setResolution() 之前调用 QCamera::supportedViewfinderResolutions()。
+
+```c++
+QCameraViewfinderSettings viewfinderSettings;
+viewfinderSettings.setResolution(640, 480);
+viewfinderSettings.setMinimumFrameRate(15.0);
+viewfinderSettings.setMaximumFrameRate(30.0);
+
+camera->setViewfinderSettings(viewfinderSettings);
+```
+
+成员函数。
+
+```c++
+bool isNull() const;
+qreal maximumFrameRate() const;
+qreal minimumFrameRate() const;
+QSize pixelAspectRatio() const;
+QVideoFrame::PixelFormat pixelFormat() const;
+QSize resolution() const;
+void setMaximumFrameRate(qreal rate);
+void setMinimumFrameRate(qreal rate);
+void setPixelAspectRatio(const QSize &ratio);
+void setPixelAspectRatio(int horizontal, int vertical);
+void setPixelFormat(QVideoFrame::PixelFormat format);
+void setResolution(const QSize &resolution);
+void setResolution(int width, int height);
+```
+
+#### 14.4.4 QCameraImageCapture
+
+QCameraImageCapture 类用于记录媒体内容。
+QCameraImageCapture 类是高级图像记录类。它不打算单独使用，而是用于访问其他媒体对象的媒体记录功能，如 QCamera。
+
+```c++
+camera = new QCamera;
+viewfinder = new QCameraViewfinder();
+viewfinder->show();
+camera->setViewfinder(viewfinder);
+imageCapture = new QCameraImageCapture(camera);
+camera->setCaptureMode(QCamera::CaptureStillImage);
+camera->start();
+camera->searchAndLock();
+imageCapture->capture();
+camera->unlock();
+```
+
+枚举类型。
+
+```c++
+enum QCameraImageCapture::CaptureDestination{
+    QCameraImageCapture::CaptureToFile//将图像捕获到文件中
+    QCameraImageCapture::CaptureToBuffer//将图像捕获到缓冲区以进行进一步处理
+}
+```
+
+```c++
+enum QCameraImageCapture::DriveMode{
+	QCameraImageCapture::SingleImageCapture//驱动模式是拍摄单张照片
+}
+```
+
+```c++
+enum QCameraImageCapture::Error{
+    QCameraImageCapture::NoError//没有错误
+    QCameraImageCapture::NotReadyError//该服务尚未准备好捕获
+    QCameraImageCapture::ResourceError//设备未准备好或不可用
+    QCameraImageCapture::OutOfSpaceError//设备上没有剩余空间
+    QCameraImageCapture::NotSupportedFeatureError//设备不支持静止图像捕获
+    QCameraImageCapture::FormatError//不支持当前格式
+}
+```
+
+成员函数。
+
+```c++
+QCameraImageCapture(QMediaObject *mediaObject, QObject *parent = Q_NULLPTR);
+QMultimedia::AvailabilityStatus availability() const;//返回此功能的可用性
+Error error() const;
+QString errorString() const;
+
+bool isAvailable() const;//如果图像捕获服务准备好使用，则返回 true
+// 如果支持图像捕获目标，则返回 true；否则返回假
+bool isCaptureDestinationSupported(CaptureDestinations destination) const;
+// 此属性保存服务是否准备好立即捕获图像
+bool isReadyForCapture() const;
+
+//返回正在使用的缓冲区图像捕获格式
+void setBufferFormat(const QVideoFrame::PixelFormat format);
+QVideoFrame::PixelFormat bufferFormat() const;
+
+//返回正在使用的图像捕获目标
+void setCaptureDestination(CaptureDestinations destination);
+CaptureDestinations captureDestination() const;
+
+//返回正在使用的图像编码器设置
+void setEncodingSettings(const QImageEncoderSettings &settings);
+QImageEncoderSettings encodingSettings() const;
+
+// 支持的缓冲区格式、图像编码格式和图像可以编码的分辨率列表
+QList<QVideoFrame::PixelFormat> supportedBufferFormats() const;
+QStringList supportedImageCodecs() const;//返回图像编解码器的描述
+QString imageCodecDescription(const QString &codec) const;
+QList<QSize> supportedResolutions(const QImageEncoderSettings &settings = QImageEncoderSettings(), bool *continuous = Q_NULLPTR) const;
+```
+
+#### 14.4.6 QVideoFrame
+
+QVideoFrame 类代表一帧视频数据。QVideoFrame 封装了视频帧的像素数据，以及有关该帧的信息。
+视频帧可以来自多个地方 - 解码媒体、相机或以编程方式生成。在这些帧中描述像素的方式可能会有很大差异，并且某些像素格式以牺牲易用性为代价提供了更大的压缩机会。
+可以使用 map() 函数将视频帧的像素内容映射到内存。映射时，可以使用 bits() 函数访问视频数据，该函数返回指向缓冲区的指针。此缓冲区的总大小由 mappedBytes() 函数给出，每行的大小由 bytesPerLine() 给出。 handle() 函数的返回值也可用于使用内部缓冲区的本机 API（例如 OpenGL 纹理句柄）访问帧数据。
+一个视频帧也可以有与之相关的时间戳信息。 QAbstractVideoSurface 的实现可以使用这些时间戳来确定何时开始和停止显示帧，但并非所有表面都可能遵守此设置。
+QVideoFrame 中的视频像素数据封装在 QAbstractVideoBuffer 中。通过继承 QAbstractVideoBuffer 类，可以从任何缓冲区类型构造 QVideoFrame。
+
+枚举类型。
+
+指定隔行扫描视频帧所属的场。
+
+```c++
+enum QVideoFrame::FieldType{  
+    QVideoFrame::ProgressiveFrame//帧不是隔行扫描的
+    QVideoFrame::TopField//该帧包含一个顶部字段
+    QVideoFrame::BottomField//该帧包含一个底部字段
+    QVideoFrame::InterlacedFrame//该帧包含合并的顶部和底部字段
+}
+```
+
+枚举视频数据类型。
+
+```c++
+enum QVideoFrame::PixelFormat{
+    QVideoFrame::Format_Invalid
+    QVideoFrame::Format_ARGB32
+    QVideoFrame::Format_ARGB32_Premultiplied
+    QVideoFrame::Format_RGB32
+    QVideoFrame::Format_RGB24
+    QVideoFrame::Format_RGB565
+    QVideoFrame::Format_RGB555
+    QVideoFrame::Format_ARGB8565_Premultiplied
+    QVideoFrame::Format_BGRA32
+    QVideoFrame::Format_BGRA32_Premultiplied
+    QVideoFrame::Format_BGR32
+    QVideoFrame::Format_BGR24
+    QVideoFrame::Format_BGR565
+    QVideoFrame::Format_BGR555
+    QVideoFrame::Format_BGRA5658_Premultiplied
+    QVideoFrame::Format_AYUV444
+    QVideoFrame::Format_AYUV444_Premultiplied
+    QVideoFrame::Format_YUV444
+    QVideoFrame::Format_YUV420P
+    QVideoFrame::Format_YV12
+    QVideoFrame::Format_UYVY
+    QVideoFrame::Format_YUYV
+    QVideoFrame::Format_NV12
+    QVideoFrame::Format_NV21
+    QVideoFrame::Format_IMC1
+    QVideoFrame::Format_IMC2
+    QVideoFrame::Format_IMC3
+    QVideoFrame::Format_IMC4
+    QVideoFrame::Format_Y8
+    QVideoFrame::Format_Y16
+    QVideoFrame::Format_Jpeg
+    QVideoFrame::Format_CameraRaw
+    QVideoFrame::Format_AdobeDng
+    QVideoFrame::Format_User
+}
+```
+
+成员函数。
+
+```c++
+QVideoFrame();
+QVideoFrame(QAbstractVideoBuffer *buffer, const QSize &size, PixelFormat format);
+QVideoFrame(int bytes, const QSize &size, int bytesPerLine, PixelFormat format);
+QVideoFrame(const QImage &image);
+QVideoFrame(const QVideoFrame &other);
+QVariantMap availableMetaData() const
+uchar *bits();
+uchar *bits(int plane);
+const uchar *bits() const;
+const uchar *bits(int plane) const;
+int bytesPerLine() const;
+int bytesPerLine(int plane) const;
+qint64 endTime() const;
+FieldType fieldType() const;
+QVariant handle() const;
+QAbstractVideoBuffer::HandleType handleType() const;
+int height() const;
+bool isMapped() const;
+bool isReadable() const;
+bool isValid() const;
+bool isWritable() const;
+bool map(QAbstractVideoBuffer::MapMode mode);
+QAbstractVideoBuffer::MapMode mapMode() const;
+int mappedBytes() const;
+QVariant metaData(const QString &key) const;
+PixelFormat pixelFormat() const;
+int planeCount() const;
+void setEndTime(qint64 time);
+void setFieldType(FieldType field);
+void setMetaData(const QString &key, const QVariant &value);
+void setStartTime(qint64 time);
+QSize size() const;
+qint64 startTime() const;
+void unmap();
+int width() const;
+```
+
+静态成员函数。
+
+```c++
+QImage::Format imageFormatFromPixelFormat(PixelFormat format);
+PixelFormat pixelFormatFromImageFormat(QImage::Format format);
+```
+
+### 14.5 本章其它数据类型
+
+#### 14.5.1 QMediaObject 
 
 QMediaObject 类为多媒体对象提供了一个公共基础。
 它提供了其他高级类（如 QMediaPlayer、QAudioDecoder 和 QCamera）共有的一些基本功能，包括可用性和元数据功能，以及将媒体对象与 QMediaPlaylist 等支持类连接的功能。
@@ -16819,7 +17390,7 @@ void metaDataChanged(const QString &key, const QVariant &value)
 void notifyIntervalChanged(int milliseconds);
 ```
 
-#### QMediaService
+#### 14.5.2 QMediaService
 
 QMediaService 类为媒体服务实现提供了一个通用基类。
 媒体服务提供媒体对象承诺的功能的实现，并允许多个提供者实现一个 QMediaObject。
@@ -16841,7 +17412,7 @@ virtual QMediaControl *requestControl(const char *interface) = 0;//返回指向�
 T requestControl();//返回指向由媒体服务实现的类型 T 的媒体控件的指针
 ```
 
-#### QMediaControl
+#### 14.5.3 QMediaControl
 
 QMediaControl 类为媒体服务控件提供了一个基本接口。
 媒体控件为媒体服务提供的各个功能提供接口。大多数服务实现了一个暴露服务核心功能的主体控件和一些暴露任何附加功能的可选控件。
@@ -16871,7 +17442,7 @@ QMediaPlayerControl *control = mediaService->requestControl<QMediaPlayerControl 
 Q_MEDIA_DECLARE_CONTROL 宏为继承自 QMediaControl 的类声明 IId。
 为 QMediaControl 声明 IId 允许从 QMediaService::requestControl() 请求该控件的实例，而无需显式传递 IId。
 
-#### QMultimedia
+#### 14.5.4 QMultimedia
 
 QMultimedia 命名空间包含在整个 Qt Multimedia 库中使用的各种标识符。
 
@@ -16920,9 +17491,7 @@ enum QMultimedia::SupportEstimate{
 }
 ```
 
-
-
-#### 14.5.1 QAudioEncoderSettings
+#### 14.5.5 QAudioEncoderSettings
 
 QAudioEncoderSettings 类提供了一组音频编码器设置。
 音频编码器设置对象用于指定 QMediaRecorder 使用的音频编码器设置。通过构造 QAudioEncoderSettings 对象，设置所需的属性，然后使用 QMediaRecorder::setEncodingSettings() 函数将其传递给 QMediaRecorder 实例来选择音频编码器设置。
@@ -16957,13 +17526,143 @@ void setSampleRate(int rate);//采样率
 int sampleRate() const;
 ```
 
+#### 14.5.6 QAudioBuffer
+
+QAudioBuffer 类表示具有特定格式和采样率的音频样本集合。
+
+成员函数。
+
+```c++
+QAudioBuffer();
+QAudioBuffer(const QAudioBuffer &other);
+// 从提供的数据以给定的格式创建一个新的音频缓冲区。该格式将确定如何从数据中解释样本的数量和大小
+QAudioBuffer(const QByteArray &data, const QAudioFormat &format, qint64 startTime = -1);
+// 为给定格式的 numFrames 帧创建一个新的音频缓冲区。单个样本将被初始化为格式的默认值
+QAudioBuffer(int numFrames, const QAudioFormat &format, qint64 startTime = -1);
+
+int byteCount() const;//返回此缓冲区的大小，以字节为单位
+
+// 获取缓冲区数据
+const void *constData() const;
+const T *constData() const;
+const void *data() const;
+void *data();
+const T *data() const;
+T *data();
+
+qint64 duration() const;//返回此缓冲区中音频的持续时间，以微秒为单位
+QAudioFormat format() const;//返回此缓冲区的格式
+int frameCount() const;//返回此缓冲区中完整音频帧的数量
+bool isValid() const;//如果这是一个有效的缓冲区，则返回 true。有效缓冲区中的帧数超过零且格式有效
+int sampleCount() const;//返回此缓冲区中的样本数
+qint64 startTime() const;//返回此缓冲区开始的流中的时间（以微秒为单位）
+```
+
+#### 14.5.7 QAudioFormat
+
+QAudioFormat 类存储音频流参数信息。
+音频格式指定如何排列音频流中的数据，即如何解释流。编码本身由用于流的 codec() 指定。
+除了编码之外，QAudioFormat 还包含其他参数，这些参数进一步指定了音频样本数据的排列方式。这些是频率、通道数、样本大小、样本类型和字节顺序。下表更详细地描述了这些。
+
+| Sample Rate        | 以赫兹为单位的每秒音频数据样本数                       |
+| ------------------ | ------------------------------------------------------ |
+| Number of channels | 音频通道的数量（通常一个用于单声道或两个用于立体声     |
+| Sample size        | 每个样本中存储了多少数据（通常为 8 或 16 位）          |
+| Sample type        | 样本的数值表示（通常是有符号整数、无符号整数或浮点数） |
+| Byte order         | 样本的字节顺序（通常是小端、大端）                     |
+
+此类通常与 QAudioInput 或 QAudioOutput 一起使用，以允许您指定正在读取或写入的音频流的参数，或者在处理内存中的样本时与 QAudioBuffer 一起使用。您可以通过 QAudioDeviceInfo 中的函数获取与使用的音频设备兼容的音频格式。该类还允许您查询设备的可用参数值，以便您可以自己设置参数。有关详细信息，请参阅 QAudioDeviceInfo 类描述。您需要知道要播放或录制的音频流的格式。在交错线性 PCM 数据的常见情况下，编解码器将是“audio/pcm”，所有通道的样本都将被交错。在 Qt Multimedia（和其他地方）中，同一时刻每个通道的一个样本被称为一帧。
+
+枚举类型。
+
+```c++
+enum QAudioFormat::Endian{
+    QAudioFormat::BigEndian//样本是大端字节序
+    QAudioFormat::LittleEndian//样本是小端字节序
+}
+```
+
+```c++
+enum QAudioFormat::SampleType{
+    QAudioFormat::Unknown//没有设置
+    QAudioFormat::SignedInt//样本是有符号整数
+    QAudioFormat::UnSignedInt//样本是无符号整数
+    QAudioFormat::Float//样本是浮点数
+}
+```
+
+成员函数。
+
+```c++
+QAudioFormat();
+QAudioFormat(const QAudioFormat &other);
+QAudioFormat::Endian byteOrder() const;;
+qint32 bytesForDuration(qint64 duration) const;
+qint32 bytesForFrames(qint32 frameCount) const;
+int bytesPerFrame() const;
+int channelCount() const;
+QString codec() const;
+qint64 durationForBytes(qint32 bytes) const;
+qint64 durationForFrames(qint32 frameCount) const;
+qint32 framesForBytes(qint32 byteCount) const;
+qint32 framesForDuration(qint64 duration) const;
+bool isValid() const;
+int sampleRate() const;
+int sampleSize() const;
+QAudioFormat::SampleType sampleType() const;
+void setByteOrder(QAudioFormat::Endian byteOrder);
+void setChannelCount(int channels);
+void setCodec(const QString &codec);
+void setSampleRate(int samplerate);
+void setSampleSize(int sampleSize);
+void setSampleType(QAudioFormat::SampleType sampleType);
+```
+
+## 15. 应用程序设计辅助功能
+
+### 15.1 多语言界面
 
 
-#### QAudioBuffer
 
-#### QAudioFormat
+### 15.2 自定义样式表
 
-## 布局管理
+
+
+### 15.3 设置界面外观
+
+
+
+### 15.4 Qt应用程序发布
+
+
+
+### 15.5 本章数据类型
+
+
+
+## 16. 其它
+
+### 16.1 布局管理
+
+#### 16.1.1 QGridLayout
+
+
+
+#### 16.1.2 QLayout
+
+
+
+#### 16.1.3 QFormLayout
+
+
+
+#### 16.1.4 QSpacerItem
+
+
+
+#### 16.1.5 QBoxLayout
+
+
 
 #### QVBoxLayout
 
@@ -16992,23 +17691,45 @@ window->show();
 
 另请参阅 QHBoxLayout、QGridLayout、QStackedLayout、布局管理和基本布局示例。
 
-## 事件
+### 16.2 事件
 
-### QCloseEvent
-
-
-
-### QMouseEvent
+#### 16.2.1 QCloseEvent
 
 
 
-### 
+#### 16.2.2 QShowEvent
+
+
+
+#### 16.2.3 QPaintEvent
+
+
+
+#### 16.2.4 mouseMoveEvent
+
+
+
+#### 16.2.5 mouseReleaseEvent
+
+
+
+#### 16.2.6 mousePressEvent
+
+
+
+#### 16.2.7 keyPressEvent
+
+
+
+#### 16.2.8 keyReleaseEvent
+
+
+
+
 
 
 
 ## 串口通信
-
-
 
 ### QtSerialPort/QSerialPort
 

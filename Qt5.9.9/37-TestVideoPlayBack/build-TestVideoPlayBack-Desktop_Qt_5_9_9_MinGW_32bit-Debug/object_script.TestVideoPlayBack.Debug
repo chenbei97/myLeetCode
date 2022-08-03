@@ -1,0 +1,14 @@
+INPUT(
+./debug\graphicsVideoItemBased.o
+./debug\main.o
+./debug\TestVideoPlayBack.o
+./debug\myVideoWidget.o
+./debug\operateCamera.o
+./debug\videoWidgetBased.o
+./debug\qrc_images.o
+./debug\moc_TestVideoPlayBack.o
+./debug\moc_graphicsVideoItemBased.o
+./debug\moc_myVideoWidget.o
+./debug\moc_operateCamera.o
+./debug\moc_videoWidgetBased.o
+);
