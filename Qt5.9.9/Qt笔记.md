@@ -17678,7 +17678,36 @@ TRANSLATIONS = Project_cn.ts \
 	Project_en.ts
 ```
 
+使用**工具-外部-Qt语言家-更新ts文件**就可以生成，没有的话会自动创建。之后ts文件要用linguist工具打开，然后逐个翻译好保存即可，最后同样**工具-外部-Qt语言家-发布ts文件生成qm文件**。**注意qm文件必须创建资源文件引入，然后调用，否则尝试过不能切换多语言**！！！具体的例子见[38-TestTRTranslation](38-TestTRTranslation)。
 
+核心函数示例。
+
+```c++
+//中文界面
+void TestTRTranslation::on_actLang_CN_triggered()
+{
+    qApp->removeTranslator(trans);
+    delete trans;
+    trans=new QTranslator; // 创建新的
+    trans->load(":/TestTRTranslation_cn.qm"); // TestTRTranslation
+    qApp->installTranslator(trans); // 安装
+    ui->retranslateUi(this);
+    QSettings settings("WWB-Qt",QCoreApplication::applicationName()); //注册表键组
+    settings.setValue("Language","CN"); //界面语言，汉语
+}
+//英文界面
+void TestTRTranslation::on_actLang_EN_triggered()
+{
+    qApp->removeTranslator(trans);
+    delete trans;
+    trans=new QTranslator; // 创建新的
+    trans->load(":/TestTRTranslation_en.qm"); // TestTRTranslation
+    qApp->installTranslator(trans); // 安装
+    ui->retranslateUi(this);
+    QSettings settings("WWB-Qt",QCoreApplication::applicationName()); //注册表键组
+    settings.setValue("Language","EN"); //界面语言，英语
+}
+```
 
 ### 15.2 自定义样式表
 
@@ -17693,6 +17722,12 @@ TRANSLATIONS = Project_cn.ts \
 
 
 ### 15.5 本章数据类型
+
+#### 15.5.1 QTranslator
+
+
+
+#### 15.5.2 QSettings
 
 
 
