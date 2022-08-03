@@ -1,0 +1,13 @@
+INPUT(
+./debug\main.o
+./debug\TestTRTranslation.o
+./debug\qwdialogheaders.o
+./debug\qwdialoglocate.o
+./debug\qwdialogsize.o
+./debug\qrc_images.o
+./debug\qrc_qmres.o
+./debug\moc_TestTRTranslation.o
+./debug\moc_qwdialogheaders.o
+./debug\moc_qwdialoglocate.o
+./debug\moc_qwdialogsize.o
+);

@@ -16742,6 +16742,8 @@ void stateChanged(QAudio::State state);
 
 视频播放有2个用于播放视频的组件可以使用，即QVideoWidget和QGraphicsVideoItem。
 
+例子可见[37-TestVideoPlayBack](37-TestVideoPlayBack)。
+
 #### 14.3.1 QVideoWidget
 
 QVideoWidget 类提供了一个展示由媒体对象生成的视频的小部件。
@@ -16895,6 +16897,8 @@ camera->start();
 ```
 
 ### 14.4 摄像头使用
+
+例子可见[37-TestVideoPlayBack](37-TestVideoPlayBack)。
 
 #### 14.4.1 QCameraInfo
 
@@ -17621,6 +17625,58 @@ void setSampleType(QAudioFormat::SampleType sampleType);
 ## 15. 应用程序设计辅助功能
 
 ### 15.1 多语言界面
+
+开发的时候注意每一个用户可见的字符串都用tr()封装，然后再UI设计器可视化窗体也要统一为一种语言，以便Qt提取界面字符串用于生成翻译资源文件。
+
+之后在项目配置文件中设需要导出的翻译文件(.ts)文件，使用lupdate工具扫描项目文件中需要反应的字符串，并生成翻译文件。
+
+然后使用Qt的Linguist程序打开生成的翻译文件，翻译后使用lrelease工具编译翻译好的文件，生成的是.qm文件。在应用程序中调用不同的qm文件就会实现不同的语言界面。
+
+tr函数是个静态函数，使用了Q_OBJECT宏定义的类都可使用或者使用Q_DECLARE_TR_FUNCTIONS宏把tr函数添加到类中后直接使用。其函数原型为：
+
+```c++
+QString QObject::tr(const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1)；
+```
+
+返回 sourceText 的翻译版本，可选地基于消歧字符串和包含复数的字符串的 n 值；如果没有合适的翻译字符串可用，则返回 QString::fromUtf8(sourceText)。
+
+使用tr函数的一些注意事项：
+
+（1）传递常量字符串而不是变量字符串，否则无法提取出来。
+
+```c++
+QString str = tr("age","年龄");// √
+QString str1 =tr(str);// × 无法提取
+```
+
+（2）若一定要使用字符串变量，则在定义的时候需要使用Qt_TR_NOOP宏进行标记。
+
+```c++
+const char*cities[3]={
+	Qt_TR_NOOP("Beijing"),
+    Qt_TR_NOOP("ShangHai"),
+    Qt_TR_NOOP("TianJin")
+};
+for (int i = 0; i < 4; ++i ) {
+    comboBox->addItem(tr(cities[i]));
+}
+```
+
+（3）不能使用拼接的字符串，应该使用arg占位符。
+
+```c++
+this->statusbar->showMessage(tr("第"+QString::number(row()))+"行"); // ×
+this->statusbar->showMessage(tr("第 %1 行").arg(row()));// √
+```
+
+为了防止某个字符串遗漏，可以在项目文件中使用DEFINES+=Qt_NO_CAST_FROM_ASCII，就可以禁止const char * 到QString的隐式转换，必须使用tr()或者QLatinString封装。
+
+最后还需要使用TRANSLATIONS对翻译文件.ts进行配置，例如一个项目文件夹名称为Project，那么.pr0文件夹就可以这样写，表示中文和英文，文件名称可以任意设计有区分就行。
+
+```c++
+TRANSLATIONS = Project_cn.ts \
+	Project_en.ts
+```
 
 
 
