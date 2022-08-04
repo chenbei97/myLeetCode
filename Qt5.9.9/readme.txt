@@ -105,7 +105,9 @@
 
 38. TestTRTranslation 演示如何使用tr函数,生成ts文件以及使用QtLinguist工具翻译并重新发布成qm文件调用的过程，注意必须qm作为资源文件调用(否则好像无法切换语言)
 
-39. TestQStyle 演示如何使用QStyle创建不同风格样式（此项目用cmake而非qmake构建）
+39. TestQStyle 演示如何使用QStyle创建不同风格样式(此项目用cmake而非qmake构建)
+
+40. ApplicationRelease 演示了如何使用windeployqt发布程序,windeployqt必须和编译项目的版本一致(这里都是mingw32)
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 

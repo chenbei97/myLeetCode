@@ -1,0 +1,3 @@
+以37-TestVideoPlayBack\TestVideoPlayBack的项目为例
+
+发布Mingw32bit下的release的发布版本，videoPlayer.exe可以直接执行，即使电脑没有Qt软件
