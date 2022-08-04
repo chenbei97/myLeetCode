@@ -1160,6 +1160,30 @@ C:\Users\Lenovo\AppData\Roaming\MathWorks\MATLAB\R2022a
 D:\MatlabProjects
 ```
 
+## 安装setup-factory
+
+这个工具用来打包生成安装文件exe的。
+
+下载地址：[Setup Factory 下载并安装 | Windows (dailydownloaded.com)](http://windows.dailydownloaded.com/zh/developer-tools/software-installation-tools/52686-setup-factory-download-install)
+
+使用教程：[(90条消息) 安装包制作工具 SetupFactory 详解_全程站着的攻城师的博客-CSDN博客_安装包制作工具](https://blog.csdn.net/it1988888/article/details/108859642)
+
+## 安装Dependency Walker
+
+用来查看可执行文件依赖关系的工具。
+
+下载地址：[Dependency Walker (depends.exe) Home Page](http://www.dependencywalker.com/)
+
+## 安装LAVFilters
+
+这个是为了解决Qt使用视频播放组件时格式不兼容的问题。
+
+下载地址：http://files.1f0.de/lavf/LAVFilters-0.65.exe
+
+参考链接1：[Qt音乐播放器播放不了音乐并出现DirectShowPlayerService::doRender: Unresolved error code0x80040266](https://blog.csdn.net/mmmmmmyy/article/details/81877233?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~default-1-81877233-blog-105031139.pc_relevant_vip_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~default-1-81877233-blog-105031139.pc_relevant_vip_default&utm_relevant_index=2)
+
+参考链接2：[qt无法播放视频DirectShowPlayerService::doRender: Unresolved error code 0x80040266](https://blog.csdn.net/weixin_44228194/article/details/105031139)
+
 ## VSCode配置
 
 下载地址：[Visual Studio Code - Code Editing. Redefined](https://code.visualstudio.com/)

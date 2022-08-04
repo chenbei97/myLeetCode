@@ -22,6 +22,9 @@
     pycharm配置qt
 安装Visio
 安装Matlab
+安装setup-factory
+安装Dependency Walker
+安装LAVFilters
 VSCode配置
     Python环境配置
     C++配置
