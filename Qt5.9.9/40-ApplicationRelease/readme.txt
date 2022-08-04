@@ -1,3 +1,16 @@
 以37-TestVideoPlayBack\TestVideoPlayBack的项目为例
 
 发布Mingw32bit下的release的发布版本，videoPlayer.exe可以直接执行，即使电脑没有Qt软件
+
+这个简易的发布版本就在videoPlayerEXE下，可以看到所有的依赖共享库和可执行文件videoPlayer.exe
+
+而sepUpFactory制作可以制作setup.exe，也就是可以安装的那种，因为最后打包的大小又50MB那么大
+
+所以无法上传至Github，只是保存了一个suf后缀文件，这个就是制作安装文件时候生成的文件，可以用setupFactory打开
+
+打开的图片文件可见setUpFactoryTrial.jpg，生成的exe文件可在百度网盘下载
+
+链接：https://pan.baidu.com/s/1drLEQp4i0Q07XOuPfCmlXA 
+提取码：tjpf
+
+exe安装过程的图片可见install1.jpg和install2.jpg

@@ -18075,6 +18075,10 @@ windeployqt videoPlayer.exe
 
 [5. Package Directory | Qt Installer Framework Manual](https://doc.qt.io/qtinstallerframework/ifw-component-description.html#package-information-file-syntax)
 
+也可以使用setUpFactory打包，[下载地址](http://windows.dailydownloaded.com/zh/developer-tools/software-installation-tools/52686-setup-factory-download-install)，[使用教程](https://blog.csdn.net/it1988888/article/details/108859642)。
+
+Qt程序发布的例子可见[40-ApplicationRelease](40-ApplicationRelease)。
+
 ### 15.5 本章数据类型
 
 #### 15.5.1 QTranslator
