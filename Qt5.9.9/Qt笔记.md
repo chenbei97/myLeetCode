@@ -18035,13 +18035,51 @@ QApplication::style()->metaObject()->className();
 
 ### 15.4 Qt应用程序发布
 
+一般使用共享库的方式发布程序，这样有利于应用程序文件小型化，且更新时不会都需要重新编译发布，如果更新插件就只需要更新插件程序，也可以单独更新共享库。
 
+Qt自带的发布工具是windeployqt.exe，在各编译器版本的bin文件夹下。在终端使用此工具的语法是：
+
+```powershell
+windeployqt [options] [files]
+```
+
+options是一些选项设置，一般使用缺省即可，files则是需要发布文件的应用程序文件名。
+
+使用此工具之前，先把该bin文件夹路径添加到系统的环境变量中，否则无法全局使用。
+
+然后记得使用Qt自带的终端，和编译项目使用的编译器一致，这里是Mingw32bit终端，不要使用win+r+cmd的方式打开终端，否则发布的程序去掉依赖路径后，程序无法正常启动。你可以新建一个文件夹，例如叫videoPlayerSetUp（这里用的是例子是[37-TestVideoPlayBack/TestVideoPlayBack](37-TestVideoPlayBack/TestVideoPlayBack)）,其编译后（这里用的release版本），把exe文件直接复制到新建的文件夹下，改名为videoPlayer.exe。
+
+然后终端cd到这个文件夹下，就可以使用发布工具了。
+
+```powershell
+windeployqt videoPlayer.exe
+```
+
+![windeployqt.jpg](windeployqt.jpg)
+
+ 然后就会生成必须的依赖程序，为了验证没有依赖路径也能运行，需要去掉之前环境变量加的bin路径，再次验证，发现可以运行。
+
+如果想要查看videoPlayer.exe的依赖情况，可以在官网[Dependency Walker (depends.exe) Home Page](http://www.dependencywalker.com/)下载最新版本，然后直接把exe文件拖进去就可以看。
+
+还可以制作安装文件，目前来说，一些常用的制作工具如[针对Windows平台的安装包制作工具汇总](https://www.bilibili.com/read/cv13340689)所说。
+
+这里也提到了可以使用Qt的工具installer framework进行打包，[下载链接](https://download.qt.io/official_releases/qt-installer-framework/)，使用参考链接（我尝试了一下感觉有些复杂暂时放弃，这些链接以后有机会再看）
+
+[1. 使用Qt installer framework制作安装包 ](http://www.manongjc.com/detail/50-ueuqzxnkjqslkic.html)
+
+[2. Qt Installer Framework实战](https://www.cnblogs.com/dyllove98/archive/2013/06/17/3141316.html)
+
+[3. 官方Tutorial: Creating an Installer | Qt Installer Framework Manual](https://doc.qt.io/qtinstallerframework/ifw-tutorial.html)
+
+[4. Configuration File | Qt Installer Framework Manual](https://doc.qt.io/qtinstallerframework/ifw-globalconfig.html)
+
+[5. Package Directory | Qt Installer Framework Manual](https://doc.qt.io/qtinstallerframework/ifw-component-description.html#package-information-file-syntax)
 
 ### 15.5 本章数据类型
 
 #### 15.5.1 QTranslator
 
-
+ 
 
 #### 15.5.2 QSettings
 

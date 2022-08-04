@@ -107,7 +107,7 @@
 
 39. TestQStyle 演示如何使用QStyle创建不同风格样式(此项目用cmake而非qmake构建)
 
-40. ApplicationRelease 演示了如何使用windeployqt发布程序,windeployqt必须和编译项目的版本一致(这里都是mingw32)
+40. ApplicationRelease 演示了如何使用windeployqt发布程序,windeployqt必须和编译项目的版本一致(这里都是mingw32),如何使用免费工具setUpFactory制作安装文件
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
