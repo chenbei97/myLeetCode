@@ -1169,7 +1169,7 @@ QString text() const;
 void setText(const QString&);
 ```
 
-##### 3.1.1.1 字符串转换为其他类型
+##### 3.1.1.1 字符串转换为数据类型
 
 QString可以从**字符串转换为其它数据类型**，常用的转换函数如下。
 
@@ -1185,11 +1185,11 @@ double ToDouble(bool * ok = Q_NULLPTR) const;
 float ToFloat(bool * ok = Q_NULLPTR) const;
 ```
 
-##### 3.1.1.2 其他类型转换为字符串
+##### 3.1.1.2 数据类型转换为字符串
 
 如果是**其他数据类型转为字符串，可以使用4个方法**，其中2个是静态函数，2个是公共成员函数。
 
-静态函数：QString::number()、QString::asprintf()
+静态函数：**QString::number()、QString::asprintf()**
 
 公共成员函数：QString.sprintf()、QString.setNum()
 
@@ -1256,7 +1256,75 @@ i =  120
 i1 =  "120"  i2 =  "120"  i3 =  "120"  i4 =  "120"
 ```
 
-##### 3.1.1.3 进制转换
+##### 3.1.1.3 字符串到字符串
+
+这里涉及常用Local8Bit、Latin1、StdString、Utf8等。
+
+```c++
+//将字符串的 Latin-1 表示形式返回为 QByteArray,如果字符串包含非拉丁语字符，则返回的字节数组未定义。这些字符可能会被隐藏或替换为问号
+QByteArray QString::toLatin1() const;
+
+// 将字符串的本地8位表示形式返回为 QByteArray。如果字符串包含本地8位编码不支持的字符，则返回的字节数组未定义。QTextCodec::codecForLocale() 用于执行从Unicode的转换。如果无法确定语言环境编码，则此函数的作用与 toLatin1() 相同。如果此字符串包含任何无法在语言环境中编码的字符，则返回的字节数组是未定义的。这些字符可能会被其他字符隐藏或替换
+QByteArray QString::toLocal8Bit() const;
+
+// 返回包含在此QString中的数据的std::string 对象。使用toUtf8()函数将Unicode数据转换为8位字符
+std::string QString::toStdString() const;
+
+// 将字符串的UTF-8表示形式返回为QByteArray,UTF-8是一种Unicod 编解码器，可以表示Unicode字符串（如 QString）中的所有字符
+QByteArray QString::toUtf8() const;
+```
+
+一些静态函数。
+
+例如，返回使用 Latin-1 字符串 str 的第一个大小字符初始化的 QString。如果 size 为 -1（默认值），则采用 strlen(str)，其它含义类似。
+
+```c++
+QString fromLatin1(const char *str, int size = -1);
+QString fromLatin1(const QByteArray &str);
+QString fromLocal8Bit(const char *str, int size = -1);
+QString fromLocal8Bit(const QByteArray &str);
+QString fromStdString(const std::string &str);
+QString fromUtf8(const char *str, int size = -1);
+QString fromUtf8(const QByteArray &str);
+```
+
+##### 3.1.1.5 arg占位符函数
+
+返回此字符串的副本，其中编号最小的位置标记替换为字符串 a，即 %1、%2、...、%99。示例用法如下。
+
+```c++
+QString i;           // current file's number
+QString total;       // number of files to process
+QString fileName;    // current file's name
+QString status = QString("Processing file %1 of %2: %3")
+    .arg(i).arg(total).arg(fileName);
+```
+
+```c++
+QString arg(const QString &a, int fieldWidth = 0, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(qulonglong a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(long a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(ulong a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(int a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(uint a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(short a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(ushort a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(double a, int fieldWidth = 0, char format = 'g', int precision = -1, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(char a, int fieldWidth = 0, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(QChar a, int fieldWidth = 0, QChar fillChar = QLatin1Char( ' ' )) const;
+QString arg(qlonglong a, int fieldWidth = 0, int base = 10, QChar fillChar = QLatin1Char( ' ' )) const;
+
+QString arg(const QString &a1, const QString &a2) const
+QString arg(const QString &a1, const QString &a2, const QString &a3) const
+QString arg(const QString &a1, const QString &a2, const QString &a3, const QString &a4) const;
+QString arg(const QString &a1, const QString &a2, const QString &a3, const QString &a4, const QString &a5) const;
+QString arg(const QString &a1, const QString &a2, const QString &a3, const QString &a4, const QString &a5, const QString &a6) const;
+QString arg(const QString &a1, const QString &a2, const QString &a3, const QString &a4, const QString &a5, const QString &a6, const QString &a7) const;
+QString arg(const QString &a1, const QString &a2, const QString &a3, const QString &a4, const QString &a5, const QString &a6, const QString &a7, const QString &a8) const;
+QString arg(const QString &a1, const QString &a2, const QString &a3, const QString &a4, const QString &a5, const QString &a6, const QString &a7, const QString &a8, const QString &a9) const;
+```
+
+##### 3.1.1.6 进制转换
 
 还有**进制转换**，进制转换也是通过number和setNum函数实现。例如下方3个都是进制转换函数。
 
@@ -1271,7 +1339,7 @@ static QString number(int, int base=10);
 QString &setNum(int, int base=10);
 ```
 
-##### 3.1.1.4 常见成员函数
+##### 3.1.1.7 常用成员函数
 
 QString存储字符串使用Unicode，每个字符是16位的QChar，所以可以春初中文字符，且1个汉字算作1个字符
 
@@ -1354,7 +1422,7 @@ QString s1 = s.left(3);
 QString s2 = s.right(4);
 ```
 
-提取以sep作为分隔符的，从start到end端到端的字符串。
+**提取以sep作为分隔符的，从start到end端到端的字符串**。
 
 ```c++
 // 函数原型
@@ -1365,6 +1433,15 @@ s1 = s2.section("，",0,0); // "学生姓名",第1段编号为0 [0,0]
 s1 = s2.section("，",1,1); // "男",第2段编号为1 [1,1]
 s1 = s2.section("，",0,1); // "学生姓名，男",第1-2段编号为0，1 [0,1]
 s1 = s2.section("，",4,4); // "山东",第5段编号为4，[4,4]
+```
+
+**以某种分隔符对字符串进行分割**。
+
+```c++
+QStringList split(const QString &sep, SplitBehavior behavior = KeepEmptyParts, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+QStringList split(QChar sep, SplitBehavior behavior = KeepEmptyParts, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+QStringList split(const QRegExp &rx, SplitBehavior behavior = KeepEmptyParts) const;
+QStringList split(const QRegularExpression &re, SplitBehavior behavior = KeepEmptyParts) const;
 ```
 
 #### 3.1.2 QVariant
@@ -17711,11 +17788,250 @@ void TestTRTranslation::on_actLang_EN_triggered()
 
 ### 15.2 自定义样式表
 
+可以右击窗体，选择改变样式表，就可以进行编辑，语法上和HTML的CSS完全一样。例如
 
+```css
+QWidget{
+	background-color: rgb(0,0,0);
+	color:rgb(255,255,0);
+	font: 12pt "楷体";
+}
+QLineEdit{
+	border: 2px groove gray;
+	border-radius: 5px;
+	padding : 2px 4px;
+	border-color: rgb(12,45,68);
+}
+```
+
+效果是这样的。
+
+![styleSheet.jpg](styleSheet.jpg)
+
+选择器类型有以下几种，所谓选择器就是花括号之前的总起名称，以QPushButton为例。
+
+|     选择器     |           示例            |                      含义                      |
+| :------------: | :-----------------------: | :--------------------------------------------: |
+|   通用选择器   |             *             |                    所有组件                    |
+|   类型选择器   |        QPushButton        |        所有QPushButton类及其子类的组件         |
+|   属性选择器   | QPushButton[flat="false"] | 所有flat属性为false的QPushButton类及其子类组件 |
+|  非子类选择器  |       .QPushButton        |        所有QPushButton组件但不包括子类         |
+|    ID选择器    |     QPushButton#btnOk     |       只用于名称为btnOk的QPushButton实例       |
+| 从属对象选择器 |    QDialog QPushButton    |        QDialog对话框里的所有QPushButton        |
+|  子对象选择器  |   QDialog > QPushButton   |   所有直接从属于QDialog的QPushButton类的实例   |
+
+（1）选择器可以组合使用，这样一个声明可用于多个选择器，例如这些选择器具有的共同属性设置。
+
+```CSS
+QPlainTextEdit,QLineEdit,QPushButton,QCheckBox{
+	color: rgb(255,255,0);
+    background-color: rgb(0,0,0);
+}
+
+QLineEdit[readOnly="ture"],QCheckBox[checked="true"]{ // 只有满足2个条件的实例才设置颜色为红色
+    background-color: rgb(255,0,0)
+}
+```
+
+（2）可以设置动态属性，然后把动态属性满足的进行设置，例如有些字段是必须填的，就可以关联一个属性required，并设定为true，之后，只有为true的才会设置为亮绿色提示需要填。
+
+```CSS
+editName->setProperty("required","true");
+comboxAge->setProperty("required","true");
+checkSex->setProperty("required","true");
+*[required="true"]{
+    background-color: lime
+}
+```
+
+（3）有些组件是组合型的，例如QComboBox的下拉按钮，QSpinBox的上、下按钮，通过选择器的子控件就可以对这些界面元素进行显示效果控制。例如：
+
+```css
+QComboBox::drop-down{
+	image: url(:images/down.bmp); // 给下拉按钮设置资源文件中的down.bmp图片
+}
+QSpinBox::up-button{
+    image: url(:images/up.bmp);
+}
+QSPinBox::down-button{
+    image: url(:images/down.bmp);
+}
+```
+
+（4）选择器可以有很多伪状态，例如激活状态（active）、关闭状态（closed）、选中状态（checked）、只读状态（read-only）、鼠标悬停状态（hover）等，要接在选择器的后边，用冒号隔开。伪状态可以取反，可以组合使用，也可以对子控件使用伪状态。
+
+```CSS
+QLineEdit: hover{
+	background-color: black;
+    color: yellow; //悬停时背景颜色黑色,控件颜色黄色
+}
+QLineEdit:!read-only{
+    background-color: rgb(235,255,251); // 对非只读实例设置
+}
+QCheckBox:hover:checked{ 
+    color: red; // 对悬停且选中状态的实例设置为红色
+}
+QCheckBox::indicator:checked{image: url(:images/checked.bmp);}
+QCheckBox::indicator:unchecked{ image: url(:images/unchecked.bmp); }
+```
+
+（5）组件有各种各样的属性，例如背景（background）可设置颜色yellow、背景颜色（background-color）设置rgb(255,0,0)、边界（border）、间隔（margin）、延展（padding）、最大最小宽度和高度（max-height、min-width）、组件背景图片（border-image）。
+
+这就需要提及组件的盒子模型（可见Qt文档的Customizing Qt Widgets Using Style Sheets 查看）。
+
+![styleSheetBoxModel.jpg](styleSheetBoxModel.jpg)
+
+(5.1) CONTENT是显示内容的矩形区域，关联的属性是min-width,max-width,min-height,max-height可以定义。
+
+```CSS
+QLineEdit{
+	min-width : 50px;
+	max-height: 40px;
+}
+```
+
+(5.2) PADDING是包围CONTENT的矩形区域，关联的属性为padding-top,padding-bottom,padding-left和padding-right定义padding的上下左右宽度。
+
+```CSS
+QLineEdit{
+	padding-top:0px;
+    padding-bottm:10px;
+    padding-left:0px;
+    padding-right:10px;
+}
+// 等价于
+QLineEdit{padding: 0px 10px 0px 10px}
+```
+
+(5.3)Border是边框，关联属性有
+
+border-width：线宽
+
+border-top-width,border-right-width,border-bottom-width,border-left-width
+
+border-color（red,#FF0000,rgba(255, 0, 0, 75%),rgb(255, 0, 0),hsv(60, 255, 255),hsva(240, 255, 255, 75%)）：颜色
+
+border-top-color,border-right-color,border-bottom-color,border-left-color
+
+border-style（dashed,dot-dash,dot-dot-dash,dotted,double,groove,inset ,outset,ridge,solid,none）：线型
+
+border-top-style,border-bottom-style,border-right-style,border-left-style
+
+border-radius：定义边框转角的圆弧半径
+
+border-top-left-radius,border-top-right-radius,border-bottm-right-radius,border-bottom-left-radius
+
+border-image（none,url,repeat）：定义边框的图像
+
+```css
+QLineEdit{
+	border-width: 1px 2px 3px 4px;
+    border-style: solid; 
+    border-color: gray red blue green;
+    border-radius: 10px;
+    padding: 0px 10px
+}
+QPushButton{// 边长60的正方形圆角半径是30时就成了圆形
+    border: 2px groove red;
+    border-radius: 30px;
+    min-width: 60px;
+    min-height: 60px;
+    border-image: url(:images/border.jpg)
+}
+```
+
+(5.4) margin时border之外和父组件之间的空白边距，可以分别定义上下左右的边距大小。关联属性margin,margin-top,margin-bottom,margin-left,margin-right。
+
+缺省时margin、border-width和padding均为0，这样盒子模型就变成了重合的矩形。有关子控件的内容、伪状态的内容、属性的内容可见Qt文档，搜索Qt Style Sheets Reference即可，相关的例子的可见Qt Style Sheets Examples 。
+
+（6）使用样式表的方法。
+
+第一种方法是在窗体设计中设计，但是样式会保存在UI文件中也就是固定的无法重新利用取得换肤的效果，而且需要为每个窗体都设计样式表，重复工作量太大；
+
+第二种方法是使用setStyleSheet函数，这个函数qApp中使用可以为应用程序设置全局样式，或者QWidget::setStyleSheet为一个窗口、对话框或者界面组件进行设置。不过这种方法也不能达到换肤效果。
+
+```c++
+qApp->setStyleSheet("QLineEdit{background:gray}");
+mainWindow->setStyleSheet("QLineEdit{background:gray}");
+lineEdit->setStyleSheet("color:blue;"
+                        "background-color:yellow;"
+                       "selection-color:yellow;"
+                       "selection-background-color:blue;");
+
+```
+
+第三种方法是把样式定义表保存在qss后缀的纯文本文件，然后程序中调用读取文本内容，再调用setStyleSheet函数应用样式。
+
+```c++
+QFile file(":/qss/mystyle.qss");//资源文件
+file.open(QFile::ReadOnly);
+QString stylesheet = QString::fromLatin1(file.readAll());
+qApp->setStyleSheet(stylesheet);
+```
+
+（7）样式的明确性作为优先级的考量。
+
+(7.1) 指定实例的设置比一类实例的设置更明确。
+
+例如这里特定实例btnSave的灰色颜色设置就会覆盖掉统一的红色颜色设置。
+
+```css
+QPushButton#btnSave{color:gray}
+QPushButton{color:red}
+```
+
+(7.2) 具有伪状态的选择器明确性更强。
+
+例如这里，悬停状态时设置为白色，其他时候是红色被覆盖掉。
+
+```css
+QPushButton:hover{color:white}
+QPushButton{color:red}
+```
+
+(7.3) 相同明确性时，按照先后顺序，后边的覆盖前边的。
+
+例如悬停在一个使能的按钮上时，出现的颜色是红色而不是白色，因为使能和悬停明确性相同，就只能按照顺序。
+
+可以更加具体的指出来避免冲突。
+
+```css
+QPushButton:hover{color:white}
+QPushButton:enabled{color:red} // 冲突
+
+QPushButton:hover:enable{color:white} // 不冲突,悬停使能的时候是白色
+QPushButton:enabled{color:red}//其它使能都是红色
+```
+
+父子关系的类也就具有相同的明确性，这种情况尽量避免。
+
+```css
+QPushButton{color:white}
+QAbstractButton{color:red}
+```
+
+(7.4) 样式优先级从组件、父组件、窗口、应用程序依次融合。如果应用程序定义按钮都是红色，窗口定义为蓝色，但是具体的一个按钮是绿色，那么就会按照绿色的情况执行，即选择离自己最近的样式。
 
 ### 15.3 设置界面外观
 
+相同的界面组件在不同的操作系统效果是不同的，可以通过QApplication::style()查看。
 
+QStyle定义了一些子类用于不同的操作系统，例如QWindowStyle和QMacStyle等。
+
+QStyleFactory管理着Qt的内置样式，它有2个静态函数，keys()和create()。keys()返回一个字符串列表，是所在平台支持的QStyle的名称列表；create()根据样式名称字符串创建一个QStyle对象。
+
+```c++
+qDebug()<<a.style(); // 0x196a85d0
+qDebug()<<QStyleFactory::keys(); // ("Windows", "WindowsXP", "WindowsVista", "Fusion")
+```
+
+样式可以使用QApplication的setStyle()函数进行设置。缺省样式的名称也可以获得。
+
+```c++
+QApplication::style()->metaObject()->className();
+```
+
+关于QStyle的使用可见[39-TestQStyle](39-TestQStyle)。
 
 ### 15.4 Qt应用程序发布
 
@@ -17728,6 +18044,14 @@ void TestTRTranslation::on_actLang_EN_triggered()
 
 
 #### 15.5.2 QSettings
+
+
+
+#### 15.5.3 QStyle
+
+
+
+#### 15.5.4 QStyleFactory
 
 
 
