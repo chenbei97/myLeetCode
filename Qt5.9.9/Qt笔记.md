@@ -18083,19 +18083,305 @@ Qt程序发布的例子可见[40-ApplicationRelease](40-ApplicationRelease)。
 
 #### 15.5.1 QTranslator
 
- 
+QTranslator 类为文本输出提供国际化支持。
+此类的对象包含一组从源语言到目标语言的翻译。 QTranslator 提供了在翻译文件中查找翻译的功能。翻译文件是使用 Qt Linguist 创建的。
+QTranslator 最常见的用途是：加载翻译文件，使用 QCoreApplication::installTranslator() 安装它，并通过 QObject::tr() 使用它。下面是一个使用 QTranslator 的 main() 函数示例：
+
+```c++
+QTranslator *trans=Q_NULLPTR;
+QString readSetting();
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    trans=new QTranslator;
+    QString curLang=readSetting(); //读取语言设置
+    qDebug()<<curLang;
+    if (curLang=="EN")
+          trans->load(":/TestTRTranslation_en.qm");
+    else
+         trans->load(":/TestTRTranslation_cn.qm");
+     if (!trans) qDebug()<<"load failed";
+    a.installTranslator(trans);
+    TestTRTranslation w;
+    w.show();
+    return a.exec();
+}
+
+QString readSetting()
+{//从注册表读取上次设置的语言
+    QString organization="WWB-Qt";//用于注册表，
+    QString appName= QCoreApplication::applicationName(); //HKEY_CURRENT_USER/WWB-Qt/appName
+    QSettings settings(organization,appName);//创建
+    QString Language=settings.value("Language","EN").toString();//读取 saved键的值
+    return  Language;
+}
+```
+
+ 在UI中可以控制切换语言，例如两个动作，它们的代码如下。
+
+```c++
+//中文界面
+void TestTRTranslation::on_actLang_CN_triggered()
+{
+    qApp->removeTranslator(trans);
+    delete trans;
+    trans=new QTranslator; // 创建新的
+    trans->load(":/TestTRTranslation_cn.qm"); // TestTRTranslation
+    qApp->installTranslator(trans); // 安装
+    ui->retranslateUi(this);
+    QSettings settings("WWB-Qt",QCoreApplication::applicationName()); //注册表键组
+    settings.setValue("Language","CN"); //界面语言，汉语
+}
+//英文界面
+void TestTRTranslation::on_actLang_EN_triggered()
+{
+    qApp->removeTranslator(trans);
+    delete trans;
+    trans=new QTranslator; // 创建新的
+    trans->load(":/TestTRTranslation_en.qm"); // TestTRTranslation
+    qApp->installTranslator(trans); // 安装
+    ui->retranslateUi(this);
+    QSettings settings("WWB-Qt",QCoreApplication::applicationName()); //注册表键组
+    settings.setValue("Language","EN"); //界面语言，英语
+}
+```
+
+ 成员函数。
+
+```c++
+QTranslator(QObject *parent = Q_NULLPTR);
+virtual bool isEmpty() const;
+// 加载文件名 + 后缀（如果未指定后缀，则为“.qm”），它可以是绝对文件名或相对于目录。如果翻译成功加载，则返回 true；否则返回假
+bool load(const QString &filename, const QString &directory = QString(), const QString &search_delimiters = QString(), const QString &suffix = QString());
+// 加载文件名 + 前缀 + ui 语言名 + 后缀（如果没有指定后缀，则为“.qm”），可以是绝对文件名，也可以是相对于目录的相对文件名。如果翻译成功加载，则返回 true；否则返回假
+bool load(const QLocale &locale, const QString &filename, const QString &prefix = QString(), const QString &directory = QString(), const QString &suffix = QString());
+// 将长度为 len 的 QM 文件数据数据加载到转换器中
+bool load(const uchar *data, int len, const QString &directory = QString());
+// 返回键的翻译（上下文、源文本、消歧）。如果没有找到，也尝试 (context, sourceText, "")。如果仍然失败，则返回一个空字符串
+virtual QString translate(const char *context, const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1) const;
+```
 
 #### 15.5.2 QSettings
 
+QSettings 类提供了与平台无关的持久应用程序设置。
+用户通常希望应用程序在会话中记住其设置（窗口大小和位置、选项等）。此信息通常存储在 Windows 的系统注册表中，以及 macOS 和 iOS 的属性列表文件中。在 Unix 系统上，在没有标准的情况下，许多应用程序（包括 KDE 应用程序）使用 INI 文本文件。
+QSettings 是围绕这些技术的抽象，使您能够以可移植的方式保存和恢复应用程序设置。它还支持自定义存储格式。QSettings 的 API 基于 QVariant，允许您以最少的工作量保存大多数基于值的类型，例如 QString、QRect 和 QImage。如果您只需要一个基于内存的非持久结构，请考虑改用 QMap&lt;QString, QVariant&gt;。
 
+基本用法：创建 QSettings 对象时，您必须传递公司或组织的名称以及应用程序的名称。例如，如果您的产品名为 Star Runner，而您的公司名为 MySoft，您将按如下方式构造 QSettings 对象：
+
+```c++
+QSettings settings("MySoft", "Star Runner");
+```
+
+QSettings 对象可以在堆栈或堆上创建（即使用 new）。构造和销毁 QSettings 对象非常快。
+如果您在应用程序的许多地方使用 QSettings，您可能希望使用 QCoreApplication::setOrganizationName() 和 QCoreApplication::setApplicationName() 指定组织名称和应用程序名称，然后使用默认的 QSettings 构造函数：
+
+```c++
+QCoreApplication::setOrganizationName("MySoft");
+QCoreApplication::setOrganizationDomain("mysoft.com");
+QCoreApplication::setApplicationName("Star Runner");
+...
+QSettings settings;
+```
+
+（这里，我们还指定了组织的 Internet 域。设置 Internet 域时，在 macOS 和 iOS 上使用它而不是组织名称，因为 macOS 和 iOS 应用程序通常使用 Internet 域来标识自己。如果没有设置域，一个假域是从组织名称派生的。有关详细信息，请参阅下面的平台特定说明。） QSettings 存储设置。每个设置都由一个指定设置名称（键）的 QString 和一个存储与键关联的数据的 QVariant 组成。要编写设置，请使用 setValue()。例如：
+
+```c++
+settings.setValue("editor/wrapMargin", 68);
+```
+
+如果已经存在具有相同键的设置，则现有值将被新值覆盖。为了提高效率，更改可能不会立即保存到永久存储中。 （您可以随时调用 sync() 来提交您的更改。）您可以使用 value() 取回设置的值：
+
+```c++
+int margin = settings.value(&quot;editor/wrapMargin&quot;).toInt();
+```
+
+如果没有指定名称的设置，QSettings 返回一个空的 QVariant（可以转换为整数 0）。您可以通过将第二个参数传递给 value() 来指定另一个默认值：
+
+```c++
+int margin = settings.value(&quot;editor/wrapMargin&quot;, 80).toInt();
+```
+
+要测试给定键是否存在，请调用 contains()。要删除与键关联的设置，请调用 remove()。要获取所有键的列表，请调用 allKeys()。要删除所有键，请调用 clear()。
+
+QVariant 和 GUI 类型：因为 QVariant 是 Qt Core 模块的一部分，所以它不能提供对 QColor、QImage 和 QPixmap 等数据类型的转换功能，这些数据类型是 Qt GUI 的一部分。换句话说，QVariant 中没有 toColor()、toImage() 或 toPixmap() 函数。相反，您可以使用 QVariant::value() 或 qVariantValue() 模板函数。例如：
+
+```c++
+QSettings settings("MySoft", "Star Runner");
+QColor color = settings.value("DataPump/bgcolor").value<QColor>();
+```
+
+对于 QVariant 支持的所有数据类型，包括与 GUI 相关的类型，反向转换（例如，从 QColor 到 QVariant）是自动的：
+
+```c++
+QSettings settings("MySoft", "Star Runner");
+QColor color = palette().background().color();
+settings.setValue("DataPump/bgcolor", color);
+```
+
+使用 qRegisterMetaType() 和 qRegisterMetaTypeStreamOperators() 注册的自定义类型可以使用 QSettings 存储。部分和键语法设置键可以包含任何 Unicode 字符。 Windows 注册表和 INI 文件使用不区分大小写的键，而 macOS 和 iOS 上的 CFPreferences API 使用区分大小写的键。为避免可移植性问题，请遵循以下简单规则： 始终使用相同的大小写引用相同的密钥。例如，如果您在代码中的某个地方将某个键称为“文本字体”，则不要在其他地方将其称为“文本字体”。除了大小写外，避免使用相同的键名。例如，如果您有一个名为“MainWindow”的键，请不要尝试将另一个键保存为“mainwindow”。不要在节或键名中使用斜杠（&#39;/&#39; 和 &#39;\&#39;）；反斜杠字符用于分隔子键（见下文）。在 Windows 上，&#39;\&#39; 由 QSettings 转换为 &#39;/&#39;，这使得它们相同。
+您可以使用“/”字符作为分隔符来形成分层键，类似于 Unix 文件路径。例如：
+
+```C++
+settings.setValue("mainwindow/size", win->size());
+settings.setValue("mainwindow/fullScreen", win->isFullScreen());
+settings.setValue("outputpanel/visible", panel->isVisible());
+```
+
+如果要保存或恢复许多具有相同前缀的设置，可以使用 beginGroup() 指定前缀并在末尾调用 endGroup()。这里还是同样的例子，但这次使用了组机制：
+
+```c++
+settings.beginGroup("mainwindow");
+settings.setValue("size", win->size());
+settings.setValue("fullScreen", win->isFullScreen());
+settings.endGroup();
+
+settings.beginGroup("outputpanel");
+settings.setValue("visible", panel->isVisible());
+settings.endGroup();
+```
+
+如果使用 beginGroup() 设置组，则大多数函数的行为都会随之改变。组可以递归设置。
+除了组，QSettings 还支持“数组”概念。有关详细信息，请参阅 beginReadArray() 和 beginWriteArray()。
+
+##### 枚举类型
+
+此枚举类型指定 QSettings 使用的存储格式。
+
+```c++
+enum QSettings::Format{
+    QSettings::NativeFormat//使用最适合平台的存储格式存储设置。在 Windows 上，这意味着系统注册表；在 macOS 和 iOS 上，这意味着 CFPreferences API；在 Unix 上，这意味着 INI 格式的文本配置文件
+    QSettings::Registry32Format//仅限 Windows：从在 64 位 Windows 上运行的 64 位应用程序显式访问 32 位系统注册表。在 32 位 Windows 上或从 64 位 Windows 上的 32 位应用程序中，这与指定 NativeFormat 相同。这个枚举值是在 Qt 5.7 中添加的
+    QSettings::Registry64Format//仅限 Windows：从 64 位 Windows 上运行的 32 位应用程序显式访问 64 位系统注册表。在 32 位 Windows 上或从 64 位 Windows 上的 64 位应用程序中，这与指定 NativeFormat 相同。这个枚举值是在 Qt 5.7 中添加的
+    QSettings::IniFormat//将设置存储在 INI 文件中
+    QSettings::InvalidFormat//registerFormat() 返回的特殊值
+}
+```
+
+此枚举指定设置是特定于用户还是由同一系统的所有用户共享。
+
+```c++
+enum QSettings::Scope{
+    QSettings::UserScope//将设置存储在特定于当前用户的位置（例如，在用户的主目录中）
+    QSettings::SystemScope//将设置存储在全局位置，以便同一台计算机上的所有用户访问同一组设置
+}
+```
+
+以下状态值是可能的：
+
+```c++
+enum QSettings::Status{
+    QSettings::NoError//
+    QSettings::AccessError//发生访问错误（例如，试图写入只读文件）
+    QSettings::FormatError//出现格式错误（例如，加载格式错误的 INI 文件）
+}
+```
+
+##### 成员函数
+
+```c++
+QSettings(const QString &organization, const QString &application = QString(), QObject *parent = Q_NULLPTR);
+QSettings(Scope scope, const QString &organization, const QString &application = QString(), QObject *parent = Q_NULLPTR);
+QSettings(Format format, Scope scope, const QString &organization, const QString &application = QString(), QObject *parent = Q_NULLPTR);
+QSettings(const QString &fileName, Format format, QObject *parent = Q_NULLPTR);
+QSettings(QObject *parent = Q_NULLPTR);
+QStringList allKeys() const;
+QString applicationName() const;
+void beginGroup(const QString &prefix);
+int beginReadArray(const QString &prefix);
+void beginWriteArray(const QString &prefix, int size = -1);
+QStringList childGroups() const;
+QStringList childKeys() const;
+void clear();
+bool contains(const QString &key) const;
+void endArray();
+void endGroup();
+bool fallbacksEnabled() const;
+QString fileName() const;
+Format format() const;
+QString group() const;
+QTextCodec *iniCodec() const;
+bool isWritable() const;
+QString organizationName() const;
+void remove(const QString &key);
+Scope scope() const;
+void setArrayIndex(int i);
+void setFallbacksEnabled(bool b);
+void setIniCodec(QTextCodec *codec);
+void setIniCodec(const char *codecName);
+void setValue(const QString &key, const QVariant &value);
+Status status() const;
+void sync();
+QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+```
+
+##### 静态成员函数
+
+```c++
+Format defaultFormat();
+Format registerFormat(const QString &extension, ReadFunc readFunc, WriteFunc writeFunc, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
+void setDefaultFormat(Format format);
+void setPath(Format format, Scope scope, const QString &path);
+```
 
 #### 15.5.3 QStyle
+
+##### 成员函数
+
+```c++
+QStyle();
+virtual ~QStyle();
+int combinedLayoutSpacing(QSizePolicy::ControlTypes controls1, QSizePolicy::ControlTypes controls2, Qt::Orientation orientation, QStyleOption *option = Q_NULLPTR, QWidget *widget = Q_NULLPTR) const;
+virtual void drawComplexControl(ComplexControl control, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual void drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual void drawItemPixmap(QPainter *painter, const QRect &rectangle, int alignment, const QPixmap &pixmap) const;
+virtual void drawItemText(QPainter *painter, const QRect &rectangle, int alignment, const QPalette &palette, bool enabled, const QString &text, QPalette::ColorRole textRole = QPalette::NoRole) const;
+virtual void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual QPixmap generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &pixmap, const QStyleOption *option) const = 0;
+virtual SubControl hitTestComplexControl(ComplexControl control, const QStyleOptionComplex *option, const QPoint &position, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual QRect itemPixmapRect(const QRect &rectangle, int alignment, const QPixmap &pixmap) const;
+virtual QRect itemTextRect(const QFontMetrics &metrics, const QRect &rectangle, int alignment, bool enabled, const QString &text) const;
+virtual int layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption *option = Q_NULLPTR, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual int pixelMetric(PixelMetric metric, const QStyleOption *option = Q_NULLPTR, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual void polish(QWidget *widget);
+virtual void polish(QApplication *application);
+virtual void polish(QPalette &palette);
+const QStyle *proxy() const;
+virtual QSize sizeFromContents(ContentsType type, const QStyleOption *option, const QSize &contentsSize, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = Q_NULLPTR, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual QPalette standardPalette() const;
+virtual int styleHint(StyleHint hint, const QStyleOption *option = Q_NULLPTR, const QWidget *widget = Q_NULLPTR, QStyleHintReturn *returnData = Q_NULLPTR) const = 0;
+virtual QRect subControlRect(ComplexControl control, const QStyleOptionComplex *option, SubControl subControl, const QWidget *widget = Q_NULLPTR) const = 0;
+virtual QRect subElementRect(SubElement element, const QStyleOption *option, const; QWidget *widget = Q_NULLPTR) const = 0;
+virtual void unpolish(QWidget *widget);
+virtual void unpolish(QApplication *application);
+```
+
+
+
+##### 静态成员函数
+
+```c++
+QRect alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment, const QSize &size, const QRect &rectangle);
+int sliderPositionFromValue(int min, int max, int logicalValue, int span, bool upsideDown = false);
+int sliderValueFromPosition(int min, int max, int position, int span, bool upsideDown = false);
+Qt::Alignment visualAlignment(Qt::LayoutDirection direction, Qt::Alignment alignment);
+QPoint visualPos(Qt::LayoutDirection direction, const QRect &boundingRectangle, const QPoint &logicalPosition);
+QRect visualRect(Qt::LayoutDirection direction, const QRect &boundingRectangle, const QRect &logicalRectangle);
+```
 
 
 
 #### 15.5.4 QStyleFactory
 
+QStyleFactory 类创建 QStyle 对象。
+QStyle 类是一个抽象基类，它封装了 GUI 的外观。 QStyleFactory 使用 create() 函数和一个标识样式的键创建一个 QStyle 对象。样式要么是内置的，要么是从样式插件动态加载的（参见 QStylePlugin）。
+可以使用 keys() 函数检索有效密钥。通常它们包括“windows”和“fusion”。根据平台，“windowsxp”、“windowsvista”和“macintosh”可能可用。请注意，键不区分大小写。
 
+```c++
+static QStyle *create(const QString &key);//创建并返回一个匹配给定键的 QStyle 对象，如果没有找到匹配的样式则返回 0。内置样式和样式插件中的样式都被查询匹配样式
+static QStringList keys();//返回有效键的列表，即该工厂可以为其创建样式的键
+```
 
 ## 16. 其它
 
