@@ -2509,6 +2509,17 @@ set-ExecutionPolicy RemoteSigned
 get-ExecutionPolicy // 回复RemoteSigned
 ```
 
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser
+A
+Set-ExecutionPolicy -Scope LocalMachine
+A
+```
+
+```powershell
+Get-ExecutionPolicy -List // 查看所有状态
+```
+
 ### win系统重装
 
 参考链接：http://iknow.lenovo.com.cn/detail/dc_199249.html
