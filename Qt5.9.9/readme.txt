@@ -239,13 +239,19 @@ if (file.open(QFile::ReadOnly)) {
         }
         event->accept();
     }
-    5.2 paintEvent():窗口绘制事件,可以用来加入背景图片
-    5.3 showEvent():窗口显示时触发的事件
-    5.4 mouseMoveEvent():鼠标移动事件
-    5.5 mouseReleaseEvent():鼠标键释放事件
-    5.6 mousePressEvent:鼠标键按下事件
-    5.7 keyPressEvent():键盘按键按下事件
-    5.8 keyReleaseEvent():键盘按键释放事件
+    5.2 hideEvent():窗口隐藏事件
+    5.3 paintEvent():窗口绘制事件,可以用来加入背景图片
+    5.4 showEvent():窗口显示时触发的事件
+    5.5 mouseMoveEvent():鼠标移动事件
+    5.6 mouseReleaseEvent():鼠标键释放事件
+    5.7 mousePressEvent():鼠标键单击事件(左键或者右键)
+    5.8 mouseDoubleClickEvent():鼠标双击事件
+    5.9 keyPressEvent():键盘按键按下事件
+    5.10 keyReleaseEvent():键盘按键释放事件
+    5.11 actionEvent():添加工具栏动作事件
+    5.12 resizeEvent():调整窗口大小事件
+    5.13 hoverEvent():悬停事件
+    5.14 timerEvent():定时器事件
 
 4. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
 一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针

@@ -18357,8 +18357,6 @@ virtual void unpolish(QWidget *widget);
 virtual void unpolish(QApplication *application);
 ```
 
-
-
 ##### 静态成员函数
 
 ```c++
@@ -18369,8 +18367,6 @@ Qt::Alignment visualAlignment(Qt::LayoutDirection direction, Qt::Alignment align
 QPoint visualPos(Qt::LayoutDirection direction, const QRect &boundingRectangle, const QPoint &logicalPosition);
 QRect visualRect(Qt::LayoutDirection direction, const QRect &boundingRectangle, const QRect &logicalRectangle);
 ```
-
-
 
 #### 15.5.4 QStyleFactory
 
@@ -18387,27 +18383,420 @@ static QStringList keys();//返回有效键的列表，即该工厂可以为其�
 
 ### 16.1 布局管理
 
-#### 16.1.1 QGridLayout
+#### 16.1.1 QLayout
 
+QLayout 类是几何管理器的基类。
+这是由具体类 **QBoxLayout、QGridLayout、QFormLayout 和 QStackedLayout 继承**的抽象基类。
+对于 QLayout 子类或 QMainWindow 的用户，很少需要使用 QLayout 提供的基本函数，例如 setSizeConstraint() 或 setMenuBar()。有关详细信息，请参阅布局管理。要制作自己的布局管理器，请实现函数 addItem()、sizeHint()、setGeometry()、itemAt() 和 takeAt()。您还应该实现 minimumSize() 以确保如果空间太少，您的布局不会调整为零大小。要支持高度取决于宽度的孩子，请实现 hasHeightForWidth() 和 heightForWidth()。有关实现自定义布局管理器的更多信息，请参阅边框布局和流布局示例。
+删除布局管理器后，几何管理停止。
 
+枚举类型。
 
-#### 16.1.2 QLayout
+这个枚举类型说明了范围如何限制。
 
+```c++
+enum QLayout::SizeConstraint{
+    QLayout::SetDefaultConstraint//最小尺寸默认设置为minimumSize()，除非小部件已经具有最小尺寸
+    QLayout::SetFixedSize//尺寸设置为sizeHint();它根本无法调整大小。
+    QLayout::SetMinimumSize//最小尺寸设置为 minimumSize();它不能更小
+    QLayout::SetMaximumSize//最大尺寸设置为maximumSize();它不能更大
+    QLayout::SetMinAndMaxSize//最小尺寸设置为minimumSize()，最大尺寸设置为maximumSize()
+    QLayout::SetNoConstraint//尺寸不受约束
+}
+```
 
+成员函数。
+
+```c++
+QLayout(QWidget *parent);
+QLayout();
+
+bool activate();//如有必要，重做 parentWidget() 的布局
+void update();//更新 parentWidget() 的布局
+virtual int count() const = 0;//必须在子类中实现以返回布局中的项目数
+virtual int indexOf(QWidget *widget) const;//在此布局中搜索小部件小部件（不包括子布局）
+QRect contentsRect() const;//返回布局周围使用的边距
+
+// 以特定于布局的方式将小部件 w 添加到此布局。此函数使用 addItem()
+void addWidget(QWidget *w);
+// 从布局中删除小部件小部件
+void removeWidget(QWidget *widget);
+// 搜索小部件 from 并将其替换为小部件 to 如果找到。从成功返回包含小部件的布局项。否则返回 0
+QLayoutItem *replaceWidget(QWidget *from, QWidget *to, Qt::FindChildOptions options = Qt::FindChildrenRecursively);
+// 返回此布局的父小部件，如果此布局未安装在任何小部件上，则返回 0
+QWidget *parentWidget() const;
+
+// 在子类中实现以添加项目。如何添加它是特定于每个子类的
+virtual void addItem(QLayoutItem *item) = 0;
+// 从布局中移除布局项目项。调用者有责任删除该项目
+void removeItem(QLayoutItem *item);
+// 必须在子类中实现以从布局中删除索引处的布局项目，并返回该项目。如果没有这样的项目，该函数必须什么都不做并返回0。项目从0开始连续编号。如果一个项目被删除，其他项目将重新编号
+virtual QLayoutItem *takeAt(int index) = 0;
+// 必须在子类中实现以返回索引处的布局项。如果没有这个项目，该函数必须返回0。项目从0开始连续编号。如果一个项目被删除，其他项目将重新编号
+virtual QLayoutItem *itemAt(int index) const = 0;
+
+// 设置对齐方式
+bool setAlignment(QWidget *w, Qt::Alignment alignment);
+bool setAlignment(QLayout *l, Qt::Alignment alignment);
+
+// 设置要在布局周围使用的边距
+void setContentsMargins(int left, int top, int right, int bottom);
+void setContentsMargins(const QMargins &margins);
+QMargins contentsMargins() const;
+void getContentsMargins(int *left, int *top, int *right, int *bottom) const;
+
+// 如果 enable 为 true，则启用此布局，否则将其禁用
+void setEnabled(bool enable);
+bool isEnabled() const;
+
+//告诉几何管理器将菜单栏小部件放置在 parentWidget() 的顶部，在 QWidget::contentsMargins() 之外。所有子小部件都放置在菜单栏的底部边缘下方
+void setMenuBar(QWidget *widget);
+QWidget *menuBar() const;
+
+void setSizeConstraint(SizeConstraint);
+SizeConstraint sizeConstraint() const;
+
+void setSpacing(int);
+int spacing() const;
+```
+
+静态成员函数：返回满足小部件所有尺寸约束的尺寸，包括 heightForWidth() 并且尽可能接近尺寸。
+
+```c++
+static QSize QLayout::closestAcceptableSize(const QWidget *widget, const QSize &size);
+```
+
+#### 16.1.2 QGridLayout
+
+QGridLayout 类在网格中布置小部件。QGridLayout 获取可用的空间（通过其父布局或通过 parentWidget()），将其划分为行和列，并将其管理的每个小部件放入正确的单元格中。
+列和行的行为相同；我们将讨论列，但行也有等效的功能。
+每列都有一个最小宽度和一个拉伸因子。最小宽度是使用 setColumnMinimumWidth() 设置的最大宽度以及该列中每个小部件的最小宽度。拉伸因子是使用 setColumnStretch() 设置的，并确定列将获得多少可用空间超过其必要的最小值。
+
+通常，每个托管小部件或布局都使用 addWidget() 放入自己的单元格中。使用 addItem() 和 addWidget() 的跨行和跨列重载，小部件也可以占据多个单元格。如果这样做，QGridLayout 将猜测如何在列/行上分配大小（基于拉伸因子）。要从布局中删除小部件，请调用 removeWidget()。在小部件上调用 QWidget::hide() 也有效地从布局中删除小部件，直到调用 QWidget::show()。
+下图显示了一个带有五列三行网格的对话框片段（网格以洋红色显示）：
+
+![QGridLayout.jpg](QGridLayout.jpg)
+
+此对话框片段中的第 0、2 和 4 列由 QLabel、QLineEdit 和 QListBox 组成。第 1 列和第 3 列是使用 setColumnMinimumWidth() 制作的占位符。第 0 行包含三个 QLabel 对象，第 1 行包含三个 QLineEdit 对象，第 2 行包含三个 QListBox 对象。我们使用占位符列（1 和 3）来获得列之间的正确空间量。
+请注意，列和行的宽度或高度不同。如果您希望两列具有相同的宽度，您必须自己将它们的最小宽度和拉伸因子设置为相同。您可以使用 setColumnMinimumWidth() 和 setColumnStretch() 来执行此操作。
+如果 QGridLayout 不是顶级布局（即不管理小部件的所有区域和子项），则必须在创建它时将其添加到其父布局，但在对其进行任何操作之前。添加布局的常规方法是在父布局上调用 addLayout()。
+添加布局后，您可以开始使用 addWidget()、addItem() 和 addLayout() 将小部件和其他布局放入网格布局的单元格中。QGridLayout 还包括两个边距宽度：内容边距和间距（）。内容边距是沿 QGridLayout 的四个边的每个保留空间的宽度。间距（）是相邻框之间自动分配的间距的宽度。
+默认内容边距值由样式提供。 Qt 样式指定的默认值对于子窗口小部件是 9，对于窗口是 11。间距默认与顶级布局的边距宽度相同，或与父布局相同。
+
+成员函数。
+
+```c++
+QGridLayout(QWidget *parent);
+QGridLayout();
+// 在位置row、column、spanning rowSpan rows和columnSpan列处添加item，并根据alignment对齐。如果 rowSpan 和/或 columnSpan 为 -1，则项目将分别延伸到底部和/或右侧边缘。布局获取项目的所有权
+void addItem(QLayoutItem *item, int row, int column, int rowSpan = 1, int columnSpan = 1, Qt::Alignment alignment = Qt::Alignment());
+// 将布局放置在网格中的位置（行、列）左上角的位置是 (0, 0)
+void addLayout(QLayout *layout, int row, int column, Qt::Alignment alignment = Qt::Alignment());
+// 此版本将布局布局添加到单元格网格，跨越多行/列。单元格将从行开始，列跨越 rowSpan行和columnSpan列
+void addLayout(QLayout *layout, int row, int column, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment());
+// 将给定的小部件添加到行、列的单元格网格中。默认情况下，左上角的位置是 (0, 0)
+void addWidget(QWidget *widget, int row, int column, Qt::Alignment alignment = Qt::Alignment());
+// 此版本将给定的小部件添加到单元格网格中，跨越多行/列。单元格将从 fromRow 开始，fromColumn 跨越 rowSpan 行和 columnSpan 列。小部件将具有给定的对齐方式
+void addWidget(QWidget *widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment());
+
+// 返回网格中具有行行和列的单元格的几何形状。如果行或列在网格之外，则返回无效矩形
+QRect cellRect(int row, int column) const;
+
+// 返回具有给定索引的项目的位置信息
+void getItemPosition(int index, int *row, int *column, int *rowSpan, int *columnSpan) const;
+// 返回占据单元格（行、列）的布局项，如果单元格为空，则返回 0
+QLayoutItem *itemAtPosition(int row, int column) const;
+
+// 返回此网格中的行列数
+int columnCount() const;
+int rowCount() const;
+
+// 设置和返回行列的拉伸因子
+void setColumnStretch(int column, int stretch);
+void setRowStretch(int row, int stretch);
+int rowStretch(int row) const;
+int columnStretch(int column) const;
+
+// 设置和返回最小行列间距
+void setRowMinimumHeight(int row, int minSize);
+int rowMinimumHeight(int row) const;
+void setColumnMinimumWidth(int column, int minSize);
+int columnMinimumWidth(int column) const;
+
+// 此属性保存并排布局的小部件之间的间距
+void setHorizontalSpacing(int spacing);
+int horizontalSpacing() const;
+// 此属性保存在彼此顶部布局的小部件之间的间距
+void setVerticalSpacing(int spacing);
+int verticalSpacing() const;
+
+// 设置和返回用于网格原点的角，即位置 (0, 0)
+void setOriginCorner(Qt::Corner corner);
+Qt::Corner originCorner() const;
+
+// 设置垂直和水平间距都为spacing
+void setSpacing(int spacing);
+int spacing() const;
+```
 
 #### 16.1.3 QFormLayout
 
+QFormLayout 类管理输入小部件的形式及其相关标签。
+QFormLayout 是一个方便的布局类，它以两列形式布置其子项。左列由标签组成，右列由“字段”小部件（行编辑器、旋转框等）组成。传统上，这种两列表单布局是使用 QGridLayout 实现的。 QFormLayout 是一种更高级别的替代方案，
+采用 QString 和 QWidget * 的 addRow() 重载在幕后创建一个 QLabel 并自动设置它的伙伴。然后我们可以这样写代码：
 
+```c++
+QFormLayout *formLayout = new QFormLayout;
+formLayout->addRow(tr("&Name:"), nameLineEdit);
+formLayout->addRow(tr("&Email:"), emailLineEdit);
+formLayout->addRow(tr("&Age:"), ageSpinBox);
+setLayout(formLayout);
+```
 
-#### 16.1.4 QSpacerItem
+将此与使用 QGridLayout 编写的以下代码进行比较：
 
+```c++
+nameLabel = new QLabel(tr("&Name:"));
+nameLabel->setBuddy(nameLineEdit);//需要设置伙伴关系
 
+emailLabel = new QLabel(tr("&Name:"));
+emailLabel->setBuddy(emailLineEdit);
+
+ageLabel = new QLabel(tr("&Name:"));
+ageLabel->setBuddy(ageSpinBox);
+
+QGridLayout *gridLayout = new QGridLayout;
+gridLayout->addWidget(nameLabel, 0, 0);
+gridLayout->addWidget(nameLineEdit, 0, 1);
+gridLayout->addWidget(emailLabel, 1, 0);
+gridLayout->addWidget(emailLineEdit, 1, 1);
+gridLayout->addWidget(ageLabel, 2, 0);
+gridLayout->addWidget(ageSpinBox, 2, 1);
+setLayout(gridLayout);
+```
+
+下图显示了不同样式的默认外观。
+
+![formLayout.jpg](formLayout.jpg)
+
+也可以通过调用 setLabelAlignment()、setFormAlignment()、setFieldGrowthPolicy() 和 setRowWrapPolicy() 单独覆盖表单样式。例如，要在所有平台上模拟 QMacStyle 的表单布局外观，但带有左对齐标签，您可以编写：
+
+```c++
+formLayout->setRowWrapPolicy(QFormLayout::DontWrapRows);
+formLayout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+formLayout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
+formLayout->setLabelAlignment(Qt::AlignLeft);
+```
+
+此枚举指定可用于控制表单字段增长方式的不同策略。
+
+```c++
+enum QFormLayout::FieldGrowthPolicy{
+    QFormLayout::FieldsStayAtSizeHint//这些字段永远不会超出其有效大小提示。这是QMacStyle默认设置
+    QFormLayout::ExpandingFieldsGrow//水平大小策略为 Expanding 或 MinimumExpanding 的字段将增长以填满可用空间。其他字段不会超出其有效大小提示。这是 Plastique 的默认策略
+    QFormLayout::AllNonFixedFieldsGrow//具有允许它们增长的大小策略的所有字段都将增长以填充可用空间。这是大多数样式的默认策略
+}
+```
+
+此枚举指定可能连续出现的小部件（或其他布局项）的类型。
+
+```c++
+enum QFormLayout::ItemRole{ 
+    QFormLayout::LabelRole//标签小部件
+    QFormLayout::FieldRole//字段小部件
+    QFormLayout::SpanningRole//跨越标签和字段列的小部件
+}
+```
+
+此枚举指定可用于控制表单行换行方式的不同策略。
+
+```c++
+enum QFormLayout::RowWrapPolicy{
+    QFormLayout::DontWrapRows//字段总是布置在其标签旁边。这是除QtExtended样式之外的默认策略
+    QFormLayout::WrapLongRows//标签有足够的水平空间来容纳最宽的标签，其余的空间给字段。如果字段对的最小大小大于可用空间，则该字段将换行到下一行。这是 Qt 扩展样式的默认策略
+    QFormLayout::WrapAllRows//字段始终位于其标签下方
+}
+```
+
+成员函数。
+
+```c++
+QFormLayout(QWidget *parent = Q_NULLPTR);
+void addRow(QWidget *label, QWidget *field);//使用给定的标签和字段在此表单布局的底部添加一个新行
+void addRow(QWidget *label, QLayout *field);
+void addRow(const QString &labelText, QWidget *field);
+void addRow(const QString &labelText, QLayout *field);
+void addRow(QWidget *widget);
+void addRow(QLayout *layout);
+void insertRow(int row, QWidget *label, QWidget *field);
+void insertRow(int row, QWidget *label, QLayout *field);
+void insertRow(int row, const QString &labelText, QWidget *field);
+void insertRow(int row, const QString &labelText, QLayout *field);
+void insertRow(int row, QWidget *widget);
+void insertRow(int row, QLayout *layout);
+void removeRow(int row);
+void removeRow(QWidget *widget);
+void removeRow(QLayout *layout);
+TakeRowResult takeRow(int row);
+TakeRowResult takeRow(QWidget *widget);
+TakeRowResult takeRow(QLayout *layout);
+int rowCount() const;
+// 此属性保存表单行换行的方式
+void setRowWrapPolicy(RowWrapPolicy policy);
+RowWrapPolicy rowWrapPolicy() const;
+
+void setItem(int row, ItemRole role, QLayoutItem *item);
+void setLabelAlignment(Qt::Alignment alignment);
+void setLayout(int row, ItemRole role, QLayout *layout);
+void setWidget(int row, ItemRole role, QWidget *widget);
+// 在指定索引处检索项目的行和角色（列）。如果索引超出范围，*rowPtr 设置为 -1；否则，该行存储在 *rowPtr 中，而角色存储在 *rolePtr 中
+void getItemPosition(int index, int *rowPtr, ItemRole *rolePtr) const;
+// 检索指定子布局的行和角色（列）。如果布局不在表单布局中，*rowPtr 设置为 -1；否则，该行存储在 *rowPtr 中，而角色存储在 *rolePtr 中
+void getLayoutPosition(QLayout *layout, int *rowPtr, ItemRole *rolePtr) const;
+// 检索布局中指定小部件的行和角色（列）。如果小部件不在布局中，*rowPtr 设置为 -1；否则，该行存储在 *rowPtr 中，而角色存储在 *rolePtr 中
+void getWidgetPosition(QWidget *widget, int *rowPtr, ItemRole *rolePtr) const;
+// 此属性保存标签的水平对齐方式
+Qt::Alignment labelAlignment() const;
+// 返回给定行中具有指定角色（列）的布局项。如果没有这样的项目，则返回 0
+QLayoutItem *itemAt(int row, ItemRole role) const;
+// 返回与给定字段关联的标签
+QWidget *labelForField(QWidget *field) const;
+QWidget *labelForField(QLayout *field) const;
+
+// 此属性保存表单字段增长的方式
+void setFieldGrowthPolicy(FieldGrowthPolicy policy);
+FieldGrowthPolicy fieldGrowthPolicy() const;
+// 此属性保存表单布局内容在布局几何中的对齐方式
+void setFormAlignment(Qt::Alignment alignment);
+Qt::Alignment formAlignment() const;
+// 设置垂直水平间距
+void setSpacing(int spacing);
+int spacing() const;
+void setVerticalSpacing(int spacing);
+int verticalSpacing() const;
+void setHorizontalSpacing(int spacing);
+int horizontalSpacing() const;
+```
+
+#### 16.1.4 QStackedLayout
+
+QStackedLayout 类提供了一堆小部件，其中一次只有一个小部件可见。
+QStackedLayout 可用于创建类似于 QTabWidget 提供的用户界面。还有一个方便的 QStackedWidget 类构建在 QStackedLayout 之上。
+一个 QStackedLayout 可以填充许多子小部件（“页面”）。例如：
+
+```c++
+QWidget *firstPageWidget = new QWidget;
+QWidget *secondPageWidget = new QWidget;
+QWidget *thirdPageWidget = new QWidget;
+
+QStackedLayout *stackedLayout = new QStackedLayout;
+stackedLayout->addWidget(firstPageWidget);
+stackedLayout->addWidget(secondPageWidget);
+stackedLayout->addWidget(thirdPageWidget);
+
+QVBoxLayout *mainLayout = new QVBoxLayout;
+mainLayout->addLayout(stackedLayout);
+setLayout(mainLayout);
+```
+
+QStackedLayout 没有为用户提供切换页面的内在方法。这通常通过存储 QStackedLayout 页面标题的 QComboBox 或 QListWidget 来完成。例如：
+
+```c++
+QComboBox *pageComboBox = new QComboBox;
+pageComboBox->addItem(tr("Page 1"));
+pageComboBox->addItem(tr("Page 2"));
+pageComboBox->addItem(tr("Page 3"));
+connect(pageComboBox, SIGNAL(activated(int)),
+        stackedLayout, SLOT(setCurrentIndex(int)));
+```
+
+填充布局时，小部件被添加到内部列表中。 indexOf() 函数返回该列表中小部件的索引。小部件可以使用 addWidget() 函数添加到列表的末尾，也可以使用 insertWidget() 函数插入到给定索引处。 removeWidget() 函数从布局中删除给定索引处的小部件。布局中包含的小部件数量，可以使用 count() 函数获得。
+widget() 函数返回给定索引位置的小部件。屏幕上显示的小部件的索引由 currentIndex() 给出，并且可以使用 setCurrentIndex() 进行更改。以类似的方式，可以使用 currentWidget() 函数检索当前显示的小部件，并使用 setCurrentWidget() 函数进行更改。每当布局中的当前小部件更改或从布局中删除小部件时，都会分别发出 currentChanged() 和 widgetRemoved() 信号。
+
+成员函数。
+
+```c++
+QStackedLayout();
+QStackedLayout(QWidget *parent);
+QStackedLayout(QLayout *parentLayout);
+int currentIndex() const;//此属性保存可见的小部件的索引位置
+QWidget *currentWidget() const;//返回当前小部件，如果此布局中没有小部件，则返回 0
+QWidget *widget(int index) const;//返回给定索引处的小部件，如果给定位置没有小部件，则返回 0
+int addWidget(QWidget *widget);//将给定的小部件添加到此布局的末尾并返回小部件的索引位置
+int insertWidget(int index, QWidget *widget);//在此 QStackedLayout 中的给定索引处插入给定的小部件。如果 index 超出范围，则附加小部件（在这种情况下，它是返回的小部件的实际索引）
+void setStackingMode(StackingMode stackingMode);//确定处理子小部件的可见性的方式
+StackingMode stackingMode() const;
+```
+
+信号和槽函数。
+
+```c++
+slot void setCurrentIndex(int index);
+slot void setCurrentWidget(QWidget *widget);
+
+signal void currentChanged(int index);
+signal void widgetRemoved(int index);
+```
 
 #### 16.1.5 QBoxLayout
 
+QBoxLayout 类水平或垂直排列子小部件。QBoxLayout 占用它获得的空间（来自其父布局或来自 parentWidget()），将其分成一排框，并使每个托管小部件填充一个框。
 
+如果 QBoxLayout 的方向是 Qt::Horizontal，那么这些框将被放置在一行中，并具有合适的大小。每个小部件（或其他框）将至少获得其最小尺寸，至多获得其最大尺寸。如果 QBoxLayout 的方向是 Qt::Vertical，那么这些框被放置在一列中，同样大小合适。创建 QBoxLayout 的最简单方法是使用便利类之一，例如QHBoxLayout（用于 Qt::Horizontal 框）或 QVBoxLayout（用于 Qt::Vertical 框）。您也可以直接使用 QBoxLayout 构造函数，将其方向指定为 LeftToRight、RightToLeft、TopToBottom 或 BottomToTop。
+如果 QBoxLayout 不是顶级布局（即它没有管理所有小部件的区域和子项），则必须先将其添加到其父布局中，然后才能对其进行任何操作。添加布局的常规方法是调用 parentLayout-&gt;addLayout()。
 
-#### QVBoxLayout
+完成此操作后，您可以使用以下四个函数之一将框添加到 QBoxLayout： addWidget() 将小部件添加到 QBoxLayout 并设置小部件的拉伸因子。 （拉伸因子沿着盒子行。） addSpacing() 创建一个空盒子；这是您用来创建漂亮而宽敞的对话框的功能之一。有关设置边距的方法，请参见下文。addStretch() 创建一个空的、可拉伸的盒子。
+addLayout() 将包含另一个 QLayout 的框添加到行并设置该布局的拉伸因子。
+使用 insertWidget()、insertSpacing()、insertStretch() 或 insertLayout() 在布局中的指定位置插入一个框。
+QBoxLayout 还包括两个边距宽度： setContentsMargins() 设置小部件每一侧的外边框的宽度。这是沿 QBoxLayout 的四个边的每个保留空间的宽度。setSpacing() 设置相邻框之间的宽度。 （您可以使用 addSpacing() 在特定位置获得更多空间。）边距默认值由样式提供。大多数 Qt 样式指定的默认边距是 9 用于子窗口小部件和 11 用于窗口。间距默认与顶级布局的边距宽度相同，或与父布局相同。
+要从布局中删除小部件，请调用 removeWidget()。在小部件上调用 QWidget::hide() 也有效地从布局中删除小部件，直到调用 QWidget::show()。
+但是最常用的是 QVBoxLayout 和 QHBoxLayout 而不是 QBoxLayout ，因为它们方便的构造函数。
+
+此枚举类型用于确定框布局的方向。
+
+```c++
+enum QBoxLayout::Direction{
+    QBoxLayout::LeftToRight //从左到右水平
+    QBoxLayout::RightToLeft //从右到左水平
+    QBoxLayout::TopToBottom //从上到下垂直
+    QBoxLayout::BottomToTop//从下到上垂直
+}
+```
+
+成员函数。
+
+```c++
+QBoxLayout(Direction dir, QWidget *parent = Q_NULLPTR);
+//将布局添加到框的末尾，并带有串行拉伸因子拉伸
+void addLayout(QLayout *layout, int stretch = 0);
+void insertLayout(int index, QLayout *layout, int stretch = 0);
+//将 spacerItem 添加到此框布局的末尾
+void addSpacerItem(QSpacerItem *spacerItem);
+void insertSpacerItem(int index, QSpacerItem *spacerItem);
+void insertItem(int index, QLayoutItem *item);
+// 在此框布局的末尾添加一个大小为 size 的不可拉伸空间（QSpacerItem）。 QBoxLayout 提供默认的边距和间距。此功能增加了额外的空间
+void addSpacing(int size);
+void setSpacing(int spacing);
+void insertSpacing(int index, int size);
+int spacing() const;
+// 将最小尺寸为零且拉伸因子拉伸的可拉伸空间（QSpacerItem）添加到此框布局的末尾
+void addStretch(int stretch = 0);
+void setStretch(int index, int stretch);
+void insertStretch(int index, int stretch = 0);
+int stretch(int index) const;
+bool setStretchFactor(QWidget *widget, int stretch);
+bool setStretchFactor(QLayout *layout, int stretch);
+// 将框的垂直尺寸（例如，如果框是 LeftToRight，则将高度）限制为最小尺寸。其他约束可能会增加限制
+void addStrut(int size);
+// 将小部件添加到此框布局的末尾，具有拉伸和对齐对齐的拉伸因子
+void addWidget(QWidget *widget, int stretch = 0, Qt::Alignment alignment = Qt::Alignment());
+void insertWidget(int index, QWidget *widget, int stretch = 0, Qt::Alignment alignment = Qt::Alignment());
+// 将此布局的方向设置为方向
+void setDirection(Direction direction);
+Direction direction() const;
+```
+
+#### 16.1.6 QVBoxLayout
 
 QVBoxLayout 类垂直排列小部件。
 此类用于构造垂直框布局对象。有关详细信息，请参阅 QBoxLayout。
@@ -18432,45 +18821,459 @@ window->setLayout(layout);
 window->show();
 ```
 
-另请参阅 QHBoxLayout、QGridLayout、QStackedLayout、布局管理和基本布局示例。
+#### 16.1.7 QHBoxLayout
+
+QHBoxLayout 类水平排列小部件。
+此类用于构造水平框布局对象。有关详细信息，请参阅 QBoxLayout。
+该类的最简单用法是这样，首先，我们在布局中创建我们想要的小部件。然后，我们创建 QHBoxLayout 对象并将小部件添加到布局中。最后，我们调用 QWidget::setLayout() 将 QHBoxLayout 对象安装到小部件上。此时，布局中的小部件被重新设置为将窗口作为其父级。
+
+```c++
+QWidget *window = new QWidget;
+QPushButton *button1 = new QPushButton("One");
+QPushButton *button2 = new QPushButton("Two");
+QPushButton *button3 = new QPushButton("Three");
+QPushButton *button4 = new QPushButton("Four");
+QPushButton *button5 = new QPushButton("Five");
+
+QHBoxLayout *layout = new QHBoxLayout;
+layout->addWidget(button1);
+layout->addWidget(button2);
+layout->addWidget(button3);
+layout->addWidget(button4);
+layout->addWidget(button5);
+
+window->setLayout(layout);
+window->show();
+```
 
 ### 16.2 事件
 
-#### 16.2.1 QCloseEvent
+#### 16.2.1 QEvent
 
+QEvent 类是所有事件类的基类。事件对象包含事件参数。
+**Qt 的主事件循环 (QCoreApplication::exec()) 从事件队列中获取本地窗口系统事件，将它们转换为 QEvents，并将转换后的事件发送给 QObjects**。
+通常，事件来自底层窗口系统（spontaneous() 返回 true），但也**可以使用 QCoreApplication::sendEvent() 和 QCoreApplication::postEvent() 手动发送事件（spontaneous() 返回 false）**。QObjects 通过**调用它们的 QObject::event() 函数来接收事件**。该功能可以在子类中重新实现，以自定义事件处理并添加额外的事件类型； QWidget::event() 是一个值得注意的例子。**默认情况下，事件被分派给像 QObject::timerEvent() 和 QWidget::mouseMoveEvent() 这样的事件处理程序**。 QObject::installEventFilter() 允许一个对象拦截发往另一个对象的事件。基本的 QEvent 只包含一个事件类型参数和一个“接受”标志。**接受标志用accept()设置，用ignore()清除**。它是默认设置的，但不要依赖它，因为子类可能会选择在其构造函数中清除它。
+QEvent 的子类包含描述特定事件的附加参数。
 
+##### 枚举类型
 
-#### 16.2.2 QShowEvent
+这个枚举类型定义了 Qt 中的有效事件类型。常用的事件类型和对应的类如下。
 
+```c++
+enum QEvent::Type{
+    QEvent::WindowActivate,//窗口被激活
+    QEvent::WindowBlocked,//该窗口被模式对话框阻止
+    QEvent::WindowDeactivate,//窗口已停用
+    QEvent::WindowIconChange,//窗口的图标已更改
+    QEvent::WindowStateChange,//窗口的状态（最小化、最大化或全屏）已经改变（QWindowStateChangeEvent）
+    QEvent::WindowTitleChange,//窗口标题已更改
+    QEvent::WindowUnblocked,//模态对话框退出后，窗口被解除阻塞
+    QEvent::WinIdChange //此本机小部件的窗口系统标识符已更改
+}
+```
 
+```c++
+enum QEvent::Type{
+    // 动作的新增、改变和移除
+    QEvent::ActionAdded, //QActionEvent
+    QEvent::ActionChanged,//QActionEvent
+    QEvent::ActionRemoved,//QActionEvent
+}
+```
 
-#### 16.2.3 QPaintEvent
+```c++
+enum QEvent::Type{
+    // 光标进入/离开/移动一个部件   
+    QEvent::DragEnter,//QDragEnterEvent
+    QEvent::DragLeave,//QDragLeaveEvent
+    QEvent::DragMove,//QDragMoveEvent
+	QEvent::Drop//一个拖放操作QDropEvent
+}
+```
 
+```c++
+enum QEvent::Type{
+    // 鼠标光标进入/离开/移动一个悬停小部件QHoverEvent
+    QEvent::HoverEnter,
+    QEvent::HoverLeave,
+    QEvent::HoverMove,
+}
+```
 
+```c++
+enum QEvent::Type{
+    // 键盘按下和释放 QKeyEvent
+    QEvent::KeyPress,
+    QEvent::KeyRelease
+}
+```
 
-#### 16.2.4 mouseMoveEvent
+```c++
+enum QEvent::Type{
+    //客户端外鼠标双击、按下、释放和移动 QMouseEvent
+    QEvent::NonClientAreaMouseButtonDblClick,
+    QEvent::NonClientAreaMouseButtonPress,
+    QEvent::NonClientAreaMouseButtonRelease,
+    QEvent::NonClientAreaMouseMove,
+    // 客户端内发生
+    QEvent::MouseButtonDblClick,
+    QEvent::MouseButtonPress,
+    QEvent::MouseButtonRelease,
+    QEvent::MouseMove,
+    QEvent::MouseTrackingChange//鼠标跟踪状态已更改
+}
+```
 
+比较常用的单列事件。
 
+```c++
+enum QEvent::Type{
+    QEvent::ActivationChange,//小部件的顶级窗口激活状态已更改
+    QEvent::Clipboard,//剪贴板内容已更改
+    QEvent::Close,//小部件已关闭QCloseEvent
+    QEvent::DynamicPropertyChange,// 从对象中添加、更改或删除了动态属性
+    QEvent::EnabledChange,//小部件的启用状态已更改
+    QEvent::Hide,//小部件被隐藏（QHideEvent）
+    QEvent::HideToParent,//一个子小部件已被隐藏
+    QEvent::Move,//小部件的位置已更改（QMoveEvent）
+    QEvent::Paint,//绘图事件（QPaintEvent）
+    QEvent::ReadOnlyChange,//Widget 的只读状态已经改变
+    QEvent::Resize,//小部件的大小已更改 (QResizeEvent)
+    QEvent::Show,//小部件显示在屏幕上（QShowEvent）
+    QEvent::StyleChange,//小部件的样式已更改
+    QEvent::ThreadChange,//对象被移动到另一个线程。这是在前一个线程中发送给该对象的最后一个事件。参见 QObject::moveToThread()
+    QEvent::Timer//常规定时器事件（QTimerEvent）
+}
+```
 
-#### 16.2.5 mouseReleaseEvent
+不常用的事件。
 
+```c++
+enum QEvent::Type{
+    // QTabletEvent
+    QEvent::TabletMove,
+    QEvent::TabletPress,
+    QEvent::TabletRelease,
+    QEvent::TabletEnterProximity,
+    QEvent::TabletLeaveProximity,
+    QEvent::TabletTrackingChange
+}
+```
 
+```c++
+enum QEvent::Type{
+    // 关于视图场景的事件
+    QEvent::GraphicsSceneContextMenu,
+    QEvent::GraphicsSceneDragEnter,
+    QEvent::GraphicsSceneDragLeave,
+    QEvent::GraphicsSceneDragMove,
+    QEvent::GraphicsSceneDrop,
+    QEvent::GraphicsSceneHelp,
+    QEvent::GraphicsSceneHoverEnter,
+    QEvent::GraphicsSceneHoverLeave,
+    QEvent::GraphicsSceneHoverMove,
+    QEvent::GraphicsSceneMouseDoubleClick,
+    QEvent::GraphicsSceneMouseMove,
+    QEvent::GraphicsSceneMousePress,
+    QEvent::GraphicsSceneMouseRelease,
+    QEvent::GraphicsSceneMove,
+    QEvent::GraphicsSceneResize,
+    QEvent::GraphicsSceneWheel
+}
+```
 
-#### 16.2.6 mousePressEvent
+```c++
+enum QEvent::Type{
+    // 对象获得/更新/移除了子部件
+    QEvent::ChildAdded, //QChildEvent（不算常用）
+    QEvent::ChildPolished,
+    QEvent::ChildRemoved,
+}
+```
 
+```c++
+enum QEvent::Type{
+    // 应用程序的字体、布局方向、调色板、状态和图标改变（不算常用）
+    QEvent::ApplicationFontChange,
+    QEvent::ApplicationLayoutDirectionChange,
+    QEvent::ApplicationPaletteChange,
+    QEvent::ApplicationStateChange,
+    QEvent::ApplicationWindowIconChange,
+}
+```
 
+```c++
+enum QEvent::Type{
+ 	QEvent::Enter,//鼠标进入小部件的边界（QEnterEvent）
+    QEvent::EnterEditFocus,//编辑器小部件获得编辑焦点。必须定义 QT_KEYPAD_NAVIGATION
+    QEvent::EnterWhatsThisMode//当应用程序输入“这是什么？”时发送到顶层小部件模式
+}
+```
 
-#### 16.2.7 keyPressEvent
+不常用的杂类事件。
 
+```c++
+enum QEvent::Type{
+    QEvent::None,
+    QEvent::CloseSoftwareInputPanel,
+    QEvent::ContentsRectChange,
+    QEvent::ContextMenu,
+    QEvent::CursorChange,
+    QEvent::DeferredDelete,
+    QEvent::Expose,
+    QEvent::FileOpen,
+    QEvent::Gesture,
+    QEvent::GestureOverride,
+    QEvent::GrabKeyboard,
+    QEvent::GrabMouse,
+    QEvent::FocusIn,
+    QEvent::FocusOut,
+    QEvent::FocusAboutToChange,
+    QEvent::FontChange,
+    QEvent::IconDrag,
+    QEvent::IconTextChange,
+    QEvent::InputMethod,
+    QEvent::InputMethodQuery,
+    QEvent::KeyboardLayoutChange,
+    QEvent::LanguageChange,
+    QEvent::LayoutDirectionChange,
+    QEvent::LayoutRequest,
+    QEvent::Leave,
+    QEvent::LeaveEditFocus,
+    QEvent::LeaveWhatsThisMode,
+    QEvent::LocaleChange,
+    QEvent::MacSizeChange,
+    QEvent::MetaCall,
+    QEvent::ModifiedChange,
+    QEvent::NativeGesture,
+    QEvent::OrientationChange,
+    QEvent::PaletteChange,
+    QEvent::ParentAboutToChange,
+    QEvent::ParentChange,
+    QEvent::PlatformPanel,
+    QEvent::PlatformSurface,
+    QEvent::Polish,
+    QEvent::PolishRequest,
+    QEvent::QueryWhatsThis,
+    QEvent::ScrollPrepare,
+    QEvent::Scroll,
+    QEvent::Shortcut,
+    QEvent::RequestSoftwareInputPanel,
+    QEvent::ShortcutOverride,
+    QEvent::ShowToParent,
+    QEvent::SockAct,
+    QEvent::StateMachineSignal,
+    QEvent::StateMachineWrapped,
+    QEvent::StatusTip,
+    QEvent::ToolBarChange,
+    QEvent::ToolTip,
+    QEvent::ToolTipChange,
+    QEvent::TouchBegin,
+    QEvent::TouchCancel,
+    QEvent::TouchEnd,
+    QEvent::TouchUpdate,
+    QEvent::UngrabKeyboard,
+    QEvent::UngrabMouse,
+    QEvent::UpdateLater,
+    QEvent::UpdateRequest,
+    QEvent::WhatsThis,
+    QEvent::WhatsThisClicked,
+    QEvent::Wheel,
+    QEvent::WinEventAct,
+    QEvent::ZOrderChange
+}
+```
 
+##### 成员函数
 
-#### 16.2.8 keyReleaseEvent
+```c++
+QEvent(Type type);
+void accept();//设置事件对象的接受标志，相当于调用 setAccepted(true)
+void ignore();//清除事件对象的接受标志参数，相当于调用 setAccepted(false)
+bool isAccepted() const;//事件对象的接受标志
+void setAccepted(bool accepted);
+bool spontaneous() const;//如果事件源自应用程序外部（系统事件），则返回 true；否则返回false
+Type type() const;//返回事件类型
+static int registerEventType(int hint = -1);//注册并返回自定义事件类型。如果提供的提示可用，将使用它，否则它将返回尚未注册的 QEvent::User 和 QEvent::MaxUser 之间的值。如果它的值不在 QEvent::User 和 QEvent::MaxUser 之间，则忽略该提示
+```
 
+#### 16.2.2 QCloseEvent
 
+QCloseEvent 类包含描述关闭事件的参数。
+关闭事件被发送到用户想要关闭的小部件，通常通过从窗口菜单中选择“关闭”，或者通过单击 X 标题栏按钮。当您调用 QWidget::close() 以编程方式关闭小部件时，它们也会发送。
+关闭事件包含一个标志，指示接收者是否希望小部件关闭。当一个小部件接受关闭事件时，它会被隐藏（如果它是使用 Qt::WA_DeleteOnClose 标志创建的，则会被销毁）。如果它拒绝接受关闭事件，则不会发生任何事情。 （在 X11 下，窗口管理器可能会强制关闭窗口；但在撰写本文时，我们还不知道有任何窗口管理器会这样做。）事件处理程序 **QWidget::closeEvent() 接收关闭事件**。此事件处理程序的默认实现接受关闭事件。如果您不希望您的小部件被隐藏，或者想要一些特殊处理，您应该重新实现事件处理程序并忽略（）事件。
+Application 示例中的 closeEvent() 显示了一个关闭事件处理程序，该处理程序询问是否在关闭之前保存文档。
+如果您**希望在关闭时删除小部件，请使用 Qt::WA_DeleteOnClose 标志创建它**。这对于多窗口应用程序中的独立顶级窗口非常有用。**当 QObjects 被删除时，它们会发出 destroy() 信号**。**如果最后一个顶级窗口关闭，则发出 QGuiApplication::lastWindowClosed() 信号**。如果事件的接收者同意关闭小部件，isAccepted() 函数将返回 true；调用accept() 同意关闭小部件，如果此事件的接收者不希望小部件关闭，则调用ignore()。
+另见 QWidget::close()、QWidget::hide()、QObject::destroyed()、QCoreApplication::exec()、QCoreApplication::quit() 和 QGuiApplication::lastWindowClosed()。
 
+##### 16.2.2.1 closeEvent
 
+#### 16.2.3 QHideEvent
 
+QHideEvent 类提供了一个在隐藏小部件后发送的事件。
+**此事件在 QWidget::hide() 返回之前发送**，并且在用户隐藏（图标化）顶级窗口时发送。
+如果自发() 为真，则事件源自应用程序外部。在这种情况下，用户使用窗口管理器控件隐藏窗口，方法是图标化窗口或切换到窗口不可见的另一个虚拟桌面。窗口将被隐藏但不会被撤回。如果窗口被图标化，QWidget::isMinimized() 返回真。
 
+##### 16.2.3.1 hideEvent
+
+#### 16.2.4 QShowEvent
+
+QShowEvent 类提供了一个在显示小部件时发送的事件。
+有两种显示事件：由窗口系统引起的显示事件（自发）和内部显示事件。 Spontaneous (QEvent::spontaneous()) 显示事件在窗口系统显示窗口之后发送；当顶层窗口在被图标化后重新显示时，它们也会被发送。内部显示事件在小部件变得可见之前交付。
+
+##### 16.2.4.1 showEvent
+
+#### 16.2.5 QMouseEvent
+
+QMouseEvent 类包含描述鼠标事件的参数。
+当在**小部件内按下或释放鼠标按钮或移动鼠标光标时，会发生鼠标事件**。
+**鼠标移动事件只会在按下鼠标按钮时发生，除非使用 QWidget::setMouseTracking() 启用了鼠标跟踪**。
+当在小部件内按下鼠标按钮时，Qt 会自动抓取鼠标；小部件将继续接收鼠标事件，直到最后一个鼠标按钮被释放。如果小部件未处理鼠标事件应该调用 ignore()。**函数 pos()、x() 和 y() 给出了相对于接收鼠标事件的小部件的光标位置**。如果您因鼠标事件而移动小部件，请使用 globalPos() 返回的全局位置来避免晃动。**QWidget::setEnabled() 函数可用于启用或禁用小部件的鼠标和键盘事件**。重新实现 QWidget 事件处理程序，**QWidget::mousePressEvent()、QWidget::mouseReleaseEvent()、QWidget::mouseDoubleClickEvent() 和 QWidget::mouseMoveEvent()** 以在您自己的小部件中接收鼠标事件。
+
+成员函数。
+
+```c++
+Qt::MouseButton button() const;//返回导致事件的按钮,请注意鼠标移动事件的返回值始终是 Qt::NoButton
+Qt::MouseButtons buttons() const;//返回事件生成时的按钮状态。按钮状态是使用 OR 运算符的 Qt::LeftButton、Qt::RightButton、Qt::MidButton 的组合。对于鼠标移动事件，这是所有按下的按钮。对于鼠标按下和双击事件，这包括导致事件的按钮。对于鼠标释放事件，这不包括导致事件的按钮
+Qt::MouseEventFlags flags() const;//返回鼠标事件标志。鼠标事件标志提供有关鼠标事件的附加信息。
+QPoint globalPos() const;//返回事件发生时鼠标光标的全局位置
+int globalX() const;//返回事件发生时鼠标光标的全局 x 位置
+int globalY() const;//返回事件发生时鼠标光标的全局 y 位置
+const QPointF &localPos() const;//以 QPointF 形式返回鼠标光标的位置，相对于接收事件的小部件或项目。如果您因鼠标事件而移动小部件，请使用 screenPos() 返回的屏幕位置来避免晃动
+QPoint pos() const;;//返回鼠标光标的位置，相对于接收事件的小部件。如果您因鼠标事件而移动小部件，请使用 globalPos() 返回的全局位置来避免晃动。
+const QPointF &screenPos() const;//以 PointF 形式返回鼠标光标相对于接收事件的屏幕的位置
+Qt::MouseEventSource source() const;//返回有关鼠标事件源的信息。鼠标事件源可用于区分真实鼠标事件和人工鼠标事件。后者是由操作系统或 Qt 本身从触摸事件合成的事件
+const QPointF &windowPos() const;//以 QPointF 形式返回鼠标光标相对于接收事件的窗口的位置
+int x() const;// 返回鼠标光标的 x 位置，相对于接收事件的小部件
+int y() const;// 返回鼠标光标的 y 位置，相对于接收事件的小部件
+```
+
+4个鼠标的主要事件函数如下，很多组件都有这样的函数可以重载使用，不一一列举，见Qt文档。
+
+##### 16.2.5.1 mouseDoubleClickEvent
+
+##### 16.2.5.2 mouseMoveEvent
+
+##### 16.2.5.3 mouseReleaseEvent
+
+##### 16.2.5.4 mousePressEvent
+
+#### 16.2.6 QKeyEvent
+
+QKeyEvent 类描述了一个按键事件。
+当按键被按下或释放时，按键事件被发送到具有键盘输入焦点的小部件。按键事件包含一个特殊的接受标志，指示接收器是否将处理按键事件。该标志默认为 QEvent::KeyPress 和 QEvent::KeyRelease 设置，因此在对按键事件进行操作时无需调用 accept()。对于 QEvent::ShortcutOverride，接收者需要明确接受事件以触发覆盖。在关键事件上调用 ignore() 会将其传播到父小部件。事件沿父窗口小部件链向上传播，直到窗口小部件接受它或事件过滤器使用它。QWidget::setEnabled() 函数可用于启用或禁用小部件的鼠标和键盘事件。
+事件处理程序 **QWidget::keyPressEvent()、QWidget::keyReleaseEvent()、QGraphicsItem::keyPressEvent() 和 QGraphicsItem::keyReleaseEvent()** 接收键事件。
+
+成员函数。
+
+```c++
+int count() const;//返回此事件中涉及的键数。如果 text() 不为空，则这只是字符串的长度
+bool isAutoRepeat() const;//如果此事件来自自动重复键，则返回 true；如果它来自初始按键，则返回 false
+int key() const;//返回被按下或释放的键的代码,键盘代码列表见 Qt::Key。这些代码独立于底层的窗口系统。请注意，此函数不区分大写字母和非大写字母，为此使用 text() 函数（返回生成的密钥的 Unicode 文本）
+bool matches(QKeySequence::StandardKey key) const;//如果键事件与给定的标准键匹配，则返回 true；否则返回假
+Qt::KeyboardModifiers modifiers() const;//返回事件发生后立即存在的键盘修饰符标志
+quint32 nativeModifiers() const;//返回键事件的本机修饰符。如果键事件不包含此数据，则返回 0
+quint32 nativeScanCode() const;//返回按键事件的原生扫描码。如果键事件不包含此数据，则返回 0
+quint32 nativeVirtualKey() const;//返回键事件的本机虚拟键或键符号。如果键事件不包含此数据，则返回 0
+QString text() const;//返回此键生成的 Unicode 文本
+```
+
+2个键盘的主要事件函数如下，很多组件都有这样的函数可以重载使用，不一一列举，见Qt文档。
+
+##### 16.2.6.1 keyPressEvent
+
+##### 16.2.6.2 keyReleaseEvent
+
+#### 16.2.7 QPaintEvent
+
+QPaintEvent 类包含绘制事件的事件参数。
+绘制事件被发送到需要自我更新的小部件，例如当一个小部件的一部分因为覆盖小部件被移动而暴露时。
+**该事件包含一个需要更新的 region() 和一个 rect()**，它是该区域的边界矩形。**两者都提供是因为许多小部件无法充分利用 region()**，而 rect() 可以比 region().boundingRect() 快得多。
+
+在处理绘制事件期间，绘制被剪辑到 region()。这种剪裁由 Qt 的绘图系统执行，并且独立于任何可能应用于用于在绘图设备上绘图的 QPainter 的剪裁。因此，QPainter::clipRegion() 在新构造的 QPainter 上返回的值不会反映绘图系统使用的剪辑区域。
+
+成员函数。
+
+```c++
+QPaintEvent(const QRegion &paintRegion);//使用需要更新的区域构造一个绘制事件对象。该区域由paintRegion 指定
+QPaintEvent(const QRect &paintRect);//用需要更新的矩形构造一个绘制事件对象。该区域由paintRect 指定
+const QRect &rect() const;//返回需要更新的矩形
+const QRegion &region() const;//返回需要更新的区域
+```
+
+涉及的相关函数：QWidget::update、QWidget::repaint
+
+##### 16.2.7.1 paintEvent
+
+#### 16.2.8 QResizeEvent
+
+QResizeEvent 类包含调整大小事件的事件参数。
+调整大小事件被发送到已调整大小的小部件。
+事件处理程序 QWidget::resizeEvent() 接收调整大小事件。相关函数：QWidget::resize() 和 QWidget::setGeometry()。
+
+成员函数。
+
+```c++
+QResizeEvent(const QSize &size, const QSize &oldSize);
+const QSize &oldSize() const;
+const QSize &size() const;
+```
+
+##### 16.2.8.1 resizeEvent
+
+#### 16.2.9 QHoverEvent
+
+QHoverEvent 类包含描述鼠标事件的参数。
+**当鼠标光标移入、移出或移入小部件时，如果小部件具有 Qt::WA_Hover 属性，则会发生鼠标事件**。
+**函数 pos() 给出当前光标位置，而 oldPos() 给出旧鼠标位置**。
+事件 QEvent::HoverEnter 和 QEvent::HoverLeave 与事件 QEvent::Enter 和 QEvent::Leave 之间有一些相似之处。但是，它们略有不同，因为我们在 **HoverEnter 和 HoverLeave 的事件处理程序中执行了 update()**。
+QEvent::HoverMove 也与 QEvent::MouseMove 略有不同。
+
+悬停事件只用在图形项上和QQuick项。
+
+```c++
+bool QGraphicsItem::acceptHoverEvents() const;
+bool QQuickItem::acceptHoverEvents() const;
+```
+
+成员函数。
+
+```c++
+QHoverEvent(Type type, const QPointF &pos, const QPointF &oldPos, Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+// 返回鼠标光标相对于接收事件的小部件的先前位置。如果没有oldPos()将返回与pos()相同的位置
+QPoint oldPos() const;
+const QPointF &oldPosF() const;
+QPoint pos() const;
+const QPointF &posF() const;
+```
+
+##### 16.2.9.1 acceptHoverEvents
+
+#### 16.2.10 QTimerEvent
+
+QTimerEvent 类包含描述定时器事件的参数。
+定时器事件会定期发送到已启动一个或多个定时器的对象。**每个计时器都有一个唯一的标识符**。定时器由 **QObject::startTimer()** 启动，**QObject::killTimer()**关闭。
+QTimer 类提供了一个使用信号而不是事件的高级编程接口。它还提供单次计时器。
+事件处理程序 QObject::timerEvent() 接收定时器事件。
+
+```c++
+int timerId() const; // 计时器标识符
+```
+
+##### 16.2.10.1 timerEvent
+
+#### 16.2.11 QActionEvent
+
+QActionEvent 类提供了在添加、删除或更改 QAction 时生成的事件。
+可以使用 QWidget::addAction() 将操作添加到小部件。这会生成一个 ActionAdded 事件，您可以处理该事件以提供自定义行为。例如，QToolBar 重新实现 QWidget::actionEvent() 来为动作创建 QToolButtons。另见 QAction、QWidget::addAction()、QWidget::removeAction() 和 QWidget::actions()。
+
+```c++
+QActionEvent(int type, QAction *action, QAction *before = Q_NULLPTR)
+QAction *action() const
+QAction *before() const;
+```
+
+##### 16.2.11.1 actionEvent
 
 ## 串口通信
 
