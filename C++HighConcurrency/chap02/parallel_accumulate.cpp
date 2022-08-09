@@ -1,7 +1,7 @@
 /*
  * @Author: chenbei
  * @Date: 2022-08-09 08:11:52
- * @LastEditTime: 2022-08-09 08:29:02
+ * @LastEditTime: 2022-08-09 08:31:08
  * @FilePath: \\myLeetCode\\C++HighConcurrency\\chap02\\parallel_accumulate.cpp
  * @Description: accumulate的并行方式
  * @Signature: A boy without dreams
@@ -66,7 +66,7 @@ T parallel_accumulate(Iterator first,Iterator last,T init)
 int main()
 {
     std::vector<int> vi;
-    for(int i=0;i<10;++i)
+    for(int i=0;i<1000000000;++i)
     {
         vi.push_back(10);
     }
