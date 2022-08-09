@@ -109,6 +109,7 @@
 
 40. ApplicationRelease 演示了如何使用windeployqt发布程序,windeployqt必须和编译项目的版本一致(这里都是mingw32),如何使用免费工具setUpFactory制作安装文件
 
+41. SerialPortExamples Qt文档中串口通信的几个例子(阻塞型用法)
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
