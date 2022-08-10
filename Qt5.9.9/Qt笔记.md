@@ -19713,7 +19713,7 @@ static QList<QSerialPortInfo> QSerialPortInfo::availablePorts();// 返回系统�
 
 #### 案例1
 
-使用阻塞型代码编写，涉及waitForBytesWritten和waitForReadyRead，不涉及readyRead，核心代码如下，具体可见[41-SerialPortExamples/BlockingSerialPort](41-SerialPortExamples/BlockingSerialPort)。
+使用阻塞型代码编写，展示如何在工作线程中使用同步型API，涉及waitForBytesWritten和waitForReadyRead，不涉及readyRead，核心代码如下，具体可见[41-SerialPortExamples/BlockingSerialPortWorkerThread](41-SerialPortExamples/BlockingSerialPortWorkerThread)。
 
 ```c++
 void MasterThread::transaction(const QString &portName, int waitTimeout, const QString &request)
