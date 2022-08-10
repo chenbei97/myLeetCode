@@ -19713,71 +19713,105 @@ static QList<QSerialPortInfo> QSerialPortInfo::availablePorts();// 返回系统�
 
 #### 案例1
 
-使用阻塞型代码编写，展示如何在工作线程中使用同步型API，涉及waitForBytesWritten和waitForReadyRead，不涉及readyRead，核心代码如下，具体可见[41-SerialPortExamples/BlockingSerialPortWorkerThread](41-SerialPortExamples/BlockingSerialPortWorkerThread)。
+使用阻塞型代码编写，展示如何在工作线程和非GUI线程中使用同步型API，2个案例正好可以作为串口的客户端和服务端，分别用于发起请求并读取回复以及处理请求并回复，涉及的API就是waitForBytesWritten和waitForReadyRead，不涉及readyRead和bytesWritten(异步API)。要注意的是，调用write写数据后要立刻调用waitForBytesWritten。如果没有写入没有超时意味着可以读取数据，此时可以调用read/readLine/readAll等函数，同样调用读取的函数之前必须先调用waitForReadyRead。
+
+具体可见[41-SerialPortExamples/BlockingSynchronousSerialCommunication](41-SerialPortExamples/BlockingSynchronousSerialCommunication)。
+
+客户端核心代码如下，
 
 ```c++
-void MasterThread::transaction(const QString &portName, int waitTimeout, const QString &request)
+void clientThread::startClientThread(const QString &portName, int waitTimeout, const QString &request)
 {
-    QMutexLocker locker(&mutex); // 先锁定mutex
-    // 把UI传过来的串口名、超时时间和要发送的消息保存
-    this->portName = portName;
+    QMutexLocker locker(&mutex);
+    this->portName = portName; // 把UI传过来的串口名、超时时间和要发送的消息保存
     this->waitTimeout = waitTimeout;
     this->request = request;
 
-    if (!isRunning()) // 如果没启动过线程就启动线程
-        start();
+    if (!isRunning())
+        {start();qDebug()<<QTime::currentTime().toString()+" [1] 客户端线程首次开启";}
     else // 线程启动过就唤醒这个线程,这个线程应该在上次的while循环内cond.wait(&mutex)阻塞
-        cond.wakeOne(); // 唤醒之后立刻会继续上次冻结的状态向下执行,也就是跳转至run()函数的注释（5）这里接着执行
+        {cond.wakeOne();qDebug()<<QTime::currentTime().toString()+" [2] 客户端线程已连接,唤醒线程并更新服务端信息";} // 唤醒之后立刻会继续上次冻结的状态向下执行
 }
 
-void MasterThread::run()
+void clientThread::run()
 {
-    bool currentPortNameChanged = false;
-
+     qDebug()<<QTime::currentTime().toString()+" [3] 进入客户端线程";
     // （1）UI传递进来的3个信息来初始化局部变量,因为这3个值是随时可能被修改的,而本函数又在使用这3个变量
     // 所以下边这段对临时数据的改变代码段需要使用mutex保护起来
+    bool currentPortNameChanged = false;
+    bool currentWaitTimeoutChanged= false;
+    bool currentRequestChanged  = false;
+    qDebug()<<QTime::currentTime().toString()+" [4] 检查客户端的串口信息";
+
     mutex.lock();
-    QString currentPortName; // UI传递进来的串口名称负责初始化此变量
-    if (currentPortName != this->portName) { // 不相等说明进来的串口名称可用
+    QString currentPortName;
+    if (currentPortName != this->portName) {
         currentPortName = this->portName;
         currentPortNameChanged = true;
+        qDebug()<<QTime::currentTime().toString()+" [4.1.1] 连接串口发生更改,更新设置";
     }
-    int currentWaitTimeout = this->waitTimeout; // UI传递进来的超时时间
-    QString currentRequest = this->request; // UI传递进来的串口请求消息
-    mutex.unlock();// 临时变量的写入保护截至
-    
-    if (currentPortName.isEmpty()) { // 说明外部没有可用串口
-        emit error(tr("No port name specified")); // 把消息传递出去
-        return;
+    else {qDebug()<<QTime::currentTime().toString()+" [4.1.2] 连接串口未发生更改";}
+
+     if (currentPortName.isEmpty()) {
+          qDebug()<<QTime::currentTime().toString()+" [4.1.3] 没有可用串口";
+          emit error(tr("没有可用串口"));
+          return;
     }
 
+    int currentWaitTimeout = -1;
+    if (currentWaitTimeout != this->waitTimeout)
+    {
+        currentWaitTimeout = this->waitTimeout;
+        currentWaitTimeoutChanged = true;
+        qDebug()<<QTime::currentTime().toString()+" [4.2.1] 允许等待超时时间发生更改,更新设置";
+    }
+    else {qDebug()<<QTime::currentTime().toString()+" [4.2.2] 允许等待超时时间未发生更改";}
+
+    QString currentRequest;
+    currentRequest= this->request;
+    if (currentRequest != this->request)
+    {
+        currentRequest = this->request;
+        currentRequestChanged  = true;
+        qDebug()<<QTime::currentTime().toString()+" [4.3.1] 发送服务端的请求发生更改,更新设置";
+    }
+    else {qDebug()<<QTime::currentTime().toString()+" [4.3.2] 发送服务端的请求未发生更改";}
+
+    mutex.unlock();
     QSerialPort serial;
 
     // （2）对于阻塞型代码需要自行构建事件循环
+    qDebug()<<QTime::currentTime().toString()+" [5] 准备首次进入while循环";
     while (!this->quit) // quit在构造函数初始化为false,故这是1个死循环
     {
-        if (currentPortNameChanged) // 时刻检查是否更改了串口
+        qDebug()<<QTime::currentTime().toString()+" [6] 再次进入while循环";
+        if (currentPortNameChanged) // 检查是否更改了串口,因为可能上次while线程冻结时外部可能通过clicked把3个私有信息已经改变
         {
-            serial.close(); // 先关闭串口
+            qDebug()<<QTime::currentTime().toString()+" [7] 之前的连接串口发生更改,更新设置";
+            serial.close();
             serial.setPortName(currentPortName);
             if (!serial.open(QIODevice::ReadWrite)) // 把打开串口的错误发送出去
             {
-                emit error(tr("Can't open %1, error code %2")
-                           .arg(portName).arg(serial.error()));
+                qDebug()<<QTime::currentTime().toString()+" [8] 新的串口打开失败";
+                emit error(tr("不能打开串口%1, 错误码为%2").arg(portName).arg(serial.error()));
                 return;
             }
         }
-        
-        // 想要发送的消息转为QByteArray按字符处理,前提是转为当前语言环境下的本地8bit字符串表示
-        QByteArray requestData = currentRequest.toLocal8Bit();
-        serial.write(requestData); // 串口写入请求
+
+        qDebug()<<QTime::currentTime().toString()+" [9] 准备向串口写入发给服务端的请求";
+        // 客户端先写入数据发送请求,如果发送请求成功,服务端会收到之后回复,此时客户端就能够读取服务的回复
+        // 如果客户端发送请求超时.或者服务端的原因回复超时亦或者客户端读取数据超时,都会发送超时错误
+        // 无论客户端有没有发送请求成功,有没有读取回复成功处理完一次事件后都会阻塞
+        QByteArray requestData = currentRequest.toLocal8Bit();// 将发送的请求转为当前语言环境下的本地8bit字符形式的QByteArray
+        serial.write(requestData);
 
         // （3）【注意阻塞型方式每次调用write都要紧跟着waitForBytesWritten确保是否写入成功】
         if (serial.waitForBytesWritten(this->waitTimeout)) // 写入没有超时再读取回复
         {
-            // 每次调用read/readLine/readAll之前必须调用waitForReadyRead
-            if (serial.waitForReadyRead(currentWaitTimeout))  // 读取没有超时
+            qDebug()<<QTime::currentTime().toString()+" [10.1] 请求未超时,客户端正在向服务端发送请求";
+            if (serial.waitForReadyRead(currentWaitTimeout))   // 每次调用read/readLine/readAll之前必须调用waitForReadyRead
             {
+                qDebug()<<QTime::currentTime().toString()+" [11] 客户端正在读取来自服务端的回复";
                 QByteArray responseData = serial.readAll(); // 读取回复的数据
                 while (serial.waitForReadyRead(10))// 继续读取剩下的可能没读取完的数据,10s是自定义的安全阈值
                     responseData += serial.readAll(); // 如果之前读取的比较慢没读完,可以把10s适当延长
@@ -19785,43 +19819,193 @@ void MasterThread::run()
                     // 那么waitForReadyRead状态永远是true,因为等待期间内总是有新数据进来,总是处于准备读取的状态
                     // 那么永远不会退出这个while循环直到外部不再发送消息,responseData就会累计成很大的字符串
                     // 如果设置的是10s,这么短的时间内不会有新数据进来,那么就不处于准备读取的状态,while退出循环
-
-                emit response(QString(responseData)); // 把收到的恢复发送出去
+                QString info = QString::fromLocal8Bit(responseData);
+                qDebug()<<QTime::currentTime().toString()+" [12.1 ] 客户端收到服务端的回复成功,回复的信息为<"+info+">";
+                emit response(info); // 把收到的回复发出去
             }
             else // 读取超时
             {
-                emit timeout(tr("Wait read response timeout %1")
-                             .arg(QTime::currentTime().toString()));
+                qDebug()<<QTime::currentTime().toString()+" [12.2] 客户端读取来自服务端的回复失败";
+                emit timeout(tr("客户端读取来自服务端的回复超时 %1").arg(QTime::currentTime().toString()));
             }
         }
         else  // 写入超时
         {
-            emit timeout(tr("Wait write request timeout %1")
-                         .arg(QTime::currentTime().toString()));
+            qDebug()<<QTime::currentTime().toString()+" [10.2] 发送超时,客户端不能向服务端发送请求";
+            emit timeout(tr("客户端发送给服务端的请求超时 %1").arg(QTime::currentTime().toString()));
         }
 
         // （4）无论有没有新数据,读取有没有超时,在这之后线程都会进入阻塞直到出现下一个事件
-        mutex.lock(); // wait内部会释放mutex,前提是mutex处于lock状态
+        mutex.lock(); // 使用条件变量的wait之前mutex必须处于lock状态,因为wait内部会对mutex解锁
         cond.wait(&mutex);//这里开始阻塞下一个事件,死循环并不是真正的死循环是通过阻塞可以控制的
 
-        // （5）下一个事件就是clicked的触发,重新调用transaction函数,使用wakeOne唤醒了当前线程
-        // 并直接跳转至这里继续执行完毕后又回到while循环的开头(因为这是个循环),再一次处理数据,无论数据读取的情况如何
-        // 在（4）处会继续冻结等待下一次clicked,也就是说用户需要手动点击接收数据,UI不能自动更新收到的消息
-        // 如果数据一直在发送,但是用户迟迟不点击接收,就会导致一次性发送累计的消息巨大
+        // （5）下一个事件就是clicked的触发,重新调用startClientThread函数,使用wakeOne唤醒了当前线程,同时把最新的3个变量信息更新
+        // 并直接跳转至这里继续执行,然后又回到while循环的开头处理下一次事件(因为这是个循环),然后再到这里等待,如此往复
+        // 注意（4）处冻结的时候在等待下一次clicked,也就是说用户需要手动点击按钮接收服务端的回复
+        // 如果数据一直在发送,但是用户迟迟不点击接收,就会导致一次性接收的回复巨大
         // 可能的做法是在UI界面的设计中不需要人去点击,定时器的timeout信号绑定到按钮的clicked信号,clicked信号绑定好槽函数
-        // 就可以实现定时的读取数据了
-        
-        if (currentPortName != this->portName) { 
-            currentPortName = portName;
-            currentPortNameChanged = true;
-        } 
-        else 
+        // 就可以实现定时的读取数据了,不过这个会造成一些其它问题需要完善,考虑到会比较复杂所以把关于定时器的代码已经注释掉
+
+        // 冻结的时候外部UI的信息可能通过clicked信号传递给了this,局部变量需要进行一个判断来更新
+        qDebug()<<QTime::currentTime().toString()+" [13] 监测是否有来自用户界面的信息更新：";
+        if (currentPortName != this->portName)
         {
-            currentPortNameChanged = false;
+            currentPortName = this->portName;
+            currentPortNameChanged = true;
+            qDebug()<<QTime::currentTime().toString()+" [14.1.1] 反馈：连接串口发生更改,更新设置";
         }
-        currentWaitTimeout = this->waitTimeout;
-        currentRequest = this->request;
+        else{ currentPortNameChanged = false; qDebug()<<QTime::currentTime().toString()+" [14.1.2] 反馈：连接串口未发生更改";}
+
+        if (currentRequest != this->request)
+        {
+            currentRequest = this->request;
+            currentRequestChanged = true;
+             qDebug()<<QTime::currentTime().toString()+" [14.2.1]反馈：发送服务端的请求发生更改,更新设置";
+        }
+        else{currentRequestChanged = false; qDebug()<<QTime::currentTime().toString()+" [14.2.2] 反馈：回复服务端的请求未发生更改";}
+
+        if (currentWaitTimeout != this->waitTimeout)
+        {
+              currentWaitTimeout = this->waitTimeout;
+              currentWaitTimeoutChanged = true;
+              qDebug()<<QTime::currentTime().toString()+" [14.3.1]反馈：允许等待超时时间发生更改,更新设置";
+        }
+        else{currentWaitTimeoutChanged = false; qDebug()<<QTime::currentTime().toString()+" [14.3.2] 反馈：允许等待超时时间未发生更改";}
         mutex.unlock();
+        qDebug()<<QTime::currentTime().toString()+" [15] 客户端处理完本次服务端的回复";
+    }
+}
+```
+
+服务端核心代码如下。
+
+```c++
+void serverThread::startServerThread(const QString &portName, int waitTimeout, const QString &response)
+{
+    QMutexLocker locker(&mutex);
+    this->portName = portName;
+    this->waitTimeout = waitTimeout;
+    this->response = response;
+    if (!isRunning())
+        {this->start(); qDebug()<<QTime::currentTime().toString()+" [1] 服务端线程首次开启";}
+    else {qDebug()<<QTime::currentTime().toString()+" [2] 服务端线程已连接,更新服务端信息";}
+    // 没有了条件变量的wakeOne()调用,其它和客户端的代码完全一样
+}
+
+void serverThread::run()
+{
+    qDebug()<<QTime::currentTime().toString()+" [3] 进入服务端线程";
+    bool currentPortNameChanged = false;
+    bool currentWaitTimeoutChanged= false;
+    bool currentResponeChanged  = false;
+    qDebug()<<QTime::currentTime().toString()+" [4] 检查服务端的串口信息";
+    mutex.lock();
+    QString currentPortName;
+    if (currentPortName != this->portName) {
+        currentPortName = this->portName;
+        currentPortNameChanged = true;
+        qDebug()<<QTime::currentTime().toString()+" [4.1.1] 连接串口发生更改,更新设置";
+    }
+    else {qDebug()<<QTime::currentTime().toString()+" [4.1.2] 连接串口未发生更改";}
+
+    int currentWaitTimeout = -1;
+    if (currentWaitTimeout != this->waitTimeout)
+    {
+        currentWaitTimeout = this->waitTimeout;
+        currentWaitTimeoutChanged = true;
+        qDebug()<<QTime::currentTime().toString()+" [4.2.1] 允许等待超时时间发生更改,更新设置";
+    }
+    else {qDebug()<<QTime::currentTime().toString()+" [4.2.2] 允许等待超时时间未发生更改";}
+
+    QString currentRespone;
+    currentRespone= this->response;
+    if (currentRespone != this->response)
+    {
+        currentRespone = this->response;
+        currentResponeChanged  = true;
+        qDebug()<<QTime::currentTime().toString()+" [4.3.1] 回复客户端的消息发生更改,更新设置";
+    }
+    else {qDebug()<<QTime::currentTime().toString()+" [4.3.2] 回复客户端的消息未发生更改";}
+
+    mutex.unlock();
+    QSerialPort serial;
+
+    qDebug()<<QTime::currentTime().toString()+" [5] 准备首次进入while循环";
+    while (!quit)
+    {
+         qDebug()<<QTime::currentTime().toString()+" [6] 再次进入while循环";
+        if (currentPortNameChanged)
+        {
+             qDebug()<<QTime::currentTime().toString()+" [7] 之前的连接串口发生更改,更新设置";
+            serial.close();
+            serial.setPortName(currentPortName);
+            if (!serial.open(QIODevice::ReadWrite))
+            {
+                qDebug()<<QTime::currentTime().toString()+" [8] 新的串口打开失败";
+                emit error(tr("不能打开串口%1, 错误码为%2").arg(portName).arg(serial.error()));
+                return;
+            }
+        }
+        // while内部在这之前的代码和客户端的代码也完全一样,下方的代码开始不同
+
+        // 客户端是先写入数据发送请求,然后判断写入有没有超时,没有超时再判断是否可以读取,读取没有超时再读取数据
+        // 读到了回复的数据会把数据发送出去,写入或者读取超时没有读到数据则都会发送超时错误,处理完一次事件后都会阻塞
+        // 这里作为服务器的角色被动接收来自客户端的请求,只要客户端发送过请求,这里waitForReadyRead就会准备好开始读取
+         qDebug()<<QTime::currentTime().toString()+" [9] 准备读取来自客户端写入串口的请求";
+        if (serial.waitForReadyRead(currentWaitTimeout)) // 每次调用read/readLine/readAll之前必须调用waitForReadyRead
+        {
+            // 读取请求
+             qDebug()<<QTime::currentTime().toString()+" [10.1] 读取未超时,服务端正在读取来自客户端的请求";
+            QByteArray requestData = serial.readAll();
+            while (serial.waitForReadyRead(10)) // 同样的手法,如果此时还有新数据进来就读取它
+                requestData += serial.readAll();
+
+            // 回复请求
+            QByteArray responseData = currentRespone.toLocal8Bit();
+            serial.write(responseData);
+             qDebug()<<QTime::currentTime().toString()+" [11] 服务端正在回复来自客户端的请求,回复的信息为<"+currentRespone+">";
+            if (serial.waitForBytesWritten(waitTimeout)) // 调用write后要立即调用waitForBytesWritten
+            {
+                qDebug()<<QTime::currentTime().toString()+" [12.1 ] 服务端回复客户端的请求成功";
+                emit request(QString::fromLocal8Bit(requestData)); // 把收到的请求发出去
+            }
+            else
+            {
+                qDebug()<<QTime::currentTime().toString()+" [12.2] 服务器端回复客户端的请求失败";
+                emit timeout(tr("服务端回复客户端的请求超时 %1").arg(QTime::currentTime().toString()));
+            }
+        }
+        else
+        {
+            qDebug()<<QTime::currentTime().toString()+" [10.2] 读取超时,服务端不能读取来自客户端的请求";
+            emit timeout(tr("服务端等待客户端的请求超时 %1").arg(QTime::currentTime().toString()));
+        }
+
+        mutex.lock(); // 唯一的区别是这里没有条件变量的wait,不会在这里阻塞,下方的客户端代码完全一样
+        qDebug()<<QTime::currentTime().toString()+" [13] 监测是否有来自用户界面的信息更新：";
+        if (currentPortName != this->portName)
+        {
+            currentPortName = this->portName;
+            currentPortNameChanged = true;
+            qDebug()<<QTime::currentTime().toString()+" [14.1.1] 反馈：连接串口发生更改,更新设置";
+        }
+        else{ currentPortNameChanged = false; qDebug()<<QTime::currentTime().toString()+" [14.1.2] 反馈：连接串口未发生更改";}
+        if (currentRespone != this->response)
+        {
+            currentRespone = this->response;
+            currentResponeChanged = true;
+             qDebug()<<QTime::currentTime().toString()+" [14.2.1]反馈：回复客户端的消息发生更改,更新设置";
+        }
+        else{currentResponeChanged = false; qDebug()<<QTime::currentTime().toString()+" [14.2.2] 反馈：回复客户端的消息未发生更改";}
+        if (currentWaitTimeout != this->waitTimeout)
+        {
+              currentWaitTimeout = this->waitTimeout;
+              currentWaitTimeoutChanged = true;
+              qDebug()<<QTime::currentTime().toString()+" [14.3.1]反馈：允许等待超时时间发生更改,更新设置";
+        }
+        else{currentWaitTimeoutChanged = false; qDebug()<<QTime::currentTime().toString()+" [14.3.2] 反馈：允许等待超时时间未发生更改";}
+        mutex.unlock();
+        qDebug()<<QTime::currentTime().toString()+" [15] 服务端处理完本次客户端的请求";
     }
 }
 ```

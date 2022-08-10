@@ -1,0 +1,4 @@
+C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Server/build-Server-Debug/CMakeFiles/Server.dir
+C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Server/build-Server-Debug/CMakeFiles/edit_cache.dir
+C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Server/build-Server-Debug/CMakeFiles/rebuild_cache.dir
+C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Server/build-Server-Debug/CMakeFiles/Server_autogen.dir

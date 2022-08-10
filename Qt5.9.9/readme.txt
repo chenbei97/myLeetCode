@@ -109,7 +109,7 @@
 
 40. ApplicationRelease 演示了如何使用windeployqt发布程序,windeployqt必须和编译项目的版本一致(这里都是mingw32),如何使用免费工具setUpFactory制作安装文件
 
-41. SerialPortExamples Qt文档中串口通信的几个例子(同步阻塞型-工作线程用法)
+41. SerialPortExamples Qt文档中串口通信的几个例子(一对客户端和服务端演示阻塞型同步API在工作线程用法和非GUI线程中的用法)
 
 
 
@@ -117,17 +117,43 @@
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
-10. 串口通信的使用方法
+11. 串口通信的使用方法
 (1) 同步阻塞型-工作线程用法
     1) 继承QThread定义自己的线程类,定义一个带参数的外部方法提供给主线程使用用于启动线程,不过启动线程要先判断是否处于running状态,不是使用start,是就使用条件变量的wakeOne
     2) 参数可以是串口名,波特率,要发送的消息等等,方法被主线程调用的时候就能够初始化对应的新线程私有属性
     3) 新的线程类作为UI界面类的私有属性,主线程可以定义同名的外部方法来启动子线程
     4) 重载新线程类的run()函数,UI传递来的信息可能会改变,所以需要使用互斥量进行保护
-    5) 自行构建事件循环,while内部向串口写入请求数据,调用write后要立即调用waitForBytesWritten
-    6) 写入没有超时,再读取串口数据,同样调用read后要立即调用waitForReadyRead
+    5) 自行构建事件循环,因为是客户端,在while内部首先向串口写入请求,调用write后要立即调用waitForBytesWritten确定写入成功
+    6) 确定写入成功后才可能有回复的数据,此时准备读取串口数据(但是不一定有),故调用read/readLine/readAll之前要先调用waitForReadyRead判断是否可以读取
     7) 如果有超时错误可以通过信号把信息带出去,UI界面可以建立对应的槽函数作一个状态显示
     8) 无论写入,读取是否成功与失败,结束之后将互斥量上锁,然后条件变量等待下一个事件(外部方法再次被调用)将这个互斥量解锁才能继续执行下方的代码
-    9) 因为下次事件的到来可能UI的一些信息发生了变化,同样需要更新信息,因为while循环从未退出,是为了下次进入while调用不出现错误
+    9) 因为下次事件的到来可能UI的一些信息发生了变化传给了this,所以在while的末尾段代码需要更新信息传给局部变量,这是因为while循环从未退出,是为了下次进入while调用不出现错误
+(2) 同步阻塞型-非GUI线程用法
+    1) 同理定义自己线程类,但是不需要使用条件变量进行阻塞,也就是说服务端是一直监听的,客户端接入后会立刻做出反应
+    2) 同理
+    3) 同理
+    4) 同理
+    5) 因为是服务端,所以首先使用read/readLine/readAll来读取客户端发送的请求,读取之前先调用waitForReadyRead判定能否读取
+    6) 能够读取之后再回复信息,同理写入回复后要立刻调用waitForBytesWritten确定写入是否成功,成功后接下来就是客户端的事情了
+    7) 同理
+    8) 无论读取是否成功,回复客户端是否成功都只是作出对应的反应,不会阻碍while循环,执行完剩余的代码后又会回到while初始代码处
+    9) 同理
+
+10. 带有重载版本的信号使用函数指针传递时的使用方法
+一般函数指针传递的都是没有重载版本的信号,直接使用&和::即可
+但是带有重载版本的时候,信号函数需要进行一个静态转换指明是哪个版本
+例如信号&QComboBox::currentIndexChanged参数有const QString&和int的2个版本
+将其静态转换为void (QComboBox::*)(const QString &),表示输入参数为const QString&输出参数void的函数指针,且该函数是从属于QComboBox的
+QSpinBox的同理valueChanged也有2个版本,但是QLineEdit的textChanged只有1个版本不需要静态转换
+void(Teacher::*teacherSignal)(QString) = &Teacher::hungry;
+void(Student::*studentSignal)(QString) = &Student::treat;
+connect(serialPortComboBox, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+        this, &Dialog::activateRunButton);
+connect(waitRequestSpinBox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged),
+        this, &Dialog::activateRunButton);
+connect(responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
+信号的参数个数必须大于等于槽函数的参数个数,且参数类型要一一对应,所以槽函数的参数可以没有
+void Dialog::activateRunButton(){runButton->setEnabled(true);}
 
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
