@@ -109,8 +109,12 @@
 
 40. ApplicationRelease 演示了如何使用windeployqt发布程序,windeployqt必须和编译项目的版本一致(这里都是mingw32),如何使用免费工具setUpFactory制作安装文件
 
-41. SerialPortExamples Qt文档中串口通信的几个例子(一对客户端和服务端演示阻塞型同步API在工作线程用法和非GUI线程中的用法)
-
+41. SerialPortExamples Qt文档中串口通信的几个例子
+    1) 一对客户端和服务端,演示阻塞型同步API在工作线程用法和非GUI线程中的用法
+        BlockingSynchronousSerialCommunication/Client
+        BlockingSynchronousSerialCommunication/Server
+    2) 串口后台固定查询小功能的实现,参照1)的写法,以后项目中可以拿去用
+        serialPortFixedQuery/TestfixedQueryThread(2022-08-11)
 
 
 
