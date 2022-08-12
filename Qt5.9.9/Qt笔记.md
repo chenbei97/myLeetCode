@@ -728,6 +728,129 @@ int qrand();//标准C++的rand()线程安全型版本,[0,RAND_MAX]
 void qsrand(uint seed);//随机种子
 ```
 
+到目前为止，涉及的宏定义如下。
+
+##### 2.2.1.1 Q_OBJECT
+
+Q_OBJECT 宏必须出现在声明自己的信号和槽或使用 Qt 元对象系统提供的其他服务的类定义的私有部分中。
+
+```c++
+#include <QObject>
+class Counter : public QObject
+{
+      Q_OBJECT
+  public:
+      Counter() { m_value = 0; }
+      int value() const { return m_value; }
+  public slots:
+      void setValue(int value);
+  signals:
+      void valueChanged(int newValue);
+  private:
+      int m_value;
+};
+```
+
+##### 2.2.1.2 Q_DECL_OVERRIDE
+
+这个宏可以用来声明一个覆盖的虚函数。如果覆盖的虚函数实际上没有覆盖任何东西，则使用此标记将允许编译器生成错误。如果您的编译器支持该 C++11 上下文关键字，则它扩展为“覆盖”，否则不支持。
+宏出现在函数的末尾，通常在 const 之后，如果有的话：
+
+```c++
+virtual void MyWidget::paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
+```
+
+##### 2.2.1.3 QT_TRANSLATE_NOOP(*context*, *sourceText*)
+
+QT_TRANSLATE_NOOP(*context*, *sourceText*)，**标记字符串字面量 sourceText 以在给定上下文中进行动态翻译**；即，存储的 sourceText 不会被更改。上下文通常是一个类，也需要指定为字符串文字。
+宏扩展为 sourceText。
+
+```c++
+static const char *greeting_strings[] = {
+      QT_TRANSLATE_NOOP("FriendlyConversation", "Hello"), // 上下文是FriendlyConversation
+      QT_TRANSLATE_NOOP("FriendlyConversation", "Goodbye")
+  };
+
+QString FriendlyConversation::greeting(int type)
+{
+    return tr(greeting_strings[type]);//此上下文环境可以根据type取值翻译
+}
+
+QString global_greeting(int type)
+{
+    return qApp->translate("FriendlyConversation", //没有上下文环境必须使用translate显示指定了
+                           greeting_strings[type]);
+}
+```
+
+##### 2.2.1.4 Q_UNUSED(*name*)
+
+向编译器指示具有指定名称的参数未在函数体中使用。这可用于抑制编译器警告，同时允许在其签名中使用有意义的参数名称定义函数。
+
+```c++
+void mainWindow::on_imagedSaved(int id, const QString &filenname)
+{
+    Q_UNUSED(id);
+    LabInfo->setText("file is saved in "+filename);
+}
+```
+
+
+
+##### 2.2.1.5 foreach(*variable*, *container*)
+
+该宏用于实现 Qt 的 foreach 循环。变量参数是变量名或变量定义； container 参数是一个 Qt 容器，其值类型对应于变量的类型。有关详细信息，请参阅 foreach 关键字。
+如果您担心命名空间污染，可以通过在 .pro 文件中添加以下行来禁用此宏：
+
+```c++
+CONFIG += no_keywords
+```
+
+```c++
+QLinkedList<QString> list;
+QString str;
+foreach (str, list)
+    qDebug() << str;
+
+QMap<QString, int> map;
+foreach (const QString &str, map.keys())
+    qDebug() << str << ':' << map.value(str);
+
+
+QMultiMap<QString, int> map;
+foreach (const QString &str, map.uniqueKeys()) {
+    foreach (int i, map.values(str))
+        qDebug() << str << ':' << i;
+}
+```
+
+##### 2.2.1.6 forever
+
+提供此宏是为了方便编写无限循环。它等价于 for (;;)。
+如果您担心命名空间污染，可以通过在 .pro 文件中添加以下行来禁用此宏：
+
+```c++
+CONFIG += no_keywords
+```
+
+```
+forever{
+    ...
+}
+```
+
+##### 2.2.1.6 qDebug
+
+qDebug 用于在debugger窗体显示信息，其他的类似的还有qWaring,qCritical,qFatal,qInfo。
+
+但是如果编译器设置了Qt_NO_DEBUG_OUTPUT，则不作任何输出。
+
+```c++
+qDebug("item is in list: %d",mylist.size());
+```
+
+
+
 #### 2.2.2 QtMath
 
 其他的就是在<QtMath>定义的基础数学运算函数，如三角运算、弧度与角度转换等。
@@ -765,26 +888,6 @@ Q_BYTE_ORDER、Q_BIG_ENDIAN、Q_LITTLE_ENDIAN分别表述内存中数据的字�
 
 Q_DECL_IMPORT和Q_DECL_EXPORT用于使用和设计共享库时用于导入或导出库的内容。
 
-Q_DECL_OVERRIDE可以重载虚函数使用，如果没有被重载就会报错。Q_DECL_FINAL将1个虚函数定义为最终级别不能再被重载，或者1个类不可再被继承。例如
-
-```c++
-void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
-class QRect Q_DECL_FINAL{ // QRect不可再被继承
-    ...
-}
-void paintEvent(QPaintEvent*) override final;// 使用override&final技术也可以
-```
-
-Q_UNUSED(name) 用于定义不在函数体使用的参数，例如：
-
-```c++
-void mainWindow::on_imagedSaved(int id, const QString &filenname)
-{
-    Q_UNUSED(id);
-    LabInfo->setText("file is saved in "+filename);
-}
-```
-
 #### 2.2.3 foreach&forever
 
 foreach(variable,containter) 用于容器遍历。
@@ -797,28 +900,16 @@ foreach(const QString& codeName,recorder->supportedAudioCodes())
 forever 用于构造无限循环。
 
 ```c++
-forever{
-    ...
-}
+
 ```
 
-#### 2.2.4 qDebug
 
-qDebug 用于在debugger窗体显示信息，其他的类似的还有qWaring,qCritical,qFatal,qInfo。
-
-但是如果编译器设置了Qt_NO_DEBUG_OUTPUT，则不作任何输出。
-
-```c++
-qDebug("item is in list: %d",mylist.size());
-```
 
 ### 2.3 Qt容器类
 
 Qt提供了多个基于模板的容器类，比STL的容器类更加轻巧、安全，这些容器类是隐式共享和可重入的，进行了速度和存储优化，可减少可执行文件的大小。此外它是线程安全的，即作为只读容器时可被多个线程访问。
 
-Qt容器类分为顺序容器类和关联容器类，包含了Java类型和STL类型的迭代类，Java类型易于使用，提供高级功能，STL则是迭代效率高。
-
-Qt还提供了foreach宏用于遍历容器内的所有数据项。
+Qt容器类分为顺序容器类和关联容器类，包含了Java类型和STL类型的迭代类，Java类型易于使用，提供高级功能，STL则是迭代效率高。foreach宏也可以用于遍历容器内的所有数据项。
 
 #### 2.3.1 顺序容器类
 
@@ -2436,6 +2527,8 @@ void highlighted(const QString &text);
 #### 3.4.5 QPlainTextEdit
 
 QPlainTextEdit是一个多行文本编辑器，相比于QLineEdit可以编辑和显示多行文本。
+QPlainTextEdit 适用于段落和字符。段落是一个格式化的字符串，它被自动换行以适应小部件的宽度。默认情况下，在阅读纯文本时，一个换行符表示一个段落。一个文档由零个或多个段落组成。段落由硬换行符分隔。段落中的每个字符都有自己的属性，例如字体和颜色。
+**QPlainTextEdit 上鼠标光标形状默认为Qt::IBeamCursor(I)。可以通过 viewport()的cursor 属性进行更改**。
 
 涉及的枚举类型。
 
@@ -2448,47 +2541,109 @@ enum LineWrapMode { NoWrap, WidgetWidth };
 具备的主要性质如下。
 
 ```c++
-backgroundVisible : bool
-blockCount : const int
-centerOnScroll : bool
-cursorWidth : int
-documentTitle : QString
-lineWrapMode : LineWrapMode
-maximumBlockCount : int
-overwriteMode : bool
-placeholderText : QString
-plainText : QString
-readOnly : bool
-tabChangesFocus : bool
-tabStopWidth : int
-textInteractionFlags : Qt::TextInteractionFlags
-undoRedoEnabled : bool
-wordWrapMode : QTextOption::WrapMode
+backgroundVisible : bool; //设置调色板背景在文档区域之外是否可见,默认false
+void setBackgroundVisible(bool visible);
+bool backgroundVisible() const;
+
+blockCount : const int; // 设置文档中文本块的数量。默认情况下在空文档中此值为1
+int blockCount() const;
+
+centerOnScroll : bool;//设置光标是否在屏幕上居中,默认false
+bool centerOnScroll() const;
+void setCenterOnScroll(bool enabled);
+
+cursorWidth : int;//设置光标宽度(以像素为单位)默认值1
+void setCursorWidth(int width);
+int cursorWidth() const;
+
+documentTitle : QString;//设置文档标题默认是空字符串
+QString documentTitle() const;
+void setDocumentTitle(const QString &title);
+void setDocument(QTextDocument *document);
+QTextDocument *document() const; // QPlainTextEdit存储的文本以QTextDocument指向
+
+maximumBlockCount : int;//设置文档可能具有的最大块数;若文档中块数超过限制,则从文档的开头删除块;负值或零值指定文档可能包含无限数量的块;默认值为0
+void setMaximumBlockCount(int maximum);
+int maximumBlockCount() const;
+
+overwriteMode : bool;//是否覆盖,默认false(追加文本而不是覆盖)
+bool overwriteMode() const;
+void setOverwriteMode(bool overwrite);
+
+placeholderText : QString;//如果document()为空,设置此属性会显示灰色的占位符文本,默认是空字符串
+void setPlaceholderText(const QString &placeholderText);
+QString placeholderText() const;
+
+plainText : QString;//获取文本内容,默认对于没有内容的返回空字符串
+void setPlainText(const QString &text);
+QString toPlainText() const;
+
+readOnly : bool;//设置是否为只读默认false
+bool isReadOnly() const;
+void setReadOnly(bool ro);
+
+tabChangesFocus : bool;//设置Tab键是否更改焦点或被接受为输入。某些情况下不允许用户输入\t或用Tab键更改缩进,因为这会破坏焦点链。默认false
+bool tabChangesFocus() const;
+void setTabChangesFocus(bool b);
+
+tabStopWidth : int; //设置像素为单位的制表位宽度,默认值80
+void setTabStopWidth(int width);
+int tabStopWidth() const;
+
+textInteractionFlags : Qt::TextInteractionFlags;//设置显示文本时如何与用户输入交互。默认值取决于 QPlainTextEdit是只读还是可编辑的
+void setTextInteractionFlags(Qt::TextInteractionFlags flags);
+Qt::TextInteractionFlags textInteractionFlags() const;
+
+undoRedoEnabled : bool; //是否启用撤消和重做,默认true
+bool isUndoRedoEnabled() const;
+void setUndoRedoEnabled(bool enable);
+
+lineWrapMode : LineWrapMode;//设置换行模式,默认模式是WidgetWidth,在文本右边缘换行.换行发生在空白处,保持整个单词完整,若希望在单词中进行换行使用setWordWrapMode()
+LineWrapMode lineWrapMode() const;
+void setLineWrapMode(LineWrapMode mode);
+
+wordWrapMode : QTextOption::WrapMode; //设置单词换行时使用的模式
+void setWordWrapMode(QTextOption::WrapMode policy);
+QTextOption::WrapMode wordWrapMode() const;
 ```
 
-常见的成员函数，不常见的已忽略显示。
+其它成员函数。
 
 ```c++
-QPlainTextEdit(const QString &text, QWidget *parent = Q_NULLPTR);
-bool backgroundVisible() const;
+QPlainTextEdit(const QString &text, QWidget *parent = Q_NULLPTR);//构造一个带有 parent parent 的 QPlainTextEdit。文本编辑将显示纯文本文本
+
+// 返回插入新文本时使用的字符格式
 QTextCharFormat currentCharFormat() const;
-QTextDocument *document() const; // QPlainTextEdit存储的文本以QTextDocument指向
-QString documentTitle() const;
-bool isReadOnly() const;
-bool isUndoRedoEnabled() const;
-LineWrapMode lineWrapMode() const;
-void setBackgroundVisible(bool visible);
-void setCenterOnScroll(bool enabled);
 void setCurrentCharFormat(const QTextCharFormat &format);
-void setCursorWidth(int width);
-void setDocument(QTextDocument *document);
-void setDocumentTitle(const QString &title);
-void setLineWrapMode(LineWrapMode mode);
-void setReadOnly(bool ro);
-setTextCursor(const QTextCursor &cursor);
-void setUndoRedoEnabled(bool enable);
-void setWordWrapMode(QTextOption::WrapMode policy);
-...
+
+QString anchorAt(const QPoint &pos) const;//返回位置pos的锚点引用,如该点不存在锚点则返回空字符串
+bool canPaste() const; //返回文本是否可以从剪贴板粘贴到文本编辑中
+
+// 创建标准上下文菜单,当用户用鼠标右键单击文本编辑时显示该菜单
+QMenu *createStandardContextMenu();
+QMenu *createStandardContextMenu(const QPoint &position);
+
+//通过执行给定的操作移动光标。如果 mode 是 QTextCursor::KeepAnchor，光标选择它移动的文本。这与用户在按住 Shift 键并使用光标键移动光标时达到的效果相同
+void moveCursor(QTextCursor::MoveOperation operation, QTextCursor::MoveMode mode = QTextCursor::MoveAnchor)；
+QTextCursor textCursor() const;//设置可见光标
+void setTextCursor(const QTextCursor &cursor);
+QTextCursor cursorForPosition(const QPoint &pos) const;//在位置pos返回一个QTextCursor
+QRect cursorRect(const QTextCursor &cursor) const;//返回一个包含光标的矩形（在视口坐标中）
+QRect cursorRect() const;//返回一个包含文本编辑光标的矩形（在视口坐标中）
+void ensureCursorVisible();//如有必要，通过滚动文本编辑确保光标可见
+
+//此功能允许用给定的颜色临时标记文档中的某些区域，指定为选择。例如，这在编程编辑器中很有用，可以用给定的背景颜色标记整行文本以指示断点的存在
+void setExtraSelections(const QList<QTextEdit::ExtraSelection> &selections;
+QList<QTextEdit::ExtraSelection> extraSelections() const;//返回先前设置的额外选择
+// 使用给定选项查找字符串exp的下一个匹配项。如果找到返回 true
+bool find(const QString &exp, QTextDocument::FindFlags options = QTextDocument::FindFlags());
+bool find(const QRegExp &exp, QTextDocument::FindFlags options = QTextDocument::FindFlags());
+//加载由给定类型和名称指定的资源
+virtual QVariant loadResource(int type, const QUrl &name)
+//通过在编辑器光标上调用 QTextCursor::mergeCharFormat 将修饰符中指定的属性合并为当前字符格式。如果编辑器有选择，那么修饰符的属性将直接应用于选择。
+void mergeCurrentCharFormat(const QTextCharFormat &modifier)
+//将文本编辑的文档打印到给定打印机的便捷功能。这相当于直接在文档上调用 print 方法，只是该函数还支持 QPrinter::Selection 作为打印范围
+void print(QPagedPaintDevice *printer) const;
 ```
 
 可能的示例代码。
@@ -6199,8 +6354,6 @@ QDataStream &operator<<(qint8 i); // 读入,其它还支持quint8,qint16,...doub
 QDataStream &operator>>(qint8 i); // 读出,其它还支持quint8,qint16,...double
 ```
 
-
-
 ### 6.3 文件和目录操作
 
 #### 6.3.1 QCoreApplication
@@ -6228,9 +6381,56 @@ static QString applicationFilePath();//返回应用程序可执行文件的文�
 static QString applicationName();//此属性包含此应用程序的名称
 static qint64 applicationPid();//返回应用程序的当前进程 ID
 static QString applicationVersion();//此属性保存此应用程序的版本
-static StringList QCoreApplication::libraryPaths();//返回应用程序在动态加载库时将搜索的路径列表
-static void QCoreApplication::exit(int returnCode = 0);// 告诉应用程序退出并返回代码
-static QString QCoreApplication::organizationName();// 此属性包含编写此应用程序的组织的名称
+static StringList libraryPaths();//返回应用程序在动态加载库时将搜索的路径列表
+static QString organizationName();// 此属性包含编写此应用程序的组织的名称
+static void exit(int returnCode = 0);// 告诉应用程序退出并返回代码
+static int exec();//进入主事件循环并等待直到调用exit()
+void setApplicationName(const QString &application);//此属性包含编写此应用程序的组织的名称
+void setApplicationVersion(const QString &version);//此属性保存此应用程序的版本
+void addLibraryPath(const QString &path);//将路径添加到库路径列表的开头，确保首先搜索库。如果 path 为空或已在路径列表中，则路径列表不会更改
+void setLibraryPaths(const QStringList &paths);//设置将库加载到路径时要搜索的目录列表。所有现有路径都将被删除，路径列表将包含路径中给出的路径
+void removeLibraryPath(const QString &path);//从库路径列表中删除路径。如果 path 为空或不在路径列表中，则列表不会更改
+void setOrganizationName(const QString &orgName);//此属性包含编写此应用程序的组织的名称
+```
+
+其它静态成员函数。
+
+```c++
+bool startingUp();//如果尚未创建应用程序对象，则返回 true；否则返回假
+static QStringList arguments(); // 返回命令行参数列表
+static bool closingDown();//如果应用程序对象正在被销毁，则返回 true；否则返回假
+QCoreApplication *instance();//返回指向应用程序的 QCoreApplication实例的指针
+
+bool installTranslator(QTranslator *translationFile);//将翻译文件 translationFile 添加到要用于翻译的翻译文件列表中
+bool removeTranslator(QTranslator *translationFile);//从该应用程序使用的翻译文件列表中删除翻译文件 translationFile,但它不会从文件系统中删除翻译文件
+QString translate(const char *context, const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1);//通过查询已安装的翻译文件，返回 sourceText 的翻译文本。翻译文件从最近安装的文件搜索回第一个安装的文件
+
+bool isQuitLockEnabled();//此属性保存使用 QEventLoopLocker 功能是否会导致应用程序退出
+void setQuitLockEnabled(bool enabled);
+
+void setSetuidAllowed(bool allow);//如果 allow 为真，则允许应用程序在 UNIX 平台上运行 setuid
+bool isSetuidAllowed();//如果允许应用程序在 UNIX 平台上运行 setuid，则返回 true
+
+QString organizationDomain();//此属性包含编写此应用程序的组织的 Internet域
+void setOrganizationDomain(const QString &orgDomain);
+
+bool sendEvent(QObject *receiver, QEvent *event);//使用 notify() 函数将事件事件直接发送到接收者接收者。返回从事件处理程序返回的值
+//将事件事件以对象接收者作为事件的接收者，添加到事件队列并立即返回
+void postEvent(QObject *receiver, QEvent *event, int priority = Qt::NormalEventPriority);
+// 根据指定的标志处理调用线程的所有挂起事件，直到没有更多事件要处理
+void processEvents(QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents);
+void processEvents(QEventLoop::ProcessEventsFlags flags, int maxtime);
+
+void removePostedEvents(QObject *receiver, int eventType = 0);//删除使用postEvent()作为接收者发布的给定eventType的所有事件
+void sendPostedEvents(QObject *receiver = Q_NULLPTR, int event_type = 0);//立即分派先前已使用 QCoreApplication::postEvent() 排队的所有事件，这些事件用于对象接收器并具有事件类型 event_type
+
+void setAttribute(Qt::ApplicationAttribute attribute, bool on = true);//如果 on 为真，则设置属性属性；否则清除该属性
+bool testAttribute(Qt::ApplicationAttribute attribute);//如果设置了属性属性，则返回 true；否则返回假
+
+// 将主线程的事件分派器设置为 eventDispatcher。这只有在尚未安装事件分派器的情况下才有可能。也就是说，在 QCoreApplication 被实例化之前。此方法获取对象的所有权
+void setEventDispatcher(QAbstractEventDispatcher *eventDispatcher);
+// 返回指向主线程的事件分派器对象的指针。如果线程不存在事件分派器，则此函数返回 0
+QAbstractEventDispatcher *eventDispatcher();
 ```
 
 #### 6.3.2 QDir
@@ -19106,7 +19306,7 @@ Application 示例中的 closeEvent() 显示了一个关闭事件处理程序，
 如果您**希望在关闭时删除小部件，请使用 Qt::WA_DeleteOnClose 标志创建它**。这对于多窗口应用程序中的独立顶级窗口非常有用。**当 QObjects 被删除时，它们会发出 destroy() 信号**。**如果最后一个顶级窗口关闭，则发出 QGuiApplication::lastWindowClosed() 信号**。如果事件的接收者同意关闭小部件，isAccepted() 函数将返回 true；调用accept() 同意关闭小部件，如果此事件的接收者不希望小部件关闭，则调用ignore()。
 另见 QWidget::close()、QWidget::hide()、QObject::destroyed()、QCoreApplication::exec()、QCoreApplication::quit() 和 QGuiApplication::lastWindowClosed()。
 
-##### 16.2.2.1 closeEvent
+##### closeEvent
 
 #### 16.2.3 QHideEvent
 
@@ -19114,14 +19314,14 @@ QHideEvent 类提供了一个在隐藏小部件后发送的事件。
 **此事件在 QWidget::hide() 返回之前发送**，并且在用户隐藏（图标化）顶级窗口时发送。
 如果自发() 为真，则事件源自应用程序外部。在这种情况下，用户使用窗口管理器控件隐藏窗口，方法是图标化窗口或切换到窗口不可见的另一个虚拟桌面。窗口将被隐藏但不会被撤回。如果窗口被图标化，QWidget::isMinimized() 返回真。
 
-##### 16.2.3.1 hideEvent
+##### hideEvent
 
 #### 16.2.4 QShowEvent
 
 QShowEvent 类提供了一个在显示小部件时发送的事件。
 有两种显示事件：由窗口系统引起的显示事件（自发）和内部显示事件。 Spontaneous (QEvent::spontaneous()) 显示事件在窗口系统显示窗口之后发送；当顶层窗口在被图标化后重新显示时，它们也会被发送。内部显示事件在小部件变得可见之前交付。
 
-##### 16.2.4.1 showEvent
+##### showEvent
 
 #### 16.2.5 QMouseEvent
 
@@ -19150,13 +19350,13 @@ int y() const;// 返回鼠标光标的 y 位置，相对于接收事件的小部
 
 4个鼠标的主要事件函数如下，很多组件都有这样的函数可以重载使用，不一一列举，见Qt文档。
 
-##### 16.2.5.1 mouseDoubleClickEvent
+##### mouseDoubleClickEvent
 
-##### 16.2.5.2 mouseMoveEvent
+##### mouseMoveEvent
 
-##### 16.2.5.3 mouseReleaseEvent
+##### mouseReleaseEvent
 
-##### 16.2.5.4 mousePressEvent
+##### mousePressEvent
 
 #### 16.2.6 QKeyEvent
 
@@ -19180,9 +19380,9 @@ QString text() const;//返回此键生成的 Unicode 文本
 
 2个键盘的主要事件函数如下，很多组件都有这样的函数可以重载使用，不一一列举，见Qt文档。
 
-##### 16.2.6.1 keyPressEvent
+##### keyPressEvent
 
-##### 16.2.6.2 keyReleaseEvent
+##### keyReleaseEvent
 
 #### 16.2.7 QPaintEvent
 
@@ -19203,7 +19403,7 @@ const QRegion &region() const;//返回需要更新的区域
 
 涉及的相关函数：QWidget::update、QWidget::repaint
 
-##### 16.2.7.1 paintEvent
+##### paintEvent
 
 #### 16.2.8 QResizeEvent
 
@@ -19219,7 +19419,7 @@ const QSize &oldSize() const;
 const QSize &size() const;
 ```
 
-##### 16.2.8.1 resizeEvent
+##### resizeEvent
 
 #### 16.2.9 QHoverEvent
 
@@ -19247,7 +19447,7 @@ QPoint pos() const;
 const QPointF &posF() const;
 ```
 
-##### 16.2.9.1 acceptHoverEvents
+##### acceptHoverEvents
 
 #### 16.2.10 QTimerEvent
 
@@ -19260,7 +19460,7 @@ QTimer 类提供了一个使用信号而不是事件的高级编程接口。它�
 int timerId() const; // 计时器标识符
 ```
 
-##### 16.2.10.1 timerEvent
+##### timerEvent
 
 #### 16.2.11 QActionEvent
 
@@ -19273,7 +19473,407 @@ QAction *action() const
 QAction *before() const;
 ```
 
-##### 16.2.11.1 actionEvent
+##### actionEvent
+
+#### 16.2.12 QWheelEvent
+
+QWheelEvent 类包含描述滚轮事件的参数。
+滚轮事件被发送到鼠标光标下的小部件，但如果该小部件不处理事件，它们将被发送到焦点小部件。为鼠标滚轮和触控板滚动手势生成滚轮事件。有两种方法可以读取车轮事件增量：**angleDelta() 返回以车轮度数为单位的增量**。始终提供此值。 **pixelDelta() 以屏幕像素为单位返回增量**，可用于具有高分辨率触控板的平台，例如 macOS。如果是这样，**source() 将返回 Qt::MouseEventSynthesizedBySystem**。**函数 pos() 和 globalPos() 返回事件发生时鼠标光标的位置**。轮子事件包含一个特殊的接受标志，指示接收者是否想要该事件。如果您**不处理车轮事件，则应调用 ignore()**；这确保它将被发送到父窗口小部件。QWidget::setEnabled() 函数可用于启用或禁用小部件的鼠标和键盘事件。事件处理程序 QWidget::wheelEvent() 接收车轮事件。
+
+```c++
+ void MyWidget::wheelEvent(QWheelEvent *event)
+  {
+     //返回车轮旋转的距离，以八分之一度为单位。正值表示滚轮向前旋转远离用户；负值表示滚轮朝用户向后旋转。大多数鼠标类型以 15 度为步长工作，在这种情况下，增量值是 120 的倍数；即 120 个单位 * 1/8 = 15 度。但是，有些鼠标的轮子分辨率更高，发送的增量值小于 120 个单位（小于 15 度）。为了支持这种可能性，您可以累积添加事件中的增量值，直到达到 120 的值，然后滚动小部件，或者您可以部分滚动小部件以响应每个滚轮事件
+      QPoint numPixels = event->pixelDelta();
+      QPoint numDegrees = event->angleDelta() / 8;
+
+      if (!numPixels.isNull()) {
+          scrollWithPixels(numPixels);
+      } else if (!numDegrees.isNull()) {
+          QPoint numSteps = numDegrees / 15;
+          scrollWithDegrees(numSteps);
+      }
+
+      event->accept();
+  }
+```
+
+成员函数。
+
+```c++
+// 构造一个车轮事件对象。
+// pos 提供了鼠标光标在窗口内的位置。全局坐标中的位置由 globalPos 指定。
+// pixelDelta 包含屏幕上以像素为单位的滚动距离，而 angleDelta 包含滚轮旋转距离。 pixelDelta 是可选的，可以为空。该事件还可以保存单向车轮事件数据：qt4Delta 指定旋转，qt4Orientation 指定方向
+QWheelEvent(const QPointF &pos, const QPointF &globalPos, QPoint pixelDelta, QPoint angleDelta, int qt4Delta, Qt::Orientation qt4Orientation, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers)
+// 事件的滚动阶段由phase指定。
+QWheelEvent(const QPointF &pos, const QPointF &globalPos, QPoint pixelDelta, QPoint angleDelta, int qt4Delta, Qt::Orientation qt4Orientation, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase)
+// 如滚轮事件来自物理鼠标滚轮，则source设置为Qt::MouseEventNotSynthesized。如它来自操作系统检测到的手势，或者来自非鼠标硬件设备，则source设置为Qt::MouseEventSynthesizedBySystem。果它来自Qt，source 将被设置为Qt::MouseEventSynthesizedByQt
+QWheelEvent(const QPointF &pos, const QPointF &globalPos, QPoint pixelDelta, QPoint angleDelta, int qt4Delta, Qt::Orientation qt4Orientation, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, Qt::MouseEventSource source)
+// 如果系统配置为反转事件传递的增量值（例如 OS X 上触摸板的自然滚动），则反转应该为真。否则，倒置为假
+QWheelEvent(const QPointF &pos, const QPointF &globalPos, QPoint pixelDelta, QPoint angleDelta, int qt4Delta, Qt::Orientation qt4Orientation, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, Qt::MouseEventSource source, bool inverted);
+
+// 鼠标在电脑屏幕的位置
+QPoint globalPos() const;
+const QPointF &globalPosF() const;
+int globalX() const;
+int globalY() const;
+// 鼠标在窗口的位置
+QPoint pos() const;
+const QPointF &posF() const;
+int x() const;
+int y() const;
+
+Qt::ScrollPhase phase() const;//返回此滚轮事件的滚动阶段
+QPoint pixelDelta() const;//返回屏幕上的滚动距离（以像素为单位）。此值在支持高分辨率基于像素的增量值的平台上提供，例如 macOS。该值应直接用于滚动屏幕上的内容
+QPoint angleDelta() const;//返回车轮旋转的距离，以八分之一度为单位。正值表示滚轮向前旋转远离用户；负值表示滚轮朝用户向后旋转
+Qt::MouseButtons buttons() const;//返回事件发生时的鼠标状态
+Qt::MouseEventSource source() const;//返回有关车轮事件源的信息
+bool inverted() const;//返回随事件传递的增量值是否反转
+```
+
+##### weelEvent
+
+#### 16.2.13 QContextMenuEvent
+
+**QContextMenuEvent 类包含描述上下文菜单事件的参数**。在QPlainText组件中常用,自动创建了该事件。关联的函数void contextMenuEvent(QContextMenuEvent *event);
+
+枚举值。这个枚举描述了发送事件的原因。
+
+```c++
+enum QContextMenuEvent::Reason{
+    QContextMenuEvent::Mouse//鼠标导致事件被发送。通常这意味着单击了鼠标右键，但这取决于平台
+    QContextMenuEvent::Keyboard//键盘导致发送此事件。在 Windows 上，这意味着按下了菜单按钮
+    QContextMenuEvent::Other//该事件是通过其他方式发送的（即不是通过鼠标或键盘）
+}
+```
+
+成员函数。
+
+```c++
+// 构造一个上下文菜单事件对象，其中接受参数标志设置为 false,原因参数必须是QContextMenuEvent::Mouse 或QContextMenuEvent::Keyboard。pos参数指定相对位置,globalPos是全局位置
+
+// 需要指定2个鼠标位置和修饰符参数
+QContextMenuEvent(Reason reason, const QPoint &pos, const QPoint &globalPos, Qt::KeyboardModifiers modifiers);
+// 需要指定2个鼠标位置
+QContextMenuEvent(Reason reason, const QPoint &pos, const QPoint &globalPos);
+// globalPos被初始化为pos
+QContextMenuEvent(Reason reason, const QPoint &pos);
+
+// 返回此上下文事件的原因
+Reason reason() const;
+const QPoint &globalPos() const;//返回事件发生时鼠标指针的全局位置
+int globalX() const;//返回事件发生时鼠标指针的全局 x 位置
+int globalY() const;//返回事件发生时鼠标指针的全局 y 位置
+const QPoint &pos() const;//返回鼠标指针相对于接收事件的小部件的位置
+int x() const;
+int y() const;
+```
+
+##### contextMenuEvent
+
+### 16.3 文本验证器
+
+#### 16.3.1 QValidator
+
+QValidator 类提供输入文本的验证。类本身是抽象的。**两个子类 QIntValidator 和 QDoubleValidator 提供基本的数值范围检查**，QRegExpValidator 使用自定义正则表达式提供一般检查。
+如果内置验证器不够用，您可以继承 QValidator。**该类有两个虚函数：validate() 和 fixup()。**
+**validate() 必须由每个子类实现。它返回 Invalid、Intermediate 或 Acceptable**，具体取决于其参数是否有效（对于子类的有效定义）。
+这三种状态需要一些解释。 Invalid 字符串显然是无效的。中间不太明显：当字符串不完整（仍在编辑）时，有效性的概念很难应用。 **QValidator 将 Intermediate 定义为既不明显无效也不可接受作为最终结果的字符串的属性**。可接受意味着该字符串作为最终结果是可接受的。有人可能会说，在输入可接受字符串期间任何可能的中间状态的字符串都是中间状态。
+
+以下是一些示例：
+
+对于接受[10,1000]整数的**LineEdit**，42 和 123 是可接受的，空字符串 5是中间值，asdf和1114是无效的；
+对于接受 URL 的可编辑**comboBox**，任何格式正确的 URL 都是可接受的；“http://example.com/,”是中间的(它可能是一个剪切和粘贴操作,意外地在末尾使用了逗号)；空字符串是中级；(用户可能会选择并删除所有文本以准备输入新 URL)，但是“http:///./”是无效的；
+对于接受长度的**SpinBox**，"11cm"和"1in"是可接受的,"11"和空字符是中间状态,“http://example.com”和“hour”是无效的。
+
+**fixup() 是为可以修复一些用户错误的验证器提供的。默认实现什么都不做**。例如，如果用户按下 Enter（或 Return）并且内容当前无效，QLineEdit 将调用 fixup()。这使 fixup() 函数有机会执行一些魔术来使无效字符串可接受。**验证器具有使用 setLocale() 设置的语言环境**。它通常用于解析本地化数据。例如，QIntValidator 和 QDoubleValidator 使用它来解析整数和双精度的本地化表示。
+QValidator 通常与 QLineEdit、QSpinBox 和 QComboBox 一起使用。
+
+枚举类型，表示验证状态。
+
+```c++
+enum State { Invalid, Intermediate, Acceptable }
+```
+
+```c++
+virtual void fixup(QString &input) const;//可以继承缺省实现
+QLocale locale() const;//返回验证器的语言环境。语言环境默认初始化为与 QLocale() 相同
+void setLocale(const QLocale &locale);
+virtual State validate(QString &input, int &pos) const = 0;//必须重实现
+```
+
+信号函数。
+
+```c++
+void QValidator::changed();
+```
+
+#### 16.3.2 QDoubleValidator
+
+QDoubleValidator 类提供浮点数的范围检查。**QDoubleValidator 提供了上界、下界和小数点后位数的限制**。它不提供 fixup() 函数。您可以**使用 setRange() 或 setBottom() 和 setTop() 在一次调用中设置可接受的范围**。使用 **setDecimals() 设置小数位数**。 validate() 函数返回验证状态。
+QDoubleValidator使用它的 locale() 来解释数字。例如，在德语语言环境中，“1,234”将被接受为小数 1.234。在阿拉伯语语言环境中，QDoubleValidator 将接受阿拉伯数字。
+注意：在 locale() 上设置的 QLocale::NumberOptions也会影响数字的解释方式。
+
+例如，默认情况下未设置 QLocale::RejectGroupSeparator，因此验证器将接受组分隔符。**因此建议使用 QLocale::toDouble() 来获取数值**。
+
+枚举类型。这个枚举定义了允许输入双精度的符号。
+
+```c++
+enum Notation { StandardNotation,// 该字符串被写为标准数字（即 0.015）
+               ScientificNotation //该字符串以科学形式编写。它可能有一个指数部分（即 1.5E-2）
+};
+```
+
+成员函数。
+
+```c++
+QDoubleValidator(QObject *parent = Q_NULLPTR);
+QDoubleValidator(double bottom, double top, int decimals, QObject *parent = Q_NULLPTR);
+double bottom() const;
+double top() const;
+int decimals() const;
+Notation notation() const;
+void setBottom(double); // 设置接收的浮点数范围
+void setTop(double);
+void setDecimals(int);// 精度
+virtual void setRange(double minimum, double maximum, int decimals = 0);
+void setNotation(Notation);// 计数模式,默认科学计数法
+```
+
+#### 16.3.3 QIntValidator
+
+QIntValidator 类提供了一个验证器，可确保字符串包含指定范围内的有效整数。
+使用示例：
+
+```c++
+QValidator *validator = new QIntValidator(100, 999, this);
+QLineEdit *edit = new QLineEdit(this);
+edit->setValidator(validator);
+
+QString str;
+int pos = 0;
+QIntValidator v(100, 900, this);
+
+str = "1";
+v.validate(str, pos);     // returns Intermediate
+str = "012";
+v.validate(str, pos);     // returns Intermediate
+str = "999";
+v.validate(str, pos);    // returns Intermediate
+
+str = "123";
+v.validate(str, pos);     // returns Acceptable
+str = "678";
+v.validate(str, pos);     // returns Acceptable
+
+str = "1234";
+v.validate(str, pos);     // returns Invalid
+str = "-123";
+v.validate(str, pos);     // returns Invalid
+str = "abc";
+v.validate(str, pos);     // returns Invalid
+str = "12cm";
+v.validate(str, pos);     // returns Invalid
+```
+
+成员函数。
+
+```c++
+QIntValidator(int minimum, int maximum, QObject *parent = Q_NULLPTR);
+int bottom() const;
+void setBottom(int);
+virtual void setRange(int bottom, int top);
+void setTop(int);
+int top() const;
+```
+
+
+
+#### 16.3.4 QRegExpValidator
+
+**QRegExpValidator 类用于根据正则表达式检查字符串**。
+QRegExpValidator 使用正则表达式 (regexp) 来确定输入字符串是 Acceptable、Intermediate 还是 Invalid。正则表达式可以在构造 QRegExpValidator 时提供，也可以在以后提供。当 QRegExpValidator 确定一个字符串是否可接受时，正则表达式被视为以字符串断言的开头 (^) 开始并以字符串断言的结尾 ($) 结束；匹配是针对整个输入字符串的，或者如果给出大于零的起始位置，则从给定位置开始。
+如果字符串是可接受字符串的前缀，则认为它是中间字符串。例如，“”和“A”是正则表达式 [A-Z][0-9] 的中间值（而“_”是无效的）。有关 Qt 的正则表达式引擎的简要介绍，请参阅 QRegExp。
+
+成员函数。
+
+```c++
+QRegExpValidator(QObject *parent = Q_NULLPTR);
+QRegExpValidator(const QRegExp &rx, QObject *parent = Q_NULLPTR);
+const QRegExp &regExp() const;
+void setRegExp(const QRegExp &rx);
+```
+
+#### 16.3.5 QRegularExpressionValidator
+
+QRegularExpressionValidator 类用于根据正则表达式检查字符串。
+QRegularExpressionValidator 使用正则表达式 (regexp) 来确定输入字符串是 Acceptable、Intermediate 还是 Invalid。正则表达式可以在构造 QRegularExpressionValidator 时提供，也可以在稍后提供。
+如果正则表达式与字符串部分匹配，则结果被认为是中间的。例如，“”和“A”是正则表达式 [A-Z][0-9] 的中间值（而“_”是无效的）。QRegularExpressionValidator 自动将正则表达式包装在 \\A 和 \\z 锚点中；换句话说，它总是尝试进行完全匹配。
+
+成员函数。
+
+```c++
+QRegularExpressionValidator(QObject *parent = Q_NULLPTR);
+QRegularExpressionValidator(const QRegularExpression &re, QObject *parent = Q_NULLPTR);
+~QRegularExpressionValidator();
+QRegularExpression ;
+regularExpression() const;
+```
+
+信号与槽函数。
+
+```c++
+slot void setRegularExpression(const QRegularExpression &re);
+signal void regularExpressionChanged(const QRegularExpression &re);
+```
+
+### 16.4 滑动条
+
+#### 16.4.1 QAbstractSlider
+
+QAbstractSlider 类提供一个范围内的整数值。
+该类被设计为 QScrollBar、QSlider 和 QDial 等小部件的通用超类。
+以下是该类的主要属性：
+
+1. value：QAbstractSlider 维护的有界整数。
+2.  最小值：可能的最低值。
+3. 最大值：可能的最大值。
+4. singleStep：抽象滑块提供的两个自然步骤中较小的一个，通常对应于用户按下箭头键。
+5. pageStep：抽象滑块提供的两个自然步骤中较大的一个，通常对应于用户按下 PageUp 或 PageDown
+6. tracking：是否启用滑块跟踪。
+7. sliderPosition：滑块的当前位置。如果启用了跟踪（默认），这与 value 相同。
+
+信号。
+
+```c++
+void actionTriggered(int action);//触发了滑块动作
+void rangeChanged(int min, int max);//滑块范围已更改
+void sliderMoved(int value);//用户拖动滑块
+void sliderPressed();//用户开始拖动滑块
+void sliderReleased();//用户释放滑块
+void valueChanged(int value);//值已更改。跟踪确定在用户交互期间是否发出此信号
+```
+
+QAbstractSlider 提供了**一个虚拟的 sliderChange() 函数，非常适合更新滑块的屏幕表示**。通过调用 triggerAction()，子类触发滑块动作。两个辅助函数 QStyle::sliderPositionFromValue() 和 QStyle::sliderValueFromPosition() 帮助子类和样式将屏幕坐标映射到逻辑范围值。
+
+枚举类型。
+
+```c++
+enum QAbstractSlider::SliderAction{
+    QAbstractSlider::SliderNoAction
+    QAbstractSlider::SliderSingleStepAdd
+    QAbstractSlider::SliderSingleStepSub
+    QAbstractSlider::SliderPageStepAdd
+    QAbstractSlider::SliderPageStepSub
+    QAbstractSlider::SliderToMinimum
+    QAbstractSlider::SliderToMaximum
+    QAbstractSlider::SliderMove
+}
+enum QAbstractSlider::SliderChange{ 
+    QAbstractSlider::SliderRangeChange
+    QAbstractSlider::SliderOrientationChange
+    QAbstractSlider::SliderStepsChange
+    QAbstractSlider::SliderValueChange
+}
+```
+
+成员函数。
+
+```c++
+Qt::Orientation orientation() const;//此属性保存滑块的方向
+void setOrientation(Qt::Orientation);//槽函数
+
+void triggerAction(SliderAction action);
+
+int sliderPosition() const;
+void setSliderPosition(int);//此属性保存当前滑块位置
+
+void setValue(int value); // 槽函数
+int value() const;//此属性保存滑块的当前值
+
+bool hasTracking() const;//此属性保存是否启用滑块跟踪
+void setTracking(bool enable);
+
+void setInvertedAppearance(bool);//此属性保存滑块是否显示其值倒置
+bool invertedAppearance() const;
+
+bool invertedControls() const;//此属性保存滑块是否反转其滚轮和按键事件
+void setInvertedControls(bool);
+
+void setSliderDown(bool);//该属性保存滑块是否被按下
+bool isSliderDown() const;
+
+
+void setRange(int min, int max);// 槽函数
+void setMaximum(int);
+void setMinimum(int);
+int maximum() const;
+int minimum() const;
+
+int pageStep() const;//此属性保存页面步骤
+void setPageStep(int);
+
+void setSingleStep(int);//此属性包含单步
+int singleStep() const;
+```
+
+#### 16.4.2 QScrollBar
+
+**QScrollBar 小部件提供垂直或水平滚动条**。
+滚动条是一种控件，它使用户能够访问大于用于显示它的小部件的文档部分。它提供了用户在文档中的当前位置和可见文档数量的视觉指示。滚动条通常配备其他控件，可以实现更准确的导航。 Qt 以适合每个平台的方式显示滚动条。如果**您需要在另一个小部件上提供滚动视图，使用 QScrollArea 类可能更方便，因为它提供了视口小部件和滚动条**。如果您需要使用 QAbstractScrollArea 为专门的小部件实现类似的功能，QScrollBar 很有用；例如，如果您决定继承 QAbstractItemView。对于使用滑块控件获取给定范围内的值的大多数其他情况，QSlider 类可能更适合您的需要。
+
+```c++
+QScrollBar(QWidget *parent = Q_NULLPTR);
+QScrollBar(Qt::Orientation orientation, QWidget *parent = Q_NULLPTR);
+~QScrollBar();
+```
+
+#### 16.4.3 QSlider
+
+QSlider 小部件提供垂直或水平滑块。
+￼ 滑块是控制有界值的经典小部件。它允许用户沿水平或垂直凹槽移动滑块手柄，并将手柄的位置转换为合法范围内的整数值。QSlider 自己的功能很少；大多数功能都在 QAbstractSlider 中。最有用的函数是 setValue() 直接将滑块设置为某个值； triggerAction() 模拟点击的效果（对快捷键有用）； setSingleStep(), setPageStep() 设置步数；和 setMinimum() 和 setMaximum() 来定义滚动条的范围。
+QSlider 提供了控制刻度线的方法。您可以使用 **setTickPosition() 来指示您想要刻度线的位置**，使用 setTickInterval() 来指示您想要多少个刻度线。**当前设置的刻度位置和间隔可以分别使用tickPosition() 和tickInterval() 函数进行查询**。
+
+成员函数。
+
+```c++
+QSlider(QWidget *parent = Q_NULLPTR);
+QSlider(Qt::Orientation orientation, QWidget *parent = Q_NULLPTR);
+~QSlider();
+void setTickInterval(int ti);
+void setTickPosition(TickPosition position);
+int tickInterval() const;
+TickPosition tickPosition() const;
+```
+
+#### 16.4.4 QDial
+
+**QDial 类提供了一个圆形范围控制（如速度计或电位计）**。
+￼ QDial 用于当用户需要控制一个程序可定义范围内的值时，该范围要么环绕（例如，测量角度从 0 到 359 度），要么对话框布局需要一个方形小部件。
+由于 QDial 继承自 QAbstractSlider，所以表盘的行为类似于滑块。当 wrapping() 为 false（默认设置）时，滑块和表盘之间没有真正的区别。它们都共享相同的信号、槽和成员函数。您使用哪一种取决于您的用户的期望和应用程序的类型。当滑块移动时，表盘最初会连续发出 valueChanged() 信号；您可以通过禁用跟踪属性来减少它发出信号的频率。即使禁用跟踪，sliderMoved() 信号也会连续发出。
+当鼠标按钮被按下和释放时，表盘还会发出sliderPressed() 和sliderReleased() 信号。请注意，表盘的值可以在不发出这些信号的情况下更改，因为键盘和滚轮也可用于更改值。
+与滑块不同的是，QDial 尝试绘制“不错”数量的凹口，而不是每行一步一个。如果可能，每行一步绘制一个槽口，但如果没有足够的像素来绘制每一个槽口，QDial 将跳过槽口来尝试绘制一个统一集（例如，每隔第二个或第三个槽口绘制一次）。
+
+与滑块一样，表盘使 QAbstractSlider 函数 setValue() 可用作插槽。
+表盘的键盘界面相当简单：左/上和右/下箭头键通过定义的singleStep调整表盘的值，Page Up和Page Down通过定义的pageStep调整值，Home和End键将值设置为定义的最小值和最大值。
+如果您使用鼠标滚轮调整表盘，则增量值由 wheelScrollLines 乘以 singleStep 和 pageStep 的较小值确定。
+
+成员函数。
+
+```c++
+QDial(QWidget *parent = Q_NULLPTR);
+~QDial();
+int notchSize() const;
+qreal notchTarget() const;
+bool notchesVisible() const;
+void setNotchTarget(double target);
+bool wrapping() const;
+
+slot void setNotchesVisible(bool visible);
+slot void setWrapping(bool on);
+```
+
+
 
 ## 串口通信
 

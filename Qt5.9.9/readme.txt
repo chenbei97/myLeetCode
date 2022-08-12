@@ -300,6 +300,7 @@ if (file.open(QFile::ReadOnly)) {
     5.12 resizeEvent():调整窗口大小事件
     5.13 hoverEvent():悬停事件
     5.14 timerEvent():定时器事件
+    5.15 contextMenuEvent():上下文菜单事件
 
 4. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
 一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针
