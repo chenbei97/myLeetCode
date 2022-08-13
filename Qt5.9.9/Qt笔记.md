@@ -839,7 +839,7 @@ forever{
 }
 ```
 
-##### 2.2.1.6 qDebug
+##### 2.2.1.7 qDebug
 
 qDebug 用于在debugger窗体显示信息，其他的类似的还有qWaring,qCritical,qFatal,qInfo。
 
@@ -849,7 +849,29 @@ qDebug 用于在debugger窗体显示信息，其他的类似的还有qWaring,qCr
 qDebug("item is in list: %d",mylist.size());
 ```
 
+##### 2.2.1.8 Q_OS_WIN
 
+在所有受支持的 Windows 版本上定义。
+
+也就是如果宏Q_OS_WIN32, Q_OS_WIN64, or Q_OS_WINRT被定义过。
+
+##### 2.2.1.9 QStringLiteral
+
+该宏在编译时从字符串文字 str 生成 QString 的数据。在这种情况下，从中创建一个 QString 是免费的，并且生成的字符串数据存储在已编译目标文件的只读段中。
+
+如果您的代码如下所示：
+
+```c++
+if (node.hasAttribute("http-contents-length"))
+```
+
+然后将创建一个**临时 QString 以作为 hasAttribute 函数参数传递**。这可能非常昂贵，因为它涉及内存分配和将数据复制/转换为 QString 的内部编码。这个成本可以通过使用 QStringLiteral 来避免：
+
+```c++
+if (node.hasAttribute(QStringLiteral(u"http-contents-length"))) 
+```
+
+这种情况下，QString的内部数据会在编译时生成；运行时不会发生转换或分配。**使用 QStringLiteral 代替双引号的纯 C++ 字符串文字可以显着加快从编译时已知的数据创建 QString 实例的速度**。
 
 #### 2.2.2 QtMath
 
@@ -20612,5 +20634,159 @@ void serverThread::run()
 
 #### 案例2
 
+案例为[41-SerialPortExamples\AsynchronousSerialCommunication](41-SerialPortExamples\AsynchronousSerialCommunication)。
 
+这个案例展示了如何使用异步方式也就是readyRead信号来读取串口数据，不过这个案例在readyRead的使用上意义不大，比较简单，只是简单的使用readAll来读取数据，如果读的速度比发的速度慢就会读出来以前的数据需要做一定处理。不过这个案例在UI界面的设计上很有参考意义，portConfig.h和portConfig.cpp以及portConfig.ui以后可以拿来使用做一个参考。
+
+关于串口参数配置的核心代码可以参考思路。**尤其头文件使用结构体的这个思路是很好的**。
+
+```c++
+class portConfig : public QDialog
+{
+    Q_OBJECT
+public:
+        struct Configs //串口配置参数
+        {
+            QString name;
+            qint32 baudRate;
+            QString stringBaudRate;
+            QSerialPort::DataBits dataBits;
+            QString stringDataBits;
+            QSerialPort::Parity parity;
+            QString stringParity;
+            QSerialPort::StopBits stopBits;
+            QString stringStopBits;
+            QSerialPort::FlowControl flowControl;
+            QString stringFlowControl;
+        };
+        Configs configs() const; // 返回设置的串口参数
+        explicit portConfig(QWidget *parent = nullptr);
+        ~portConfig();
+private slots:
+        void on_btnConfigSure_clicked();// 应用配置,点击确定
+        void on_availPortsComboBox_currentIndexChanged(int index);
+        void on_portBaudRateCombo_currentIndexChanged(int index);
+private:
+        void initAvailPorts();
+        void showPortInfo(int idx);
+        void initConfigs();
+        void updateConfigs(); // 用户点击确定后会更新设置
+private:
+        Ui::portConfig *ui;
+        Configs currentConfigs; // 当前的串口配置参数
+        QIntValidator * intValidator; // 用于限制lineEdit(comboBox)的输入必须是指定的整数
+};
+```
+
+源文件，核心是3个函数。
+
+```c++
+// 初始化可用串口并存储它们的信息到对应下拉项
+void portConfig::initAvailPorts()
+{
+        ui->availPortsComboBox->clear();
+        QString name; // 串口名称
+        QString serialNumber; // 串口编号
+        QString location; // 串口位置
+        QString description; // 描述信息
+        QString manufacturer; // 制造商
+        quint16 vendor; // 供应商编号
+        quint16 productIdentifier; // 产品编号
+        const auto infos = QSerialPortInfo::availablePorts(); // 可用串口
+
+        for (const QSerialPortInfo &info : infos)
+        {
+                QStringList list;
+                name = info.portName();
+                serialNumber = info.serialNumber();
+                location = info.systemLocation();
+                description = info.description();
+                manufacturer = info.manufacturer();
+                vendor = info.vendorIdentifier();
+                productIdentifier = info.productIdentifier();
+
+                // 信息为空时就打印N/A表示空白
+                list << name
+                     << location
+                     << (!serialNumber.isEmpty() ? serialNumber : blankString)
+                     << (!description.isEmpty() ? description : blankString)
+                     << (!manufacturer.isEmpty() ? manufacturer : blankString)
+                     << (vendor ? QString::number(info.vendorIdentifier(), 16) : blankString)
+                     << (productIdentifier ? QString::number(info.productIdentifier(), 16) : blankString);
+                ui->availPortsComboBox->addItem(info.portName(),list); // 注意这里,list也存进去了,每个项存储对应的信息
+        }
+}
+
+void portConfig::initConfigs()
+{
+    // 波特率
+    QList<qint32> baudrates = QSerialPortInfo::standardBaudRates();
+    QStringList stringBaudrates;
+    foreach (const quint32& rate, baudrates)
+                stringBaudrates << QString::number(rate,10);
+    ui->portBaudRateCombo->addItems(stringBaudrates);
+    ui->portBaudRateCombo->addItem(tr("Custom"));
+    ui->portBaudRateCombo->setEditable(false);
+    ui->portBaudRateCombo->setCurrentIndex(12); // 对应115200的位置
+
+    // 数据位,QStringLiteral可以避免QString临时变量的复制
+    ui->portDataBitsCombo->addItem(QStringLiteral("5"), QSerialPort::Data5); // 存储到指定userData下
+    ui->portDataBitsCombo->addItem(QStringLiteral("6"), QSerialPort::Data6);
+    ui->portDataBitsCombo->addItem(QStringLiteral("7"), QSerialPort::Data7);
+    ui->portDataBitsCombo->addItem(QStringLiteral("8"), QSerialPort::Data8);
+    ui->portDataBitsCombo->setCurrentIndex(3); // 默认是Data8
+
+    // 校验位
+    ui->portParityCombo->addItem(tr("None"), QSerialPort::NoParity);// 存储到指定userData下
+    ui->portParityCombo->addItem(tr("Even"), QSerialPort::EvenParity);
+    ui->portParityCombo->addItem(tr("Odd"), QSerialPort::OddParity);
+    ui->portParityCombo->addItem(tr("Mark"), QSerialPort::MarkParity);
+    ui->portParityCombo->addItem(tr("Space"), QSerialPort::SpaceParity);
+
+    // 停止位
+    ui->portStopBitCombo->addItem(QStringLiteral("1"), QSerialPort::OneStop);// // 存储到指定userData下
+    #ifdef Q_OS_WIN // 此类型的停止位只支持window平台
+    ui->portStopBitCombo->addItem(tr("1.5"), QSerialPort::OneAndHalfStop);
+    #endif
+    ui->portStopBitCombo->addItem(QStringLiteral("2"), QSerialPort::TwoStop);
+
+    // 流控制
+    ui->portFlowControlCombo->addItem(tr("None"), QSerialPort::NoFlowControl);
+    ui->portFlowControlCombo->addItem(tr("RTS/CTS"), QSerialPort::HardwareControl);
+    ui->portFlowControlCombo->addItem(tr("XON/XOFF"), QSerialPort::SoftwareControl);
+}
+
+void portConfig::updateConfigs()
+{
+        // 串口名
+        this->currentConfigs.name = ui->availPortsComboBox->currentText();
+
+        // 波特率
+         // 这里在initConfig.cpp中没有给波特率的每个项加用户数据,所以这里是不能使用itemData获取对应的波特率的
+        // this->currentConfigs.baudRate = static_cast<qint32>( ui->portBaudRateCombo->itemData( // 传入索引参数,返回值是QVariant,所以必须强制转换为qint32类型
+        //        ui->portBaudRateCombo->currentIndex()).toInt());  // 因为currentIndex()是字符串,需要转为int传入
+        this->currentConfigs.baudRate = ui->portBaudRateCombo->currentText().toInt(); // 直接获取当前的索引即可
+        this->currentConfigs.stringBaudRate = QString::number(this->currentConfigs.baudRate); // 字符串表示
+
+        // 数据位
+        this->currentConfigs.dataBits = static_cast<QSerialPort::DataBits>(
+                    ui->portDataBitsCombo->itemData(ui->portDataBitsCombo->currentIndex()).toInt());
+        this->currentConfigs.stringDataBits = ui->portDataBitsCombo->currentText();// 字符串表示
+
+        // 校验位
+        this->currentConfigs.parity = static_cast<QSerialPort::Parity>(
+                    ui->portParityCombo->itemData(ui->portParityCombo->currentIndex()).toInt());
+        this->currentConfigs.stringParity = ui->portParityCombo->currentText();// 字符串表示
+
+        // 停止位
+        this->currentConfigs.stopBits = static_cast<QSerialPort::StopBits>(
+                    ui->portStopBitCombo->itemData(ui->portStopBitCombo->currentIndex()).toInt());
+        this->currentConfigs.stringStopBits = ui->portStopBitCombo->currentText();// 字符串表示
+
+        // 流控制
+        this->currentConfigs.flowControl = static_cast<QSerialPort::FlowControl>(
+                    ui->portFlowControlCombo->itemData(ui->portFlowControlCombo->currentIndex()).toInt());
+        this->currentConfigs.stringFlowControl = ui->portFlowControlCombo->currentText();// 字符串表示
+}
+```
 

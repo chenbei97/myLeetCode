@@ -1,0 +1,9 @@
+41-SerialPortExamples\AsynchronousSerialCommunication
+
+这个案例展示了如何使用异步方式也就是readyRead信号来读取串口数据
+
+不过这个案例在readyRead的使用上意义不大，比较简单，只是简单的使用readAll来读取数据，如果读的速度比发的速度慢就会读出来以前的数据需要做一定处理
+
+不过这个案例在UI界面的设计上很有参考意义，portConfig.h和portConfig.cpp以及portConfig.ui以后可以拿来使用做一个参考
+
+关于串口参数配置的核心代码可以参考portConfig.h，尤其使用结构体的这个思路是很好的
