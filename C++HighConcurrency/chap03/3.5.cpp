@@ -1,7 +1,7 @@
 /*
  * @Author: chenbei
  * @Date: 2022-08-09 13:27:51
- * @LastEditTime: 2022-08-09 13:49:07
+ * @LastEditTime: 2022-08-15 10:04:32
  * @FilePath: \\myLeetCode\\C++HighConcurrency\\chap03\\3.5.cpp
  * @Description: 使用std::lock和std::scoped_lock<>避免死锁
  * @Signature: A boy without dreams
@@ -54,4 +54,4 @@ void swap(X& lhs, X& rhs)
 // 锁操作可能是导致死锁的原因，但是也可以不涉及锁操作就导致死锁
 // 例如2个线程各自关联了thread实例,若它们同时再对方的thread 实例调用join函数就能制造死锁又不涉及锁操作
 // 总结下来就是只要有一个线程在等待另一个线程，那么这个线程就不能反过来等待这个线程
-// 3.5.cpp给出了具体的细分条目来判断其它线程是否正在等待当前线程
+// 3.6.cpp给出了具体的细分条目来判断其它线程是否正在等待当前线程
