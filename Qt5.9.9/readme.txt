@@ -115,7 +115,6 @@
         BlockingSynchronousSerialCommunication/Server
     2) 串口后台固定查询小功能的实现,参照1)的写法,以后项目中可以拿去用
         serialPortFixedQuery/TestfixedQueryThread(2022-08-11)
-
     3) 这个案例展示了如何使用异步方式也就是readyRead信号来读取串口数据,不过这个案例在readyRead的使用上意义不大，比较简单
         只是简单的使用readAll来读取数据，如果读的速度比发的速度慢就会读出来以前的数据需要做一定处理
         不过这个案例在UI界面的设计上很有参考意义，portConfig.h和portConfig.cpp以及portConfig.ui以后可以拿来使用做一个参考
@@ -147,21 +146,38 @@
     8) 无论读取是否成功,回复客户端是否成功都只是作出对应的反应,不会阻碍while循环,执行完剩余的代码后又会回到while初始代码处
     9) 同理
 
-10. 带有重载版本的信号使用函数指针传递时的使用方法
-一般函数指针传递的都是没有重载版本的信号,直接使用&和::即可
-但是带有重载版本的时候,信号函数需要进行一个静态转换指明是哪个版本
+10. 信号与槽函数的连接问题
+(1) 信号可以和信号连接
+connect(Obj1,SIGNAL(signal1),Obj2,SIGNAL(signal2));//使用场景可能是一个timeout连接一个readyRead信号,然后readyRead绑定了一个槽函数
+(2) 同一个信号可以连接多个槽函数
+connect(Obj1,SIGNAL(signal),Obj2,SIGNAL(slot1));
+connect(Obj1,SIGNAL(signal),Obj2,SIGNAL(slot2));
+信号的参数个数必须大于等于槽函数的参数个数,且参数类型要一一对应,缺少的参数是信号的后几个参数
+connect(responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);//textChanged信号有参数
+void Dialog::activateRunButton(){runButton->setEnabled(true);} // activateRunButton槽函数没有参数
+(3) 不同的信号可以连接同一个槽函数
+connect(Obj1,SIGNAL(signal1),Obj3,SIGNAL(slot));
+connect(Obj2,SIGNAL(signal2),Obj3,SIGNAL(slot));
+(4) 如果使用宏SIGNAL和SLOT的方式,槽函数必须有slots声明,还可以使用函数指针的方式,这样的函数不需要使用slot声明
+connect(&Obj,Obj::signal,this,&MainWindow::slot);//但是需要使用取址运算符作用域,一般函数指针传递的都是没有重载版本的信号,直接使用即可
+(5) 函数指针的方式,如果信号具有重载版本,必须使用static_cast<>静态转换,借助运算符号&和::指明是哪个版本的信号
 例如信号&QComboBox::currentIndexChanged参数有const QString&和int的2个版本
 将其静态转换为void (QComboBox::*)(const QString &),表示输入参数为const QString&输出参数void的函数指针,且该函数是从属于QComboBox的
 QSpinBox的同理valueChanged也有2个版本,但是QLineEdit的textChanged只有1个版本不需要静态转换
-void(Teacher::*teacherSignal)(QString) = &Teacher::hungry;
+// C风格转换
+void(Teacher::*teacherSignal)(QString) = &Teacher::hungry; 
 void(Student::*studentSignal)(QString) = &Student::treat;
+// C++风格转换
 connect(serialPortComboBox, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
         this, &Dialog::activateRunButton);
 connect(waitRequestSpinBox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged),
         this, &Dialog::activateRunButton);
-connect(responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
-信号的参数个数必须大于等于槽函数的参数个数,且参数类型要一一对应,所以槽函数的参数可以没有
-void Dialog::activateRunButton(){runButton->setEnabled(true);}
+(6) 槽函数中可以使用静态函数sender()和类型转换qobject_cast获取信号的发送者
+void on_lineEdit_textChanged(const QString &text)
+{
+    //....
+    QLineEdit * lineEdit = qobject_cast<QLineEdit*>(sender()) ;
+}
 
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
@@ -192,14 +208,14 @@ int main()
     return a.exec();
 }
 
-8. 文本对话框的使用方式
+7. 选择文件对话框的使用方式
 QString aFileName=QFileDialog::getOpenFileName(this,tr("打开一个文件"),curPath,
                 "C++文件(*.h *cpp);;文本文件(*.txt);;所有文件(*.*)");
 if (aFileName.isEmpty()) return; //如果未选择文件，退出
 // dosomething
 
-7. 标准的文本文件保存内容的代码
-7.1 流的方式：（QFile+QTextStream）
+6. 标准的文本文件保存内容的代码(QFile+QTextStream)
+// 示例1
 QFile aFile(aFileName);
 if (!aFile.open(QIODevice::WriteOnly | QIODevice::Text))
     return false;
@@ -208,7 +224,7 @@ aStream.setAutoDetectUnicode(true); //自动检测Unicode,才能正常显示文�
 QString str=ui->textEditStream->toPlainText(); //QPlainText的内容可以直接转换为字符串
 aStream<<str; //写入文本流
 aFile.close();//关闭文件
-
+// 示例2
 QTextDocument   *doc;       //文本对象
 QTextBlock      textLine;   //文本中的一段
 doc=ui->textEditStream->document(); //QPlainTextEdit的内容也可以保存在一个 QTextDocument 里
@@ -221,8 +237,8 @@ for (int i=0; i<cnt; i++) //扫描所有 block
     aStream<<str<<"\n";
 }
 
-6. 标准的文本文件读取内容的代码
-6.1 流的方式：（QFile+QTextStream+QFileInfo）
+5. 标准的文本文件读取内容的代码
+5.1 流的方式：（QFile+QTextStream+QFileInfo）
 /******************************************************************************/
 QFile aFile("file.txt");  //以文件方式读出
 if (aFile.open(QIODevice::ReadOnly | QIODevice::Text)) //以只读文本方式打开文件
@@ -243,7 +259,7 @@ while (!line.isNull()) { // 不为空就继续处理
 }
 /******************************************************************************/
 
-6.2 IO的方式：（QFile+QIODevice）
+5.2 IO的方式：（QFile+QIODevice）
 /******************************************************************************/
 QFile file("in.txt");
 if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -262,7 +278,7 @@ if (file.open(QFile::ReadOnly)) {
 }
 /******************************************************************************/
 
-5. 窗口可以利用的事件类型
+4. 窗口可以利用的事件类型
     5.1 closeEvent():窗口关闭触发的事件,例如弹出窗口确认是否关闭
     void customDialog::closeEvent(QCloseEvent *event)
     {
@@ -306,7 +322,7 @@ if (file.open(QFile::ReadOnly)) {
     5.14 timerEvent():定时器事件
     5.15 contextMenuEvent():上下文菜单事件
 
-4. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
+3. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
 一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针
 /******************************************************************************/
 void QFormDoc::closeEvent(QCloseEvent *event)
@@ -326,14 +342,6 @@ void void QFormDoc::closeEvent(QCloseEvent *event)
     // 这样当子窗口关闭时发射该信号就会自动执行setActWidgetEnable函数
 }
 /******************************************************************************/
-
-3. 槽函数中获取信号的发送者
-需要利用静态函数sender(),以及类型转换qobject_cast
-void on_lineEdit_textChanged(const QString &text)
-{
-    //....
-    QLineEdit * lineEdit = qobject_cast<QLineEdit*>(sender()) ;
-}
 
 2. 延时功能的实现(使用QTime)
 QTime t;

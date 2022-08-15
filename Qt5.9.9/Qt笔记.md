@@ -855,24 +855,6 @@ qDebug("item is in list: %d",mylist.size());
 
 也就是如果宏Q_OS_WIN32, Q_OS_WIN64, or Q_OS_WINRT被定义过。
 
-##### 2.2.1.9 QStringLiteral
-
-该宏在编译时从字符串文字 str 生成 QString 的数据。在这种情况下，从中创建一个 QString 是免费的，并且生成的字符串数据存储在已编译目标文件的只读段中。
-
-如果您的代码如下所示：
-
-```c++
-if (node.hasAttribute("http-contents-length"))
-```
-
-然后将创建一个**临时 QString 以作为 hasAttribute 函数参数传递**。这可能非常昂贵，因为它涉及内存分配和将数据复制/转换为 QString 的内部编码。这个成本可以通过使用 QStringLiteral 来避免：
-
-```c++
-if (node.hasAttribute(QStringLiteral(u"http-contents-length"))) 
-```
-
-这种情况下，QString的内部数据会在编译时生成；运行时不会发生转换或分配。**使用 QStringLiteral 代替双引号的纯 C++ 字符串文字可以显着加快从编译时已知的数据创建 QString 实例的速度**。
-
 #### 2.2.2 QtMath
 
 其他的就是在<QtMath>定义的基础数学运算函数，如三角运算、弧度与角度转换等。
@@ -939,7 +921,7 @@ Qt容器类分为顺序容器类和关联容器类，包含了Java类型和STL�
 
 ##### 2.3.1.1 QList
 
-**QList：**最常用的容器类，但是以数组列表实现的线性列表，而不是链表，可以使用下标索引访问数据项，但是头插和尾插数据非常快。
+**QList：**最常用的容器类，但是以数组列表实现的线性列表，而不是链表，**常作为指针数组使用**，可以使用下标索引访问数据项，但是头插和尾插数据非常快。此类被QItemSelection、QQueue、QSignalSpy、QStringList和QTestEventList继承。
 
 常用函数。
 
@@ -947,6 +929,11 @@ Qt容器类分为顺序容器类和关联容器类，包含了Java类型和STL�
 insert(); // 插入
 replace(); // 替换
 removeAt(); // 移除
+removeAll();
+removeFirst();
+removeLast();
+reomveOne();
+erase();// 删除
 move(); // 移动
 swap(); // 交换
 append(); // 尾插
@@ -954,17 +941,57 @@ prepend(); // 头插
 removeFirst(); // 头删
 removeLast(); // 尾删
 isEmpty(); // 是否为空
+clear();// 清空
+count();// 元素个数
+length();// 长度
+size(); // 容量
+pop_front();// 头删
+pop_back();// 尾删
+replace();//替换
+takeAt();//取出指定位置元素
+takeFirst();//取出首元素
+takeLast();//取出尾元素
+
+// 访问元素
+at();
+value(); 
+front();
+first();constFirst();
+last();constLast();
+begin();cbegin();constBegin();crbegin();rbegin();
+end();cend();rend();constEnd();crend;rend();
+
+startsWith();//是否以xx开始
+endsWith();//是否以xx结束
+indexOf();//某个值首次出现的位置
+lastIndexOf();//某个值最后出现的位置
+
+// 一些转换函数
+QSet<T> toSet() const;
+std::list<T> toStdList() const;
+QVector<T> toVector() const;
+static QList<T> fromSet(const QSet<T> &set);
+static QList<T> fromStdList(const std::list<T> &list);
+static QList<T> fromVector(const QVector<T> &vector);
 ```
 
 ##### 2.3.1.2 QLinkedList
 
-**QLinkedList：**是链表，基于迭代器访问数据项，不能使用下标索引，插入和删除数据项的操作时间相同。
+**QLinkedList：**是链表，**基于迭代器访问数据项，不能使用下标索引**，插入和删除数据项的操作时间相同。
 
 其它的接口函数和QList很像，基本一致。
 
 ##### 2.3.1.3 QVector
 
-**QVector：**提供动态数组的功能，可以以下标索引访问数据，函数接口也与QList基本相同。区别是QVector效率更高，因为数据项是连续存储的，其风格就是STL的vector，QList则更像Java。
+**QVector：**提供动态数组的功能，可以以下标索引访问数据，函数接口也与QList基本相同。区别是QVector访问效率更高，因为数据项是连续存储的，所以前插和中间插入的效率很低，因为所有元素都要被移动。风格就是STL的vector，QList则更像Java。
+
+| 容器类      | 查找 | 插入 | 头插  | 尾插  |
+| ----------- | ---- | ---- | ----- | ----- |
+| QList       | O(1) | O(n) | ≈O(1) | ≈O(1) |
+| QLinkedList | O(n) | O(1) | O(1)  | O(1)  |
+| QVector     | O(1) | O(n) | O(n)  | ≈O(1) |
+
+
 
 ##### 2.3.1.4 QStack
 
@@ -1557,6 +1584,42 @@ QStringList split(const QRegExp &rx, SplitBehavior behavior = KeepEmptyParts) co
 QStringList split(const QRegularExpression &re, SplitBehavior behavior = KeepEmptyParts) const;
 ```
 
+##### 3.1.8 宏定义
+
+**（1）QStringLiteral**
+
+该宏在编译时从字符串文字 str 生成 QString 的数据。在这种情况下，从中创建一个 QString 是免费的，并且生成的字符串数据存储在已编译目标文件的只读段中。
+
+如果您的代码如下所示：
+
+```c++
+if (node.hasAttribute("http-contents-length"))
+```
+
+然后将创建一个**临时 QString 以作为 hasAttribute 函数参数传递**。这可能非常昂贵，因为它涉及内存分配和将数据复制/转换为 QString 的内部编码。这个成本可以通过使用 QStringLiteral 来避免：
+
+```c++
+if (node.hasAttribute(QStringLiteral(u"http-contents-length"))) 
+```
+
+这种情况下，QString的内部数据会在编译时生成；运行时不会发生转换或分配。**使用 QStringLiteral 代替双引号的纯 C++ 字符串文字可以显着加快从编译时已知的数据创建 QString 实例的速度**。
+
+**（2）QT_NO_CAST_FROM_ASCII**
+
+可以使用此宏**禁止const char * 到QString的隐式构造函数**。
+
+如果需要多语言界面也就是使用QObejct::tr()函数处理的字符串，就可以定义此宏。
+
+被传递的const char * 字符串会被QString:fromAscii函数转换为Unicode编码，也就是自动将超过128的字符作为Latin-1进行处理（可以通过QTextCodec::setCodecForCString()函数来改变默认设置）。
+
+**（3）QT_NO_CAST_TO_ASCII**
+
+正好相反，禁止从QString转换为const char * 。
+
+**（4）QT_RESTRICTED_CAST_FROM_ASCII**
+
+定义此宏会禁用从const char *  到QStrings 的大多数自动转换，但允许使用 QChar(char) 和 QString(const char (&amp;ch)[N] 构造函数，以及 QString::operator=( const char (&amp;ch)[N]) 赋值运算符提供了 QT_NO_CAST_FROM_ASCII 的大部分类型安全优势，但不需要用户代码用 QLatin1Char、QLatin1String 或类似内容包装字符和字符串文字。
+
 #### 3.1.2 QVariant
 
 QVariant类就像最常见的Qt数据类型的Union。**QVariant对象一次保存一个单一类型的单一值**，允许某些类型的多值，例如字符串列表。可以找出变量的类型T，**使用convert()函数将其转换为其他类型**，使用其中一个toT()函数例如toSize()获取其值，并**检查是否可以使用canConvert()将该类型转换为特定类型**。
@@ -1603,7 +1666,74 @@ struct MyCustomStruct{
 };
 ```
 
-##### 3.1.2.2 2个示例
+##### 3.1.2.2 枚举类型
+
+这个枚举类型定义了 QVariant 可以包含的变量类型。
+
+```c++
+Constant	Value	Description
+QVariant::Invalid	QMetaType::UnknownType	no type
+QVariant::BitArray	QMetaType::QBitArray	a QBitArray
+QVariant::Bitmap	QMetaType::QBitmap	a QBitmap
+QVariant::Bool	QMetaType::Bool	a bool
+QVariant::Brush	QMetaType::QBrush	a QBrush
+QVariant::ByteArray	QMetaType::QByteArray	a QByteArray
+QVariant::Char	QMetaType::QChar	a QChar
+QVariant::Color	QMetaType::QColor	a QColor
+QVariant::Cursor	QMetaType::QCursor	a QCursor
+QVariant::Date	QMetaType::QDate	a QDate
+QVariant::DateTime	QMetaType::QDateTime	a QDateTime
+QVariant::Double	QMetaType::Double	a double
+QVariant::EasingCurve	QMetaType::QEasingCurve	a QEasingCurve
+QVariant::Uuid	QMetaType::QUuid	a QUuid
+QVariant::ModelIndex	QMetaType::QModelIndex	a QModelIndex
+QVariant::PersistentModelIndex	QMetaType::QPersistentModelIndex	a QPersistentModelIndex (since 5.5)
+QVariant::Font	QMetaType::QFont	a QFont
+QVariant::Hash	QMetaType::QVariantHash	a QVariantHash
+QVariant::Icon	QMetaType::QIcon	a QIcon
+QVariant::Image	QMetaType::QImage	a QImage
+QVariant::Int	QMetaType::Int	an int
+QVariant::KeySequence	QMetaType::QKeySequence	a QKeySequence
+QVariant::Line	QMetaType::QLine	a QLine
+QVariant::LineF	QMetaType::QLineF	a QLineF
+QVariant::List	QMetaType::QVariantList	a QVariantList
+QVariant::Locale	QMetaType::QLocale	a QLocale
+QVariant::LongLong	QMetaType::LongLong	a qlonglong
+QVariant::Map	QMetaType::QVariantMap	a QVariantMap
+QVariant::Matrix	QMetaType::QMatrix	a QMatrix
+QVariant::Transform	QMetaType::QTransform	a QTransform
+QVariant::Matrix4x4	QMetaType::QMatrix4x4	a QMatrix4x4
+QVariant::Palette	QMetaType::QPalette	a QPalette
+QVariant::Pen	QMetaType::QPen	a QPen
+QVariant::Pixmap	QMetaType::QPixmap	a QPixmap
+QVariant::Point	QMetaType::QPoint	a QPoint
+QVariant::PointF	QMetaType::QPointF	a QPointF
+QVariant::Polygon	QMetaType::QPolygon	a QPolygon
+QVariant::PolygonF	QMetaType::QPolygonF	a QPolygonF
+QVariant::Quaternion	QMetaType::QQuaternion	a QQuaternion
+QVariant::Rect	QMetaType::QRect	a QRect
+QVariant::RectF	QMetaType::QRectF	a QRectF
+QVariant::RegExp	QMetaType::QRegExp	a QRegExp
+QVariant::RegularExpression	QMetaType::QRegularExpression	a QRegularExpression
+QVariant::Region	QMetaType::QRegion	a QRegion
+QVariant::Size	QMetaType::QSize	a QSize
+QVariant::SizeF	QMetaType::QSizeF	a QSizeF
+QVariant::SizePolicy	QMetaType::QSizePolicy	a QSizePolicy
+QVariant::String	QMetaType::QString	a QString
+QVariant::StringList	QMetaType::QStringList	a QStringList
+QVariant::TextFormat	QMetaType::QTextFormat	a QTextFormat
+QVariant::TextLength	QMetaType::QTextLength	a QTextLength
+QVariant::Time	QMetaType::QTime	a QTime
+QVariant::UInt	QMetaType::UInt	a uint
+QVariant::ULongLong	QMetaType::ULongLong	a qulonglong
+QVariant::Url	QMetaType::QUrl	a QUrl
+QVariant::Vector2D	QMetaType::QVector2D	a QVector2D
+QVariant::Vector3D	QMetaType::QVector3D	a QVector3D
+QVariant::Vector4D	QMetaType::QVector4D	a QVector4D
+QVariant::UserType	QMetaType::User	Base value for user-defined types.
+```
+
+##### 3.1.2.3 2个示例
 
 这里给出2个例子，说明如何使用QVariant。
 
@@ -2775,58 +2905,93 @@ Ctrl+Wheel // Zooms the text.
 
 QLabel用于显示文本或图像，未提供用户交互功能。
 
-它可以展示的类型主要是以下几类。
-
-```c++
-void setText(const QString &); // 纯文本 或 富文本
-void setPixmap(const QPixmap &);// 传递QPixmap
-void setMovie(QMovie *movie);// 传递 QMovie
-void setNum(int num);// 传递数字int或double可转为文本
-void setNum(double num); 
-```
-
-主要的性质如下。
-
-```c++
-pixmap : QPixmap;
-alignment : Qt::Alignment;
-text : QString;
-textFormat : Qt::TextFormat;
-```
-
 常见的公共成员函数如下。
 
 ```c++
-Qt::Alignment alignment() const;
-void setAlignment(Qt::Alignment);
-QString text() const;
-Qt::TextFormat textFormat() const;
-void setTextFormat(Qt::TextFormat);
-const QPicture *picture() const;  
+slot void clear(); // 清除文本
+
+// 设置动画
+slot void setMovie(QMovie *movie);
+QMovie *movie() const;
+
+// 设置图片
+slot void setPicture(const QPicture &picture);
+const QPicture *picture() const;
+
+// 设置像素图,如果没有返回0
+slot void setPixmap(const QPixmap &);
 const QPixmap *pixmap() const;
+
+// 设置文本,默认返回空字符串,注意QLabel非常适合显示小型富文本文档,对于大型文档请改为在只读模式下使用 QTextEdit,因为QTextEdit可以在必要时提供滚动条
+slot setText(const QString& text);
+QString text() const;
+
+// 将标签内容设置为包含整数num的纯文本
+slot void setNum(int num);
+slot void setNum(double num);
+
+// 设置选定的文本,默认空字符串
+QString selectedText() const;
+bool hasSelectedText() const;
+
+// 设置对齐方式
+void setAlignment(Qt::Alignment);
+Qt::Alignment alignment() const;
+
+QWidget *buddy() const;
+void setBuddy(QWidget *buddy);
+
+// 以像素为单位保存文本缩进,缩进为-1
+void setIndent(int);
+int indent() const;
+
+// 设置边距的宽度,默认边距为0
+void setMargin(int);
+int margin() const;
+
+// 指定是否使用QDesktopServices::openUrl()自动打开链接，而不是发出linkActivated()信号,默认为false
+void setOpenExternalLinks(bool open);
+bool openExternalLinks() const;
+
+// 设置是否将缩放其内容以填充所有可用空间,默认为false
+void setScaledContents(bool);
+bool hasScaledContents() const;
+
+// 从位置开始和长度字符选择文本
+void setSelection(int start, int length);
+// selectionStart() 返回标签中第一个选定字符的索引，如果没有选择文本，则返回-1
+int selectionStart() const;
+
+// 设置文本格式,默认格式是Qt::AutoText
+void setTextFormat(Qt::TextFormat);
+Qt::TextFormat textFormat() const;
+
+// 设定如何与用户输入交互,默认值为Qt::LinksAccessibleByMouse
+void setTextInteractionFlags(Qt::TextInteractionFlags flags);
+Qt::TextInteractionFlags textInteractionFlags() const;
+
+// 设置自动换行策略,如果此属性为真则标签文本在必要时在断词处换行,默认自动换行被禁用
+void setWordWrap(bool on);
+bool wordWrap() const;
 ```
 
-常见的公共槽函数如下。
+对于QLabel特别说明的函数是setBuddy，只有QLabel对象才有这个功能，定义的时候可以在文字前边加上符号"&"，UI界面直接输入或者动态创建如下。
 
 ```c++
-void clear();
-void setMovie(QMovie *movie);
-void setNum(int num);
-void setNum(double num);
-void setPicture(const QPicture &picture);
-void setPixmap(const QPixmap &);
-void setText(const QString &);
-19 public slots inherited from QWidget
-1 public slot inherited from QObject 
+QLineEdit*nameEdit  = new QLineEdit(this);
+QLabel*nameLabel = new QLabel("&Name:", this); // Alt+N是快捷键会将鼠标或键盘的焦点聚焦在伙伴窗口部件上
+nameLabel->setBuddy(nameEdit);
+
+QLineEdit *phoneEdit  = new QLineEdit(this);
+QLabel    *phoneLabel = new QLabel("&Phone:", this); // Alt+P
+phoneLabel->setBuddy(phoneEdit);
 ```
 
 QLabel的信号不常见，但是可以提一句。
 
 ```c++
-void linkActivated(const QString &link);
-void linkHovered(const QString &link);
-3 signals inherited from QWidget
-2 signals inherited from QObject 
+void linkActivated(const QString &link);//当用户单击链接时会发出此信号
+void linkHovered(const QString &link);//当用户将鼠标悬停在链接上时会发出此信号
 ```
 
 #### 3.3.2 QProgressBar
@@ -18690,26 +18855,30 @@ static QSize QLayout::closestAcceptableSize(const QWidget *widget, const QSize &
 
 #### 16.1.2 QGridLayout
 
-QGridLayout 类在网格中布置小部件。QGridLayout 获取可用的空间（通过其父布局或通过 parentWidget()），将其划分为行和列，并将其管理的每个小部件放入正确的单元格中。
-列和行的行为相同；我们将讨论列，但行也有等效的功能。
-每列都有一个最小宽度和一个拉伸因子。最小宽度是使用 setColumnMinimumWidth() 设置的最大宽度以及该列中每个小部件的最小宽度。拉伸因子是使用 setColumnStretch() 设置的，并确定列将获得多少可用空间超过其必要的最小值。
+QGridLayout 是个网格布局管理器对象，它的使用方式非常简单，例子如下。
 
-通常，每个托管小部件或布局都使用 addWidget() 放入自己的单元格中。使用 addItem() 和 addWidget() 的跨行和跨列重载，小部件也可以占据多个单元格。如果这样做，QGridLayout 将猜测如何在列/行上分配大小（基于拉伸因子）。要从布局中删除小部件，请调用 removeWidget()。在小部件上调用 QWidget::hide() 也有效地从布局中删除小部件，直到调用 QWidget::show()。
+```c++
+QGridLayout * layout = new QGridLayout(this);
+layout->addWidget(label1,0,0);//添加1个标签到0行0列
+layout->addWidget(lineEdit,0,1);//添加1个文本编辑器到0行1列
+layout->addWidget(label2,1,0);//添加1个标签到1行0列
+layout->addWidget(button,1,1);//添加1个按钮到1行1列
+this->setLayout(layout); // 添加进主界面
+```
+
+列和行的行为相同，这里以列为例说明属性。
+每列都有一个**最小宽度和一个拉伸因子**。最小宽度是使用 setColumnMinimumWidth() 设置，拉伸因子是使用 setColumnStretch() 设置，确定列宽度最多可超过最小值多少倍。
+
+使用addWidget() 将部件放入单元格中，removeWidget()移除部件，或者小部件调用 QWidget::hide() 也可以删除直到调用QWidget::show()。使用 addItem() 
 下图显示了一个带有五列三行网格的对话框片段（网格以洋红色显示）：
 
 ![QGridLayout.jpg](QGridLayout.jpg)
 
-此对话框片段中的第 0、2 和 4 列由 QLabel、QLineEdit 和 QListBox 组成。第 1 列和第 3 列是使用 setColumnMinimumWidth() 制作的占位符。第 0 行包含三个 QLabel 对象，第 1 行包含三个 QLineEdit 对象，第 2 行包含三个 QListBox 对象。我们使用占位符列（1 和 3）来获得列之间的正确空间量。
-请注意，列和行的宽度或高度不同。如果您希望两列具有相同的宽度，您必须自己将它们的最小宽度和拉伸因子设置为相同。您可以使用 setColumnMinimumWidth() 和 setColumnStretch() 来执行此操作。
-如果 QGridLayout 不是顶级布局（即不管理小部件的所有区域和子项），则必须在创建它时将其添加到其父布局，但在对其进行任何操作之前。添加布局的常规方法是在父布局上调用 addLayout()。
-添加布局后，您可以开始使用 addWidget()、addItem() 和 addLayout() 将小部件和其他布局放入网格布局的单元格中。QGridLayout 还包括两个边距宽度：内容边距和间距（）。内容边距是沿 QGridLayout 的四个边的每个保留空间的宽度。间距（）是相邻框之间自动分配的间距的宽度。
-默认内容边距值由样式提供。 Qt 样式指定的默认值对于子窗口小部件是 9，对于窗口是 11。间距默认与顶级布局的边距宽度相同，或与父布局相同。
+添加布局的常规方法是在父布局上调用 addLayout()。添加布局后，您可以开始使用 addWidget()、addItem() 和 addLayout() 将小部件和其他布局放入网格布局的单元格中。
 
 成员函数。
 
 ```c++
-QGridLayout(QWidget *parent);
-QGridLayout();
 // 在位置row、column、spanning rowSpan rows和columnSpan列处添加item，并根据alignment对齐。如果 rowSpan 和/或 columnSpan 为 -1，则项目将分别延伸到底部和/或右侧边缘。布局获取项目的所有权
 void addItem(QLayoutItem *item, int row, int column, int rowSpan = 1, int columnSpan = 1, Qt::Alignment alignment = Qt::Alignment());
 // 将布局放置在网格中的位置（行、列）左上角的位置是 (0, 0)
@@ -19067,6 +19236,100 @@ layout->addWidget(button5);
 window->setLayout(layout);
 window->show();
 ```
+
+#### 16.1.8 QSplitter
+
+分裂器，可以动态的调整小组件的大小，一个例子如下。
+
+```c++
+QSplitter *splitter = new QSplitter(Qt::Horizontal,this);
+QListView *listview = new QListView;
+QTreeView *treeview = new QTreeView;
+splitter->addWidget(listview);
+splitter->addWidget(treeview);
+splitter->setChildrenCollapsible(false); // 禁止小部件被压缩到0
+splitter->setOpaqueResize(false);
+
+QSplitter * rightSplitter = new QSplitter(Qt::Horizontal,splitter);
+rightSplitter->setOrientation(Qt::Vertical);
+QTextEdit * textdedit1= new QTextEdit("top text",rightSplitter);
+textdedit1->setAlignment(Qt::AlignCenter);
+QTextEdit * textdedit2= new QTextEdit("bottom text",rightSplitter);
+textdedit2->setAlignment(Qt::AlignCenter);
+this->setCentralWidget(splitter);
+
+qDebug()<<splitter->count(); // 3
+qDebug()<<splitter->indexOf(listview); // 0
+qDebug()<<splitter->indexOf(treeview); // 1
+qDebug()<<splitter->handleWidth(); // 6
+int max  = 0 ,min = 0;
+splitter->getRange(0,&min,&max);
+qDebug()<<min<<"  "<<max;// 0,0
+splitter->getRange(1,&min,&max);
+qDebug()<<min<<"  "<<max;// 89,-86
+```
+
+效果如下。
+
+![qsplitter.jpg](qsplitter.jpg)
+
+默认的 QSplitter **水平**布置其子级，可以使用 setOrientation(Qt::Vertical) 将其子项垂直放置。
+默认情况下，所有小部件都可以根据用户的意愿介于小部件的 minimumSizeHint()或 minimumSize()和 maximumSize() 之间。默认情况下，QSplitter 会动态调整其子项的大小。如果您希望QSplitter**仅在调整大小操作结束时调整子项的大小，请调用 setOpaqueResize(false)**。
+小部件之间的初始大小分布是通过将初始大小乘以拉伸因子来确定的。您还可以使用 setSizes() 设置所有小部件的大小。函数sizes() 返回用户设置的尺寸。或者分别使用 saveState() 和 restoreState() 从 QByteArray 保存和恢复小部件的大小。当 hide() 一个小部件时，它的空间将分配给其他小部件，调用show()时自动恢复。
+注意：**不支持将 QLayout 添加到 QSplitter**(通过 setLayout() 或使 QSplitter 成为 QLayout 的父级)，使用 addWidget() 代替（见上面的例子）。
+
+成员函数。
+
+```c++
+void addWidget(QWidget *widget);
+void insertWidget(int index, QWidget *widget);
+QWidget *replaceWidget(int index, QWidget *widget);
+QWidget *widget(int index) const;
+int count() const;//返回拆分器布局中包含的小部件数量
+int indexOf(QWidget *widget) const;// 返回位置
+
+void getRange(int index, int *min, int *max) const;//如果min和max不为0，则返回 *min 和 *max 索引处的拆分器的有效范围
+QSplitterHandle *handle(int index) const;//返回给定索引处拆分器布局中项目左侧（或上方）的句柄。索引 0 处的句柄始终隐藏
+void refresh();//更新拆分器的状态。您不需要调用此函数
+//更新位置索引处小部件的大小策略以具有拉伸因子。拉伸不是有效的拉伸因子；有效拉伸因子是通过获取小部件的初始大小并将其与拉伸相乘来计算的
+void setStretchFactor(int index, int stretch);
+
+// 将拆分器的布局恢复到指定的状态。如果状态恢复，则返回 true；否则返回假
+bool restoreState(const QByteArray &state);
+QByteArray saveState() const;//保存拆分器布局的状态
+
+// 设置是否可以将子小部件的大小调整为0,默认情况下子小部件是可折叠的
+void setChildrenCollapsible(bool);
+bool childrenCollapsible() const;
+
+// 如果 index 处的小部件是可折叠的，则返回 true，否则返回 false
+bool isCollapsible(int index) const;
+void setCollapsible(int index, bool collapse);
+
+// 设置拆分器宽度,默认情况下取决于用户平台和样式偏好的值,如果设置为1或0，实际抓取区域将增长到与其各自小部件的几个像素重叠
+void setHandleWidth(int);
+int handleWidth() const;
+
+// 会出现一个阴影框显示拆分器的位置,结束拖动后才移动到新位置
+void setOpaqueResize(bool opaque = true);
+bool opaqueResize() const;
+
+// 设置方向
+void setOrientation(Qt::Orientation);
+Qt::Orientation orientation() const;
+
+// 将子小部件的各自大小设置为列表中给定的值。如果拆分器是水平的，则这些值设置每个小部件的宽度（以像素为单位），从左到右。如果拆分器是垂直的，则设置每个小部件的高度，从上到下。
+void setSizes(const QList<int> &list);
+QList<int> sizes() const;
+```
+
+信号函数。
+
+```c++
+void splitterMoved(int pos, int index);
+```
+
+
 
 ### 16.2 事件
 
@@ -19893,6 +20156,105 @@ bool wrapping() const;
 
 slot void setNotchesVisible(bool visible);
 slot void setWrapping(bool on);
+```
+
+### 16.5 全局枚举类型
+
+#### 16.5.1 Qt::WindowFlags
+
+此枚举类型用于为**小部件指定各种窗口系统属性**。
+
+低位的11个字节定义窗口部件的窗口类型，范围是0x00000000~0x00000012一共定义了13个窗口类型。
+
+高位字节定义了窗口外观，可以进行位或操作使得只具有某个标志。
+
+```c++
+enum Qt::WindowType
+flags Qt::WindowFlags
+{
+    Qt::Widget,//QWidget的默认类型。这种类型的小部件如果有父小部件则为子小部件，如果它们没有父小部件则为独立窗口。参见 Qt::Window 和 Qt::SubWindow
+    Qt::Window,//表示该小部件是一个窗口，通常带有一个窗口系统框架和一个标题栏
+    Qt::Dialog,//指示该小部件是一个为对话框窗口（在标题栏中没有最大化或最小化按钮）。这是QDialog的默认类型。如果你想将它用作模式对话框，它应该从另一个窗口启动，或者有一个父窗口并与 QWidget::windowModality 属性一起使用。如果将其设为模态，对话框将阻止应用程序中的其他顶级窗口获得任何输入。
+    Qt::Sheet,//表示窗口是 macOS 上的工作表
+    Qt::Drawer,//指示小部件是 macOS 上的抽屉
+    Qt::Popup,//表示该小部件是一个弹出式顶级窗口，即它是模态的，但具有适合弹出式菜单的窗口系统框架
+    Qt::Tool,//表示小部件是一个工具窗口。工具窗口通常是一个小窗口，具有比通常的标题栏和装饰更小的窗口，通常用于工具按钮的集合
+    Qt::ToolTip,//指示小部件是工具提示。这在内部用于实现工具提示
+    Qt::SplashScreen,//指示窗口是闪屏。这是QSplashScreen的默认类型
+    Qt::Desktop,//表示此小部件是桌面。这是QDesktopWidget的类型
+    Qt::SubWindow,//指示此小部件是子窗口，例如 QMdiSubWindow小部件
+    Qt::ForeignWindow,//指示此窗口对象是一个句柄，表示由另一个进程或手动使用本机代码创建的本机平台窗口
+    Qt::CoverWindow,//表示该窗口代表一个覆盖窗口，在某些平台上最小化应用程序时显示
+    
+    // 高位字节定义窗口外观,可以进行位或操作来启用对应的标志
+    Qt::MSWindowsFixedSizeDialogHint,//在Windows上为窗口提供一个细对话框边框
+    Qt::MSWindowsOwnDC,//在Windows上为窗口提供自己的显示上下文
+    Qt::BypassWindowManagerHint,//此标志可用于向平台插件指示应禁用“所有”窗口管理器协议
+    Qt::X11BypassWindowManagerHint,//完全绕过窗口管理器。这会导致一个完全不受管理的无边框窗口
+    Qt::FramelessWindowHint/,//生成无边框窗口。用户不能通过窗口系统移动或调整无边框窗口的大小
+    Qt::NoDropShadowWindowHint,//禁用支持平台上的窗口投影
+    Qt::CustomizeWindowHint,//关闭默认窗口标题提示
+    Qt::WindowTitleHint,//给窗口一个标题栏
+    Qt::WindowSystemMenuHint,//添加一个窗口系统菜单，可能还有一个关闭按钮（例如在Mac上）
+    Qt::WindowMinimizeButtonHint,//添加一个最小化按钮
+    Qt::WindowMaximizeButtonHint,//添加最大化按钮
+    Qt::WindowMinMaxButtonsHint,//添加最小化和最大化按钮
+    Qt::WindowCloseButtonHint,//添加关闭按钮
+    Qt::WindowContextHelpButtonHint,//向对话框添加上下文帮助按钮
+    Qt::MacWindowToolBarButtonHint,//在macOS上添加了一个工具栏按钮
+    Qt::WindowFullscreenButtonHint,//在macOS上添加了一个全屏按钮
+    Qt::BypassGraphicsProxyWidget,//如果希望小部件始终是桌面上顶级小部件，则可以设置此标志
+    Qt::WindowShadeButtonHint,//如果底层窗口管理器支持，则添加一个阴影按钮来代替最小化按钮
+    Qt: :WindowStaysOnTopHint,//通知窗口位于所有其他窗口的顶部。请注意在X11上的某些窗口管理器上，还必须传递Qt::X11BypassWindowManagerHint才能使此标志正常工作
+    Qt::WindowStaysOnBottomHint,//通知窗口系统该窗口应位于所有其他窗口的底部。请注意在X11上此提示仅适用于支持_NET_WM_STATE_BELOW atom的窗口管理器
+    Qt::WindowTransparentForInput,//通知窗口系统该窗口仅用于输出（显示某些内容），不接受输入
+    Qt::WindowOverridesSystemGestures,//窗口实现了自己的一组系统级手势，例如三指桌面切换
+    Qt::WindowDoesNotAcceptFocus,//通知窗口系统该窗口不应接收输入焦点
+    Qt::MaximizeUsingFullscreenGeometryHint,//窗口在最大化时尽可能多使用可用的屏幕几何图形
+    Qt::WindowType_Mask//用于提取窗口标志的窗口类型部分的掩码
+}
+```
+
+#### 16.5.2 Qt::Orientation
+
+此类型用于表示对象的方向。
+
+```c++
+enum Qt::Orientation
+flags Qt::Orientations
+{
+    Qt::Horizontal
+    Qt::Vertical
+}
+```
+
+#### 16.5.3 Qt::Alignment
+
+此枚举类型用于描述对齐方式。它包含可以组合以产生所需效果的水平和垂直标志。
+TextElideMode 枚举也可以在许多情况下用于微调对齐文本的外观。
+水平标志是：
+
+```c++
+enum Qt::AlignmentFlag
+flags Qt::Alignment
+{
+	// 水平方向对齐
+    Qt::AlignLeft,
+    Qt::AlignRight,
+    Qt::AlignHCenter,
+    Qt::AlignJustify, // 在可用空间中使用文本
+	// 垂直方向对齐  
+	Qt::AlignTop,
+    Qt::AlignBottom,
+    Qt::AlignVCenter,
+    Qt::AlignBaseline,// 在可用空间中垂直居中
+    Qt::AlignCenter, // 中心对齐
+    Qt::AlignAbsolute,//如果小部件的布局方向是Qt::RightToLeft（而不是 Qt::LeftToRight，默认），Qt::AlignLeft 指的是右边缘，Qt::AlignRight 指的是左边缘。这通常是所需的行为。如果您希望 Qt::AlignLeft 始终表示“左”而 Qt::AlignRight 始终表示“右”，请将标志与 Qt::AlignAbsolute 结合起来。
+    Qt::AlignLeading,//Qt::AlignLeft 的同义词
+    Qt::AlignTrailing,//Qt::AlignRight 的同义词
+    Qt::AlignHorizontal_Mask,//AlignLeft | AlignRight | AlignHCenter | AlignJustify | AlignAbsolute
+    Qt::AlignVertical_Mask,//AlignTop | AlignBottom | AlignVCenter | AlignBaseline
+}
 ```
 
 
