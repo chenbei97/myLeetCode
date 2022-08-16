@@ -18774,8 +18774,17 @@ static QStringList keys();//返回有效键的列表，即该工厂可以为其�
 
 QLayout 类是几何管理器的基类。
 这是由具体类 **QBoxLayout、QGridLayout、QFormLayout 和 QStackedLayout 继承**的抽象基类。
-对于 QLayout 子类或 QMainWindow 的用户，很少需要使用 QLayout 提供的基本函数，例如 setSizeConstraint() 或 setMenuBar()。有关详细信息，请参阅布局管理。要制作自己的布局管理器，请实现函数 addItem()、sizeHint()、setGeometry()、itemAt() 和 takeAt()。您还应该实现 minimumSize() 以确保如果空间太少，您的布局不会调整为零大小。要支持高度取决于宽度的孩子，请实现 hasHeightForWidth() 和 heightForWidth()。有关实现自定义布局管理器的更多信息，请参阅边框布局和流布局示例。
-删除布局管理器后，几何管理停止。
+对于 QLayout 子类或 QMainWindow 的用户，很少需要使用 QLayout 提供的基本函数，例如 setSizeConstraint() 或 setMenuBar()。有关详细信息，请参阅布局管理。要制作自己的布局管理器，请实现函数 addItem()、sizeHint()、setGeometry()、itemAt() 和 takeAt()。您还应该实现 minimumSize() 以确保如果空间太少，您的布局不会调整为零大小。要支持高度取决于宽度的孩子，请实现 hasHeightForWidth() 和 heightForWidth()。
+
+```mermaid
+graph TB
+QLayout-->QBoxLayout
+QLayout-->QGridLayout
+QLayout-->QFormLayout
+QLayout-->QStackedLayout
+QBoxLayout-->QHBoxLayout
+QBoxLayout-->QVBoxLayout
+```
 
 枚举类型。
 
@@ -19239,7 +19248,7 @@ window->show();
 
 #### 16.1.8 QSplitter
 
-分裂器，可以动态的调整小组件的大小，一个例子如下。
+分裂器，可以动态的调整小组件的大小，一个例子如下，具体可见[42-TestLayOut/TestSplitter](42-TestLayOut/TestSplitter)。
 
 ```c++
 QSplitter *splitter = new QSplitter(Qt::Horizontal,this);
@@ -19331,7 +19340,7 @@ void splitterMoved(int pos, int index);
 
 #### 16.1.9 QDockWidget
 
-停靠窗口类，常与QTextEdit配合使用。
+停靠窗口类，常与QTextEdit配合使用，例子可见[42-TestLayOut/TestDockWidget](42-TestLayOut/TestDockWidget)。
 
 枚举值。
 
@@ -19435,7 +19444,7 @@ this->setWindowTitle(tr("DockWindow"));
 
 #### 16.1.10 QStackedWidget
 
-堆栈窗体类，常与QListWidget、QComboBox配合使用。
+堆栈窗体类，常与QListWidget、QComboBox配合使用。例子可见[42-TestLayOut/TestStackedWidget](42-TestLayOut/TestStackedWidget)。
 
 成员函数。
 
@@ -19459,7 +19468,87 @@ signal void currentChanged(int index);
 signal void widgetRemoved(int index);
 ```
 
+#### 16.1.1 QFrame
 
+QFrame 类是可以具有框架的小部件的基类。
+QMenu 使用它来“提升”周围屏幕上方的菜单。 QProgressBar 有一个“下沉”的外观。 QLabel 外观扁平。像这样的小部件的框架可以更改。
+
+```c++
+QLabel label(...);
+label.setFrameStyle(QFrame::Panel | QFrame::Raised);
+label.setLineWidth(2);
+
+QProgressBar pbar(...);
+label.setFrameStyle(QFrame::NoFrame);
+```
+
+QFrame 类也可以**直接用于创建没有任何内容的简单占位符框架**。
+框架样式由框架形状和阴影样式指定，用于在视觉上将框架与周围的小部件分开。这些属性可以使用 setFrameStyle() 函数一起设置，并使用 frameStyle() 读取。
+**框架形状有 NoFrame、Box、Panel、StyledPanel、HLine 和 VLine**；**阴影样式是平原，凸起和沉没**。
+框架部件具有描述边框粗细的三个属性：lineWidth、midLineWidth 和 frameWidth。**线宽**是框架边框的宽度。可以对其进行修改以自定义框架的外观。**中线宽度**指定框架中间多出一条线的宽度，它使用第三种颜色来获得特殊的 3D 效果。请注意，仅针对凸起或凹陷的 Box、HLine 和 VLine 框架绘制中线。**框架宽度**由框架样式确定，frameWidth() 函数用于获取为使用的样式定义的值。
+可以使用 QWidget::setContentsMargins() 函数自定义框架和框架内容之间的边距。
+下图显示了一些样式和线宽的组合效果：
+
+![QFrame.jpg](QFrame.jpg)
+
+枚举类型。
+
+此枚举类型定义了用于为帧提供 3D 效果的阴影类型。
+
+```c++
+enum QFrame::Shadow{
+    QFrame::Plain//框架和内容与周围环境；保持水平没有任何3D效果
+    QFrame::Raised//框架和内容出现凸起；使用当前颜色组的浅色和深色绘制3D凸起线
+    QFrame::Sunken//框架和内容出现凹陷；使用当前颜色组的明暗颜色绘制3D凹陷线
+}
+```
+
+此枚举类型定义了可用框架的形状。
+
+```c++
+enum QFrame::Shape{
+    QFrame::NoFrame//QFrame什么都不画
+    QFrame::Box//QFrame在其内容周围绘制一个框
+    QFrame::Panel//QFrame绘制一个面板使内容看起来凸起或凹陷
+    QFrame::StyledPanel//绘制一个矩形面板，其外观取决于当前的 GUI 样式。它可以升起或下沉
+    QFrame::HLine//QFrame 绘制一条不包含任何内容的水平线（用作分隔符）
+    QFrame::VLine//QFrame 绘制一条不包含任何内容的垂直线（用作分隔符）
+    QFrame::WinPanel//绘制一个可以像 Windows 2000 中那样凸起或凹陷的矩形面板。指定此形状会将线宽设置为 2 像素。提供 WinPanel 是为了兼容。对于 GUI 样式独立性，我们建议改用 StyledPanel
+}
+```
+
+此枚举定义了两个常量，可用于提取 frameStyle() 的两个组件。
+
+```c++
+enum QFrame::StyleMask{
+    QFrame::Shadow_Mask//frameStyle()的阴影部分
+    QFrame::Shape_Mask//frameStyle()的形状部分
+}
+```
+
+成员函数。
+
+```c++
+int frameWidth() const;
+
+void setFrameRect(const QRect &);
+QRect frameRect() const;
+
+void setFrameShadow(Shadow);
+Shadow frameShadow() const;
+
+void setFrameShape(Shape);
+Shape frameShape() const;
+
+void setFrameStyle(int style);
+int frameStyle() const;
+
+void setLineWidth(int);
+int lineWidth() const;
+
+void setMidLineWidth(int);
+int midLineWidth() const;
+```
 
 ### 16.2 事件
 
