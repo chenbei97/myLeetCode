@@ -125,6 +125,7 @@
     TestSplitter QSplitter的简单使用,关键点在于多个拆分器之间要注意谁是谁的父类,顶级拆分器的父类是主窗口
     TestDockWidget QDockWidget的简单使用,主要关注2个枚举类型DockWidgetFeature和DockWidgetArea
     TestStackedWidget QStackedWidget的简单使用,常与QComboBox/QListWidget配合使用实现翻页效果
+    TestGridBoxLayout 综合演示QGridLayout,QBoxLayout的用法,核心函数是addWidget和addLayout
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
