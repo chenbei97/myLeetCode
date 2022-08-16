@@ -126,6 +126,7 @@
     TestDockWidget QDockWidget的简单使用,主要关注2个枚举类型DockWidgetFeature和DockWidgetArea
     TestStackedWidget QStackedWidget的简单使用,常与QComboBox/QListWidget配合使用实现翻页效果
     TestGridBoxLayout 综合演示QGridLayout,QBoxLayout的用法,核心函数是addWidget和addLayout
+    ComprehensiveExample 综合演示所有布局类型的用法
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
