@@ -19329,6 +19329,136 @@ QList<int> sizes() const;
 void splitterMoved(int pos, int index);
 ```
 
+#### 16.1.9 QDockWidget
+
+停靠窗口类，常与QTextEdit配合使用。
+
+枚举值。
+
+第一个枚举类型：设置停靠窗体的特性，这个枚举类型属于QDockWidget作用域下。
+
+```c++
+enum DockWidgetFeature { 
+    DockWidgetClosable, // 可关闭
+    DockWidgetMovable, // 可移动
+    DockWidgetFloatable, // 可漂浮
+    DockWidgetVerticalTitleBar, //标题栏显示在左侧而不是顶部
+    AllDockWidgetFeatures,// 拥有所有特点
+    NoDockWidgetFeatures // 不可移动.关闭和浮动
+}
+```
+
+第二个枚举类型：设置窗体可停靠的区域，作用域在Qt下，需要了解。
+
+```c++
+enum Qt::DockWidgetArea
+{
+    Qt::LeftDockWidgetArea,
+    Qt::RightDockWidgetArea,
+    Qt::TopDockWidgetArea,
+    Qt::BottomDockWidgetArea,
+    Qt::AllDockWidgetAreas,
+    Qt::NoDockWidgetArea,//只可停靠在插入处
+}
+```
+
+成员函数。
+
+```c++
+QDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+QDockWidget(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+
+void setAllowedAreas(Qt::DockWidgetAreas areas);
+bool isAreaAllowed(Qt::DockWidgetArea area) const;
+Qt::DockWidgetAreas allowedAreas() const;
+
+void setFeatures(DockWidgetFeatures features);
+DockWidgetFeatures features() const;
+
+void setFloating(bool floating);
+bool isFloating() const;
+
+void setTitleBarWidget(QWidget *widget); // 这个是用于设置自定义标题栏的,标题栏部件必须有一个有效的 QWidget::sizeHint() 和 QWidget::minimumSizeHint()。这些功能应该考虑到标题栏的当前方向。
+QWidget *titleBarWidget() const;
+
+void setWidget(QWidget *widget);
+QWidget *widget() const;
+
+QAction *toggleViewAction() const;//返回可用于显示或关闭此停靠小部件的可检查操作。操作的文本设置为停靠小部件的窗口标题
+```
+
+信号函数。
+
+```c++
+void allowedAreasChanged(Qt::DockWidgetAreas allowedAreas);
+void dockLocationChanged(Qt::DockWidgetArea area);
+void featuresChanged(QDockWidget::DockWidgetFeatures features);
+void topLevelChanged(bool topLevel);//当浮动属性发生变化时会发出此信号
+void visibilityChanged(bool visible);
+```
+
+一个例子如下。
+
+```c++
+// (1) 主窗口
+QTextEdit * textedit = new QTextEdit(this); // this为父窗口
+textedit->setText("main window");
+textedit->setAlignment(Qt::AlignCenter);
+this->setCentralWidget(textedit);
+// (2) 停靠窗口1
+QDockWidget * dock1 = new QDockWidget(tr("DockWindow1"),this);
+dock1->setFeatures(QDockWidget::DockWidgetMovable); // 可移动
+dock1->setAllowedAreas(Qt::LeftDockWidgetArea| Qt::RightDockWidgetArea);// 可停靠区域左边和右边
+dock1->setFloating(false);
+QTextEdit * edit1 = new QTextEdit();
+edit1->setText(tr("可被移动的停靠窗口,但不可以悬浮和关闭"));
+dock1->setWidget(edit1);
+this->addDockWidget(Qt::LeftDockWidgetArea,dock1);
+// (3) 停靠窗口2
+QDockWidget * dock2  = new QDockWidget("DockWindow2",this);
+dock2->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable);
+QTextEdit * edit2 = new QTextEdit();
+edit2->setText(tr("可悬浮和关闭的窗口,但不可以移动只能双击来实现悬浮"));
+dock2->setWidget(edit2);
+this->addDockWidget(Qt::RightDockWidgetArea,dock2);
+// (4) 停靠窗口3
+QDockWidget * dock3 = new QDockWidget("DockWindow3",this);
+dock3->setFeatures(QDockWidget::AllDockWidgetFeatures);
+QTextEdit * edit3 = new QTextEdit();
+edit3->setText(tr("具有所有特点的窗口"));
+dock3->setWidget(edit3);
+this->addDockWidget(Qt::BottomDockWidgetArea,dock3);
+
+this->resize(800,600);
+this->setWindowTitle(tr("DockWindow"));
+```
+
+#### 16.1.10 QStackedWidget
+
+堆栈窗体类，常与QListWidget、QComboBox配合使用。
+
+成员函数。
+
+```c++
+int addWidget(QWidget *widget);
+QWidget *currentWidget() const;
+int insertWidget(int index, QWidget *widget);
+void removeWidget(QWidget *widget);
+QWidget *widget(int index) const;
+int count() const;
+int currentIndex() const;
+int indexOf(QWidget *widget) const;
+```
+
+信号和槽函数。
+
+```c++
+slot void setCurrentIndex(int index);
+slot void setCurrentWidget(QWidget *widget);
+signal void currentChanged(int index);
+signal void widgetRemoved(int index);
+```
+
 
 
 ### 16.2 事件
@@ -20231,8 +20361,6 @@ flags Qt::Orientations
 #### 16.5.3 Qt::Alignment
 
 此枚举类型用于描述对齐方式。它包含可以组合以产生所需效果的水平和垂直标志。
-TextElideMode 枚举也可以在许多情况下用于微调对齐文本的外观。
-水平标志是：
 
 ```c++
 enum Qt::AlignmentFlag
@@ -20254,6 +20382,22 @@ flags Qt::Alignment
     Qt::AlignTrailing,//Qt::AlignRight 的同义词
     Qt::AlignHorizontal_Mask,//AlignLeft | AlignRight | AlignHCenter | AlignJustify | AlignAbsolute
     Qt::AlignVertical_Mask,//AlignTop | AlignBottom | AlignVCenter | AlignBaseline
+}
+```
+
+#### 16.5.4 Qt::DockWidgetArea
+
+停靠窗口的可停靠区域，可以使用组合。
+
+```c++
+enum Qt::DockWidgetArea
+{
+    Qt::LeftDockWidgetArea,
+    Qt::RightDockWidgetArea,
+    Qt::TopDockWidgetArea,
+    Qt::BottomDockWidgetArea,
+    Qt::AllDockWidgetAreas,
+    Qt::NoDockWidgetArea,//只可停靠在插入处
 }
 ```
 

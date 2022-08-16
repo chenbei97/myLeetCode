@@ -123,6 +123,7 @@
 
 42. TestLayOut 介绍关于布局的使用,涉及到的布局类型有QDockWidget,QSplitter,QGridLayout,
     TestSplitter QSplitter的简单使用,关键点在于多个拆分器之间要注意谁是谁的父类,顶级拆分器的父类是主窗口
+    TestDockWidget QDockWidget的简单使用,主要关注2个枚举类型DockWidgetFeature和DockWidgetArea
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
