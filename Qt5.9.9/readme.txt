@@ -130,6 +130,19 @@
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
+12. 实现下拉项选择颜色
+QStringList colorList = QColor::colorNames();
+qDebug()<<colorList.size(); // 148个
+ui->comboBox->resize(100,30);
+foreach(const QString &color, colorList)
+{6
+    QPixmap pix(ui->comboBox->size()); // 这个大小要设置
+    pix.fill(QColor(color));// pix是个纯色图标
+    ui->comboBox->addItem(QIcon(pix),nullptr); // 添加图标
+    ui->comboBox->setIconSize(ui->comboBox->size()); // 这个大小也要设置,因为图标默认方形,这里设置为矩形长度
+    ui->comboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);//设置这个最好,其它的略短,符合内容大小的调整策略
+}
+
 11. 串口通信的使用方法
 (1) 同步阻塞型-工作线程用法
     1) 继承QThread定义自己的线程类,定义一个带参数的外部方法提供给主线程使用用于启动线程,不过启动线程要先判断是否处于running状态,不是使用start,是就使用条件变量的wakeOne

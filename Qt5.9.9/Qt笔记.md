@@ -2522,7 +2522,7 @@ enum EchoMode { QLineEdit::Normal, QLineEdit::NoEcho, QLineEdit::Password, QLine
 // 输入时显示字符、不要显示任何内容、显示与平台相关的密码掩码字符、编辑时按输入显示字符，否则按密码显示字符，就是文本可以直接显示、不显示或者*****这样显示或者输入时***但是不输入时显示
 ```
 
-#### 3.2.4 QCombobox
+#### 3.2.4 QComboBox
 
 QComboBox是下拉列表框组件，提供1个下拉列表供用户选择，也可以直接当成一个QLineEdit用作输入。
 
@@ -2615,50 +2615,58 @@ int findData(const QVariant &data, int role = Qt::UserRole, Qt::MatchFlags flags
 int findText(const QString &text, Qt::MatchFlags flags = static_cast<Qt::MatchFlags> ( Qt::MatchExactly | Qt::MatchCaseSensitive )) const；
 
 // 其他属性
+slot void clear();
+slot void clearEditText();
+slot void setEditText(const QString &text);
 QCompleter *completer() const;
 int count() const；
 QVariant currentData(int role = Qt::UserRole) const；
-int currentIndex() const；
-QString currentText() const；
-bool duplicatesEnabled() const；
-bool hasFrame() const;
-QSize iconSize() const;
-InsertPolicy insertPolicy() const;
-bool isEditable() const;
-QVariant itemData(int index, int role = Qt::UserRole) const;
-QIcon itemIcon(int index) const;
-QString itemText(int index) const;
-QLineEdit *lineEdit() const;
-SizeAdjustPolicy sizeAdjustPolicy() const;
-int maxCount() const;
-int maxVisibleItems() const;
-int minimumContentsLength() const;
-void setDuplicatesEnabled(bool enable);
-void setEditable(bool editable);
-void setFrame(bool);
-void setIconSize(const QSize &size);
-void setInsertPolicy(InsertPolicy policy);
-void setItemData(int index, const QVariant &value, int role = Qt::UserRole);
 void setItemDelegate(QAbstractItemDelegate *delegate);
+
+slot void setCurrentIndex(int index);
+int currentIndex() const；
+
+slot void setCurrentText(const QString &text);
+QString currentText() const；
+
+void setDuplicatesEnabled(bool enable);
+bool duplicatesEnabled() const；
+
+void setEditable(bool editable);
+bool isEditable() const;
+
+void setFrame(bool);
+bool hasFrame() const;
+
+void setIconSize(const QSize &size);
+QSize iconSize() const;
+
+void setInsertPolicy(InsertPolicy policy);
+InsertPolicy insertPolicy() const;
+
+void setItemData(int index, const QVariant &value, int role = Qt::UserRole);
+QVariant itemData(int index, int role = Qt::UserRole) const;
+
 void setItemIcon(int index, const QIcon &icon);
+QIcon itemIcon(int index) const;
+
 void setItemText(int index, const QString &text);
+QString itemText(int index) const;
+
 void setLineEdit(QLineEdit *edit);
+QLineEdit *lineEdit() const;
+
 void setMaxCount(int max);
+int maxCount() const;
+
 void setMaxVisibleItems(int maxItems);
+int maxVisibleItems() const;
+
 void setMinimumContentsLength(int characters);
+int minimumContentsLength() const;
+
 void setSizeAdjustPolicy(SizeAdjustPolicy policy);
-```
-
-公共槽函数如下。
-
-```c++
-void clear();
-void clearEditText();
-void setCurrentIndex(int index);
-void setCurrentText(const QString &text);
-void setEditText(const QString &text);
-19 public slots inherited from QWidget
-1 public slot inherited from QObject 
+SizeAdjustPolicy sizeAdjustPolicy() const;
 ```
 
 主要的信号函数如下。
@@ -2672,14 +2680,49 @@ void currentTextChanged(const QString &text); // 常用
 void editTextChanged(const QString &text);
 void highlighted(int index);
 void highlighted(const QString &text);
-3 signals inherited from QWidget
-2 signals inherited from QObject 
 ```
 
-#### 3.4.5 QPlainTextEdit
+#### 3.4.5 QDoubleSpinBox
+
+成员函数。
+
+```c++
+QString cleanText() const;
+
+slot void setValue(double val);
+double value() const;
+
+int decimals() const;
+void setDecimals(int prec);
+
+void setRange(double minimum, double maximum);
+void setMaximum(double max);
+void setMinimum(double min);
+double maximum() const;
+double minimum() const;
+
+QString prefix() const;
+QString suffix() const;
+void setSuffix(const QString &suffix);
+void setPrefix(const QString &prefix);
+
+void setSingleStep(double val);
+double singleStep() const;
+
+virtual QString textFromValue(double value) const;
+virtual double valueFromText(const QString &text) const;
+```
+
+信号函数。
+
+```c++
+void valueChanged(double d);
+void valueChanged(const QString &text);
+```
+
+#### 3.4.6 QPlainTextEdit
 
 QPlainTextEdit是一个多行文本编辑器，相比于QLineEdit可以编辑和显示多行文本。
-QPlainTextEdit 适用于段落和字符。段落是一个格式化的字符串，它被自动换行以适应小部件的宽度。默认情况下，在阅读纯文本时，一个换行符表示一个段落。一个文档由零个或多个段落组成。段落由硬换行符分隔。段落中的每个字符都有自己的属性，例如字体和颜色。
 **QPlainTextEdit 上鼠标光标形状默认为Qt::IBeamCursor(I)。可以通过 viewport()的cursor 属性进行更改**。
 
 涉及的枚举类型。
@@ -2899,6 +2942,167 @@ Alt+Wheel // Scrolls the page horizontally (the Wheel is the mouse wheel).
 Ctrl+Wheel // Zooms the text.
 ```
 
+#### 3.4.6 QTextEdit
+
+枚举类型。
+
+```c++
+enum QTextEdit::AutoFormattingFlag{
+    QTextEdit::AutoNone//不要进行任何自动格式化
+    QTextEdit::AutoBulletList//自动创建项目符号列表（例如，当用户在最左侧的列中输入星号'*'或在现有列表项中按Enter时
+    QTextEdit::AutoAll//应用所有自动格式。目前仅支持自动项目符号列表
+}
+```
+
+```c++
+enum QTextEdit::LineWrapMode{
+    QTextEdit::NoWrap
+    QTextEdit::WidgetWidth
+    QTextEdit::FixedPixelWidth
+    QTextEdit::FixedColumnWidth
+}
+```
+
+成员函数。
+
+```c++
+QTextEdit(const QString &text, QWidget *parent = Q_NULLPTR);
+
+Qt::Alignment alignment() const;
+slot void setAlignment(Qt::Alignment a);
+
+QString anchorAt(const QPoint &pos) const;
+
+QMenu *createStandardContextMenu();
+QMenu *createStandardContextMenu(const QPoint &position);
+
+QRect cursorRect(const QTextCursor &cursor) const;
+QRect cursorRect() const;
+void moveCursor(QTextCursor::MoveOperation operation, QTextCursor::MoveMode mode = QTextCursor::MoveAnchor);
+QTextCursor cursorForPosition(const QPoint &pos) const;
+void ensureCursorVisible();
+
+bool find(const QString &exp, QTextDocument::FindFlags options = QTextDocument::FindFlags());
+bool find(const QRegExp &exp, QTextDocument::FindFlags options = QTextDocument::FindFlags());
+
+QFont currentFont() const;
+slot void setFontFamily(const QString &fontFamily);
+QString fontFamily() const;
+slot void setFontItalic(bool italic);
+bool fontItalic() const;
+slot void setFontPointSize(qreal s);
+qreal fontPointSize() const;
+slot void setFontUnderline(bool underline);
+bool fontUnderline() const;
+slot void setFontWeight(int weight);
+int fontWeight() const;
+slot void setCurrentFont(const QFont &f);
+
+bool canPaste() const;
+slot void paste();
+
+void print(QPagedPaintDevice *printer) const;
+
+virtual QVariant loadResource(int type, const QUrl &name);
+
+void setCurrentCharFormat(const QTextCharFormat &format);
+QTextCharFormat currentCharFormat() const;
+void mergeCurrentCharFormat(const QTextCharFormat &modifier);
+
+void setAcceptRichText(bool accept);
+bool acceptRichText() const;
+
+void setAutoFormatting(AutoFormatting features);
+AutoFormatting autoFormatting() const;
+
+void setCursorWidth(int width);
+int cursorWidth() const;
+
+void setDocument(QTextDocument *document);
+QTextDocument *document() const;
+void setDocumentTitle(const QString &title);
+QString documentTitle() const;
+
+void setExtraSelections(const QList<ExtraSelection> &selections);
+QList<ExtraSelection> extraSelections() const;
+
+void setLineWrapColumnOrWidth(int w);
+int lineWrapColumnOrWidth() const;
+
+void setLineWrapMode(LineWrapMode mode);
+LineWrapMode lineWrapMode() const;
+
+void setOverwriteMode(bool overwrite);
+bool overwriteMode() const;
+
+void setPlaceholderText(const QString &placeholderText);
+QString placeholderText() const;
+
+void setReadOnly(bool ro);
+bool isReadOnly() const;
+
+void setTabChangesFocus(bool b);
+bool tabChangesFocus() const;
+
+void setTabStopWidth(int width);
+int tabStopWidth() const;
+
+void setTextCursor(const QTextCursor &cursor);
+QTextCursor textCursor() const;
+
+void setTextInteractionFlags(Qt::TextInteractionFlags flags);
+Qt::TextInteractionFlags textInteractionFlags() const;
+
+void setUndoRedoEnabled(bool enable);
+bool isUndoRedoEnabled() const;
+
+void setWordWrapMode(QTextOption::WrapMode policy);
+QTextOption::WrapMode wordWrapMode() const;
+
+QColor textBackgroundColor() const;
+slot void setTextBackgroundColor(const QColor &c);
+
+slot void setTextColor(const QColor &c);
+QColor textColor() const;
+
+slot void setHtml(const QString &text);
+slot void insertHtml(const QString &text);
+QString toHtml() const;
+
+QString toPlainText() const;
+void insertPlainText(const QString &text);
+void setPlainText(const QString &text);
+```
+
+其它槽函数。
+
+```c++
+void append(const QString &text);
+void clear();
+void copy();
+void cut();
+void redo();
+void undo();
+void selectAll();
+void paset();
+void scrollToAnchor(const QString &name);
+void setText(const QString &text);
+void zoomIn(int range = 1);
+void zoomOut(int range = 1);
+```
+
+信号函数。
+
+```c++
+void copyAvailable(bool yes);
+void currentCharFormatChanged(const QTextCharFormat &f);
+void cursorPositionChanged();
+void redoAvailable(bool available);
+void selectionChanged();
+void textChanged();
+void undoAvailable(bool available);
+```
+
 ### 3.3 常见输出组件类
 
 #### 3.3.1 QLabel
@@ -2996,7 +3200,33 @@ void linkHovered(const QString &link);//当用户将鼠标悬停在链接上时�
 
 #### 3.3.2 QProgressBar
 
- QProgressBar的父类是QWidget，一般用于进度显示。
+ QProgressBar的父类是QWidget，一般用于进度显示。有2种方式使用，模态和非模态。如果以模态方式使用，必须调用**QApplication::processEvents()**使事件循环保持正常进行状态而不会导致应用被阻塞。非模态方式一般通过**QTime实现定时设置进度条**的值。除了可以使用QProgressBar还可以使用进度对话框的方式，这种方式针对慢速过程，对话框会包含一个进度条，一个取消按钮和一个消息标签，具体可见[5.1.6 QProgressDialog](#5.1.6 QProgressDialog)。
+
+一个例子如下。
+
+```c++
+if (comboBox->currentIndex == 0 )//进度条方式
+{
+    progressBar->setRange(0,10000);
+    for(int i = 1; i < 10001; ++i)
+        progressBar->setValue(i);
+}
+else{ // 进度对话框方式
+    QProgressDialog * dlg = new QProgressDialog(this);
+    QFont font("Times New Roman",12);
+    dlg->setFont(font);
+    dlg->setWindowModality(Qt::WindowModal);//模态方式运行
+    dlg->setMinimumDuration(5);//进度对话框出现之前等待的时间,默认4s,系统根据完成的工作量估算预计花费的时间
+    dlg->setWindowTitle("进度");
+    dlg->setLabelText("正在复制...");
+    dlg->setCancelButtonText("Cancel");
+    dlg->setRange(0,10000);
+    for(int i = 1; i < 10001; ++i)
+        dlg->setValue(i);
+    if (dlg->wasCanceled())
+        return;
+}
+```
 
 常见的属性值如下。
 
@@ -3011,8 +3241,6 @@ text : const QString // 文字
 textDirection : Direction  // 文字方向
 textVisible : bool // 是否显示文字,一般是百分比进度
 value : int // 当前显示值
-59 properties inherited from QWidget
-1 property inherited from QObject 
 ```
 
 常见的公共成员函数如下。
@@ -3020,18 +3248,24 @@ value : int // 当前显示值
 ```c++
 Qt::Alignment alignment() const; // 对齐方式
 void setAlignment(Qt::Alignment alignment);
+
 QString format() const;// 格式
 void resetFormat();
 void setFormat(const QString &format);
+
 bool invertedAppearance() const;// 反相器,也就是从大到小
 void setInvertedAppearance(bool invert);
+
 bool isTextVisible() const;// 文本可见性
 void setTextVisible(bool visible);
+
 int maximum() const; // 进度条范围
 int minimum() const;
+
 Qt::Orientation orientation() const; // 方向
 void setTextDirection(QProgressBar::Direction textDirection);
 QProgressBar::Direction textDirection() const;
+
 virtual QString text() const; // 文本
 int value() const;//当前值
 ```
@@ -3045,33 +3279,15 @@ void setMinimum(int minimum);
 void setRange(int minimum, int maximum);
 void setOrientation(Qt::Orientation); // 设置方向
 void setValue(int value); // 设置当前值
-19 public slots inherited from QWidget;
-1 public slot inherited from QObject ;
 ```
 
 最常用的信号。
 
 ```c++
 void valueChanged(int value);
-3 signals inherited from QWidget
-2 signals inherited from QObject 
 ```
 
-这里可以提一下对齐方式的枚举值Qt::Alignment。
 
-```c++
-// 水平枚举值
-Qt::AlignLeft 0x0001; // Aligns with the left edge.
-Qt::AlignRight0x0002; // Aligns with the right edge.
-Qt::AlignHCenter0x0004; // Centers horizontally in the available space.
-Qt::AlignJustify0x0008; // Justifies the text in the available space.
-// 垂直枚举值
-Qt::AlignTop 0x0020; // Aligns with the top.
-Qt::AlignBottom 0x0040; // Aligns with the bottom.
-Qt::AlignVCenter 0x0080; // Centers vertically in the available space.
-Qt::AlignBaseline 0x0100; // Aligns with the baseline.
-Qt::AlignCenter AlignVCenter | AlignHCenter; // Centers in both dimensions.
-```
 
 ### 3.4 常见时间日期类
 
@@ -3248,6 +3464,72 @@ enum Qt::TimeSpec{
 	Qt::TimeZone = 3 // 使用一组特定的夏令时规则的指定时区
 }；
 ```
+
+#### 3.4.4 QLCDNumber
+
+数码管显示。它可以显示几乎任何大小的数字。它可以显示十进制、十六进制、八进制或二进制数。使用 display() 插槽很容易连接到数据源，该插槽被重载以采用五种参数类型中的任何一种。
+还有一些槽可以用 setMode() 改变基数，用 setSmallDecimalPoint() 改变小数点。
+当 QLCDNumber 被要求显示超出其范围的内容时，它会发出 overflow() 信号。范围由 setDigitCount() 设置，但 setSmallDecimalPoint() 也会影响它。如果显示设置为十六进制、八进制或二进制，则显示与该值等效的整数。
+可以显示这些数字和其他符号：0/O、1、2、3、4、5/S、6、7、8、9/g、减号、小数点、A、B、C、D、E、 F、h、H、L、o、P、r、u、U、Y、冒号、度数符号（在字符串中指定为单引号）和空格。 QLCDNumber 用空格代替非法字符。尽管可以使用 value() 检索数值，但无法检索 QLCDNumber 对象的内容。如果您确实需要文本，我们建议您将 display() 插槽的信号也连接到另一个插槽并将值存储在那里。
+
+枚举类型。
+
+此类型确定数字的显示方式。如果显示设置为十六进制、八进制或二进制，则显示与该值等效的整数。
+
+```c++
+enum QLCDNumber::Mode{
+    QLCDNumber::Hex
+    QLCDNumber::Dec
+    QLCDNumber::Oct
+    QLCDNumber::Bin
+}
+```
+
+此类型确定 QLCDNumber 小部件的视觉外观。
+
+```c++
+enum QLCDNumber::SegmentStyle{
+    QLCDNumber::Outline//给出用背景颜色填充的凸起段
+    QLCDNumber::Filled//给出用 windowText 颜色填充的凸起段
+    QLCDNumber::Flat//给出用 windowText 颜色填充的平面段
+}
+```
+
+成员函数。
+
+```c++
+QLCDNumber(QWidget *parent = Q_NULLPTR);
+QLCDNumber(uint numDigits, QWidget *parent = Q_NULLPTR);
+
+signal void overflow();
+bool checkOverflow(double num) const;//如果 num 太大而无法完整显示，则返回 true；否则返回false
+bool checkOverflow(int num) const;//如果 num 太大而无法完整显示，则返回 true；否则返回false
+
+int intValue() const;//对应LCDNumber显示的当前值,如果显示的值不是数字，则该属性的值为0
+double value() const;
+
+void setDigitCount(int numDigits);//返回当前位数
+int digitCount() const;
+
+void setMode(Mode);//设置LCDNumber的样式
+Mode mode() const;
+
+void setSegmentStyle(SegmentStyle);
+SegmentStyle segmentStyle() const;
+
+slot void setSmallDecimalPoint(bool);
+bool smallDecimalPoint() const;//小数点的样式如果为 true，则在两位数位置之间绘制小数点。否则，它会占据自己的一个数字位置，即绘制在一个数字位置。默认值为false
+
+slot void display(const QString &s);
+slot void display(int num);
+slot void display(double num);
+slot void setBinMode();
+slot void setDecMode();
+slot void setHexMode();
+slot void setOctMode();
+```
+
+
 
 ### 3.5 常见表格文字类
 
@@ -3566,14 +3848,30 @@ QRadioButton *button = new QRadioButton("Search from the &cursor", this);
 
 #### 3.6.3 QToolButton
 
-QToolButton 类为命令或选项提供了一个快速访问按钮，通常在 QToolBar 中使用。
-工具按钮是一种特殊按钮，可提供对特定命令或选项的快速访问。与普通命令按钮不同，工具按钮通常不显示文本标签，而是显示图标。
+QToolButton 类为命令或选项提供了一个快速访问按钮，**通常在 QToolBar 中使用**。
+工具按钮是一种特殊按钮，可提供对特定命令或选项的快速访问。与普通命令按钮不同，**工具按钮通常不显示文本标签，而是显示图标**。
 当使用 QToolBar::addAction() 创建新的 QAction 实例或使用 QToolBar::addAction() 将现有操作添加到工具栏时，通常会创建工具按钮。也可以以与任何其他小部件相同的方式构建工具按钮，并将它们与布局中的其他小部件一起排列。
 工具按钮的一个经典用途是选择工具。例如，绘图程序中的“钢笔”工具。这将通过使用 QToolButton 作为切换按钮来实现（参见 setCheckable()）。
 QToolButton 支持自动升起。在自动升起模式下，仅当鼠标指向按钮时，按钮才会绘制 3D 帧。当在 QToolBar 中使用按钮时，该功能会自动打开。用 setAutoRaise() 改变它。
 工具按钮的图标设置为 QIcon。这使得为禁用和活动状态指定不同的像素图成为可能。当按钮的功能不可用时，使用禁用的像素图。当鼠标指针悬停在按钮上时，将显示活动像素图。
-按钮的外观和尺寸可通过 setToolButtonStyle() 和 setIconSize() 进行调整。当在 QMainWindow 的 QToolBar 中使用时，按钮会自动调整为 QMainWindow 的设置（参见 QMainWindow::setToolButtonStyle() 和 QMainWindow::setIconSize()）。除了图标，工具按钮还可以显示箭头符号，由 arrowType 指定。
-工具按钮可以在弹出菜单中提供额外的选择。可以使用 setMenu() 设置弹出菜单。使用 setPopupMode() 为带有菜单集的工具按钮配置可用的不同模式。默认模式是 DelayedPopupMode，有时与 Web 浏览器中的“返回”按钮一起使用。按住按钮一会儿后，会弹出一个菜单，显示可能跳转到的页面列表。超时取决于样式，请参阅 QStyle::SH_ToolButton_PopupDelay。
+**按钮的外观和尺寸可通过 setToolButtonStyle() 和 setIconSize() 进行调整**。当在 QMainWindow 的 QToolBar 中使用时，按钮会自动调整为 QMainWindow 的设置（参见 QMainWindow::setToolButtonStyle() 和 QMainWindow::setIconSize()）。除了图标，**工具按钮还可以显示箭头符号，由 arrowType 指定**。
+工具按钮可以在弹出菜单中提供额外的选择。可以使用 setMenu() 设置弹出菜单。**使用 setPopupMode() 为带有菜单集的工具按钮配置可用的不同模式。默认模式是 DelayedPopupMode**，有时与 Web 浏览器中的“返回”按钮一起使用。按住按钮一会儿后，会弹出一个菜单，显示可能跳转到的页面列表。超时取决于样式，请参阅 QStyle::SH_ToolButton_PopupDelay。此类型常与[16.5.3 QToolBox](#16.5.3 QToolBox)配合使用。
+
+一个例子。
+
+```c++
+QToolButton * btn1 = new QToolButton;
+QToolButton * btn2 = new QToolButton;
+QToolButton * btn3 = new QToolButton;
+QGroupBox * groupBox = new QGroupBox;
+QVBoxLayout * layout = new QVBoxLayout(groupBox);//父对象是容器
+layout->addWidget(btn1);
+layout->addWidget(btn2);
+layout->addWidget(btn3);
+
+QToolBox * toolBox = new QToolBox(this);
+toolBox->addItem((QWidget*)groupBox,"工具箱");
+```
 
 需要了解的枚举类型如下。
 
@@ -3585,36 +3883,27 @@ enum ToolButtonPopupMode {
 };
 ```
 
-常见的性质如下。
+公共成员函数如下。
 
 ```c++
-arrowType : Qt::ArrowType // 这个属性保存按钮是否显示一个箭头而不是一个普通的图标 这显示一个箭头作为 QToolButton 的图标。默认情况下，此属性设置为 Qt::NoArrow。
-autoRaise : bool // 此属性保存是否启用自动提升。默认为禁用（即 false）。使用 QMacStyle 时，当前在 macOS 上忽略此属性。
-popupMode : ToolButtonPopupMode // 描述弹出菜单与工具按钮一起使用的方式 默认情况下，此属性设置为 DelayedPopup。
-toolButtonStyle : Qt::ToolButtonStyle // 描述弹出菜单与工具按钮一起使用的方式 默认情况下，此属性设置为 DelayedPopup。
-```
-
-常见的公共成员函数如下。
-
-```c++
-Qt::ArrowType arrowType() const;
-bool autoRaise() const;
-QAction *defaultAction() const;
-QMenu *menu() const;
-ToolButtonPopupMode popupMode() const;
+Qt::ArrowType arrowType() const; //箭头类型,莫热门Qt::NoArrow
 void setArrowType(Qt::ArrowType type);
-void setAutoRaise(bool enable);
+
 void setMenu(QMenu *menu);
-void setPopupMode(ToolButtonPopupMode mode);
+QMenu *menu() const;
+slot void showMenu();
+
+void setAutoRaise(bool enable);//鼠标离开按时恢复为弹起状态
+bool autoRaise() const;
+
+void setPopupMode(ToolButtonPopupMode mode);//菜单与按钮一起使用的方式,默认DelayedPopup
+ToolButtonPopupMode popupMode() const;
+
+slot void setDefaultAction(QAction *action);
+QAction *defaultAction() const;
+
+slot void setToolButtonStyle(Qt::ToolButtonStyle style);//只显示图标,只显示文字,图标在旁边或下方以及遵循Style标准
 Qt::ToolButtonStyle toolButtonStyle() const;
-```
-
-常见的槽函数如下。
-
-```c++
-void setDefaultAction(QAction *action);
-void setToolButtonStyle(Qt::ToolButtonStyle style);
-void showMenu();
 ```
 
 常见的信号如下。
@@ -3660,29 +3949,25 @@ QCheckBox *checkbox = new QCheckBox("C&ase sensitive", this);
 
 ### 3.7 其他类
 
-这些类不再赘述，自行查看Qt文档。
+这些类可在第16章查看。部分类型不再赘述，自行查看Qt文档。
 
-**Layouts类：**Vertical Layout、Horizontal Layout、Grid Layout和Form Layout，布局方向；
+**Layouts类：**布局管理；
 
-**Spacers类：**Horizontal Spacer、Vetiacal Spacer，空格间距；
+**Spacers类：**空格间距；
 
 **Buttons类：**Command Link Button、Dialog Button box，按钮;
 
-**ItemViews类：**List View、Tree View、Table View、Column View、Undo View，**第4章会详细介绍**；
+**ItemViews类：**：Column View、Undo View；
 
-**Containers类：**Group Box、Scroll Area、Tool Box、Stacked Widget、 Tab Widget、Frame、Widget、MDI Area、DockWidget和QAxWidget，容器类；
+**Containers类：**容器类；
 
-**InputWidgets类：**Font Combo Box、Text Edit、Double Spin Box、Dial、Horizontal Scroll Bar、Verical  Scroll Bar、Horizontal Silder、Vertical Silider、QDial以及Key Sequence Edit，输入组件类；
+**InputWidgets类：**Font Combo Box、Key Sequence Edit，输入组件类；
 
-**以前的版本是QSlider**，现在拆成了Horizontal Silder和Vertical Silider；同理以前的**QScrollBar**拆成了Horizontal Scroll Bar和Verical  Scroll Bar，**QDial没有变化**。
-
-这些类都从**基类QAbstractSlider继承而来**，有一些共有的属性。**QSlider是滑动的标尺型组件**，滑动标尺的一个滑块可以改变值；**QScrollBar是滚动条；QDial是仪表盘式的组件**，通过旋转表盘获得输入值。
-
-**Display Widgets类：**QLCDNumber、Text Browser、Graphics View、Horizontal Line、Vertical Line、OpenGL Widget和QQuickWidget。
+**Display Widgets类：**QLCDNumber、Text Browser、OpenGL Widget和QQuickWidget。
 
 **QLCDNumber是模拟LCD显示数字的组件**，可以显示整数或小数。
 
-**Times类：**QCalendarWidget，一个用日历形式选择日期的组件，关联的数据类型是QTime、QDate和QDateTime，关联的组件类型是QTimeEdit、QDateEdit和QDateTimeEdit。
+**Times类：**QCalendarWidget，一个用日历形式选择日期的组件。
 
 ## 4. Model/View结构
 
@@ -5080,7 +5365,7 @@ else
     ui->plainTextEdit->appendPlainText("Question消息框: 无选择");
 ```
 
-##### 枚举类型
+枚举类型。
 
 该枚举描述了可用于描述按钮框中的按钮的角色。这些角色的组合作为用于描述其行为的不同方面的标志。
 
@@ -5137,7 +5422,7 @@ enum QMessageBox::StandardButton = {
 }
 ```
 
-##### 子类函数
+成员函数，这些函数一般是自定义消息框的时候可用。
 
 ```c++
 void addButton(QAbstractButton *button, ButtonRole role);
@@ -5150,14 +5435,15 @@ void setDetailedText(const QString &text);
 void setEscapeButton(QAbstractButton *button);
 void setEscapeButton(StandardButton button);
 void setIcon(Icon);
-void setIconPixmap(const QPixmap &pixmap);
+void setIconPixmap(const QPixmap &pixmap);//设置图标位图
+
 void setInformativeText(const QString &text);
 void setStandardButtons(StandardButtons buttons);
 void setText(const QString &text);
 void setTextFormat(Qt::TextFormat format);
 void setTextInteractionFlags(Qt::TextInteractionFlags flags);
 void setWindowModality(Qt::WindowModality windowModality);
-void setWindowTitle(const QString &title);
+void setWindowTitle(const QString &title);//对话框标题
 
 QPushButton *addButton(const QString &text, ButtonRole role);
 QPushButton *addButton(StandardButton button);
@@ -5165,7 +5451,7 @@ QAbstractButton *button(StandardButton which) const;
 ButtonRole buttonRole(QAbstractButton *button) const;
 QList<QAbstractButton *> buttons() const;
 QCheckBox *checkBox() const;
-QAbstractButton *clickedButton() const;
+QAbstractButton *clickedButton() const; // 返回用户点击的按钮
 QPushButton *defaultButton() const;
 QString detailedText() const;
 QAbstractButton *escapeButton() const;
@@ -5179,7 +5465,7 @@ Qt::TextFormat textFormat() const;
 Qt::TextInteractionFlags textInteractionFlags() const;
 ```
 
-##### 静态函数
+静态函数，最常用的函数。
 
 ```c++
 void about();
@@ -5188,6 +5474,102 @@ StandardButton critical();
 StandardButton information();
 StandardButton question();
 StandardButton warning();
+```
+
+如果希望自定义消息框也是可以的，一个例子如下。
+
+```c++
+QLabel * label = new QLabel;
+QMessageBox customMsgBox;
+customMsgBox.setWindowTitle("用户自定义消息框");//标题
+QPushButton * yesBtn = customMsgBox.addButton("Yes",QMessageBox::ActionRole);
+QPushButton * noBtn = customMsgBox.addButton("No",QMessageBox::ActionRole);
+QPushButton * cancelBtn = customMsgBox.addButton(QMessageBox::Cancel);
+customMsgBox.setText("这是一个自定义的消息框");//消息
+customMsgBox.setIconPixmap(QPixmap("Qt.png"));//图标
+customMsgBox.exec();//进入事件循环
+if (customMsgBox..clickedButton() == yesBtn)
+    label->setText("yes");
+if (customMsgBox..clickedButton() == noBtn)
+    label->setText("no");
+if (customMsgBox..clickedButton() == cancelBtn)
+    label->setText("cancel");
+```
+
+#### 5.1.6 QProgressDialog
+
+进度对话框，包含一个进度条，消息标签和取消按钮。
+
+成员函数。
+
+```c++
+QProgressDialog(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+QProgressDialog(const QString &labelText, const QString &cancelButtonText, int minimum, int maximum, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+void setAutoClose(bool close);
+void setAutoReset(bool reset);
+bool autoClose() const;//是否被 reset() 隐藏。默认值为 true。
+bool autoReset() const;//是否在value()等于 maximum()时立即调用reset() 默认为 true
+
+QString labelText() const;
+int maximum() const;
+int minimum() const;
+int minimumDuration() const;
+int value() const;
+bool wasCanceled() const;
+
+// 打开对话框并将其cancelled()信号连接到接收者和成员指定的插槽。当对话框关闭时，信号将与插槽断开连接。
+void open(QObject *receiver, const char *member);
+void setBar(QProgressBar *bar);
+void setCancelButton(QPushButton *cancelButton);
+void setLabel(QLabel *label);
+```
+
+槽函数。
+
+```c++
+void cancel();
+void reset();
+void setCancelButtonText(const QString &cancelButtonText);
+void setLabelText(const QString &text);
+void setMaximum(int maximum);
+void setMinimum(int minimum);
+void setMinimumDuration(int ms);
+void setRange(int minimum, int maximum);
+void setValue(int progress);
+```
+
+信号。
+
+```c++
+void canceled();
+```
+
+一个例子如下。
+
+```c++
+Operation::Operation(QObject *parent)
+    : QObject(parent), steps(0)
+    {
+        pd = new QProgressDialog("Operation in progress.", "Cancel", 0, 100);
+        connect(pd, SIGNAL(canceled()), this, SLOT(cancel()));//点击取消时的操作
+        t = new QTimer(this);
+        connect(t, SIGNAL(timeout()), this, SLOT(perform()));
+        t->start(0);
+    }
+
+void Operation::perform()
+{
+    pd->setValue(steps);//定时设置进度
+    steps++;
+    if (steps > pd->maximum())
+        t->stop();
+}
+
+void Operation::cancel()
+{
+    t->stop(); // 定时取消
+    //... 其它清理操作
+}
 ```
 
 ### 5.2 自定义对话框
@@ -7795,7 +8177,7 @@ int yellow() const;
 其他的不怎么常用的静态成员函数和关联函数可以了解一下。
 
 ```c++
-static QStringList colorNames();
+static QStringList colorNames();//可以获取所有有效的颜色
 static QColor fromCmyk(int c, int m, int y, int k, int a = 255);
 static QColor fromCmykF(qreal c, qreal m, qreal y, qreal k, qreal a = 1.0);
 static QColor fromHsl(int h, int s, int l, int a = 255);
@@ -19550,6 +19932,41 @@ void setMidLineWidth(int);
 int midLineWidth() const;
 ```
 
+#### 16.1.12 QSpacerItem
+
+QSpacerItem 类在布局中提供空白空间。
+通常，您不需要直接使用此类。 Qt 的内置布局管理器提供以下功能来操作布局中的空白空间：
+
+QHBoxLayout：addSpacing(), addStretch(), insertSpacing(), insertStretch()
+QGridLayout：setRowMinimumHeight(), setRowStretch(), setColumnMinimumWidth(), setColumnStretch()
+
+成员函数。
+
+```c++
+//构造一个具有首选宽度 w、首选高度 h、水平尺寸策略 hPolicy 和垂直尺寸策略 vPolicy 的间隔项。默认值提供了一个可以拉伸的间隙，如果没有其他需要空间。
+QSpacerItem(int w, int h, QSizePolicy::Policy hPolicy = QSizePolicy::Minimum, QSizePolicy::Policy vPolicy = QSizePolicy::Minimum);
+//请注意，如果在将分隔项添加到布局后调用 changeSize()，则必须使布局无效才能使分隔项的新大小生效
+void changeSize(int w, int h, QSizePolicy::Policy hPolicy = QSizePolicy::Minimum, QSizePolicy::Policy vPolicy = QSizePolicy::Minimum);
+//返回此项的尺寸政策
+QSizePolicy sizePolicy() const;
+```
+
+涉及的枚举类型。该枚举描述了在构造 QSizePolicy 时使用的各种每个维度的大小调整类型。
+
+```c++
+enum QSizePolicy::Policy{
+    QSizePolicy::Fixed//QWidget::sizeHint() 是唯一可接受的替代方法，因此小部件永远不会增长或缩小
+    QSizePolicy::Minimum//sizeHint() 最小且足够
+    QSizePolicy::Maximum
+    QSizePolicy::Preferred//sizeHint() 是最好的，但小部件可以缩小并且仍然有用
+    QSizePolicy::Expanding//sizeHint() 是一个合理的大小，但小部件可以缩小并且仍然有用
+    QSizePolicy::MinimumExpanding//sizeHint() 最小且足够。小部件可以利用额外的空间
+    QSizePolicy::Ignored//sizeHint() 被忽略。小部件将获得尽可能多的空间
+}
+```
+
+
+
 ### 16.2 事件
 
 #### 16.2.1 QEvent
@@ -20377,9 +20794,197 @@ slot void setNotchesVisible(bool visible);
 slot void setWrapping(bool on);
 ```
 
-### 16.5 全局枚举类型
+### 16.5 容器
 
-#### 16.5.1 Qt::WindowFlags
+#### 16.5.1 QWidget
+
+
+
+#### 16.5.2 QGroupBox
+
+
+
+#### 16.5.3 QToolBox
+
+工具箱，常与工具按钮[3.6.3 QToolButton](#3.6.3 QToolButton)配合使用。工具箱可以看成类似堆叠窗口或者分页效果的窗口，可以使用addItem添加部件。
+
+成员函数。
+
+```c++
+QToolBox(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+int addItem(QWidget *widget, const QIcon &iconSet, const QString &text);
+int addItem(QWidget *w, const QString &text);
+int insertItem(int index, QWidget *widget, const QIcon &icon, const QString &text);
+int insertItem(int index, QWidget *widget, const QString &text);
+void removeItem(int index);
+
+int count() const;
+int currentIndex() const;
+int indexOf(QWidget *widget) const;
+QWidget *currentWidget() const;
+QWidget *widget(int index) const;
+
+bool isItemEnabled(int index) const;
+QIcon itemIcon(int index) const;
+QString itemText(int index) const;
+QString itemToolTip(int index) const;
+void setItemEnabled(int index, bool enabled);
+void setItemIcon(int index, const QIcon &icon);
+void setItemText(int index, const QString &text);
+void setItemToolTip(int index, const QString &toolTip);
+```
+
+信号和槽函数。
+
+```c++
+slot void setCurrentIndex(int index);
+slot void setCurrentWidget(QWidget *widget);
+signal void currentChanged(int index);
+```
+
+#### 16.5.4 QAxWidget
+
+
+
+#### 16.5.5 QScrollArea
+
+
+
+### 16.6 窗口外观
+
+#### 16.6.1 QPalette
+
+改变某个控件的颜色外观，如背景、文字颜色等，这个类专门用于管理这些颜色信息，因为每个窗口或者控件都会有这个对象。这个类有2个概念，一个是ColorRole，一个是ColorGroup，故用的最多的函数是setColor。
+
+其中ColorRole是颜色主题，对窗体不同角色的组件进行分类，例如QPalette::Window表示背景色，而QPalette::WindowText是前景色等等。
+
+ColorGroup表示3种状态，QPalette::Active获得焦点激活状态，QPalette::Inactive未激活状态，QPalette::Disable不可用状态。
+
+最重要的3个函数如下。
+
+setColor表示对某个状态的某个角色进行设置，或者不区分状态。
+
+setColorGroup原型对指定的状态一次性设置前景色、按钮、高亮、黑暗等一系列的brush。
+
+setBrush设置指定状态下组件的brush。
+
+ setColor() 和 setBrush()的区别具体取决于**想要纯色还是像素图图案**。
+
+```c++
+void setColor(ColorGroup group, ColorRole role, const QColor &color);
+void setColor(ColorRole role, const QColor &color);
+const QColor &color(ColorGroup group, ColorRole role) const;
+const QColor &color(ColorRole role) const;
+
+void setColorGroup(ColorGroup cg, const QBrush &windowText, const QBrush &button, const QBrush &light, const QBrush &dark, const QBrush &mid, const QBrush &text, const QBrush &bright_text, const QBrush &base, const QBrush &window);
+void setCurrentColorGroup(ColorGroup cg);
+ColorGroup currentColorGroup() const;
+
+void setBrush(ColorRole role, const QBrush &brush);
+void setBrush(ColorGroup group, ColorRole role, const QBrush &brush);
+```
+
+最好使用当前样式的默认调色板（由 **QGuiApplication::palette()** 返回）并根据需要进行修改。
+
+枚举类型。
+
+```c++
+enum QPalette::ColorGroup{
+    QPalette::Disabled
+    QPalette::Active
+    QPalette::Inactive
+    QPalette::Normal // Active同义词
+}
+```
+
+```c++
+enum QPalette::ColorRole{
+    QPalette::Window // 背景颜色
+    QPalette::Background // Window同义词
+    QPalette::WindowText // 前景色
+    QPalette::Foreground// WindowText同义词
+    QPalette::Base//文本框背景色,通常是白色或其他浅色
+    QPalette::AlternateBase//在具有交替行颜色的视图中用作备用背景颜色
+    QPalette::ToolTipBase//用作 QToolTip 和 QWhatsThis 的背景颜色
+    QPalette::ToolTipText//用作 QToolTip 和 QWhatsThis 的前景色
+    QPalette::Text//Base 使用的前景色
+    QPalette::Button//常规按钮背景颜色
+    QPalette::ButtonText//与 Button 颜色一起使用的前景色
+    QPalette::BrightText//一种与WindowText非常不同的文本颜色，并形成鲜明对比
+    
+    // 还有一些3D效果的角色
+    QPalette::Light//比Button颜色浅
+    QPalette::Midlight//在Button和Light之间
+    QPalette::Dark//比Button暗
+    QPalette::Mid//在Button和Dark之间
+    QPalette::Shadow//很深的颜色,默认是 Qt::black
+    
+    QPalette::Highlight//用于指示选定项或当前项。默认情况下高亮颜色是Qt::darkBlue
+    QPalette::HighlightedText//与突出显示形成对比的文本颜色。默认情况Qt::white
+    QPalette::Link//用于未访问的超链接的文本颜色。默认情况下，链接颜色是 Qt::blue
+    QPalette::LinkVisited//用于已访问超链接的文本颜色。默认情况下，链接访问的颜色是 Qt::magenta
+	QPalette::NoRole//没有角色；此特殊角色通常用于指示尚未分配角色
+}
+```
+
+```c++
+// 注意在Qt中呈现富文本时不使用Link和LinkVisited 角色，并建议使用CSS和QTextDocument::setDefaultStyleSheet()函数来改变链接的外观。例如：
+QTextBrowser browser;
+QColor linkColor(Qt::red);
+QString sheet = QString::fromLatin1("a { text-decoration: underline; color: %1 }").arg(linkColor.name());
+browser.document()->setDefaultStyleSheet(sheet);
+```
+
+关于颜色角色下图展示了区别。
+
+![ColorRole.jpg](ColorRole.jpg)
+
+成员函数。
+
+```c++
+//从按钮颜色构造一个调色板。其他颜色会根据此颜色自动计算。窗口也将是按钮颜色
+QPalette(const QColor &button);
+//从按钮颜色构造一个调色板。其他颜色会根据此颜色自动计算。窗口也将是按钮颜色
+QPalette(Qt::GlobalColor button);
+// 从按钮颜色和窗口构造调色板。根据这些颜色自动计算其他颜色
+QPalette(const QColor &button, const QColor &window);
+//构造一个调色板。您可以为 windowText、button、light、dark、mid、text、bright_text、base 和 window 传递画笔、像素图或纯色
+QPalette(const QBrush &windowText, const QBrush &button, const QBrush &light, const QBrush &dark, const QBrush &mid, const QBrush &text, const QBrush &bright_text, const QBrush &base, const QBrush &window);
+
+const QBrush &alternateBase() const;//返回当前颜色组的备用基础笔刷
+const QBrush &base() const;//返回当前颜色组的基础画笔
+const QBrush &brightText() const;//返回当前颜色组的明亮文本前景画笔
+const QBrush &brush(ColorGroup group, ColorRole role) const;//返回指定颜色组中的画笔
+const QBrush &brush(ColorRole role) const;//返回为当前 ColorGroup 中的给定颜色角色设置的画笔
+const QBrush &button() const;//返回当前颜色组的按钮画笔
+const QBrush &buttonText() const;//返回当前颜色组的按钮文本前景画笔
+const QBrush &light() const;//返回当前颜色组的光刷
+const QBrush &link() const;//返回当前颜色组的未访问链接文本画笔
+const QBrush &linkVisited() const;//返回当前颜色组的已访问链接文本画笔
+const QBrush &mid() const;//返回当前颜色组的中间画笔
+const QBrush &midlight() const;//返回当前颜色组的中光笔刷
+const QBrush &dark() const;//返回当前颜色组的深色画笔
+const QBrush &highlight() const;//返回当前颜色组的高光画笔
+const QBrush &highlightedText() const;//返回当前颜色组的高亮文本画笔
+const QBrush &shadow() const;//返回当前颜色组的阴影画笔
+const QBrush &text() const;//返回当前颜色组的文本前景画笔
+const QBrush &toolTipBase() const;//返回当前颜色组的工具提示基础画笔
+const QBrush &toolTipText() const;//返回当前颜色组的工具提示文本画笔
+const QBrush &window() const;//返回当前颜色组的窗口（一般背景）画笔
+const QBrush &windowText() const;//返回当前颜色组的窗口文本（一般前景）画笔
+
+qint64 cacheKey() const;//返回一个数字，该数字标识此 QPalette 对象的内容。如果不同的 QPalette 对象引用相同的内容，则它们可以具有相同的键
+bool isBrushSet(ColorGroup cg, ColorRole cr) const;//先前已设置了cg和则返回true
+bool isCopyOf(const QPalette &p) const;//使用复制构造函数复制调色板可以测试两个调色板是否相同
+bool isEqual(ColorGroup cg1, ColorGroup cg2) const;//cg1等于cg2则返回 true
+QPalette resolve(const QPalette &other) const;//返回具有从其他复制的属性的新 QPalette
+```
+
+
+
+### 16.10 全局枚举类型
+
+#### 16.10.1 Qt::WindowFlags
 
 此枚举类型用于为**小部件指定各种窗口系统属性**。
 
@@ -20434,7 +21039,7 @@ flags Qt::WindowFlags
 }
 ```
 
-#### 16.5.2 Qt::Orientation
+#### 16.10.2 Qt::Orientation
 
 此类型用于表示对象的方向。
 
@@ -20447,7 +21052,7 @@ flags Qt::Orientations
 }
 ```
 
-#### 16.5.3 Qt::Alignment
+#### 16.10.3 Qt::Alignment
 
 此枚举类型用于描述对齐方式。它包含可以组合以产生所需效果的水平和垂直标志。
 
@@ -20474,7 +21079,7 @@ flags Qt::Alignment
 }
 ```
 
-#### 16.5.4 Qt::DockWidgetArea
+#### 16.10.4 Qt::DockWidgetArea
 
 停靠窗口的可停靠区域，可以使用组合。
 
@@ -20487,6 +21092,20 @@ enum Qt::DockWidgetArea
     Qt::BottomDockWidgetArea,
     Qt::AllDockWidgetAreas,
     Qt::NoDockWidgetArea,//只可停靠在插入处
+}
+```
+
+#### 16.10.5 Qt::ToolButtonStyle
+
+工具按钮的风格。
+
+```c++
+enum Qt::ToolButtonStyle{  
+    Qt::ToolButtonIconOnly,
+    Qt::ToolButtonTextOnly,
+    Qt::ToolButtonTextBesideIcon,
+    Qt::ToolButtonTextUnderIcon,
+    Qt::ToolButtonFollowStyle
 }
 ```
 
