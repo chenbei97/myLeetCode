@@ -128,6 +128,7 @@
     TestGridBoxLayout 综合演示QGridLayout,QBoxLayout的用法,核心函数是addWidget和addLayout
     ComprehensiveExample 综合演示所有布局类型的用法
 
+43. TestLCDNumber 一个简易电子时钟的设计
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
 12. 实现下拉项选择颜色
