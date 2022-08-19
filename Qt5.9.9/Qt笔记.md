@@ -20798,11 +20798,258 @@ slot void setWrapping(bool on);
 
 #### 16.5.1 QWidget
 
+##### 枚举类型
+
+这个枚举描述了在调用 QWidget::render() 时如何渲染小部件。
+
+```c++
+enum QWidget::RenderFlag{
+    QWidget::DrawWindowBackground//如果启用此选项，即使未设置 autoFillBackground，窗口小部件的背景也会呈现到目标中,默认启用
+    QWidget::DrawChildren//如果启用，小部件的子级将递归呈现到目标中,默认启用
+    QWidget::IgnoreMask//如果启用则渲染目标时忽略QWidget::mask(),默认禁用
+}
+```
+
+##### 成员函数
+
+只提供常用写入函数的解释，只读函数只是返回值不提供注释，同时不常用的单独放置也不提供解释，具体见Qt文档。
+
+常用成员函数。
+
+```c++
+void activateWindow();
+void adjustSize();
+void setAcceptDrops(bool on);
+void setAutoFillBackground(bool enabled);
+
+void repaint(int x, int y, int w, int h);
+void repaint(const QRect &rect);
+void repaint(const QRegion &rgn);
+
+void addAction(QAction *action);
+void addActions(QList<QAction *> actions);
+void insertAction(QAction *before, QAction *action);
+void insertActions(QAction *before, QList<QAction *> actions);
+void removeAction(QAction *action);
+
+void move(const QPoint &);
+void move(int x, int y);
+
+void resize(const QSize &);
+void resize(int w, int h);
+
+void setAttribute(Qt::WidgetAttribute attribute, bool on = true);
+
+void setBackgroundRole(QPalette::ColorRole role);
+void setForegroundRole(QPalette::ColorRole role);
+
+void setContentsMargins(int left, int top, int right, int bottom);
+void setContentsMargins(const QMargins &margins);
+
+void setFixedHeight(int h);
+void setFixedSize(const QSize &s);
+void setFixedSize(int w, int h);
+void setFixedWidth(int w);
+
+void setFont(const QFont &);
+
+void setLayout(QLayout *layout);
+void setLayoutDirection(Qt::LayoutDirection direction);
+
+void setLocale(const QLocale &locale);
+
+void clearMask();
+void setMask(const QBitmap &bitmap);
+void setMask(const QRegion &region);
+
+void setMaximumHeight(int maxh);
+void setMaximumSize(const QSize &);
+void setMaximumSize(int maxw, int maxh);
+void setMaximumWidth(int maxw);
+void setMinimumHeight(int minh);
+void setMinimumSize(const QSize &);
+void setMinimumSize(int minw, int minh);
+void setMinimumWidth(int minw);
+
+void setMouseTracking(bool enable);
+void setTabletTracking(bool enable);
+
+void setPalette(const QPalette &);
+
+void setParent(QWidget *parent);
+void setParent(QWidget *parent, Qt::WindowFlags f);
+
+void setWindowFlag(Qt::WindowType flag, bool on = true);
+void setWindowFlags(Qt::WindowFlags type);
+void setWindowIcon(const QIcon &icon);
+void setWindowOpacity(qreal level);
+void setWindowRole(const QString &role);
+void setWindowState(Qt::WindowStates windowState);
+
+void setSizePolicy(QSizePolicy);
+void setSizePolicy(QSizePolicy::Policy horizontal, QSizePolicy::Policy vertical);
+```
+
+不常用成员函数。
+
+```c++
+
+void ensurePolished() const;
+void getContentsMargins(int *left, int *top, int *right, int *bottom) const;
+void grabGesture(Qt::GestureType gesture, Qt::GestureFlags flags = Qt::GestureFlags());
+void grabKeyboard();
+void grabMouse();
+void grabMouse(const QCursor &cursor);
+void overrideWindowFlags(Qt::WindowFlags flags);
+void releaseKeyboard();
+void releaseMouse();
+void releaseShortcut(int id);
+void render(QPaintDevice *target, const QPoint &targetOffset = QPoint(), const QRegion &sourceRegion = QRegion(), RenderFlags renderFlags = RenderFlags( DrawWindowBackground | DrawChildren ));
+void render(QPainter *painter, const QPoint &targetOffset = QPoint(), const QRegion &sourceRegion = QRegion(), RenderFlags renderFlags = RenderFlags( DrawWindowBackground | DrawChildren ));
+void scroll(int dx, int dy);
+void scroll(int dx, int dy, const QRect &r);
+void setAccessibleDescription(const QString &description);
+void setAccessibleName(const QString &name);
+void setBaseSize(const QSize &);
+void setBaseSize(int basew, int baseh);
+void setContextMenuPolicy(Qt::ContextMenuPolicy policy);
+void setCursor(const QCursor &);
+void setEditFocus(bool enable);
+void setFocus(Qt::FocusReason reason);
+void setFocusPolicy(Qt::FocusPolicy policy);
+void setFocusProxy(QWidget *w);
+void setGeometry(const QRect &);
+void setGeometry(int x, int y, int w, int h);
+void setGraphicsEffect(QGraphicsEffect *effect);
+void setInputMethodHints(Qt::InputMethodHints hints);
+void setShortcutAutoRepeat(int id, bool enable = true);
+void setShortcutEnabled(int id, bool enable = true);
+void setSizeIncrement(const QSize &);
+void setSizeIncrement(int w, int h);
+void setStatusTip(const QString &);
+void setStyle(QStyle *style);
+void setToolTip(const QString &);
+void setToolTipDuration(int msec);
+void setUpdatesEnabled(bool enable);
+void setWhatsThis(const QString &)
+void setWindowFilePath(const QString &filePath);
+void setupUi(QWidget *widget);
+void stackUnder(QWidget *w);
+void ungrabGesture(Qt::GestureType gesture);
+void unsetCursor();
+void unsetLayoutDirectio;
+void unsetLocale();
+void updateGeometry();
+```
+
+##### 信号与槽函数
+
+槽函数。
+
+```c++
+slot bool close();
+slot void hide();
+slot void setHidden(bool hidden);
+bool isHidden() const;
+
+slot void lower();
+slot void raise();
+slot void repaint();
+
+slot void setDisabled(bool disable);
+
+slot void setEnabled(bool);
+bool isEnabled() const;
+bool isEnabledTo(const QWidget *ancestor) const;
+
+slot void setFocus();
+bool hasFocus() const;
+bool hasEditFocus() const;
+void clearFocus();
+
+slot void setStyleSheet(const QString &styleSheet);
+
+slot virtual void setVisible(bool visible);
+bool isVisible() const;
+bool isVisibleTo(const QWidget *ancestor) const;
+
+slot void setWindowModified(bool);
+bool isWindowModified() const;
+bool isModal() const;
+
+slot void setWindowTitle(const QString &);
+
+slot void show();
+slot void showNormal();
+slot void showFullScreen();
+bool isFullScreen() const;
+
+slot void showMaximized();
+bool isMaximized() const;
+
+slot void showMinimized();
+bool isMinimized() const;
+
+slot void update();
+void update(int x, int y, int w, int h);
+void update(const QRect &rect);
+void update(const QRegion &rgn);
+```
+
 
 
 #### 16.5.2 QGroupBox
 
+QGroupBox 小部件提供了一个带有标题的组框框架。组框提供框架、顶部的标题、键盘快捷键，并在其内部显示各种其他小部件。键盘快捷键将键盘焦点移动到组框的子小部件之一。
+QGroupBox 还允许您设置标题（通常在构造函数中设置）和标题的对齐方式。可以选中组框。可检查组框中的子小部件根据是否选中组框而启用或禁用。
+您可以通过启用 flat 属性来最小化组合框的空间消耗。在大多数样式中，启用此属性会导致移除框架的左、右和下边缘。
+QGroupBox 不会自动布置子小部件（通常是 QCheckBoxes 或 QRadioButtons，但可以是任何小部件）。下面的例子展示了我们如何设置一个带有布局的 QGroupBox：
 
+```c++
+
+QGroupBox *groupBox = new QGroupBox(tr("Exclusive Radio Buttons"));
+
+QRadioButton *radio1 = new QRadioButton(tr("&Radio button 1"));
+QRadioButton *radio2 = new QRadioButton(tr("R&adio button 2"));
+QRadioButton *radio3 = new QRadioButton(tr("Ra&dio button 3"));
+
+radio1->setChecked(true);
+
+QVBoxLayout *vbox = new QVBoxLayout;
+vbox->addWidget(radio1);
+vbox->addWidget(radio2);
+vbox->addWidget(radio3);
+vbox->addStretch(1);
+groupBox->setLayout(vbox);
+```
+
+成员函数。
+
+```c++
+QGroupBox(QWidget *parent = Q_NULLPTR);
+QGroupBox(const QString &title, QWidget *parent = Q_NULLPTR);
+
+void setAlignment(int alignment);
+Qt::Alignment alignment() const;
+
+void setCheckable(bool checkable);//分组框的标题中是否有复选框。如果此属性为真，则分组框使用复选框代替普通标签显示其标题。如果选中该复选框，则启用组框的子项；否则，它们将被禁用且无法访问
+bool isCheckable() const;
+bool isChecked() const;//是否选中了分组框，如果分组框是可选中的，它会显示一个复选框。如果选中该复选框，则启用组框的子项；否则，子项将被禁用并且用户无法访问
+
+void setFlat(bool flat);//组框是平坦还是有框架,默认被禁用
+bool isFlat() const;
+
+void setTitle(const QString &title);
+QString title() const;
+```
+
+信号和槽函数。
+
+```c++
+signal void clicked(bool checked = false);//该信号在复选框被激活时发出
+signal void toggled(bool on);//如果组框是可选中的，则在切换复选框时发出此信号。如果选中该复选框，则 on 为真；否则为假
+slot void setChecked(bool checked);
+```
 
 #### 16.5.3 QToolBox
 
