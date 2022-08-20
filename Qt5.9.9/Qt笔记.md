@@ -20817,129 +20817,109 @@ enum QWidget::RenderFlag{
 常用成员函数。
 
 ```c++
-void activateWindow();
-void adjustSize();
-void setAcceptDrops(bool on);
-void setAutoFillBackground(bool enabled);
-
-void repaint(int x, int y, int w, int h);
-void repaint(const QRect &rect);
-void repaint(const QRegion &rgn);
-
-void addAction(QAction *action);
-void addActions(QList<QAction *> actions);
-void insertAction(QAction *before, QAction *action);
-void insertActions(QAction *before, QList<QAction *> actions);
-void removeAction(QAction *action);
-
-void move(const QPoint &);
-void move(int x, int y);
-
-void resize(const QSize &);
+void activateWindow();//设置为活动窗口
+void adjustSize();//调整小部件的大小以适合其内容
+void setAcceptDrops(bool on);//是否启用删除事件,默认false
+void setAutoFillBackground(bool enabled);//该属性保存小部件背景是否自动填充
+void addAction(QAction *action);//将操作操作附加到此小部件的操作列表
+void addActions(QList<QAction *> actions);//将操作附加到此小部件的操作列表
+void insertAction(QAction *before, QAction *action);//将动作动作插入到此小部件的动作列表中，在动作之前。 如果 before 为 0 或 before 不是此小部件的有效操作，它会附加操作
+void insertActions(QAction *before, QList<QAction *> actions);//将动作动作插入到此小部件的动作列表中，在之前的动作之前。 如果 before 为 0 或 before 不是此小部件的有效操作，它会附加操作
+void removeAction(QAction *action);//从此小部件的操作列表中删除操作动作
+void move(const QPoint &);//此属性保存小部件在其父小部件中的位置
+void move(int x, int y);//这对应于 move(QPoint(x, y))。
+void resize(const QSize &);//设置小部件的大小，不包括任何窗口框架
 void resize(int w, int h);
-
-void setAttribute(Qt::WidgetAttribute attribute, bool on = true);
-
-void setBackgroundRole(QPalette::ColorRole role);
-void setForegroundRole(QPalette::ColorRole role);
-
-void setContentsMargins(int left, int top, int right, int bottom);
+void repaint(int x, int y, int w, int h);//此版本在小部件内重新绘制了一个矩形 (x, y, w, h)
+void repaint(const QRect &rect);//这个版本在小部件内重新绘制了一个矩形
+void repaint(const QRegion &rgn);//这个版本在小部件内重新绘制了一个区域 rgn
+void setAttribute(Qt::WidgetAttribute attribute, bool on = true);//如果 on 为真，则设置此小部件的属性属性； 否则清除该属性
+void setBackgroundRole(QPalette::ColorRole role);//将小部件的背景角色设置为指定角色
+void setContentsMargins(int left, int top, int right, int bottom);//将小部件内容周围的边距设置为左、上、右和下的大小。 边距由布局系统使用，子类可以使用边距来指定要绘制的区域（例如，不包括框架）
 void setContentsMargins(const QMargins &margins);
-
-void setFixedHeight(int h);
-void setFixedSize(const QSize &s);
-void setFixedSize(int w, int h);
-void setFixedWidth(int w);
-
-void setFont(const QFont &);
-
-void setLayout(QLayout *layout);
-void setLayoutDirection(Qt::LayoutDirection direction);
-
-void setLocale(const QLocale &locale);
-
-void clearMask();
-void setMask(const QBitmap &bitmap);
+void setFixedHeight(int h);//将小部件的最小和最大高度都设置为 h 而不更改宽度。 提供方便
+void setFixedSize(const QSize &s);//将小部件的最小和最大尺寸都设置为 s，从而防止它不断增长或缩小
+void setFixedSize(int w, int h);//将小部件的宽度设置为 w，将高度设置为 h
+void setFixedWidth(int w);//在不更改高度的情况下将小部件的最小和最大宽度设置为 w。 提供方便
+void setFont(const QFont &);//设置格式
+void setLayout(QLayout *layout);//设置布局
+void setLayoutDirection(Qt::LayoutDirection direction);//设置布局方向
+void setLocale(const QLocale &locale);//此属性保存小部件的语言环境
+void clearMask();//从小部件获取键盘输入焦点
+void setMask(const QBitmap &bitmap);//仅导致位图具有相应 1 位的窗口小部件的像素可见。 如果该区域包括小部件的 rect() 之外的像素，则该区域中的窗口系统控件可能可见也可能不可见，具体取决于平台
 void setMask(const QRegion &region);
-
-void setMaximumHeight(int maxh);
+void setMaximumHeight(int maxh);//对应于setMaximumSize,将最大宽度设置为maxw，将最大高度设置为maxh
 void setMaximumSize(const QSize &);
 void setMaximumSize(int maxw, int maxh);
 void setMaximumWidth(int maxw);
 void setMinimumHeight(int minh);
-void setMinimumSize(const QSize &);
+void setMinimumSize(const QSize &);//同理
 void setMinimumSize(int minw, int minh);
 void setMinimumWidth(int minw);
-
-void setMouseTracking(bool enable);
-void setTabletTracking(bool enable);
-
-void setPalette(const QPalette &);
-
-void setParent(QWidget *parent);
+void setMouseTracking(bool enable);//此属性保存是否为小部件启用鼠标跟踪
+void setTabletTracking(bool enable);//
+void setPalette(const QPalette &);//
+void setParent(QWidget *parent);//设置小部件的父级并重设标志
 void setParent(QWidget *parent, Qt::WindowFlags f);
-
-void setWindowFlag(Qt::WindowType flag, bool on = true);
-void setWindowFlags(Qt::WindowFlags type);
-void setWindowIcon(const QIcon &icon);
-void setWindowOpacity(qreal level);
-void setWindowRole(const QString &role);
-void setWindowState(Qt::WindowStates windowState);
-
-void setSizePolicy(QSizePolicy);
-void setSizePolicy(QSizePolicy::Policy horizontal, QSizePolicy::Policy vertical);
+void setWindowFlag(Qt::WindowType flag, bool on = true);//如果 on 为真，则在此小部件上设置窗口标志标志； 否则清除标志
+void setWindowFlags(Qt::WindowFlags type);//窗口标志是一个类型（例如 Qt::Dialog）和零个或多个窗口系统提示（例如 Qt::FramelessWindowHint）的组合
+void setWindowIcon(const QIcon &icon);//此属性保存小部件的图标
+void setWindowOpacity(qreal level);//此属性保存模态小部件阻止的窗口
+void setWindowRole(const QString &role);//将窗口的角色设置为角色。 这仅对 X11 上的 Windows 有意义
+void setWindowState(Qt::WindowStates windowState);//将窗口状态设置为 windowState。 窗口状态是 Qt::WindowState 的 OR'ed 组合：Qt::WindowMinimized、Qt::WindowMaximized、Qt::WindowFullScreen 和 Qt::WindowActive
+void setSizePolicy(QSizePolicy);//将小部件的大小策略设置为水平和垂直，具有标准拉伸且没有宽度换高
+void setSizePolicy(QSizePolicy::Policy horizontal, QSizePolicy::Policy vertical);//
 ```
 
 不常用成员函数。
 
 ```c++
-
-void ensurePolished() const;
-void getContentsMargins(int *left, int *top, int *right, int *bottom) const;
-void grabGesture(Qt::GestureType gesture, Qt::GestureFlags flags = Qt::GestureFlags());
-void grabKeyboard();
-void grabMouse();
-void grabMouse(const QCursor &cursor);
-void overrideWindowFlags(Qt::WindowFlags flags);
-void releaseKeyboard();
-void releaseMouse();
-void releaseShortcut(int id);
-void render(QPaintDevice *target, const QPoint &targetOffset = QPoint(), const QRegion &sourceRegion = QRegion(), RenderFlags renderFlags = RenderFlags( DrawWindowBackground | DrawChildren ));
-void render(QPainter *painter, const QPoint &targetOffset = QPoint(), const QRegion &sourceRegion = QRegion(), RenderFlags renderFlags = RenderFlags( DrawWindowBackground | DrawChildren ));
-void scroll(int dx, int dy);
-void scroll(int dx, int dy, const QRect &r);
-void setAccessibleDescription(const QString &description);
-void setAccessibleName(const QString &name);
-void setBaseSize(const QSize &);
+void ensurePolished() const;//确保小部件及其子项已被 QStyle 修饰（即，具有适当的字体和调色板）
+void getContentsMargins(int *left, int *top, int *right, int *bottom) const;//返回小部件内容的左、上、右和下边距
+void grabGesture(Qt::GestureType gesture, Qt::GestureFlags flags = Qt::GestureFlags());//为小部件订阅具有特定标志的给定手势
+void grabKeyboard();//此小部件接收所有键盘事件，直到调用 releaseKeyboard()； 其他小部件根本没有键盘事件。 鼠标事件不受影响。 如果你想抓住它，请使用 grabMouse()
+void grabMouse();//此小部件接收所有鼠标事件，直到调用 releaseMouse()； 其他小部件根本没有鼠标事件。 键盘事件不受影响。 如果你想抓住它，请使用 grabKeyboard()
+void grabMouse(const QCursor &cursor);//抓取鼠标输入并更改光标形状
+void overrideWindowFlags(Qt::WindowFlags flags);//将小部件的窗口标志设置为标志，而不告诉窗口系统
+void releaseKeyboard();//释放键盘抓取
+void releaseMouse();//释放鼠标抓取
+void releaseShortcut(int id);//从 Qt 的快捷方式系统中删除具有给定 id 的快捷方式。 小部件将不再接收快捷键的键序列的 QEvent::Shortcut 事件（除非它具有具有相同键序列的其他快捷键）
+void render(QPaintDevice *target, const QPoint &targetOffset = QPoint(), const QRegion &sourceRegion = QRegion(), RenderFlags renderFlags = RenderFlags( DrawWindowBackground | DrawChildren ));//使用 renderFlags 将此小部件的 sourceRegion 渲染到目标中以确定如何渲染。 渲染从目标中的 targetOffset 开始
+void render(QPainter *painter, const QPoint &targetOffset = QPoint(), const QRegion &sourceRegion = QRegion(), RenderFlags renderFlags = RenderFlags( DrawWindowBackground | DrawChildren ));//将小部件渲染到画家的 QPainter::device() 中。渲染时将使用应用于画家的转换和设置
+void scroll(int dx, int dy);//向右滚动小部件，包括其子 dx 像素并向下滚动 dy。  dx 和 dy 都可能是负数
+void scroll(int dx, int dy, const QRect &r);//此版本仅滚动 r 并且不移动小部件的子项
+void setAccessibleDescription(const QString &description);//此属性包含辅助技术所看到的小部件的描述
+void setAccessibleName(const QString &name);//此属性包含辅助技术所见的小部件名称
+void setBaseSize(const QSize &);//此属性保存小部件的基本大小
 void setBaseSize(int basew, int baseh);
-void setContextMenuPolicy(Qt::ContextMenuPolicy policy);
-void setCursor(const QCursor &);
-void setEditFocus(bool enable);
-void setFocus(Qt::FocusReason reason);
-void setFocusPolicy(Qt::FocusPolicy policy);
-void setFocusProxy(QWidget *w);
-void setGeometry(const QRect &);
+void setContextMenuPolicy(Qt::ContextMenuPolicy policy);//小部件如何显示上下文菜单
+void setCursor(const QCursor &);//此属性保存此小部件的光标形状
+void setEditFocus(bool enable);//如果 enable 为真，则使该控件具有编辑焦点，此时 Qt::Key_Up 和 Qt::Key_Down 将正常传递给该控件； 否则，使用 Qt::Key_Up 和 Qt::Key_Down 来改变焦点
+void setFocus(Qt::FocusReason reason);//如果此小部件或其父项之一是活动窗口，则将键盘输入焦点赋予此小部件（或其焦点代理）。 原因参数将被传递到从该函数发送的任何焦点事件中，它用于解释导致小部件获得焦点的原因。 如果窗口不活动，则窗口变为活动时，小部件将获得焦点
+void setFocusPolicy(Qt::FocusPolicy policy);//此属性保存小部件接受键盘焦点的方式
+void setFocusProxy(QWidget *w);//将小部件的焦点代理设置为小部件 w。 如果 w 为 0，则该函数将此小部件重置为没有焦点代理
+void setGeometry(const QRect &);//这对应于 setGeometry(QRect(x, y, w, h))
 void setGeometry(int x, int y, int w, int h);
-void setGraphicsEffect(QGraphicsEffect *effect);
-void setInputMethodHints(Qt::InputMethodHints hints);
-void setShortcutAutoRepeat(int id, bool enable = true);
-void setShortcutEnabled(int id, bool enable = true);
-void setSizeIncrement(const QSize &);
-void setSizeIncrement(int w, int h);
-void setStatusTip(const QString &);
-void setStyle(QStyle *style);
-void setToolTip(const QString &);
-void setToolTipDuration(int msec);
-void setUpdatesEnabled(bool enable);
-void setWhatsThis(const QString &)
-void setWindowFilePath(const QString &filePath);
-void setupUi(QWidget *widget);
-void stackUnder(QWidget *w);
-void ungrabGesture(Qt::GestureType gesture);
-void unsetCursor();
-void unsetLayoutDirectio;
-void unsetLocale();
-void updateGeometry();
+void setGraphicsEffect(QGraphicsEffect *effect);//setGraphicsEffect 函数用于设置小部件的图形效果
+void setInputMethodHints(Qt::InputMethodHints hints);//小部件具有哪些输入法特定提示
+void setShortcutAutoRepeat(int id, bool enable = true);//如果 enable 为 true，则启用具有给定 id 的快捷方式的自动重复； 否则它被禁用
+void setShortcutEnabled(int id, bool enable = true);//如果 enable 为 true，则启用具有给定 id 的快捷方式； 否则快捷方式被禁用
+void setSizeIncrement(const QSize &);//此属性保存小部件的大小增量
+void setSizeIncrement(int w, int h);//
+void setStatusTip(const QString &);//默认情况下，此属性包含一个空字符串
+void setStyle(QStyle *style);//将小部件的 GUI 样式设置为样式。 样式对象的所有权不会转移
+void setToolTip(const QString &);//此属性保存小部件的工具提示
+void setToolTipDuration(int msec);//此属性保存小部件的工具提示持续时间
+void setUpdatesEnabled(bool enable);//此属性保存是否启用更新
+void setWhatsThis(const QString &);//此属性保存小部件的 What's This 帮助文本
+void setWindowFilePath(const QString &filePath);//此属性保存与小部件关联的文件路径
+void setupUi(QWidget *widget);//为指定的小部件设置用户界面
+void stackUnder(QWidget *w);//将小部件放在父小部件堆栈中的 w 下
+void ungrabGesture(Qt::GestureType gesture);//取消订阅给定手势类型的小部件
+void unsetCursor();//此属性保存此小部件的光标形状
+void unsetLayoutDirection();//此属性保存此小部件的布局方向
+void unsetLocale();//此属性保存小部件的语言环境
+void updateGeometry();//如果 sizeHint() 或 sizePolicy() 已更改，请调用此函数
 ```
 
 ##### 信号与槽函数
@@ -20947,25 +20927,22 @@ void updateGeometry();
 槽函数。
 
 ```c++
-slot bool close();
-slot void hide();
-slot void setHidden(bool hidden);
+slot bool close();//关闭
+slot void hide();//隐藏
+slot void setHidden(bool hidden);//便利函数，相当于 setVisible(!hidden)
 bool isHidden() const;
-
-slot void lower();
-slot void raise();
-slot void repaint();
-
-slot void setDisabled(bool disable);
-
-slot void setEnabled(bool);
+slot void lower();//将小部件降低到父小部件堆栈的底部
+slot void raise();//将此小部件提升到父小部件堆栈的顶部
+slot void repaint();//通过立即调用paintEvent() 直接重绘小部件，除非更新被禁用或小部件被隐藏
+slot void setDisabled(bool disable);//如果 disable 为 true，则禁用小部件输入事件； 否则启用输入事件
+slot void setEnabled(bool);//此属性保存小部件是否启用
 bool isEnabled() const;
 bool isEnabledTo(const QWidget *ancestor) const;
 
 slot void setFocus();
 bool hasFocus() const;
 bool hasEditFocus() const;
-void clearFocus();
+void clearFocus();//从小部件获取键盘输入焦点
 
 slot void setStyleSheet(const QString &styleSheet);
 
@@ -20990,13 +20967,19 @@ bool isMaximized() const;
 slot void showMinimized();
 bool isMinimized() const;
 
-slot void update();
+slot void update();//更新小部件，除非更新被禁用或小部件被隐藏
 void update(int x, int y, int w, int h);
 void update(const QRect &rect);
 void update(const QRegion &rgn);
 ```
 
+信号函数。
 
+```c++
+void customContextMenuRequested(const QPoint &pos);//当小部件的 contextMenuPolicy 为 Qt::CustomContextMenu 并且用户已请求小部件上的上下文菜单时，将发出此信号。 位置 pos 是小部件接收的上下文菜单事件的位置。 通常这是在小部件坐标中。 此规则的例外是 QAbstractScrollArea 及其将上下文菜单事件映射到 viewport() 坐标的子类
+void windowIconChanged(const QIcon &icon);//当窗口的图标发生变化时会发出此信号，并将新图标作为参数
+void windowTitleChanged(const QString &title);//当窗口的标题发生变化时会发出此信号，并以新标题作为参数
+```
 
 #### 16.5.2 QGroupBox
 
@@ -21091,11 +21074,57 @@ signal void currentChanged(int index);
 
 #### 16.5.4 QAxWidget
 
+QAxWidget 类是包装 ActiveX 控件的 QWidget。可以将 QAxWidget 实例化为空对象，使用它应该包装的 ActiveX 控件的名称，或者使用指向 ActiveX 控件的现有接口指针。 仅使用 QAxBase 支持的数据类型的 ActiveX 控件的属性、方法和事件可用作 Qt 属性、槽和信号。 基类 QAxBase 提供了一个 API，可以通过 IUnknown 指针直接访问 ActiveX。
+QAxWidget 是一个 QWidget 并且主要可以这样使用，例如 它可以组织在小部件层次结构和布局中，也可以用作事件过滤器。 标准小部件属性，例如 支持启用，但它依赖于 ActiveX 控件来实现对环境属性的支持，例如 调色板或字体。  QAxWidget 尝试提供必要的提示。但是，您不能重新实现特定于 Qt 的事件处理程序，如 mousePressEvent 或 keyPressEvent 并期望它们被可靠地调用。 嵌入式控件完全覆盖了 QAxWidget，并且通常处理用户界面本身。 使用特定于控件的 API（即监听控件的信号），或使用标准 COM 技术，如窗口过程子类。QAxWidget 还从 QAxBase 继承了大部分与 ActiveX 相关的功能，特别是 dynamicCall() 和 querySubObject()。
+ 警告：你可以继承 QAxWidget，但是你不能在子类中使用 Q_OBJECT 宏（生成的 moc 文件不会编译），所以你不能添加更多的信号、槽或属性。 此限制是由于运行时生成的元对象信息造成的。 要解决此问题，请将 QAxWidget 聚合为 QObject 子类的成员。
 
+成员函数。
+
+```c++
+QAxWidget(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());//创建一个空的QAxWidget小部件，并将parent和f传播到QWidget构造函数。要初始化控件，请调用setControl（）
+QAxWidget(const QString &c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());//创建QAxWidget小部件并初始化ActiveX控件c。父控件和f将传播到QWidget构造函数
+QAxWidget(IUnknown *iface, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());//创建一个QAxWidget，包装iface引用的COM对象。parent和f被传播到QWidget构造函数
+virtual QAxAggregated *createAggregate();//当您希望为ActiveX控件的客户端站点实现其他COM接口时，或者当您希望提供COM接口的替代实现时，请重新实现此函数。返回QAxAggregated子类的新对象
+bool doVerb(const QString &verb);//请求 ActiveX 控件执行动作动词。 可能的动词由verbs() 返回
+```
 
 #### 16.5.5 QScrollArea
 
+QScrollArea类提供了另一个小部件的滚动视图。
+滚动区域用于显示框架内子控件的内容。如果小部件超过了框架的大小，视图可以提供滚动条，以便可以查看子小部件的整个区域。必须使用setWidget（）指定子小部件。例如：
 
+```c++
+QLabel *imageLabel = new QLabel;
+QImage image("happyguy.png");
+imageLabel->setPixmap(QPixmap::fromImage(image));
+
+scrollArea = new QScrollArea;
+scrollArea->setBackgroundRole(QPalette::Dark);
+scrollArea->setWidget(imageLabel);
+```
+
+上面的代码创建了一个包含图像标签的滚动区域（如下图所示）。缩放图像时，滚动区域可以提供必要的滚动条：
+
+![scrollArea.png](scrollArea.png)
+
+滚动条的外观取决于当前设置的滚动条策略。 您可以使用从 QAbstractScrollArea 继承的功能来控制滚动条的外观。
+例如，您可以设置 QAbstractScrollArea::horizontalScrollBarPolicy 和 QAbstractScrollArea::verticalScrollBarPolicy 属性。 或者，如果您希望滚动条在滚动区域的内容发生变化时动态调整，您可以使用 HorizontalScrollBar() 和 VerticalScrollBar() 函数（使您可以访问滚动条）并在 滚动区域的内容改变，使用 QScrollBar::setValue() 函数。
+您可以使用 widget() 函数检索子小部件。 可以使用 **setWidgetResizable() 函数调整视图的大小**。 可以使用 setAlignment() 指定小部件的对齐方式。两个便利函数 ensureVisible() 和 ensureWidgetVisible() 确保内容的某个区域在视口内可见，必要时通过滚动内容。
+
+成员函数。
+
+```c++
+QScrollArea(QWidget *parent = Q_NULLPTR);
+Qt::Alignment alignment() const;
+void setAlignment(Qt::Alignment);
+void ensureVisible(int x, int y, int xmargin = 50, int ymargin = 50);//滚动滚动区域的内容，使点（x，y）在视口区域内可见，边距由xmargin和ymargin以像素为单位指定。如果无法到达指定点，则内容将滚动到最近的有效位置。两个边距的默认值均为50像素
+void ensureWidgetVisible(QWidget *childWidget, int xmargin = 50, int ymargin = 50);//滚动滚动区域的内容，以便 QScrollArea::widget() 的 childWidget 在视口内可见，其边距由 xmargin 和 ymargin 以像素为单位指定。 如果无法到达指定点，则将内容滚动到最近的有效位置。 两个边距的默认值为 50 像素
+void setWidget(QWidget *widget);//设置滚动区域的小部件
+QWidget *widget() const;
+void setWidgetResizable(bool resizable);//此属性保存滚动区域是否应调整视图小部件的大小
+QWidget *takeWidget();//删除滚动区域的小部件，并将小部件的所有权传递给调用者
+bool widgetResizable() const;//此属性保存滚动区域是否应调整视图小部件的大小
+```
 
 ### 16.6 窗口外观
 
