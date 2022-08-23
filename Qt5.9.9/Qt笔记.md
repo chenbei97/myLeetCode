@@ -18646,7 +18646,7 @@ QCheckBox::indicator:unchecked{ image: url(:images/unchecked.bmp); }
 
 （5）组件有各种各样的属性，例如背景（background）可设置颜色yellow、背景颜色（background-color）设置rgb(255,0,0)、边界（border）、间隔（margin）、延展（padding）、最大最小宽度和高度（max-height、min-width）、组件背景图片（border-image）。
 
-这就需要提及组件的盒子模型（可见Qt文档的Customizing Qt Widgets Using Style Sheets 查看）。
+这就需要提及组件的盒子模型（可见Qt文档的**Qt Style Sheets Reference ** 查看）。
 
 ![styleSheetBoxModel.jpg](styleSheetBoxModel.jpg)
 
@@ -20340,6 +20340,15 @@ const QSize &oldSize() const;
 const QSize &size() const;
 ```
 
+例如一个对话框窗口的菜单栏想要跟随窗口长度的变化，可以这样做。
+
+```c++
+void Dialog::resizeEvent(QResizeEvent *e)
+{
+    MenuBar->setGeometry(0,0,e->size().width(),30);//让菜单栏长度跟随
+}
+```
+
 ##### resizeEvent
 
 #### 16.2.9 QHoverEvent
@@ -21256,7 +21265,137 @@ bool isEqual(ColorGroup cg1, ColorGroup cg2) const;//cg1等于cg2则返回 true
 QPalette resolve(const QPalette &other) const;//返回具有从其他复制的属性的新 QPalette
 ```
 
+### 16.7 菜单
 
+#### 16.7.1 QMenuBar
+
+成员函数。
+
+```c++
+QAction *actionAt(const QPoint &pt) const;//如果pt处没有动作或者是分隔符则返回0
+QRect actionGeometry(QAction *act) const;//返回作为 QRect 的动作的几何形状
+
+QAction *addAction(const QString &text);
+QAction *addAction(const QString &text, const QObject *receiver, const char *member);
+QAction *addMenu(QMenu *menu);
+QMenu *addMenu(const QString &title);
+QMenu *addMenu(const QIcon &icon, const QString &title);
+QAction *insertMenu(QAction *before, QMenu *menu);
+QAction *addSeparator();
+QAction *insertSeparator(QAction *before);
+void clear();
+
+void setActiveAction(QAction *act);//将当前活动的动作设置为act
+QAction *activeAction() const;
+
+// 将给定小部件设置为直接显示在第一个菜单项的左侧或最后一个菜单项的右侧，具体取决于cornor
+void setCornerWidget(QWidget *widget, Qt::Corner corner = Qt::TopRightCorner);
+QWidget *cornerWidget(Qt::Corner corner = Qt::TopRightCorner) const;
+
+void setDefaultUp(bool);//设置弹出方向
+bool isDefaultUp() const;
+
+void setNativeMenuBar(bool nativeMenuBar);//菜单栏是否将在支持它的平台上用作本机菜单栏
+bool isNativeMenuBar() const;
+```
+
+信号与槽函数。
+
+```c++
+slot virtual void setVisible(bool visible) override;
+signal void hovered(QAction *action);//当一个菜单动作被高亮时，这个信号被发出
+signal triggered(QAction *action);//当鼠标单击触发属于该菜单栏的菜单中的动作时，会发出此信号
+```
+
+#### 16.7.2 QMenu
+
+成员函数。
+
+```c++
+QMenu(QWidget *parent = Q_NULLPTR);
+QMenu(const QString &title, QWidget *parent = Q_NULLPTR);
+
+QAction *actionAt(const QPoint &pt) const;
+QRect actionGeometry(QAction *act) const;
+QAction *addAction(const QString &text);
+QAction *addAction(const QIcon &icon, const QString &text);
+QAction *addAction(const QString &text, const QObject *receiver, const char *member, const QKeySequence &shortcut = 0);//Ctrl+X
+QAction *addAction(const QIcon &icon, const QString &text, const QObject *receiver, const char *member, const QKeySequence &shortcut = 0);
+QAction *addAction(const QString &text, const QObject *receiver, PointerToMemberFunction method, const QKeySequence &shortcut = 0);
+QAction *addAction(const QString &text, Functor functor, const QKeySequence &shortcut = 0);
+QAction *addAction(const QString &text, const QObject *context, Functor functor, const QKeySequence &shortcut = 0);
+QAction *addAction(const QIcon &icon, const QString &text, const QObject *receiver, PointerToMemberFunction method, const QKeySequence &shortcut = 0);
+QAction *addAction(const QIcon &icon, const QString &text, Functor functor, const QKeySequence &shortcut = 0);
+QAction *addAction(const QIcon &icon, const QString &text, const QObject *context, Functor functor, const QKeySequence &shortcut = 0);
+
+void setActiveAction(QAction *act);//将当前突出显示的动作设置act
+QAction *activeAction() const;
+
+void setDefaultAction(QAction *act);//这将默认操作设置为采取行动
+QAction *defaultAction() const;
+QAction *menuAction() const;//返回与此菜单关联的操作
+
+QAction *addMenu(QMenu *menu);
+QMenu *addMenu(const QString &title);
+QMenu *addMenu(const QIcon &icon, const QString &title);
+QAction *insertMenu(QAction *before, QMenu *menu);
+
+QAction *addSection(const QString &text);//创建一个带有isSeparator()返回true且有文本提示的动作
+QAction *addSection(const QIcon &icon, const QString &text);
+QAction *insertSection(QAction *before, const QString &text);
+QAction *insertSection(QAction *before, const QIcon &icon, const QString &text);
+
+QAction *insertSeparator(QAction *before);
+QAction *addSeparator();
+
+void clear();
+bool isEmpty() const;.//如果菜单中没有插入可见操作，则返回 true，否则返回 false
+void setAsDockMenu();//通过选项单击应用程序停靠图标，将此菜单设置为可用的停靠菜单。仅在 macOS 上可用
+void popup(const QPoint &p, QAction *atAction = Q_NULLPTR);//显示菜单，要将小部件的本地坐标转换为全局坐标，请使用 QWidget::mapToGlobal()
+
+QAction *exec();//等效于 exec(pos())
+// 常见用法是将菜单定位在当前鼠标位置：exec(QCursor::pos());或者exec(somewidget.mapToGlobal(QPoint(0, 0)));或者在QMouseEvent事件中使用exec(e->globalPos());
+QAction *exec(const QPoint &p, QAction *action = Q_NULLPTR);
+// 将弹出菜单，以便指定的动作 at 出现在全局位置 pos。如果未指定 at，则菜单出现在位置 pos
+static QAction *QMenu::exec(QList<QAction *> actions, const QPoint &pos, QAction *at = Q_NULLPTR, QWidget *parent = Q_NULLPTR)
+/*
+QMenu menu;
+QAction *at = actions[0]; // 假定不为空
+foreach (QAction *a, actions)
+    menu.addAction(a);
+menu.exec(pos, at);
+*/
+
+void setIcon(const QIcon &icon);
+QIcon icon() const;
+
+void setSeparatorsCollapsible(bool collapse);//此属性保存是否应折叠连续的分隔符
+bool separatorsCollapsible() const;
+
+void setTearOffEnabled(bool);//该属性保存菜单是否支持被撕掉
+bool isTearOffEnabled() const;
+
+void showTearOffMenu(const QPoint &pos);//强制显示撕下的菜单，使其出现在用户桌面上指定的全局位置
+void showTearOffMenu();//此功能将强制显示撕下的菜单，使其出现在鼠标光标下的用户桌面上
+
+void hideTearOffMenu();//此功能将强制隐藏撕下的菜单，使其从用户桌面上消失
+bool isTearOffMenuVisible() const;
+
+void setTitle(const QString &title);
+QString title() const;
+
+void setToolTipsVisible(bool visible);//此属性保存菜单操作的工具提示是否应该可见,默认false
+bool toolTipsVisible() const;
+```
+
+信号函数。
+
+```c++
+void aboutToHide();
+void aboutToShow();
+void hovered(QAction *action)
+void triggered(QAction *action);
+```
 
 ### 16.10 全局枚举类型
 
@@ -21381,6 +21520,33 @@ enum Qt::ToolButtonStyle{
     Qt::ToolButtonTextOnly,
     Qt::ToolButtonTextBesideIcon,
     Qt::ToolButtonTextUnderIcon,
+    Qt::ToolButtonFollowStyle
+}
+```
+
+#### 16.10.6 Qt::Cornor
+
+此枚举类型指定矩形中的一个角。
+
+```c++
+enum Qt::Cornor{ 
+    Qt::TopLeftCorner//矩形的左上角
+    Qt::TopRightCorner//右上角
+    Qt::BottomLeftCorner//左下角
+    Qt::BottomRightCorner//右下角
+}
+```
+
+#### 16.10.7 Qt::ToolButtonStyle
+
+工具按钮的样式，描述按钮的文本和图标应如何显示。
+
+```c++
+enum Qt::ToolButtonStyle{
+    Qt::ToolButtonIconOnly
+    Qt::ToolButtonTextOnly
+    Qt::ToolButtonTextBesideIcon
+    Qt::ToolButtonTextUnderIcon
     Qt::ToolButtonFollowStyle
 }
 ```

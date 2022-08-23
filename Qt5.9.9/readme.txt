@@ -131,6 +131,26 @@
 43. TestLCDNumber 一个简易电子时钟的设计
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
+15. 让QComboBox居中的方法
+    QStandardItemModel * model = qobject_cast<QStandardItemModel*>(workMode->model());
+    for(int i = 0; i < model->rowCount(); ++i)
+    {
+        QStandardItem * item = model->item(i);
+        item->setTextAlignment(Qt::AlignCenter); //让项居中
+    }
+    QLineEdit * lineEdit = new QLineEdit;
+    lineEdit->setAlignment(Qt::AlignCenter); // 文本框也要居中
+    workMode->setLineEdit(lineEdit);
+14. QGridLayout控制组件的大小
+    必须使用固定大小否则不起作用，同时配合比例关系可以调整
+    spinbox->setFixedSize(300,30);
+    mainLayout->setColumnStretch(0,1);
+    mainLayout->setColumnStretch(1,2);
+
+13. 禁用子控件
+    QSpinBox禁用上下拉三角按钮: spinbox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    QToolButton禁止右下角下拉菜单: toolbutton->setStyleSheet("QToolButton::menu-indicator{image:none;}");
+
 12. 实现下拉项选择颜色
 QStringList colorList = QColor::colorNames();
 qDebug()<<colorList.size(); // 148个
