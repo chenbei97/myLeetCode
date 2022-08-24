@@ -129,6 +129,9 @@
     ComprehensiveExample 综合演示所有布局类型的用法
 
 43. TestLCDNumber 一个简易电子时钟的设计
+
+44. 30kWSourceLoad 30kW源载一体上位机项目
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
 15. 让QComboBox居中的方法
