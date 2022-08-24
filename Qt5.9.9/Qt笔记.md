@@ -2942,7 +2942,7 @@ Alt+Wheel // Scrolls the page horizontally (the Wheel is the mouse wheel).
 Ctrl+Wheel // Zooms the text.
 ```
 
-#### 3.4.6 QTextEdit
+#### 3.4.7 QTextEdit
 
 枚举类型。
 
@@ -7702,15 +7702,7 @@ uint qstrnlen(const char *str, uint maxlen);//一个安全的 strnlen() 函数�
 int qvsnprintf(char *str, size_t n, const char *fmt, va_list ap);//一个可移植的 vsnprintf() 函数。将根据系统调用 ::vsnprintf()、::_vsnprintf() 或 ::vsnprintf_s，或者回退到内部版本。fmt 是 printf() 格式字符串。结果被放入 str，它是一个至少 n 字节的缓冲区。调用者负责在 ap 上调用 va_end()。警告：由于 vsnprintf() 在某些平台上表现出不同的行为，你不应该依赖返回值或者你总是会得到一个以 0 结尾的字符串的事实。理想情况下，你不应该调用这个函数，而是使用 QString::asprintf() 
 ```
 
-#### 6.4.2 QTextBlock
-
-
-
-#### 6.4.3 QTextDocument
-
-
-
-#### 6.4.4 QTextCodec
+#### 6.4.2 QTextCodec
 
 QTextCodec 类提供文本编码之间的转换。
 Qt 使用 Unicode 来存储、绘制和操作字符串。在许多情况下，您可能希望处理使用不同编码的数据。例如，大多数日语文档仍然存储在 Shift-JIS 或 ISO 2022-JP 中，而俄罗斯用户通常将其文档存储在 KOI8-R 或 Windows-1251 中。Qt 提供了一组 QTextCodec 类来帮助将非 Unicode 格式转换为 Unicode。您还可以创建自己的编解码器类。
@@ -21656,6 +21648,166 @@ void aboutToShow();
 void hovered(QAction *action)
 void triggered(QAction *action);
 ```
+
+### 16.8 文本编辑
+
+编写包含文本编辑程序时，常常用到以下类，分为文档格式类、文档元素类、文本块类以及最关键的鼠标类。
+
+```mermaid
+graph LR
+	subgraph QTextFormat
+		QTextCharFormat
+		QTextBlockFormat
+		QTextListFormat
+		QTextFrameFormat
+		QTextTableFormat
+	end
+	subgraph Type
+		QTextBlock
+		QTextList
+		QTextFrame
+		QTextTable
+	end
+QTextCursor{QTextCursor}
+QTextFormat ==> Type
+QTextDocument ==> Type
+QTextCursor --> QTextDocument
+QTextCursor ==> Type
+QTextEdit --> QTextDocument
+QTextEdit --> QTextCursor
+QAbstractScrollArea -->QTextEdit
+QAbstractScrollArea --> QPlainTextEdit
+```
+
+#### 16.8.1 QPlainTextEdit
+
+具体可见[3.4.6 QPlainTextEdit](#3.4.6 QPlainTextEdit)。
+
+#### 16.8.2 QTextEdit
+
+具体可见[3.4.7 QTextEdit](#3.4.7 QTextEdit)。
+
+#### 16.8.3 QTextDocument
+
+QTextDocument 类保存格式化的文本。
+QTextDocument 是结构化富文本文档的容器，支持样式化文本和各种类型的文档元素，例如列表、表格、框架和图像。它们可以创建用于 QTextEdit，或独立使用。
+每个文档元素由关联的格式对象描述。每个格式对象都被 QTextDocuments 视为一个唯一的对象，并且可以传递给 objectForFormat() 以获取应用它的文档元素。
+可以使用 QTextCursor 以编程方式编辑 QTextDocument，并且可以通过遍历文档结构来检查其内容。整个文档结构存储为根框架下的文档元素层次结构，可通过 rootFrame() 函数找到。或者，如果您只想迭代文档的文本内容，您可以使用 begin()、end() 和 findBlock() 来检索可以检查和迭代的文本块。
+文档的布局由 documentLayout() 决定；如果您想使用自己的布局逻辑，您可以创建自己的 QAbstractTextDocumentLayout 子类并使用 setDocumentLayout() 进行设置。可以通过调用 metaInformation() 函数获取文档的标题和其他元信息。对于通过 QTextEdit 类向用户公开的文档，文档标题也可以通过 QTextEdit::documentTitle() 函数获得。
+toPlainText() 和 toHtml() 便利函数允许您以纯文本和 HTML 格式检索文档的内容。可以使用 find() 函数搜索文档的文本。可以使用 setUndoRedoEnabled() 函数控制对文档执行的操作的撤消/重做。撤消/重做系统可以由编辑器小部件通过 undo() 和 redo() 插槽控制；该文档还提供了 contentsChanged()、undoAvailable() 和 redoAvailable() 信号，它们通知连接的编辑器小部件有关撤消/重做系统的状态。
+
+常用成员函数。
+
+```c++
+QVector<QTextFormat> allFormats() const;//返回文档中使用的所有格式的文本格式向量
+QTextBlock begin() const;//返回文档的第一个文本块
+QTextBlock end() const;//返回文档的最好一个文本块
+int blockCount() const;//返回文档中文本块的数量
+int lineCount() const;//返回此文档的行数（如果布局支持）。否则，这与块的数量相同
+int pageCount() const;//返回此文档的页数
+int maximumBlockCount() const;
+virtual void clear();
+bool isEmpty() const;
+QTextBlock firstBlock() const;
+QTextBlock lastBlock() const;
+
+void print(QPagedPaintDevice *printer) const;//将文档打印到给定的打印机。 QPageablePaintDevice 必须在与此函数一起使用之前进行设置
+void setBaseUrl(const QUrl &url);//此属性保存用于解析文档中的相对资源 URL 的基本 URL
+void setDefaultCursorMoveStyle(Qt::CursorMoveStyle style);//将默认光标移动样式设置为给定样式
+void setDefaultFont(const QFont &font);//设置在文档布局中使用的默认字体
+void setDefaultStyleSheet(const QString &sheet);//默认样式表应用于插入到文档中的所有新的 HTML 格式文本，例如使用 setHtml() 或 QTextCursor::insertHtml()
+void setDefaultTextOption(const QTextOption &option);//将默认文本选项设置为选项
+void setDocumentLayout(QAbstractTextDocumentLayout *layout);//将文档设置为使用给定的布局。先前的布局被删除
+void setDocumentMargin(qreal margin);//文档周围的边距。默认值为 4
+void setHtml(const QString &html);//用 html 字符串中给定的 HTML 格式文本替换文档的全部内容。调用此函数时，将重置撤消/重做历史记录
+void setIndentWidth(qreal width);//设置用于文本列表和文本块缩进的宽度
+void setMaximumBlockCount(int maximum);//指定文档中块的限制
+void setMetaInformation(MetaInformation info, const QString &string);//将 info 指定类型的文档元信息设置为给定的字符串
+void setPageSize(const QSizeF &size);//此属性保存应该用于布局文档的页面大小
+void setPlainText(const QString &text);//用给定的纯文本替换文档的全部内容。调用此函数时，将重置撤消/重做历史记录
+void setTextWidth(qreal width);//文本宽度指定文档中文本的首选宽度。如果文本（或一般内容）比指定的宽，则将其分成多行并垂直增长。如果文本不能分成多行以适应指定的文本宽度，它将更大，并且 size() 和 IdealWidth() 属性将反映这一点
+void setUndoRedoEnabled(bool enable);//此属性保存是否为此文档启用撤消/重做
+
+QString toHtml(const QByteArray &encoding = QByteArray()) const;
+QString toPlainText() const;
+QString toRawText() const;
+```
+
+信号和槽函数。
+
+```c++
+slot void redo();
+slot void setModified(bool m = true);
+slot void undo();
+
+// signals
+void baseUrlChanged(const QUrl &url);
+void blockCountChanged(int newBlockCount);
+void contentsChange(int position, int charsRemoved, int charsAdded);
+void contentsChanged();
+void cursorPositionChanged(const QTextCursor &cursor);
+void documentLayoutChanged();
+void modificationChanged(bool changed);
+void redoAvailable(bool available);
+void undoAvailable(bool available);
+void undoCommandAdded();
+```
+
+#### 16.8.4 QTextBlock
+
+
+
+#### 16.8.5 QTextList
+
+
+
+#### 16.8.6 QTextFrame
+
+
+
+#### 16.8.7 QTextTable
+
+
+
+#### 16.8.8 QTextFormat
+
+
+
+#### 16.8.9 QTextCharFormat
+
+
+
+#### 16.8.10 QTextBlockFormat
+
+
+
+#### 16.8.11 QTextListFormat
+
+
+
+#### 16.8.12 QTextFrameFormat
+
+
+
+#### 16.8.13 QTextTableFormat
+
+
+
+#### 16.8.14 QCursor
+
+
+
+#### 16.8.15 QTextCursor
+
+
+
+#### 16.8.16 QFontComboBox
+
+
+
+#### 16.8.17 QFont
+
+
 
 ### 16.10 全局枚举类型
 
