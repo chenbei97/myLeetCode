@@ -5572,6 +5572,52 @@ void Operation::cancel()
 }
 ```
 
+#### 5.1.7 QPrintDialog
+
+QPrintDialog 类提供了一个用于指定打印机配置的对话框，使用的话需要在pro文件添加QT += printsupport。
+该对话框允许用户更改与文档相关的设置，例如纸张尺寸和方向、打印类型（彩色或灰度）、页面范围和要打印的份数。还提供了控件以使用户能够从可用的打印机中进行选择，包括任何已配置的网络打印机。
+通常，QPrintDialog 对象是用 QPrinter 对象构造的，并使用 exec() 函数执行。
+
+```c++
+QPrintDialog printDialog(printer, parent);
+if (printDialog.exec() == QDialog::Accepted) {
+    // print ...
+}
+```
+
+如果用户接受该对话框，则 QPrinter 对象已正确配置用于打印。
+
+![printDialog.jpg](printDialog.jpg)
+
+打印机对话框（如上图所示的 Plastique 样式）可以访问常用的打印属性。在使用 CUPS 打印系统的 X11 平台上，可以通过对话框的“属性”按钮修改每个可用打印机的设置。
+在 Windows 和 macOS 上，使用本机打印对话框，这意味着对话框上设置的某些 QWidget 和 QDialog 属性将不被尊重。 macOS 上的原生打印对话框不支持设置打印机选项，即 setOptions() 和 setOption() 无效。
+在 Qt 4.4 中，可以使用静态函数在 macOS 上显示工作表。 Qt 4.5 不再支持此功能。如果你想要这个功能，使用 QPrintDialog::open()。
+
+成员函数。
+
+```c++
+QPrintDialog(QPrinter *printer, QWidget *parent = Q_NULLPTR)
+QPrintDialog(QWidget *parent = Q_NULLPTR);
+//返回此打印机对话框操作的打印机。这在使用 QPrintDialog::open() 方法时很有用
+QPrinter *printer();
+//打开对话框将accepted()信号连接到接收者和成员指定的插槽
+void open(QObject *receiver, const char *member);
+//如果on为true，则将给定选项设置为启用；否则清除给定的选项
+PrintDialogOptions options() const;
+void setOption(PrintDialogOption option, bool on = true);
+void setOptions(PrintDialogOptions options);
+// 如果启用给定选项，则返回 true；否则，返回 false
+bool testOption(PrintDialogOption option) const;
+```
+
+信号函数。
+
+```c++
+void accepted(QPrinter *printer);
+```
+
+
+
 ### 5.2 自定义对话框
 
 对话框分为模态和非模态对话框，模态对话框是必须执行完当前操作关闭后才能操作主窗口，非模态对话框则是可以同时操作，常用于需要交互的情况。
@@ -6152,9 +6198,223 @@ int main(int argc, char *argv[])
 }
 ```
 
-其它涉及到的数据类型和组件类型下方说明。
+### 5.6 本章其它数据类型
 
-#### QSettings
+涉及到的数据类型和组件类型下方说明。
+
+#### 5.6.1 QPrint
+
+使用的话需要在pro文件添加QT += printsupport。
+
+QPrinter 类是在打印机上绘制的绘制设备。
+请注意，在无效打印机上设置参数（如纸张尺寸和分辨率）是未定义的。您可以在更改任何参数之前使用 QPrinter::isValid() 来验证这一点。
+QPrinter 支持许多参数，最终用户可以通过打印对话框更改大部分参数。通常，QPrinter 将这些函数传递给底层的 QPrintEngine。
+最重要的参数是：
+
+setOrientation() 告诉 QPrinter 使用哪个页面方向。
+setPaperSize() 告诉 QPrinter 打印机期望的纸张尺寸。
+setResolution() 告诉 QPrinter 您希望打印机提供什么分辨率，以每英寸点数 (DPI) 为单位。
+setFullPage() 告诉 QPrinter 你是想处理整页还是只处理打印机可以绘制的部分。
+setCopyCount() 告诉 QPrinter 它应该打印多少份文档。
+
+其中许多函数只能在实际打印开始之前调用（即，在调用 QPainter::begin() 之前）。这通常是有道理的，因为例如，当您打印到一半时，无法更改份数。还有一些用户设置（通过打印机对话框）并且应用程序应该遵守的设置。有关详细信息，请参阅 **QAbstractPrintDialog** 的文档。
+当 QPainter::begin() 被调用时，它所操作的 QPrinter 为新页面做好准备，使 QPainter 可以立即用于绘制文档的第一页。绘制完第一页后，可以调用 newPage() 来请求绘制新的空白页，或者可以调用 QPainter::end() 来完成打印。第二页和所有后续页面在绘制之前使用对 newPage() 的调用进行准备。
+文档的第一页不需要在调用 newPage() 之前。如果需要在打印文档的开头插入空白页，则只需在 QPainter::begin() 之后调用 newPage()。同样，在绘制文档的最后一页之后调用 newPage() 将导致在打印文档的末尾附加一个尾随空白页。
+如果要中止打印作业，abort() 将尽力停止打印。它可能会取消整个工作或只是其中的一部分。
+由于 QPrinter 可以打印到任何 QPrintEngine 子类，因此可以通过继承 QPrintEngine 并重新实现其接口来扩展打印支持以涵盖新类型的打印子系统。
+
+##### 枚举类型
+
+此枚举类型用于指示 QPrinter 是否应进行彩色打印。
+
+```c++
+enum QPrinter::ColorMode{
+    QPrinter::Color
+    QPrinter::GrayScale
+}
+```
+
+此枚举用于指示是在每张纸的一侧还是两侧进行打印（单面或双面打印）。
+
+```c++
+enum QPrinter::DuplexMode{
+    QPrinter::DuplexNone//仅单面打印
+    QPrinter::DuplexAuto//打印机的默认设置用于确定是否使用双面打印
+    QPrinter::DuplexLongSide//每张纸的两面都用于打印。在打印第二面之前将纸张翻转其最长边
+    QPrinter::DuplexShortSide//每张纸的两面都用于打印。在打印第二面之前将纸张翻转其最短边
+}
+```
+
+此枚举类型（不要与方向混淆）用于指定每个页面的方向。
+
+```c++
+enum QPrinter::Orientation{
+    QPrinter::Portrait//页面的高度大于其宽度
+    QPrinter::Landscape//页面的宽度大于其高度
+}
+```
+
+OutputFormat 枚举用于描述 QPrinter 应该用于打印的格式。
+
+```c++
+OutputFormat 枚举用于描述 QPrinter 应该用于打印的格式。enum QPrinter::OutputFormat{
+    QPrinter::NativeFormat//QPrinter 将使用它所运行的平台定义的方法打印输出。此模式是直接打印到打印机时的默认模式
+    QPrinter::PdfFormat//QPrinter 将其输出生成为可搜索的 PDF 文件。此模式是打印到文件时的默认模式
+}
+```
+
+QPrinter 使用此枚举类型来告诉应用程序如何打印。
+
+```c++
+enum QPrinter::PageOrder{
+    QPrinter::FirstPageFirst//应首先打印编号最小的页面
+    QPrinter::LastPageFirst//应首先打印编号最高的页面
+}
+```
+
+此枚举类型指定 QPrinter 要使用的纸张来源。 QPrinter 不检查纸张来源是否可用；它只是使用这些信息来尝试设置纸张来源。是否设置纸张来源取决于打印机是否具有该特定来源。
+
+```c++
+enum QPrinter::PaperSource{
+    QPrinter::Auto
+    QPrinter::Cassette
+    QPrinter::Envelope
+    QPrinter::EnvelopeManual
+    QPrinter::FormSource
+    QPrinter::LargeCapacity
+    QPrinter::LargeFormat
+    QPrinter::Lower
+    QPrinter::MaxPageSource//已弃用，请改用 LastPaperSource
+    QPrinter::Middle
+    QPrinter::Manual
+    QPrinter::OnlyOne
+    QPrinter::Tractor
+    QPrinter::SmallFormat
+    QPrinter::Upper
+    QPrinter::CustomSource//由 Qt 未知的打印机定义的 PaperSource
+    QPrinter::LastPaperSource//最高有效 PaperSource 值，当前为 CustomSource
+}
+```
+
+用于指定打印范围选择选项。
+
+```c++
+enum QPrinter::PrintRange{
+    QPrinter::AllPages//应打印所有页面
+    QPrinter::Selection//只应打印选择
+    QPrinter::PageRange//应打印指定的页面范围
+    QPrinter::CurrentPage//只应打印当前页面
+}
+```
+
+这个枚举描述了打印机应该工作的模式。它基本上预设了一定的分辨率和工作模式。
+
+```c++
+enum QPrinter::PrinterMode{
+    QPrinter::ScreenResolution//将打印设备的分辨率设置为屏幕分辨率。这具有很大的优势，即在打印机上绘制时获得的结果将或多或少与屏幕上的可见输出完全匹配。这是最容易使用的，因为屏幕和打印机上的字体规格是相同的。这是默认值。 ScreenResolution 将产生比 HighResolution 更低质量的输出，并且应该只用于草稿
+    QPrinter::PrinterResolution//此值已弃用。它相当于 Unix 上的 ScreenResolution 和 Windows 和 Mac 上的 HighResolution。由于 ScreenResolution 和 HighResolution 之间的差异，使用此值可能会导致非便携式打印机代码
+    QPrinter::HighResolution//在 Windows 上，将打印机分辨率设置为为正在使用的打印机定义的分辨率。对于 PDF 打印，将 PDF 驱动程序的分辨率设置为 1200 dpi
+}
+```
+
+```c++
+enum QPrinter::PrinterState{
+    QPrinter::Idle
+    QPrinter::Active
+    QPrinter::Aborted
+    QPrinter::Error
+}
+```
+
+此枚举类型用于指定页面和纸张尺寸的测量单位。请注意 Point 和 DevicePixel 之间的区别。 Point 单位定义为 1/72 英寸，而 DevicePixel 单位取决于分辨率，并基于打印机上的实际像素或点。
+
+```c++
+enum QPrinter::Unit{   
+    QPrinter::Millimeter
+    QPrinter::Point
+    QPrinter::Inch
+    QPrinter::Pica
+    QPrinter::Didot
+    QPrinter::Cicero
+    QPrinter::DevicePixel
+}
+```
+
+##### 成员函数
+
+```c++
+QPrinter(PrinterMode mode = ScreenResolution);
+QPrinter(const QPrinterInfo &printer, PrinterMode mode = ScreenResolution);
+bool abort();//中止当前的打印运行。如果打印运行成功中止，则返回 true，并且 printerState() 将返回 QPrinter::Aborted；否则返回false
+bool isValid() const;//如果当前选择的打印机是系统中的有效打印机，或者是纯 PDF 打印机，则返回 true；否则返回假
+QPrintEngine *printEngine() const;//返回打印机使用的打印引擎
+bool supportsMultipleCopies() const;
+
+void setCollateCopies(bool collate);//设置打印对话框出现时排序规则复选框的默认值。如果 collate 为 true，它将启用 setCollateCopiesEnabled()。默认值为假。该值将由用户在打印对话框中按下的内容更改
+bool collateCopies() const;
+
+void setCopyCount(int count);//将要打印的份数设置为count
+int copyCount() const;
+
+void setCreator(const QString &creator);//将创建文档的应用程序的名称设置为 creator
+QString creator() const;
+
+void setDocName(const QString &name);//将文档名称设置为 name
+QString docName() const;
+
+void setFontEmbeddingEnabled(bool enable);//根据启用启用或禁用字体嵌入
+bool fontEmbeddingEnabled() const;
+
+void setFromTo(int from, int to);//设置要打印的页面范围以覆盖由 from 和 to 指定的编号的页面，其中 from 对应于范围中的第一页，to 对应于最后一页
+int fromPage() const;//返回要打印的页面范围内第一页的编号（“从页面”设置）。文档中的页面按照第一页为第 1 页的约定进行编号
+int toPage() const;//返回要打印的页面范围中最后一页的编号（“到页面”设置）。文档中的页面按照第一页为第 1 页的约定进行编号
+
+void setFullPage(bool fp);//如果fp为真，则支持在整个页面上绘制；否则将绘画限制在设备报告的可打印区域
+bool fullPage() const;
+
+void setOutputFileName(const QString &fileName);//将输出文件的名称设置为 fileName
+QString outputFileName() const;
+
+bool setPageMargins(const QMarginsF &margins);//使用当前单位将页边距设置为边距。如果页边距设置成功，则返回 true
+bool setPageMargins(const QMarginsF &margins, QPageLayout::Unit units);
+QRectF pageRect(Unit unit) const;
+QRectF paperRect(Unit unit) const;
+
+bool setPageSize(const QPageSize &pageSize);//将页面大小设置为 pageSize
+bool setPageOrientation(QPageLayout::Orientation orientation);//将页面方向设置为 QPageLayout::Portrait 或 QPageLayout::Landscape
+
+void setPrintProgram(const QString &printProg);//将应该执行打印作业的程序的名称设置为 printProg
+QString printProgram() const;
+
+void setPrinterName(const QString &name);//将打印机名称设置为 name
+QString printerName() const;
+
+void setPrinterSelectionOption(const QString &option);//设置要使用的打印机选项以选择打印机。 option 默认为 null（这意味着 Qt 应该足够聪明，可以正确猜测），但可以将其设置为其他值以使用特定的打印机选择选项
+QString printerSelectionOption() const;
+
+void setResolution(int dpi);//要求打印机以 dpi 或尽可能接近 dpi 进行打印
+int resolution() const;
+QList<int> supportedResolutions() const;//返回打印机表示支持的分辨率列表（每英寸点数整数列表）
+
+void setColorMode(ColorMode newColorMode);
+void setDuplex(DuplexMode duplex);
+void setOutputFormat(OutputFormat format);
+bool setPageLayout(const QPageLayout &newLayout);
+void setPageOrder(PageOrder pageOrder);
+void setPaperSource(PaperSource source);
+void setPrintRange(PrintRange range);
+ColorMode colorMode() const;
+DuplexMode duplex() const;
+OutputFormat outputFormat() const;
+QPageLayout pageLayout() const;
+PageOrder pageOrder() const;
+PaperSource paperSource() const;
+PrintRange printRange() const;
+PrinterState printerState() const;
+QList<PaperSource> supportedPaperSources() const;//返回此打印机支持的纸张尺寸
+```
+
+#### 5.6.2 QSettings
 
 QSettings 类提供与平台无关的持久应用程序设置。
 用户通常希望应用程序在会话中记住其设置（窗口大小和位置、选项等）。此信息通常存储在 Windows 的系统注册表中，以及 macOS 和 iOS 的属性列表文件中。在 Unix 系统上，在没有标准的情况下，许多应用程序（包括 KDE 应用程序）使用 INI 文本文件。
@@ -6313,7 +6573,7 @@ static void setDefaultFormat(Format format);
 static void setPath(Format format, Scope scope, const QString &path);
 ```
 
-#### QCryptographicHash
+#### 5.6.3 QCryptographicHash
 
 QCryptographicHash 类提供了一种生成加密哈希的方法。
 QCryptographicHash 可用于生成二进制或文本数据的加密哈希。
