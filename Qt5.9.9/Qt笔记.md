@@ -7481,6 +7481,8 @@ QString QFileInfo::absoluteFilePath() const；//返回包含文件名的绝对�
 QStringList QDir::entryList(const QStringList &nameFilters, Filters filters = NoFilter, SortFlags sort = NoSort) const;//列出所有子文件或者子目录
 ```
 
+QFileInfoList是QList< QFileInfo >的别名，如果遇到了不要不认识。
+
 #### 6.3.4 QTemporaryDir
 
 QTemporaryDir 类创建一个唯一的目录供临时使用。
