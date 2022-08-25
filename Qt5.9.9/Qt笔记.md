@@ -21689,12 +21689,10 @@ QAbstractScrollArea --> QPlainTextEdit
 
 #### 16.8.3 QTextDocument
 
-QTextDocument 类保存格式化的文本。
-QTextDocument 是结构化富文本文档的容器，支持样式化文本和各种类型的文档元素，例如列表、表格、框架和图像。它们可以创建用于 QTextEdit，或独立使用。
-每个文档元素由关联的格式对象描述。每个格式对象都被 QTextDocuments 视为一个唯一的对象，并且可以传递给 objectForFormat() 以获取应用它的文档元素。
-可以使用 QTextCursor 以编程方式编辑 QTextDocument，并且可以通过遍历文档结构来检查其内容。整个文档结构存储为根框架下的文档元素层次结构，可通过 rootFrame() 函数找到。或者，如果您只想迭代文档的文本内容，您可以使用 begin()、end() 和 findBlock() 来检索可以检查和迭代的文本块。
-文档的布局由 documentLayout() 决定；如果您想使用自己的布局逻辑，您可以创建自己的 QAbstractTextDocumentLayout 子类并使用 setDocumentLayout() 进行设置。可以通过调用 metaInformation() 函数获取文档的标题和其他元信息。对于通过 QTextEdit 类向用户公开的文档，文档标题也可以通过 QTextEdit::documentTitle() 函数获得。
-toPlainText() 和 toHtml() 便利函数允许您以纯文本和 HTML 格式检索文档的内容。可以使用 find() 函数搜索文档的文本。可以使用 setUndoRedoEnabled() 函数控制对文档执行的操作的撤消/重做。撤消/重做系统可以由编辑器小部件通过 undo() 和 redo() 插槽控制；该文档还提供了 contentsChanged()、undoAvailable() 和 redoAvailable() 信号，它们通知连接的编辑器小部件有关撤消/重做系统的状态。
+QTextDocument 类保存格式化的文本，是结构化富文本文档的容器，支持样式化文本和各种类型的文档元素，例如**列表、表格、框架和图像**。它们**可以创建用于 QTextEdit，或独立使用**。
+可以**使用 QTextCursor 以编程方式编辑 QTextDocument，并且可以通过遍历文档结构来检查其内容**。整个文档结构存储为根框架下的文档元素层次结构，可通过 rootFrame() 函数找到。或者，如果您只想迭代文档的文本内容，您可以使用 begin()、end() 和 findBlock() 来检索可以检查和迭代的文本块。
+文档的**布局由 documentLayout() 决定**，可以创建自己的 QAbstractTextDocumentLayout 子类并使用 setDocumentLayout() 进行设置。可以通过调用 **metaInformation() 函数获取文档的标题和其他元信息**。对于通过 QTextEdit 类向用户公开的文档，文档标题也可以通过 QTextEdit::documentTitle() 函数获得。
+toPlainText() 和 toHtml() 便利函数允许您以纯文本和 HTML 格式检索文档的内容。可以使用 find() 函数搜索文档的文本。可以使用 **setUndoRedoEnabled() 函数控制对文档执行的操作的撤消/重做**。撤消/重做系统可以由编辑器小部件通过 undo() 和 redo() 插槽控制；该文档还提供了 contentsChanged()、undoAvailable() 和 redoAvailable() 信号，它们通知连接的编辑器小部件有关撤消/重做系统的状态。
 
 常用成员函数。
 
@@ -21755,57 +21753,1098 @@ void undoCommandAdded();
 
 #### 16.8.4 QTextBlock
 
+QTextBlock 类为 QTextDocument 中的**文本片段提供了一个容器**。
+QTextBlock 提供对 QTextDocuments **块/段落结构的只读访问**。
+**每个文本块都位于 document() 中的特定位置position()**。可以使用 text() 函数获取块的内容。 length() 函数确定文档中块的大小（包括格式化字符）。块的视觉属性由其文本 layout()、charFormat() 和 blockFormat() 确定。next() 和previous() 函数可以在文档在迭代过程中不被其他方式修改的情况下对文档中的连续有效块进行迭代。请注意，**虽然块是按顺序返回的，但相邻的块可能来自文档结构中的不同位置**。块的有效性可以通过调用 isValid() 来确定。
+ 成员函数。
 
+```c++
+iterator begin() const;
+iterator end() const;
+QTextBlock next() const;
+QTextBlock previous() const;
+
+QTextBlockFormat blockFormat() const;//返回描述块特定属性的 QTextBlockFormat
+int blockFormatIndex() const;//返回文本块格式的文档内部块格式列表的索引
+int blockNumber() const;//返回此块的编号，如果块无效，则返回 -1
+
+QTextCharFormat charFormat() const;//返回描述块字符格式的 QTextCharFormat
+int charFormatIndex() const;//为文本块的字符格式返回文档内部字符格式列表的索引
+
+void clearLayout();//清除用于布局和显示块内容的 QTextLayout
+QTextLayout *layout() const;//返回用于布局和显示块内容的 QTextLayout
+
+bool contains(int position) const;//如果给定位置位于文本块内，则返回 true；否则返回false
+bool isValid() const;//如果此文本块有效，则返回 true；否则返回false
+
+void setVisible(bool visible);
+bool isVisible() const;//如果块可见，则返回 true；否则返回false
+
+int firstLineNumber() const;//返回此块的第一行号，如果块无效则返回 -1。除非布局支持否则行号与块号相同
+int length() const;//返回块的长度（以字符为单位）
+int position() const;//返回文档中块的第一个字符的索引
+
+void setLineCount(int count);//将行数设置为count
+int lineCount() const;
+
+void setRevision(int rev);
+int revision() const;//返回块修订
+
+void setUserData(QTextBlockUserData *data);//将给定的数据对象附加到文本块
+void setUserState(int state);//将指定的状态整数值存储在文本块中
+
+Qt::LayoutDirection textDirection() const;//返回解析的文本方向
+const QTextDocument *document() const;//返回此文本块所属的文本文档，如果不属于任何文档，则返回 0
+QVector<QTextLayout::FormatRange> textFormats() const;//将块的文本格式选项作为 QTextCharFormat 的连续范围列表返回。在范围边界内插入文本时使用范围的字符格式
+QTextList *textList() const;//如果block代表一个列表项，则返回该项所属的列表；否则返回 0
+QString text() const;//以纯文本形式返回块的内容
+```
 
 #### 16.8.5 QTextList
 
+QTextList 类在 QTextDocument 中提供了一个**修饰的项目列表**。
+列表包含一系列文本块，每个文本块都标有项目符号或其他符号。可以使用多级列表，并且自动编号功能提供对有序数字和字母列表的支持。
+列表是通过使用文本光标在当前位置插入一个空列表或通过将现有文本移动到新列表中来创建的。 **QTextCursor::insertList() 函数在光标位置插入一个空块到文档中，并使其成为列表中的第一项**。
 
+```c++
+QTextListFormat listFormat;
+if (list) {
+    listFormat = list->format();//获取列表的格式
+    listFormat.setIndent(listFormat.indent() + 1);
+}
+listFormat.setStyle(QTextListFormat::ListDisc);
+cursor.insertList(listFormat);//光标处插入列表格式
+```
+
+**QTextCursor::createList() 函数获取光标当前块的内容并将其转换为新列表的第一项**。
+使用 QTextCursor::currentList() 可以找到光标的当前列表。列表中的项目数由 count() 给出。可以使用 item() 函数通过其在列表中的索引来获取每个项目。类似地，可以使用 itemNumber() 找到给定项目的索引。可以使用 itemText() 函数找到每个项目的文本。请注意，**列表中的项目可能不是文档中的相邻元素**。可以使用 removeItem() 函数按索引删除列表项。 remove() 删除列表中的指定项。列表的格式用 setFormat() 设置，用 format() 读取。
+
+成员函数。
+
+```c++
+void add(const QTextBlock &block);//使给定块成为列表的一部分
+int count() const;//返回列表中的项目数
+QTextListFormat format() const;//返回列表的格式
+QTextBlock item(int i) const;//返回列表中的第 i 个文本块
+int itemNumber(const QTextBlock &block) const;//返回给定块对应的列表项的索引。如果不存在则返回 -1
+QString itemText(const QTextBlock &block) const;//返回与给定块对应的列表项的文本
+void remove(const QTextBlock &block);//从列表中删除给定的块
+void removeItem(int i);//从列表中删除项目位置 i 处的项目
+void setFormat(const QTextListFormat &format);//将列表的格式设置为 format
+```
 
 #### 16.8.6 QTextFrame
 
+QTextFrame 类表示 QTextDocument 中的框架。
+**文本框架为文档中的文本提供结构**。它们用作其他文档元素的通用容器。框架通常使用 QTextCursor::insertFrame() 创建。框架可用于在富文本文档中创建层次结构。**每个文档都有一个根框架（QTextDocument::rootFrame()），根框架下的每个框架都有一个父框架和一个（可能为空的）子框架列表**。可以使用 parentFrame() 找到父框架，而 childFrames() 函数提供子框架列表。
+**每个框架至少包含一个文本块**，以使文本光标能够在其中插入新的文档元素。因此，QTextFrame::iterator 类用于遍历给定帧内的块和子帧。可以使用 begin() 和 end() 找到框架中的第一个和最后一个子元素。
+框架也有一个格式（使用 QTextFrameFormat 指定），可以用 setFormat() 设置并用 format() 读取。
+**可以获得指向帧内第一个和最后一个有效光标位置的文本光标**；为此使用 firstCursorPosition() 和 lastCursorPosition() 函数。可以使用 **firstPosition() 和 lastPosition() 找到文档中框架的范围**。
+您可以使用 QTextFrame::iterator 类迭代框架的内容：这提供了对其内部文本块和子框架列表的只读访问。
 
+成员函数。
+
+```c++
+iterator begin() const;
+iterator end() const;
+int firstPosition() const;
+int lastPosition() const;
+QTextCursor firstCursorPosition() const;
+QTextCursor lastCursorPosition() const;
+QTextFrame *parentFrame() const;
+QList<QTextFrame *> childFrames() const;
+void setFrameFormat(const QTextFrameFormat &format);
+QTextFrameFormat frameFormat() const;
+```
 
 #### 16.8.7 QTextTable
 
+**QTextTable 类表示 QTextDocument 中的一个表**。
+例如，我们可以使用以下代码行在编辑器的当前光标位置插入一个三行两列的表格：
 
+```c++
+QTextCursor cursor(editor->textCursor());
+cursor.movePosition(QTextCursor::Start);
+QTextTable *table = cursor.insertTable(rows, columns, tableFormat);
+```
+
+**表格格式要么在创建表格时定义，要么稍后使用 setFormat() 更改**。光标当前正在编辑的表格可以通过 QTextCursor::currentTable() 找到。可以使用 resize() 或使用 insertRows()、insertColumns()、removeRows() 或 removeColumns() 更改表的大小。使用 cellAt() 检索表格单元格。通过在表格内移动光标，使用rowStart()和rowEnd()函数获取每行开始和结束的光标，可以找到**表格行的开始和结束位置**。
+QTextTable 中的行和列可以使用 mergeCells() 和 splitCell() 函数进行合并和拆分。但是，**只能拆分跨多行或多列的单元格**。请注意，如果您已将多列和多行合并到一个单元格中，您将无法将合并后的单元格拆分为跨越多行的新单元格或列。为了能够拆分跨越多行和多列的单元格，您需要在多次迭代中执行此操作。
+
+假设我们有一个 2x3 的名称和地址表。要合并第一行中的两列，我们调用 mergeCells()，其中 row = 0、column = 0、numRows = 1 和 numColumns = 2。从第1个单元格开始横跨2列，横跨1行就是不合并多行。
+
+```c++
+ table->mergeCells(0, 0, 1, 2);
+```
+
+要将表格的第一行拆分回两个单元格，我们调用 splitCell() 函数，其中 numRows 和 numCols = 1。也就是设置为行列不横跨，就拆分回去了。
+
+```c++
+table->splitCell(0, 0, 1, 1);
+```
+
+成员函数。
+
+```c++
+void appendColumns(int count);
+void appendRows(int count);
+void insertColumns(int index, int columns);
+void insertRows(int index, int rows);
+void removeColumns(int index, int columns);
+void removeRows(int index, int rows);
+void resize(int rows, int columns);
+
+int columns() const;
+int rows() const;
+
+QTextTableCell cellAt(int row, int column) const;
+QTextTableCell cellAt(int position) const;
+QTextTableCell cellAt(const QTextCursor &cursor) const;
+QTextCursor rowEnd(const QTextCursor &cursor) const;
+QTextCursor rowStart(const QTextCursor &cursor) const;
+
+void setFormat(const QTextTableFormat &format);
+QTextTableFormat format() const;
+
+void mergeCells(int row, int column, int numRows, int numCols);
+void mergeCells(const QTextCursor &cursor);
+void splitCell(int row, int column, int numRows, int numCols);
+```
 
 #### 16.8.8 QTextFormat
 
+**QTextFormat 类为 QTextDocument 提供格式信息**。
+QTextFormat 是一个**通用类**，用于描述 QTextDocument 各部分的格式。**派生类 QTextCharFormat、QTextBlockFormat、QTextListFormat 和 QTextTableFormat 通常更有用**，它们描述了应用于文档特定部分的格式。格式有一个 FormatType ，它指定它可以格式化的文本项的种类；例如**文本块、列表、表格**等。格式还具有各种属性（某些特定于特定格式类型），如 Property 枚举所述。每个属性都有一个对应的属性。
+**格式类型由type()给出**，格式可以用isCharFormat()、isBlockFormat()、isListFormat()、isTableFormat()、isFrameFormat()、isImageFormat()测试。如果确定了类型，则可以使用 toCharFormat()、toBlockFormat()、toListFormat()、toTableFormat()、toFrameFormat() 和 toImageFormat() 进行检索。
+可以使**用 setProperty() 函数设置格式的属性**，并根据需要使用 boolProperty()、intProperty()、doubleProperty() 和 stringProperty() 检索格式的属性。格式中使用的所有属性 ID 都可以使用 allPropertyIds() 检索。可以使用 merge() 将一种格式合并到另一种格式中。
+可以使用 **setObjectIndex() 设置格式的对象索引，并使用 objectIndex() 检索**。这些方法可用于将格式与 QTextObject 相关联。它用于表示文档中的列表、框架和表格。
 
+枚举类型。
+
+这个枚举描述了 QTextFormat 对象正在格式化的文本项。
+
+```c++
+enum QTextFormat::FormatType{
+    QTextFormat::InvalidFormat
+    QTextFormat::BlockFormat
+    QTextFormat::CharFormat
+    QTextFormat::ListFormat
+    QTextFormat::FrameFormat
+    QTextFormat::UserFormat
+}
+```
+
+这个枚举描述了这种格式与什么样的 QTextObject 相关联。
+
+```c++
+enum QTextFormat::ObjectTypes{ 
+    QTextFormat::NoObject
+    QTextFormat::ImageObject
+    QTextFormat::TableObject
+    QTextFormat::TableCellObject
+    QTextFormat::UserObject//第一个可用于特定应用目的的对象
+}
+```
+
+此枚举描述了打印时如何执行分页。它映射到相应的 css 属性。
+
+```c++
+enum QTextFormat::PageBreakFlag{
+    QTextFormat::PageBreak_Auto//分页符是根据当前页面上的可用空间自动确定的
+    QTextFormat::PageBreak_AlwaysBefore//页面总是在段落/表格之前被打破
+    QTextFormat::PageBreak_AlwaysAfter//在段落/表格之后总是开始一个新页面
+}
+```
+
+此枚举描述了格式可以具有的不同属性。
+
+```c++
+enum QTextFormat::Property{
+    QTextFormat::ObjectIndex,//格式化对象的索引。请参见 objectIndex()
+    //段落和字符属性
+    QTextFormat::CssFloat,//框架相对于周围文本的位置
+    QTextFormat::LayoutDirection,//文档中文本的布局方向（Qt::LayoutDirection）
+    QTextFormat::OutlinePen,
+    QTextFormat::ForegroundBrush,
+    QTextFormat::BackgroundBrush,
+    QTextFormat::BackgroundImageUrl,
+    //段落属性
+    QTextFormat::BlockAlignment,
+    QTextFormat::BlockTopMargin,
+    QTextFormat::BlockBottomMargin,
+    QTextFormat::BlockLeftMargin,
+    QTextFormat::BlockRightMargin,
+    QTextFormat::TextIndent,
+    QTextFormat::TabPositions,//指定制表符位置。选项卡位置是 QTextOption::Tab
+    QTextFormat::BlockIndent,
+    QTextFormat::LineHeight,
+    QTextFormat::LineHeightType,
+    QTextFormat::BlockNonBreakableLines,
+    QTextFormat::BlockTrailingHorizontalRulerWidth,
+    // 字符属性
+    QTextFormat::FontFamily,
+    QTextFormat::FontPointSize,
+    QTextFormat::FontPixelSize,
+    QTextFormat::FontSizeAdjustment,//指定已设置的字体大小的大小变化
+    QTextFormat::FontFixedPitch,
+    QTextFormat::FontWeight,
+    QTextFormat::FontItalic,
+    QTextFormat::FontUnderline,//此属性已被弃用。请改用 QTextFormat::TextUnderlineStyle
+    QTextFormat::FontOverline,
+    QTextFormat::FontStrikeOut,
+    QTextFormat::FontCapitalization,//指定要应用于文本的大写类型
+    QTextFormat::FontLetterSpacingType,//默认值为 QFont::PercentageSpacing
+    QTextFormat::FontLetterSpacing,//更改字体中各字母之间默认间距。指定为百分比或绝对值。默认100%
+    QTextFormat::FontWordSpacing,//更改单个单词之间默认间距。正值增加相应像素的字间距负值减小间距
+    QTextFormat::FontStretch,//对应于 QFont::Stretch 属性
+    QTextFormat::FontStyleHint,//对应于 QFont::StyleHint 属性
+    QTextFormat::FontStyleStrategy,//对应于 QFont::StyleStrategy 属性
+    QTextFormat::FontKerning,//指定字体是否打开了字距调整
+    QTextFormat::FontHintingPreference,//根据 QFont::HintingPreference 枚举的值控制提示的使用
+    QTextFormat::TextUnderlineColor,
+    QTextFormat::TextVerticalAlignment,
+    QTextFormat::TextOutline,
+    QTextFormat::TextUnderlineStyle,
+    QTextFormat::TextToolTip,//指定为文本片段显示的（可选）工具提示
+    QTextFormat::IsAnchor,
+    QTextFormat::AnchorHref,
+    QTextFormat::AnchorName,
+    QTextFormat::ObjectType,
+	//列表属性
+    QTextFormat::ListStyle,//指定用于列表中项目的样式，由 QTextListFormat::Style 枚举的值描述
+    QTextFormat::ListIndent,//指定用于列表的缩进量
+    QTextFormat::ListNumberPrefix,//定义附加到数字列表中项目编号的文本
+    QTextFormat::ListNumberSuffix,//定义附加到数字列表中项目编号的文本
+    // 表格和框架属性
+    QTextFormat::FrameBorder,
+    QTextFormat::FrameBorderBrush,
+    QTextFormat::FrameBorderStyle,
+    QTextFormat::FrameBottomMargin,
+    QTextFormat::FrameHeight,
+    QTextFormat::FrameLeftMargin,
+    QTextFormat::FrameMargin,
+    QTextFormat::FramePadding,
+    QTextFormat::FrameRightMargin,
+    QTextFormat::FrameTopMargin,
+    QTextFormat::FrameWidth,
+    QTextFormat::TableCellSpacing,
+    QTextFormat::TableCellPadding,
+    QTextFormat::TableColumns,
+    QTextFormat::TableColumnWidthConstraints,
+    QTextFormat::TableHeaderRowCount,
+    // 表格单元格属性
+    QTextFormat::TableCellRowSpan,
+    QTextFormat::TableCellColumnSpan,
+    QTextFormat::TableCellLeftPadding,
+    QTextFormat::TableCellRightPadding,
+    QTextFormat::TableCellTopPadding,
+    QTextFormat::TableCellBottomPadding,
+    // 图像属性  
+    QTextFormat::ImageName,
+    QTextFormat::ImageWidth,
+    QTextFormat::ImageHeight,
+    // 选择属性
+    QTextFormat::FullWidthSelection,//在选择的characterFormat上设置时文本整个宽度将显示为选中状态
+	// 分页符属性 
+    QTextFormat::PageBreakPolicy,//指定如何破坏页面。请参阅 PageBreakFlag 枚举
+    QTextFormat::UserProperty 
+}
+```
+
+成员函数。
+
+```c++
+QTextFormat(int type);
+int type() const;//返回此格式的类型
+
+bool isValid() const;//如果格式有效（即不是 InvalidFormat），则返回 true；否则返回false
+void merge(const QTextFormat &other);//将其他格式与此格式合并；在有冲突的地方，其他格式优先
+
+void setBackground(const QBrush &brush);
+void setForeground(const QBrush &brush);
+QBrush background() const;
+QBrush foreground() const;
+void clearBackground();
+void clearForeground();
+
+bool isBlockFormat() const;
+bool isCharFormat() const;
+bool isEmpty() const;
+bool isFrameFormat() const;
+bool isImageFormat() const
+bool isListFormat() const;
+bool isTableCellFormat() const;
+bool isTableFormat() const;
+QTextBlockFormat toBlockFormat() const;
+QTextCharFormat toCharFormat() const;
+QTextFrameFormat toFrameFormat() const;
+QTextImageFormat toImageFormat() const;
+QTextListFormat toListFormat() const;
+QTextTableCellFormat toTableCellFormat() const;
+QTextTableFormat toTableFormat() const;
+
+void setLayoutDirection(Qt::LayoutDirection direction);
+Qt::LayoutDirection layoutDirection() const;
+
+QTextLength lengthProperty(int propertyId) const;
+QVector<QTextLength> lengthVectorProperty(int propertyId) const;
+
+void setObjectIndex(int index);//设置格式对象的对象索引
+void setObjectType(int type);//将文本格式的对象类型设置为 type
+int objectIndex() const;
+int objectType() const;
+
+QPen penProperty(int propertyId) const;
+bool boolProperty(int propertyId) const;
+QBrush brushProperty(int propertyId) const;
+QString stringProperty(int propertyId) const;
+QColor colorProperty(int propertyId) const;
+qreal doubleProperty(int propertyId) const;
+QMap<int, QVariant> properties() const;
+QVariant property(int propertyId) const;
+void setProperty(int propertyId, const QVariant &value);
+void setProperty(int propertyId, const QVector<QTextLength> &value);
+void clearProperty(int propertyId);
+bool hasProperty(int propertyId) const;
+int propertyCount() const;
+int intProperty(int propertyId) const;
+```
 
 #### 16.8.9 QTextCharFormat
 
+QTextCharFormat 类为 QTextDocument 中的**字符提供格式信息**。
+可以通过向 **setFont()** 函数提供字体来设置使用的字体，并且可以调整其外观的各个方面以提供所需的效果。 **setFontFamily() 和 setFontPointSize()** 定义字体的系列和打印大小； setFontWeight() 和 setFontItalic() 提供对字体样式的控制。 setFontUnderline()、setFontOverline()、setFontStrikeOut() 和 setFontFixedPitch() 为文本提供附加效果。
+**颜色是用 setForeground() 设置的**。如果文本打算用作锚点（**用于超链接**），则可以使用 setAnchor() 启用。 **setAnchorHref() 和 setAnchorNames() 函数用于指定有关超链接目标和锚点名称的信息**。
 
+此枚举指定 setFont() 函数应如何处理未设置的字体属性。
+
+```c++
+enum QTextCharFormat::FontPropertiesInheritanceBehavior{    
+	QTextCharFormat::FontPropertiesSpecifiedOnly//如果未显式设置属性，请不要更改文本格式的属性值
+	QTextCharFormat::FontPropertiesAll
+}
+```
+
+这个枚举描述了绘制带下划线文本的不同方式。
+
+```c++
+enum QTextCharFormat::UnderlineStyle{
+    QTextCharFormat::NoUnderline//字符的基线对齐
+    QTextCharFormat::SingleUnderline//使用 Qt::SolidLine 绘制一条线
+    QTextCharFormat::DashUnderline//破折号是使用 Qt::DashLine 绘制的
+    QTextCharFormat::DotLine//使用 Qt::DotLine 绘制点
+    QTextCharFormat::DashDotLine//虚线和点是使用 Qt::DashDotLine 绘制的
+    QTextCharFormat::DashDotDotLine//虚线和点是使用 Qt::DashDotLine 绘制的
+    QTextCharFormat::WaveUnderline//文本使用波浪形线加下划线
+    QTextCharFormat::SpellCheckUnderline//根据 QApplication 样式的 QStyle::SH_SpellCeckUnderlineStyle 样式提示绘制下划线。默认情况下，它映射到 WaveUnderline，在 macOS 上，它映射到 DashDotLine
+}
+```
+
+这个枚举描述了相邻字符可以垂直对齐的方式。
+
+```c++
+enum QTextCharFormat::VerticalAlignment{ 
+    QTextCharFormat::AlignNormal//相邻字符在使用的书写系统中以文本的标准方式定位
+    QTextCharFormat::AlignSuperScript//字符放置在普通文本的基线上方
+    QTextCharFormat::AlignSubScript//字符放置在普通文本的基线下方
+    QTextCharFormat::AlignMiddle//对象的中心与基线垂直对齐。目前，这仅适用于内联对象
+    QTextCharFormat::AlignBottom//对象的底部边缘与基线垂直对齐
+    QTextCharFormat::AlignTop//对象的上边缘与基线垂直对齐
+    QTextCharFormat::AlignBaseline//对象的上边缘与基线垂直对齐
+}
+```
+
+成员函数。
+
+```c++
+QString anchorHref() const;//超链接使用
+QStringList anchorNames() const;//超链接使用
+// 读函数
+QFont font() const;
+QFont::Capitalization fontCapitalization() const;
+QString fontFamily() const;
+bool fontFixedPitch() const;
+QFont::HintingPreference fontHintingPreference() const;
+bool fontItalic() const;
+bool fontKerning() const;
+qreal fontLetterSpacing() const;
+QFont::SpacingType fontLetterSpacingType() const;
+bool fontOverline() const;
+qreal fontPointSize() const;
+int fontStretch() const;
+bool fontStrikeOut() const;
+QFont::StyleHint fontStyleHint() const;
+QFont::StyleStrategy fontStyleStrategy() const;
+bool fontUnderline() const;
+int fontWeight() constqreal;
+fontWordSpacing() const;
+bool isAnchor() const;
+bool isValid() const;
+QPen textOutline() const;
+QString toolTip() const;
+QColor underlineColor() const;
+UnderlineStyle underlineStyle() const;
+VerticalAlignment verticalAlignment() const;
+// 写函数
+void setAnchor(bool anchor);
+void setAnchorHref(const QString &value);
+void setAnchorNames(const QStringList &names);
+void setFont(const QFont &font, FontPropertiesInheritanceBehavior behavior);
+void setFont(const QFont &font);
+void setFontCapitalization(QFont::Capitalization capitalization);
+void setFontFamily(const QString &family);
+void setFontFixedPitch(bool fixedPitch);
+void setFontHintingPreference(QFont::HintingPreference hintingPreference);
+void setFontItalic(bool italic);
+void setFontKerning(bool enable);
+void setFontLetterSpacing(qreal spacing);
+void setFontLetterSpacingType(QFont::SpacingType letterSpacingType);
+void setFontOverline(bool overline);
+void setFontPointSize(qreal size);
+void setFontStretch(int factor);
+void setFontStrikeOut(bool strikeOut);
+void setFontStyleHint(QFont::StyleHint hint, QFont::StyleStrategy strategy = QFont::PreferDefault);
+void setFontStyleStrategy(QFont::StyleStrategy strategy);
+void setFontUnderline(bool underline);
+void setFontWeight(int weight);
+void setFontWordSpacing(qreal spacing);
+void setTextOutline(const QPen &pen);
+void setToolTip(const QString &text);
+void setUnderlineColor(const QColor &color);
+void setUnderlineStyle(UnderlineStyle style);
+void setVerticalAlignment(VerticalAlignment alignment);
+```
 
 #### 16.8.10 QTextBlockFormat
+
+QTextBlockFormat 类为 **QTextDocument 中的文本块提供格式信息**。
+文档由块列表组成，由 QTextBlock 对象表示。每**个块可以包含某种类型的项目，例如一段文本、表格、列表或图像。每个块都有一个关联的 QTextBlockFormat 来指定它的特性**。
+为了满足从左到右和从右到左的语言，您可以使用 setDirection() 设置块的方向。段落对齐使用 setAlignment() 设置。边距由 setTopMargin()、setBottomMargin()、setLeftMargin()、setRightMargin() 控制。整体缩进用 setIndent() 设置，第一行的缩进用 setTextIndent() 设置。**行间距由 setLineHeight() 设置，并通过 lineHeight() 和 lineHeightType() 检索。可用的行距类型在 LineHeightTypes 枚举中**。
+可以使用 setNonBreakableLines() 启用和禁用换行。
+用于绘制段落背景的画笔由 setBackground() 设置，文本外观的其他方面可以通过使用带有 OutlinePen、ForegroundBrush 和 BackgroundBrush QTextFormat::Property 值的 setProperty() 函数来自定义。
+如果文本块是列表的一部分，它还可以具有可通过 listFormat() 函数访问的列表格式。
+
+这个枚举描述了支持段落可以有的各种类型的行距。
+
+```c++
+enum QTextBlockFormat::LineHeightTypes{
+    QTextBlockFormat::SingleHeight
+    QTextBlockFormat::ProportionalHeight
+    QTextBlockFormat::FixedHeight
+    QTextBlockFormat::MinimumHeight
+    QTextBlockFormat::LineDistanceHeight
+}
+```
+
+成员函数。
+
+```c++
+// 读函数
+Qt::Alignment alignment() const;
+qreal bottomMargin() const;
+int indent() const;
+bool isValid() const;
+qreal leftMargin() const;
+qreal lineHeight(qreal scriptLineHeight, qreal scaling) const;
+qreal lineHeight() const;
+int lineHeightType() const;
+bool nonBreakableLines() ;
+PageBreakFlags pageBreakPolicy() const;
+qreal rightMargin() const;
+QList<QTextOption::Tab> tabPositions() const;
+qreal textIndent() const;
+qreal topMargin() const;
+// 写函数
+void setAlignment(Qt::Alignment alignment);
+void setBottomMargin(qreal margin);
+void setIndent(int indentation);
+void setLeftMargin(qreal margin);
+void setLineHeight(qreal height, int heightType);
+void setNonBreakableLines(bool b);
+void setPageBreakPolicy(PageBreakFlags policy);
+void setRightMargin(qreal margin);
+void setTabPositions(const QList<QTextOption::Tab> &tabs);
+void setTextIndent(qreal indent);
+void setTopMargin(qreal margin);
+```
 
 
 
 #### 16.8.11 QTextListFormat
 
+QTextListFormat 类为 QTextDocument 中的**列表提供格式信息**。
+列表由一个或多个项目组成，表示为文本块。列表的格式指定列表中项目的外观。特别是，它决定了**每个项目的缩进和样式**。**项目的缩进是一个整数值**，它使每个项目从左边距偏移一定量。该值**使用 indent() 读取并使用 setIndent() 设置**。用于装饰每个项目的样式使用 setStyle() 设置，并且可以使用 style() 函数读取。样式控制用于列表中项目的项目符号点和编号方案的类型。**请注意，使用十进制编号方案的列表从 1 而不是 0 开始计数**。
+可以设置样式属性来进一步配置列表项的外观；例如，ListNumberPrefix 和 ListNumberSuffix 属性可用于自定义有序列表中使用的数字，以便它们显示为 (1)、(2)、(3) 等：
 
+```c++
+QTextListFormat listFormat;
+
+listFormat.setStyle(QTextListFormat::ListDecimal);
+listFormat.setNumberPrefix("(");
+listFormat.setNumberSuffix(")");
+
+cursor.insertList(listFormat);
+```
+
+这个枚举描述了用于装饰列表项的符号：
+
+```c++
+enum QTextListFormat::Style{   
+    QTextListFormat::ListDisc//一个实心圆圈
+    QTextListFormat::ListCircle//一个空的圆圈
+    QTextListFormat::ListSquare//一个实心正方形
+    QTextListFormat::ListDecimal//按升序排列的十进制值
+    QTextListFormat::ListLowerAlpha//按字母顺序排列的小写拉丁字符
+    QTextListFormat::ListUpperAlpha//按字母顺序排列的大写拉丁字符
+    QTextListFormat::ListLowerRoman//小写罗马数字（仅支持最多 4999 个项目）
+    QTextListFormat::ListUpperRoman//大写罗马数字（仅支持最多 4999 个项目）
+}
+```
+
+成员函数。
+
+```c++
+bool isValid() const;//如果此列表格式有效，则返回 true；否则返回false
+
+void setIndent(int indentation);//设置列表格式的缩进。缩进乘以 QTextDocument::indentWidth 属性得到有效缩进（以像素为单位）
+int indent() const;
+
+void setNumberPrefix(const QString &numberPrefix);//将列表格式的数字前缀设置为numberPrefix指定的字符串,默认空字符串
+void setNumberSuffix(const QString &numberSuffix);//将列表格式的数字后缀设置为 numberSuffix 指定的字符串，默认"."
+QString numberPrefix() const;
+QString numberSuffix() const;
+
+void setStyle(Style style);//设置列表格式的样式
+Style style() const;
+```
 
 #### 16.8.12 QTextFrameFormat
 
+QTextFrameFormat 类为 **QTextDocument 中的框架提供格式信息**。
+框架格式定义了屏幕上框架的width()和height()。每个框架都可以有一个border()，它用一个矩形框包围它的内容。边框由框架周围的 margin() 包围，框架的内容通过框架的 padding() 与边框分开。这个方案类似于 HTML 页面的层叠样式表使用的盒子模型。
 
+框架的 position() 使用 setPosition() 设置，并确定它相对于周围文本的位置。
+QTextFrameFormat 对象的有效性可以通过 isValid() 函数确定。
+
+此枚举描述了文本框架的不同边框样式。
+
+```c++
+enum QTextFrameFormat::BorderStyle{
+    QTextFrameFormat::BorderStyle_None
+    QTextFrameFormat::BorderStyle_Dotted
+    QTextFrameFormat::BorderStyle_Dashed
+    QTextFrameFormat::BorderStyle_Solid
+    QTextFrameFormat::BorderStyle_Double
+    QTextFrameFormat::BorderStyle_DotDash
+    QTextFrameFormat::BorderStyle_DotDotDash
+    QTextFrameFormat::BorderStyle_Groove
+    QTextFrameFormat::BorderStyle_Ridge
+    QTextFrameFormat::BorderStyle_Inset
+    QTextFrameFormat::BorderStyle_Outset
+}
+```
+
+此枚举描述了框架相对于周围文本的位置。
+
+```c++
+enum QTextFrameFormat::Position{
+    QTextFrameFormat::InFlow
+    QTextFrameFormat::FloatLeft
+    QTextFrameFormat::FloatRight
+}
+```
+
+成员函数。
+
+```c++
+qreal border() const;
+QBrush borderBrush() const;
+BorderStyle borderStyle() const;
+qreal bottomMargin() const;
+QTextLength height() const;
+bool isValid() const;
+qreal leftMargin() const;
+qreal margin() const;
+qreal padding() const;
+PageBreakFlags pageBreakPolicy() const;
+Position position() const
+qreal rightMargin() const;
+qreal topMargin() const;
+QTextLength width() const;
+// 写函数
+void setBorder(qreal width);
+void setBorderBrush(const QBrush &brush);
+void setBorderStyle(BorderStyle style);
+void setBottomMargin(qreal margin);
+void setHeight(const QTextLength &height);
+void setHeight(qreal height);
+void setLeftMargin(qreal margin);
+void setMargin(qreal margin);
+void setPadding(qreal width);
+void setPageBreakPolicy(PageBreakFlags policy);
+void setPosition(Position policy);
+void setRightMargin(qreal margin);
+void setTopMargin(qreal margin);
+void setWidth(const QTextLength &width);
+void setWidth(qreal width);
+```
 
 #### 16.8.13 QTextTableFormat
 
+QTextTableFormat 类为 QTextDocument 中的表格提供格式信息。
+根据表格的对齐方式，表格在其父框架内水平对齐。这可以使用alignment() 函数读取并使用setAlignment() 设置。表格中的单元格由单元格间距分隔。单元格之间的像素数使用 setCellSpacing() 设置并使用 cellSpacing() 读取。每个单元格的内容都被单元格填充包围。每个单元格边缘与其内容之间的像素数使用 setCellPadding() 设置，并使用 cellPadding() 读取。表格的背景颜色可以用 background() 函数读取，也可以用 setBackground() 指定。每个单元格的背景颜色可以独立设置，并将控制填充区域内单元格的颜色。
+表格格式还提供了一种限制表格中列宽的方法。可以为列分配固定宽度、可变宽度或可用宽度的百分比（参见 QTextLength）。 columns() 函数返回具有约束的列数，columnWidthConstraints() 函数返回为表定义的约束。这些数量也可以通过使用包含新约束的向量调用 setColumnWidthConstraints() 来设置。如果不需要约束，可以使用 clearColumnWidthConstraints() 删除它们。
 
+成员函数。
+
+```c++
+Qt::Alignment alignment() const;
+qreal cellPadding() const;
+qreal cellSpacing() const;
+void clearColumnWidthConstraints();
+QVector<QTextLength> columnWidthConstraints() const;
+int columns() const;
+int headerRowCount() const;
+bool isValid() const;
+void setAlignment(Qt::Alignment alignment);
+void setCellPadding(qreal padding);
+void setCellSpacing(qreal spacing);
+void setColumnWidthConstraints(const QVector<QTextLength> &constraints);
+void setHeaderRowCount(int count);
+```
 
 #### 16.8.14 QCursor
 
+**QCursor 类提供具有任意形状的鼠标光标**。
+该类主要用于创建与特定小部件关联的鼠标光标，以及获取和设置鼠标光标的位置。
+Qt 有许多标准光标形状，但您也可以根据 QBitmap、蒙版和热点制作自定义光标形状。
+要将光标与小部件关联，请使用 QWidget::setCursor()。要将光标与所有小部件关联（通常在短时间内），请使用 QGuiApplication::setOverrideCursor()。
+要设置光标形状，请使用 QCursor::setShape() 或使用将形状作为参数的 QCursor 构造函数，或者您可以使用 Qt::CursorShape 枚举中定义的预定义光标之一。详见[#16.10.9 Qt::CursorShape](#16.10.9 Qt::CursorShape)。
+如果要使用自己的位图创建光标，请使用 QCursor 构造函数，该构造函数采用位图和掩码，或者使用像素图作为参数的构造函数。
+要**设置或获取鼠标光标的位置，请使用静态方法 QCursor::pos() 和 QCursor::setPos()**。
 
+成员函数。
+
+```c++
+QCursor(Qt::CursorShape shape);
+//构造一个自定义位图光标
+QCursor(const QBitmap &bitmap, const QBitmap &mask, int hotX = -1, int hotY = -1);
+//构造一个自定义像素图光标
+QCursor(const QPixmap &pixmap, int hotX = -1, int hotY = -1);
+const QBitmap *bitmap() const;
+QPixmap pixmap() const;
+QPoint hotSpot() const;//返回光标热点，如果是标准光标之一，则返回 (0, 0)
+const QBitmap *mask() const;//返回光标位图掩码，如果它是标准光标之一，则返回0
+void setShape(Qt::CursorShape shape);
+Qt::CursorShape shape() const;//将光标设置为由 shape 标识的形状
+```
+
+静态成员函数。
+
+```c++
+QPoint pos();
+QPoint pos(const QScreen *screen;
+void setPos(int x, int y);
+void setPos(QScreen *screen, int x, int y);
+void setPos(const QPoint &p);
+void setPos(QScreen *screen, const QPoint &p);
+```
 
 #### 16.8.15 QTextCursor
 
+**QTextCursor 类提供了访问和修改 QTextDocuments 的 API**。
+可以使用 setPosition() 和 movePosition() 以编程方式更改光标位置；后者也可用于选择文本。对于选择，请参见 selectionStart()、selectionEnd()、hasSelection()、clearSelection() 和 removeSelectedText()。
+如果 position() 位于块的开头， atBlockStart() 返回 true；如果它位于块的末尾，则 atBlockEnd() 返回 true。当前字符的格式由charFormat()返回，当前块的格式由blockFormat()返回。
+可以使用 setCharFormat()、mergeCharFormat()、setBlockFormat() 和 mergeBlockFormat() 函数将格式应用于当前文本文档。 **&#39;set&#39; 函数将替换光标的当前字符或块格式，而 &#39;merge&#39; 函数将给定的格式属性添加到光标的当前格式**。如果光标有选择，则给定格式将应用于当前选择。请注意，当仅选择块的一部分时，块格式将应用于整个块。可以使用 createList() 将当前字符位置的文本变成一个列表。
+可以使用 deleteChar()、deletePreviousChar() 和 removeSelectedText() 来实现删除。
+文本字符串可以使用 **insertText()** 函数插入到文档中，块（代表新段落）可以使用 **insertBlock()** 插入。
+可以使用 **insertFragment() 插入现有的文本片段**，但是，如果要插入各种格式的文本片段，通常使用 insertText() 并提供字符格式更容易。
 
+各种类型的高级结构也可以用光标插入到文档中：列表是块元素的有序序列，用项目符号或符号装饰。这些通过 **insertList() 以指定的格式插入**。表格是使用 **insertTable()** 函数插入的，并且可以给定一种可选格式。这些包含可以使用光标遍历的单元格数组。内联图像使用 **insertImage()** 插入。要使用的图像可以以图像格式或名称指定。通过调用具有指定格式的 **insertFrame()** 来插入帧。
+可以使用 beginEditBlock() 和 endEditBlock() 对操作进行分组（即视为撤消/重做的单个操作）。
+光标移动仅限于有效的光标位置。在拉丁文写作中，这是在文本中任意两个连续字符之间、第一个字符之前或最后一个字符之后。在其他一些书写系统中，光标移动仅限于“簇”（例如梵文中的音节，或基本字母加变音符号）。 movePosition() 和 deleteChar() 等函数将光标移动限制在这些有效位置。
+
+```c++
+enum QTextCursor::MoveMode{
+    QTextCursor::MoveAnchor//将锚点移动到与光标本身相同的位置
+    QTextCursor::KeepAnchor//将锚保持在原位
+}
+```
+
+```c++
+enum QTextCursor::MoveOperation{
+    QTextCursor::NoMove//将光标保持在原处
+    QTextCursor::Start//移动到文档的开头
+    QTextCursor::StartOfLine
+    QTextCursor::StartOfBlock
+    QTextCursor::StartOfWord
+    QTextCursor::PreviousBlock
+    QTextCursor::PreviousCharacter
+    QTextCursor::PreviousWord
+    QTextCursor::Up
+    QTextCursor::Left
+    QTextCursor::WordLeft
+    QTextCursor::End
+    QTextCursor::EndOfLine
+    QTextCursor::EndOfWord
+    QTextCursor::EndOfBlock
+    QTextCursor::NextBlock
+    QTextCursor::NextCharacter
+    QTextCursor::NextWord
+    QTextCursor::Down
+    QTextCursor::Right
+    QTextCursor::WordRight
+    QTextCursor::NextCell
+    QTextCursor::PreviousCell
+    QTextCursor::NextRow
+    QTextCursor::PreviousRow
+}
+```
+
+```c++
+enum QTextCursor::SelectionType{//此枚举描述了可以使用 select() 函数应用的选择类型
+    QTextCursor::Document//选择整个文档
+    QTextCursor::BlockUnderCursor//选择光标下的文本块
+    QTextCursor::LineUnderCursor//选择光标下的文本行
+    QTextCursor::WordUnderCursor//选择光标下的单词。如果光标不在可选字符的字符串中，则不选择文本
+}
+```
+
+成员函数。
+
+```c++
+QTextCursor(QTextDocument *document);
+QTextCursor(QTextFrame *frame);
+QTextCursor(const QTextBlock &block);
+QTextCursor(const QTextCursor &cursor);
+// 读函数
+int anchor() const;
+bool atBlockEnd() const;
+bool atBlockStart() const;
+bool atEnd() const;
+bool atStart() const;
+QTextBlock block() const;
+QTextCharFormat blockCharFormat() const;
+QTextBlockFormat blockFormat() const;
+int blockNumber() const;
+QTextCharFormat charFormat() const;
+int columnNumber() const;
+QTextList *createList(const QTextListFormat &format);
+QTextList *createList(QTextListFormat::Style style);
+QTextFrame *currentFrame() const;
+QTextList *currentList() const;
+QTextTable *currentTable() const;
+QTextDocument *document() const;
+bool hasComplexSelection() const;
+bool hasSelection() const;
+QTextFrame *insertFrame(const QTextFrameFormat &format);
+QTextList *insertList(const QTextListFormat &format);
+QTextList *insertList(QTextListFormat::Style style);
+QTextTable *insertTable(int rows, int columns, const QTextTableFormat &format);
+QTextTable *insertTable(int rows, int columns);
+bool isCopyOf(const QTextCursor &other) const;
+bool isNull() const;
+bool keepPositionOnInsert() const;
+int position() const;
+int positionInBlock() const;
+bool movePosition(MoveOperation operation, MoveMode mode = MoveAnchor, int n = 1);
+QString selectedText() const;
+QTextDocumentFragment selection() const;
+int selectionEnd() const;
+int selectionStart() const;
+// 写函数
+void beginEditBlock();
+void clearSelection();
+void deleteChar();
+void deletePreviousChar();
+void endEditBlock();
+void insertBlock();
+void insertBlock(const QTextBlockFormat &format);
+void insertBlock(const QTextBlockFormat &format, const QTextCharFormat &charFormat);
+void insertFragment(const QTextDocumentFragment &fragment);
+void insertHtml(const QString &html);
+void insertImage(const QTextImageFormat &format);
+void insertImage(const QTextImageFormat &format, QTextFrameFormat::Position alignment);
+void insertImage(const QString &name);
+void insertImage(const QImage &image, const QString &name = QString());
+void insertText(const QString &text);
+void insertText(const QString &text, const QTextCharFormat &format);
+void joinPreviousEditBlock();
+void mergeBlockCharFormat(const QTextCharFormat &modifier);
+void mergeBlockFormat(const QTextBlockFormat &modifier);
+void mergeCharFormat(const QTextCharFormat &modifier);
+void removeSelectedText();
+void select(SelectionType selection);
+void selectedTableCells(int *firstRow, int *numRows, int *firstColumn, int *numColumns) const;
+void setBlockCharFormat(const QTextCharFormat &format);
+void setBlockFormat(const QTextBlockFormat &format);
+void setCharFormat(const QTextCharFormat &format);
+void setKeepPositionOnInsert(bool b);
+void setPosition(int pos, MoveMode m = MoveAnchor);
+void setVerticalMovementX(int x);
+void setVisualNavigation(bool b);
+```
 
 #### 16.8.16 QFontComboBox
 
+**QFontComboBox 小部件是一个允许用户选择字体系列的组合框**。
+组合框填充了按字母顺序排列的字体系列名称列表，例如 Arial、Helvetica 和 Times New Roman。尽可能使用实际字体显示姓氏。对于 Symbol 等字体，其名称不能在字体本身中表示，字体示例会显示在系列名称旁边。
+QFontComboBox 常用于工具栏，与用于控制字体大小的 QComboBox 和用于粗体和斜体的两个 QToolButtons 一起使用。当用户选择新字体时，除了 currentIndexChanged() 之外，还会发出 currentFontChanged() 信号。
+调用 setWritingSystem() 告诉 QFontComboBox 只显示支持给定书写系统的字体，调用 setFontFilters() 过滤掉某些类型的字体，例如不可缩放字体或等宽字体。
 
+此枚举可用于仅在字体组合框中显示某些类型的字体。
+
+```c++
+enum QFontComboBox::FontFilter{   
+    QFontComboBox::AllFonts//显示所有字体
+    QFontComboBox::ScalableFonts//显示可缩放字体
+    QFontComboBox::NonScalableFonts//显示不可缩放的字体
+    QFontComboBox::MonospacedFonts//显示等宽字体
+    QFontComboBox::ProportionalFonts//显示比例字体
+}
+```
+
+成员函数。
+
+```c++
+QFontComboBox(QWidget *parent = Q_NULLPTR);
+QFont currentFont() const;
+FontFilters fontFilters() const;
+void setFontFilters(FontFilters filters);
+void setWritingSystem(QFontDatabase::WritingSystem);
+QFontDatabase::WritingSystem writingSystem() const;
+```
+
+信号和槽函数。
+
+```c++
+slot void setCurrentFont(const QFont &f);
+signal void currentFontChanged(const QFont &font);
+```
 
 #### 16.8.17 QFont
+
+QFont 类指定用于绘制文本的字体。
+当您创建 QFont 对象时，您指定了您希望字体具有的各种属性。 Qt 将使用具有指定属性的字体，或者如果不存在匹配的字体，Qt 将使用最匹配的已安装字体。实际使用的字体属性可以从 **QFontInfo 对象**中获取。
+请注意，在使用 **QFont 之前，必须存在 QGuiApplication 实例**。您可以使用 **QGuiApplication::setFont()** 设置应用程序的默认字体。
+如果选择的字体没有包含所有需要显示的字符，QFont 将尝试查找最接近的等效字体中的字符。当 QPainter 从字体中绘制一个字符时，QFont 将报告它是否具有该字符；如果没有，QPainter 将绘制一个未填充的正方形。
+像这样创建 QFonts：
+
+```c++
+QFont serifFont("Times", 10, QFont::Bold);
+QFont sansFont("Helvetica [Cronyx]", 12);
+```
+
+构造函数中设置的属性也可以稍后设置，例如setFamily()、setPointSize()、setPointSizeF()、setWeight() 和 setItalic()。其余属性必须在构造后设置，例如setBold()、setUnderline()、setOverline()、setStrikeOut() 和 setFixedPitch()。 QFontInfo 对象应在设置字体属性后创建。一个 QFontInfo 对象不会改变，即使你改变了字体的属性。相应的“get”函数，例如family()、pointSize() 等返回设置的值，即使使用的值可能不同。实际值可从 QFontInfo 对象获得。
+如果请求的字体系列不可用，您可以通过使用 setStyleHint() 选择特定的 QFont::StyleHint 和 QFont::StyleStrategy 来影响字体匹配算法。默认系列（对应于当前样式提示）由 defaultFamily() 返回。
+在找不到合适匹配的情况下，字体匹配算法具有 lastResortFamily() 和 lastResortFont()。您可以使用 insertSubstitution() 和 insertSubstitutions() 为字体系列名称提供替换。可以使用 removeSubstitutions() 删除替换。使用substitute() 检索家庭的第一个替代品，如果没有替代品，则检索家庭名称本身。使用替代品() 检索家庭替代品的列表（可能为空）。
+每个 QFont 都有一个 key()，您可以使用它，例如，作为缓存或字典中的键。如果你想存储用户的字体偏好，你可以使用 QSettings，使用 toString() 写入字体信息并使用 fromString() 读取它。 operator&lt;&lt;() 和 operator&gt;&gt;() 函数也可用，但它们适用于数据流。
+可以使用 setPixelSize() 将屏幕上显示的字符高度设置为指定的像素数；但是使用 setPointSize() 具有类似的效果并提供设备独立性。
+加载字体可能很昂贵，尤其是在 X11 上。 QFont 包含大量优化以使 QFont 对象的复制速度更快，并缓存它所依赖的慢速窗口系统函数的结果。
+
+```c++
+enum QFont::Capitalization{//此字体适用的文本的渲染选项
+    QFont::MixedCase
+    QFont::AllUppercase
+    QFont::AllLowercase
+    QFont::SmallCaps
+    QFont::Capitalize
+}
+```
+
+```c++
+enum QFont::HintingPreference{//此枚举描述了可应用于字形的不同级别的提示，以提高可能由像素密度保证的显示器的易读性
+    QFont::PreferDefaultHinting
+    QFont::PreferNoHinting
+    QFont::PreferVerticalHinting
+    QFont::PreferFullHinting
+}
+```
+
+```c++
+enum QFont::SpacingType{
+    QFont::PercentageSpacing//值 100 将保持间距不变；值 200 会将字符后的间距扩大字符本身的宽度
+    QFont::AbsoluteSpacing//正值会增加相应像素的字母间距；负值减小间距
+}
+```
+
+```c++
+enum QFont::Stretch{//遵循 CSS 命名约定的预定义拉伸值。值越高，文本越拉伸
+    QFont::AnyStretch//0 接受使用其他 QFont 属性匹配的任何拉伸（在 Qt 5.8 中添加）
+    QFont::UltraCondensed
+    QFont::ExtraCondensed
+    QFont::Condensed
+    QFont::SemiCondensed
+    QFont::Unstretched
+    QFont::SemiExpanded
+    QFont::Expanded
+    QFont::ExtraExpanded
+    QFont::UltraExpanded
+}
+```
+
+```c++
+enum QFont::Style{//这个枚举描述了用于显示文本的不同样式的字形
+    QFont::StyleNormal
+    QFont::StyleItalic
+    QFont::StyleOblique
+}
+```
+
+```c++
+enum QFont::StyleHint{//如果所选字体系列不可用，字体匹配算法使用样式提示来查找适当的默认系列
+    QFont::AnyStyle
+    QFont::SansSerif
+    QFont::Helvetica
+    QFont::Serif
+    QFont::Times
+    QFont::TypeWriter
+    QFont::Courier
+    QFont::OldEnglish
+    QFont::Decorative
+    QFont::Monospace
+    QFont::Fantasy
+    QFont::Cursive
+    QFont::System
+}
+```
+
+```c++
+enum QFont::StyleStrategy{//样式策略告诉字体匹配算法应该使用什么类型的字体来找到合适的默认系列
+    QFont::PreferDefault
+    QFont::PreferBitmap
+    QFont::PreferDevice
+    QFont::PreferOutline
+    QFont::ForceOutline
+    QFont::NoAntialias
+    QFont::NoSubpixelAntialias
+    QFont::PreferAntialias
+    QFont::OpenGLCompatible
+    QFont::NoFontMerging
+    QFont::PreferMatch
+    QFont::PreferQuality
+    QFont::ForceIntegerMetrics
+}
+```
+
+```c++
+enum QFont::Weight{//Qt 使用从 0 到 99 的权重标度，与 Windows 或 CSS 中使用的标度相似但不相同。 0 的重量会很薄，而 99 的重量会非常黑
+    QFont::Thin // 0
+    QFont::ExtraLight // 12
+    QFont::Light // 25
+    QFont::Normal // 50
+    QFont::Medium // 57
+    QFont::DemiBold // 63
+    QFont::Bold // 75
+    QFont::ExtraBold // 81
+    QFont::Black    // 87
+}
+```
+
+成员函数。
+
+```c++
+QFont(const QString &family, int pointSize = -1, int weight = -1, bool italic = false);
+// 读函数
+bool bold() const;
+Capitalization capitalization() const;
+QString defaultFamily() const;
+bool exactMatch() const;
+QString family() const;
+bool fixedPitch() const;
+bool fromString(const QString &descrip);
+HintingPreference hintingPreference() const;
+bool isCopyOf(const QFont &f) const;
+bool italic() const;
+bool kerning() const;
+QString key() const;
+QString lastResortFamily() const;
+QString lastResortFont() const;
+qreal letterSpacing() const;
+SpacingType letterSpacingType() const;
+bool overline() const;
+int pixelSize() const;
+int pointSize() const;
+qreal pointSizeF() const;
+QFont resolve(const QFont &other) const;
+int stretch() const;
+bool strikeOut() const;
+Style style() const;
+StyleHint styleHint() const;
+QString styleName() const;
+StyleStrategy styleStrategy() const;
+void swap(QFont &other);
+QString toString() const;
+bool underline() const;
+int weight() const;
+qreal wordSpacing() const;
+// 写函数
+void setBold(bool enable);//如果 enable 为 true，则将字体的粗细设置为 QFont::Bold；否则将权重设置为 QFont::Normal
+void setCapitalization(Capitalization caps);//将此字体中文本的大写设置为大写
+void setFamily(const QString &family);//设置字体的系列名称。名称不区分大小写
+void setFixedPitch(bool enable);//如果启用为真，则设置固定间距；否则设置固定间距关闭
+void setHintingPreference(HintingPreference hintingPreference);//将字形提示级别的首选项设置为hintingPreference。这是对底层字体渲染系统使用一定程度的提示的提示，并且跨平台具有不同的支持。有关更多详细信息，请参阅 QFont::HintingPreference 文档中的表格
+void setItalic(bool enable);//如果为true，则字体style()设置为StyleItalic否则设置为StyleNormal
+void setKerning(bool enable);//如果 enable 为 true，则启用此字体的字距调整；否则禁用它。默认启用
+void setLetterSpacing(SpacingType type, qreal spacing);//字母间距设置spacing，间距类型设置type
+void setOverline(bool enable);//如果启用为真，则设置上划线；否则设置上划线关闭
+void setPixelSize(int pixelSize);//将字体大小设置为 pixelSize 像素
+void setPointSize(int pointSize);//将点大小设置为 pointSize。点大小必须大于零
+void setPointSizeF(qreal pointSize);//将点大小设置为 pointSize。点大小必须大于零。可能无法在所有平台上达到要求的精度
+void setStretch(int factor);//设置字体的拉伸因子
+void setStrikeOut(bool enable);//如果启用为真，则设置删除线；否则设置三振出局
+void setStyle(Style style);//将字体的样式设置为样式
+void setStyleHint(StyleHint hint, StyleStrategy strategy = PreferDefault);//将样式提示和策略分别设置为提示和策略
+void setStyleName(const QString &styleName);//将字体的样式名称设置为 styleName。设置后，其他样式属性（如 style() 和 weight() 将被忽略以进行字体匹配，但如果平台的字体引擎支持，之后可能会模拟它们
+void setStyleStrategy(StyleStrategy s);//将字体的样式策略设置为 s
+void setUnderline(bool enable);//如果 enable 为 true，则设置下划线；否则设置下划线
+void setWeight(int weight);//使用 QFont::Weight 枚举定义的比例将字体的粗细设置为weight
+void setWordSpacing(qreal spacing);//将字体的字间距设置为spacing
+```
+
+静态成员函数。
+
+```c++
+//将substituteName 插入到族familyName 的替换表中
+void insertSubstitution(const QString &familyName, const QString &substituteName);
+//将族替代名称列表插入到 familyName 的替代列表中
+void insertSubstitutions(const QString &familyName, const QStringList &substituteNames);
+//删除 familyName 的所有替换
+void removeSubstitutions(const QString &familyName);
+//返回指定 familyName 时要使用的第一个姓氏。查找不区分大小写
+QString substitute(const QString &familyName);
+// 返回指定 familyName 时要使用的姓氏列表。查找不区分大小写
+QStringList substitutes(const QString &familyName);
+// 返回替代姓氏的排序列表
+QStringList substitutions();
+```
+
+#### 16.8.18 QFontInfo
+
+QFontInfo 类提供有关字体的一般信息。
+QFontInfo 类提供与 **QFont 相同的访问功能，例如family()、pointSize()、italic()、weight()、fixedPitch()、styleHint() 等**。但是，当 QFont 访问函数返回设置的值时，QFontInfo 对象返回适用于字体的值实际上将用于绘制文本。
+例如，当程序在具有不可缩放的 24pt Courier 字体的机器上请求 25pt Courier 字体时，QFont 将（通常）使用 24pt Courier 进行渲染。在这种情况下，QFont::pointSize() 返回 25，QFontInfo::pointSize() 返回 24。
+有三种方法可以创建 QFontInfo 对象。
+使用 QFont 调用 QFontInfo 构造函数会为屏幕兼容字体创建一个字体信息对象，即该字体不能是打印机字体。如果稍后更改字体，则不会更新字体信息对象。（注意：如果您使用打印机字体，则返回的值可能不准确。打印机字体并不总是可访问的，因此如果提供了打印机字体，则使用最近的屏幕字体。） QWidget::fontInfo() 返回小部件的字体信息字体。这相当于调用 QFontInfo(widget-&gt;font())。如果稍后更改小部件的字体，则不会更新字体信息对象。
+QPainter::fontInfo() 返回画家当前字体的字体信息。如果后来更改了画家的字体，则不会更新字体信息对象。
+
+成员函数。
+
+```c++
+QFontInfo(const QFont &font);
+bool bold() const;
+bool exactMatch() const;
+QString family() const;
+bool fixedPitch() const;
+bool italic() const;
+int pixelSize() const;
+int pointSize() const;
+qreal pointSizeF() const;
+QFont::Style style() const;
+QFont::StyleHint styleHint() const;
+QString styleName() const;
+int weight() const;
+```
 
 
 
@@ -21963,7 +23002,55 @@ enum Qt::ToolButtonStyle{
 }
 ```
 
+#### 16.10.8 Qt::PenStyle
 
+这个枚举类型定义了可以使用 QPainter 绘制的画笔样式。样式是：
+
+```c++
+enum Qt::PenStyle{  
+    Qt::NoPen
+    Qt::SolidLine
+    Qt::DashLine
+    Qt::DotLine
+    Qt::DashDotLine
+    Qt::DashDotDotLine
+    Qt::CustomDashLine
+}
+```
+
+#### 16.10.9 Qt::CursorShape
+
+此枚举类型定义了可以使用的各种游标。标准箭头光标是正常状态下小部件的默认设置。
+
+```c++
+enum Qt::CursorShape{
+    Qt::ArrowCursor
+    Qt::UpArrowCursor
+    Qt::CrossCursor
+    Qt::WaitCursor
+    Qt::IBeamCursor
+    Qt::SizeVerCursor
+    Qt::SizeHorCursor
+    Qt::SizeBDiagCursor
+    Qt::SizeFDiagCursor
+    Qt::SizeAllCursor
+    Qt::BankCursor
+    Qt::SplitVCursor
+    Qt::SplitHCursor
+    Qt::PointingHandCursor
+    Qt::ForbiddenCursor
+    Qt::OpenHandCursor
+    Qt::ClosedHandCursor
+    Qt::WhatsThisCursor
+    Qt::BusyCursor
+    Qt::DragMoveCursor
+    Qt::DragCopyCursor
+    Qt::DragLinkCursor
+    Qt::BitmapCursor
+}
+```
+
+![cursorShape.jpg](cursorShape.jpg)
 
 ## 串口通信
 
