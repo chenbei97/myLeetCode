@@ -132,7 +132,42 @@
 
 44. 30kWSourceLoad 30kW源载一体上位机项目
 
+45. TestLocationFunction 测试位置相关的函数size(),geometry(),x(),y(),pos(),frameGeometry(),rect()等
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
+
+16. 位置函数的区别
+    1) this->x(),this->y(),this->pos(),获取整个窗体左上角在桌面上的坐标位置(只有窗口移动事件和左上角为中心调整窗口大小时会影响)
+        this->pos().x()=this->x(),this->pos.y()=this->y()
+    2) this->frameGeometry()函数获取整个窗体的左上顶点以及宽度和高度
+        this->frameGeometry().x()=this->x(), this->frameGeometry().y()=this->y()
+        this->frameGeometry().width()≠this->width(), this->frameGeometry().height()≠this->height()
+    3) this->frameSize()函数就是this->frameGeometry()函数的width()和height()部分
+    4) this->geometry()函数获取的是中央区域的左上顶点坐标x、y以及width和height
+        左上顶点坐标是相对于父窗体而言的，如果没有父窗体就是相对于桌面的坐标
+        但是因为窗口的标题栏和侧边栏的影响,会让此函数的x()和y()稍大,width()和height()则是稍小
+        
+        2个x()的差值的1/2就是2个width()的差值,这个值就是窗口侧边栏的宽度,即可以分别使用point和size计算
+        siderBar.width() = this->geometry().x()-this->frameGeometry().x()
+                         = [this->geometry().topLeft() - this->frameGeometry.topLeft()].x()
+                         = [this->frameGeometry().width()-this->geometry().width()] / 2 
+        
+        至于高度也是同理,区别在于2个height差值得到的是1个标题栏高度+1个侧边栏宽度(底部的侧边栏),即
+        titleBar.height() = this->geometry.y() - this->geometry.y()
+                          = [this->geometry().topLeft() - this->frameGeometry.topLeft()].y()
+                          = this->frameGeometry.height()-this->geometry.height() - siderBar.width()                                   
+    5) this->rect()和this->geometry()函数是一样的,区别是左上角顶点永远是(0,0)而不是相对父窗体或者桌面的位置
+    6) this->size()=this->geometry().size()=[this->width(),this->height()],也是中央区域
+    7) this->baseSize(),保存了小部件的基本尺寸,默认情况下对于新建的小部件是[0,0]
+    8) this->sizeIncrement(),保存小部件的尺寸增量,当用户调整窗口大小时
+        尺寸将水平移动this->sizeIncrement().width()像素,垂直移动this->sizeIncrement.height()像素
+        以 this->baseSize()为基础,首选小部件大小适用于非负整数 i 和 j：
+            this->width = baseSize().width() + i * sizeIncrement().width();
+            this->height = baseSize().height() + j * sizeIncrement().height();
+        请注意虽然可以为所有小部件设置sizeIncrement，但它只影响Window对Dialog不起作用,默认也是[0,0]
+    9) this->sizeHint(),保存小部件的推荐大小,如果此属性的值是无效大小,则不推荐大小
+        如果此小部件没有布局，则this->sizeHint()的默认实现返回无效大小,否则返回布局的首选大小
+    这些函数的区别示例可见45-TestLocationFunction
 
 15. 让QComboBox居中的方法
     QStandardItemModel * model = qobject_cast<QStandardItemModel*>(workMode->model());
@@ -144,6 +179,7 @@
     QLineEdit * lineEdit = new QLineEdit;
     lineEdit->setAlignment(Qt::AlignCenter); // 文本框也要居中
     workMode->setLineEdit(lineEdit);
+
 14. QGridLayout控制组件的大小
     必须使用固定大小否则不起作用，同时配合比例关系可以调整
     spinbox->setFixedSize(300,30);

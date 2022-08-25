@@ -20753,6 +20753,21 @@ int y() const;
 
 ##### contextMenuEvent
 
+#### 16.2.14 QMoveEvent
+
+QMoveEvent 类包含移动事件的事件参数。移动事件被发送到已移动到相对于其父级的新位置的小部件。
+事件处理程序 QWidget::moveEvent() 接收移动事件。关联的函数有move() 和 setGeometry()。
+
+成员函数。
+
+```c++
+QMoveEvent(const QPoint &pos, const QPoint &oldPos);
+const QPoint &oldPos() const;//返回小部件的旧位置
+const QPoint &pos() const;//返回小部件的新位置
+```
+
+##### moveEvent
+
 ### 16.3 文本验证器
 
 #### 16.3.1 QValidator

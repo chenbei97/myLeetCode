@@ -1,0 +1,3 @@
+C:\cmake-3.23.2-windows-x86_64\bin\cmake.exe -E rm -f CMakeFiles\TestLocationFunction.dir/objects.a
+C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\ar.exe qc CMakeFiles\TestLocationFunction.dir/objects.a @CMakeFiles\TestLocationFunction.dir\objects1.rsp
+C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\TestLocationFunction.dir/objects.a -Wl,--no-whole-archive -o TestLocationFunction.exe -Wl,--out-implib,libTestLocationFunction.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\TestLocationFunction.dir\linklibs.rsp
