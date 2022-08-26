@@ -15629,9 +15629,27 @@ void TCPClient::onSocketReadyRead()
 
 ### 13.3 UDP通信
 
-与TCP不同，无需预先建立持久的socket，UDP每次发送数据报都需要指定目标地址和端口。
+与TCP不同，无需预先建立持久的socket，UDP每次发送数据报都需要指定目标地址和端口。UDP以数据报传输数据，使用函数QUdpSocket::writeDatagram()，数据报的长度一般少于512字节，每个数据报包含发送者和接收者的IP地址和端口等信息。
 
-UDP以数据报传输数据，而不是以连续的数据流，发送数据报需要使用函数QUdpSocket::writeDatagram()，数据报的长度一般少于512字节，每个数据报包含发送者和接收者的IP地址和端口等信息。
+```mermaid
+graph LR
+	subgraph UDP客户端
+		A1[初始化套接字]-->A2[发送]
+		A2-->A3[数据请求]
+		A2-->A4[接收]
+		A4-->A2[发送]
+		A4-->A6[关闭]
+	end
+	subgraph UDP服务器
+		B1[初始化套接字]-->B2[绑定]
+		B2-->B3[接收]
+		B3-->|阻塞直到收到数据|B4[处理请求]
+		B4-->B5[发送]
+		B5-->B3
+	end
+	A2 -->|数据请求| B4
+	B5 -->|数据应答| A4
+```
 
 UDP传送有3种方式，单播、广播和组播模式。
 
@@ -15641,7 +15659,7 @@ UDP传送有3种方式，单播、广播和组播模式。
 
 组播模式：UDP客户端加入到另一个组播IP地址指定的多播组，成员向组播地址发送的数据报组内成员都可以接收到，类似于QQ群的功能。QUdpSocket::joinMulticastGroup函数实现加入多播组的功能，加入多播组后UDP数组的收发与正常的UDP数据收发一样。
 
-这里给出UDP通信的例子，[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast)，记得在工具-构建与运行这里设置stop applications before building为None，这样就可以多实例运行了，UDP的2个例子之间是可以互相通信的，它们可以在同一台电脑也可以不在同一台电脑。
+这里给出UDP通信的2个例子，[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast)和[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCastOther](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCastOther)，记得在工具-构建与运行这里设置stop applications before building为None，这样就可以多实例运行了，UDP的2个例子之间是可以互相通信的，它们可以在同一台电脑也可以不在同一台电脑。
 
 同一台电脑，因为IP地址都是相同的，在任意一个实例角度来看对方的IP地址都是当地地址，所以如果想要通信必须要绑定不同的端口，否则会造成冲突。绑定端口使用bind，解除绑定使用abort。
 
@@ -15690,41 +15708,33 @@ QNetWorkReply用于处理网络请求后的响应，提供了信号finshed、rea
 
 #### 13.5.1 QHostInfo
 
-QHostInfo 类为主机名查找提供静态函数。**QHostInfo 使用操作系统提供的查找机制来查找与主机名关联的 IP 地址，或与 IP 地址关联的主机名。**该类提供了两个静态便利函数：一个异步工作并在找到主机后发出信号，另一个阻止并返回 QHostInfo 对象。要异步查找主机的 IP 地址，请调用 **lookupHost()**，它将主机名或 IP 地址、接收器对象和插槽签名作为参数并返回一个 ID。您可以通过使用查找 ID 调用 abortHostLookup() 来中止查找。
+QHostInfo 类是主机信息类，可以返回主机的IP地址列表，关联的数据类型是QHostAddress。查找主机 IP 地址或者通过IP地址查找主机名可以使用静态函数 **lookupHost()**，它将主机名或 IP 地址、接收器对象和插槽签名作为参数并返回一个 ID，此函数是异步的。还可以使用阻塞的方式查找，使用静态函数**QHostInfo::fromName()**。还可以通过使用查找 ID 调用 abortHostLookup() 来中止查找。要检索本地主机的名称，请使用静态函**localHostName() **。
 例子：
 
 ```c++
-// 查找 qt-project.org 的IP地址(给定主机名查询IP地址)
+// 异步查找指定主机名的IP地址
 QHostInfo::lookupHost("qt-project.org",this, SLOT(lookedUp(QHostInfo)));
-//查找 4.2.2.1 的主机名(也可以给IP地址查询I主机名)
+//异步查找指定IP地址的主机名
 QHostInfo::lookupHost("4.2.2.1",this, SLOT(lookedUp(QHostInfo)));
 
 // lookedUp函数的实现可以是这样的
- void MyWidget::lookedUp(const QHostInfo &host)
-  {
-      if (host.error() != QHostInfo::NoError) {
-          qDebug() << "Lookup failed:" << host.errorString();
-          return;
-      }
-
-      const auto addresses = host.addresses(); // 地址列表
-      for (const QHostAddress &address : addresses)
-          qDebug() << "Found address:" << address.toString();
-  }
-```
-
-当结果准备好时调用该槽。结果存储在 QHostInfo 对象中。**调用addresses() 获取主机的IP 地址列表，调用hostName() 获取查找的主机名**。如果查找失败，error() 返回发生的错误类型。 errorString() 给出了查找错误的可读描述。如果要**阻塞查找，请使用 QHostInfo::fromName()** 函数：
-
-```c++
+void MyWidget::lookedUp(const QHostInfo &host)
+{
+    if (host.error() != QHostInfo::NoError) {
+        return;
+    }
+    const auto addresses = host.addresses(); // IP地址列表
+    for (const QHostAddress &address : addresses)
+        qDebug() << "Found address:" << address.toString();
+}
+// 同步查找指定主机信息
 QHostInfo info = QHostInfo::fromName("qt-project.org");
 ```
 
-QHostInfo 通过 IDNA 和 Punycode 标准支持国际化域名 (IDN)。
-**要检索本地主机的名称，请使用静态 QHostInfo::localHostName() 函数**。
-注意：由于 Qt 4.6.1 QHostInfo 使用多个线程进行 DNS 查找，而不是一个专用的 DNS 线程。与以前的 Qt 版本相比，这提高了性能，但也改变了使用 lookupHost() 时的信号发射顺序。
-注意：由于 Qt 4.6.3 QHostInfo 使用小型内部 60 秒 DNS 缓存来提高性能。
 
-枚举类型，此枚举描述了尝试解析主机名时可能发生的各种错误。
+枚举类型。
+
+此枚举描述了尝试解析主机名时可能发生的各种错误。
 
 ```c++
 enum QHostInfo::HostInfoError{
@@ -15739,88 +15749,62 @@ enum QHostInfo::HostInfoError{
 ```c++
 QHostInfo(int id = -1);//构造一个带有查找ID的空主机信息对象
 
-// 返回与hostName()主机关联的IP地址列表
 void setAddresses(const QList<QHostAddress> &addresses);
-QList<QHostAddress> addresses() const;
-/*
-  QHostInfo info;
-  ...
-  if (!info.addresses().isEmpty()) {
-      QHostAddress address = info.addresses().first();
-      // use the first IP address
-  }
-*/
+QList<QHostAddress> addresses() const;//返回QHostInfo对象的IP地址列表
 
-// 返回主机查找失败错误类型,否则返回NoError
-void setError(HostInfoError error);
+void setError(HostInfoError error);// 返回主机查找失败错误类型,否则返回NoError
 HostInfoError error() const;
-
-// 返回主机查找失败返回错误描述字符串
-void setErrorString(const QString &str);
+void setErrorString(const QString &str);// 返回主机查找失败返回错误描述字符串
 QString errorString() const;
 
-// 返回通过IP查找的主机名称
 void setHostName(const QString &hostName);
-QString hostName() const;
+QString hostName() const;// 返回通过IP查找的主机名称
 
-//返回本次查找的ID
 void setLookupId(int id);
-int lookupId() const;
+int lookupId() const;//返回本次查找的ID
 ```
 
 静态成员函数。
 
 ```c++
-// 中断由lookupHost()返回的ID主机查找
-void abortHostLookup(int id);
+void abortHostLookup(int id);// 中断由lookupHost()返回的ID主机查找
 
-// 以异步方式根据主机名查找主机的IP地址,并返回一个ID用于查找,member是用于接收信息的槽函数名称
-//  QHostInfo::lookupHost("www.kde.org",this, SLOT(lookedUp(QHostInfo)));
+// 异步方式查找指定主机名IP地址，接收槽函数或函数指针或仿函数
 int lookupHost(const QString &name, QObject *receiver, const char *member);
-// 也可以传递函数指针而不是槽函数
 int lookupHost(const QString &name, const QObject *receiver, PointerToMemberFunction function);
-// 如果context在查找完成之前被销毁，则不会调用仿函数。仿函数将在上下文线程中运行,上下文的线程必须有一个正在运行的Qt事件循环
 int lookupHost(const QString &name, const QObject *context, Functor functor);
-// 这个版本没有context上下文
 int lookupHost(const QString &name, Functor functor);
 
-// 返回指定主机名的IP地址,不过不是异步方式
-QHostInfo fromName(const QString &name);
-// 获取本机DNS域名
-QString localDomainName();
-// 获取本机主机名
-QString localHostName();
+QHostInfo fromName(const QString &name);// 同步方式查找指定主机名的IP地址
+QString localDomainName();// 获取本机DNS域名
+QString localHostName();// 获取本机主机名
 ```
 
 #### 13.5.2 QHostAddress
 
-QHostAddress 类提供一个 IP 地址。此类以独立于平台和协议的方式保存 IPv4 或 IPv6 地址。
-QHostAddress 通常与 QTcpSocket、QTcpServer 和 QUdpSocket 一起使用以连接到主机或设置服务器。
-主机地址使用 setAddress() 设置，并使用 toIPv4Address()、toIPv6Address() 或 toString() 检索。您可以使用协议（）检查类型。
-注意：请注意 QHostAddress 不进行 DNS 查找。为此需要 QHostInfo。
-该类还支持常见的预定义地址：Null、LocalHost、LocalHostIPv6、Broadcast 和 Any。
+QHostAddress 类提供一个IP地址
 
 枚举类型。
 
 ```c++
 enum QHostAddress::ConversionModeFlag{
-    QHostAddress::StrictConversion,//在比较不同协议的两个 QHostAddress 对象时，不要将 IPv6 地址转换为 IPv4，因此它们将始终被认为是不同的
-    QHostAddress::ConvertV4MappedToIPv4,//比较时转换IPv4映射的IPv6地址（RFC 4291 sect. 2.5.5.2）。因此QHostAddress("::ffff:192.168.1.1") 将等于 QHostAddress("192.168.1.1")
-    QHostAddress::ConvertV4CompatToIPv4,//比较时转换与IPv4兼容的IPv6地址（RFC 4291 sect. 2.5.5.1）。因此QHostAddress("::192.168.1.1") 将等于QHostAddress("192.168.1.1")
-    QHostAddress::ConvertLocalHost,//比较时将IPv6环回地址转换为其等效的IPv4。因此，例如QHostAddress("::1") 将等于QHostAddress("127.0.0.1)
-    QHostAddress::ConvertUnspecifiedAddress,//所有未指定的地址将比较相等，即 AnyIPv4、AnyIPv6 和 Any
+    QHostAddress::StrictConversion,// 严格比较,IPv6不同于IPv4
+    QHostAddress::ConvertV4MappedToIPv4,//转换为IPv4映射的IPv6地址,"::ffff:192.168.1.1"映射为"192.168.1.1"
+    QHostAddress::ConvertV4CompatToIPv4,//转换与IPv4兼容的IPv6地址,"::192.168.1.1"映射为"192.168.1.1"
+    QHostAddress::ConvertLocalHost,//将IPv6环回地址转换为等效的IPv4。"::1"映射为"127.0.0.1"
+    QHostAddress::ConvertUnspecifiedAddress,//所有未指定的地址将比较相等
     QHostAddress::TolerantConversion//设置所有三个前面的标志
 }
 ```
 
 ```c++
 enum QHostAddress::SpecialAddress{
-    QHostAddress::Null,//空地址对象。等效于 QHostAddress()。另请参见 QHostAddress::isNull()
-    QHostAddress::LocalHost,//IPv4 本地主机地址。等效于 QHostAddress("127.0.0.1")
+    QHostAddress::Null,//空地址对象。等效于QHostAddress()
+    QHostAddress::LocalHost,//IPv4 本地主机地址。等效于QHostAddress("127.0.0.1")
     QHostAddress::LocalHostIPv6,//IPv6 本地主机地址。等效于 QHostAddress("::1")
-    QHostAddress::Broadcast,//IPv4 广播地址。等效于 QHostAddress("255.255.255.255")
-    QHostAddress::AnyIPv4,//IPv4 任意地址。等效于 QHostAddress("0.0.0.0")。与此地址绑定的套接字将仅侦听 IPv4 接口
-    QHostAddress::AnyIPv6,//IPv6 任意地址。等效于 QHostAddress("::")。与此地址绑定的套接字将仅侦听 IPv6 接口
+    QHostAddress::Broadcast,//IPv4 广播地址。等效于QHostAddress("255.255.255.255")
+    QHostAddress::AnyIPv4,//IPv4 任意地址。等效于 QHostAddress("0.0.0.0")
+    QHostAddress::AnyIPv6,//IPv6 任意地址。等效于 QHostAddress("::")
     QHostAddress::Any//双栈任意地址。与此地址绑定的套接字将侦听 IPv4 和 IPv6 接口
 }
 ```
@@ -15852,7 +15836,7 @@ Q_IPV6ADDR toIPv6Address() const;// 以数字形式返回 IPv6 地址
 bool isEqual(const QHostAddress &other, ConversionMode mode = TolerantConversion) const;
 // 如果此 IP 在由网络前缀子网和网络掩码网络掩码描述的子网中，则返回 true
 bool isInSubnet(const QHostAddress &subnet, int netmask) const;
-// 如果此 IP 在子网描述的子网中，则返回 true。子网的 QHostAddress 成员包含网络前缀，而 int（第二个）成员包含网络掩码（前缀长度）
+// 如果此 IP 在子网描述的子网中，则返回 true
 bool isInSubnet(const QPair<QHostAddress, int> &subnet) const;
 // 如果地址是 IPv6 环回地址或任何 IPv4 环回地址，则返回 true
 bool isLoopback() const;
@@ -15862,7 +15846,7 @@ bool isMulticast() const;
 bool isNull() const;
 // 返回主机地址的网络层协议
 QAbstractSocket::NetworkLayerProtocol protocol() const;
-// 将地址的 IPv6 范围 ID 设置为 id。如果地址协议不是 IPv6，则此函数不执行任何操作。范围 ID 可以设置为接口名称（例如“eth0”或“en1”）或表示接口索引的整数。如果 id 是接口名称，QtNetwork 将在调用操作系统网络函数之前使用 QNetworkInterface::interfaceIndexFromName() 转换为接口索引
+// 将地址的 IPv6 范围 ID 设置为 id。如果地址协议不是 IPv6，则此函数不执行任何操作
 void setScopeId(const QString &id);
 QString scopeId() const;
 
@@ -15874,9 +15858,9 @@ void setAddress(quint8 *ip6Addr);
 void setAddress(const quint8 *ip6Addr);
 // 设置 ip6Addr 指定的 IPv6 地址
 void setAddress(const Q_IPV6ADDR &ip6Addr);
-// 设置本机结构sockaddr指定的IPv4或IPv6 地址。如果地址解析成功，则返回 true 并设置地址；否则返回假
+// 设置本机结构sockaddr指定的IPv4或IPv6 地址。如果地址解析成功，则返回true并设置地址
 void setAddress(const sockaddr *sockaddr);
-// 设置由地址指定的字符串表示指定的 IPv4 或 IPv6 地址（例如“127.0.0.1”）。如果地址解析成功，则返回 true 并设置地址；否则返回假
+// 设置由地址指定的字符串表示指定的 IPv4 或 IPv6 地址（例如“127.0.0.1”）。如地址解析成功，则返回 true 
 bool setAddress(const QString &address);
 // 设置由地址指定的特殊地址
 void setAddress(SpecialAddress address);
@@ -15886,55 +15870,75 @@ void setAddress(SpecialAddress address);
 
 ```c++
 QPair<QHostAddress, int> parseSubnet(const QString &subnet);
-// 解析子网中包含的 IP 和子网信息，并返回该网络的网络前缀及其前缀长度。IP 地址和网络掩码必须用斜杠 (/) 分隔。此函数支持以下形式的参数： 123.123.123.123/n 其中 n 是 0 到 32 之间的任意值 123.123.123.123/255.255.255.255 &lt;ipv6-address&gt;/n 其中 n 是 0 到 128 之间的任意值 对于 IP 版本 4，此函数也接受缺少的尾随组件（即，少于 4 个八位字节，例如“192.168.1”），后跟或不跟点。如果在这种情况下也缺少网络掩码，则将其设置为实际传递的八位字节数（在上面的示例中，对于 3 个八位字节，它将是 24）。
+// 解析子网中包含的 IP 和子网信息，并返回该网络的网络前缀及其前缀长度
 ```
 
-#### 13.5.3 QNetworkInterface
+#### 13.5.3 QNetworkAddressEntry
 
-QNetworkInterface 类提供主机 IP 地址和网络接口的列表。
-QNetworkInterface 表示连接到正在运行程序的主机的一个网络接口。每个网络接口可以包含零个或多个 IP 地址，每个 IP 地址可选地与网络掩码和/或广播地址相关联。可以使用 addressEntries() 获取此类三重奏的列表。或者，当不需要网络掩码或广播地址时，使用 allAddresses() 便利函数仅获取 IP 地址。
-QNetworkInterface 还使用hardwareAddress() 报告接口的硬件地址。
+QNetworkAddressEntry 类**存储一个网络接口支持的 IP 地址，以及与其关联的网络掩码和广播地址**。
+每个网络接口可以包含零个或多个 IP 地址，而这些 IP 地址又可以与网络掩码和/或广播地址相关联（取决于操作系统的支持）。这个类代表一个这样的组。
+
+成员函数。
+
+```c++
+// 将此 QNetworkAddressEntry 对象的广播 IP 地址设置为 newBroadcast
+void setBroadcast(const QHostAddress &newBroadcast);
+QHostAddress broadcast() const;
+// 将 QNetworkAddressEntry 对象包含的 IP 地址设置为 newIp
+void setIp(const QHostAddress &newIp);
+QHostAddress ip() const;
+// 将此 QNetworkAddressEntry 对象包含的网络掩码设置为 newNetmask。设置网络掩码还会设置前缀长度以匹配新的网络掩码
+void setNetmask(const QHostAddress &newNetmask);
+QHostAddress netmask() const;
+// 将此 IP 地址的前缀长度设置为 length。对于这种类型的 IP 地址，length 的值必须有效：对于 IPv4 地址，介于 0 和 32 之间，对于 IPv6 地址，介于 0 和 128 之间。设置为任何无效值等同于设置为 -1，即“无前缀长度”
+void setPrefixLength(int length);
+int prefixLengt5555h() const;
+```
+
+#### 13.5.4 QNetworkInterface
+
+QNetworkInterface 类提供**主机 IP 地址和网络接口的列表**。
+addressEntries() 返回具有IP地址、网络掩码和广播地址3个字段的列表。或者不需要网络掩码或广播地址时，使用 静态函数allAddresses() 便利函数仅获取 IP 地址。hardwareAddress() 报告接口的硬件地址。
+
 并非所有操作系统都支持报告所有功能。在所有平台中，此类仅保证列出 IPv4 地址。特别是，IPv6 地址列表仅在 Windows、Linux、macOS 和 BSD 上受支持。
 
 成员函数。
 
 ```c++
-QNetworkInterface();
-
-//返回此接口拥有的 IP 地址列表及其关联的网络掩码和广播地址
+//返回此接口拥有的IP地址、关联的网络掩码、广播地址字段列表
 QList<QNetworkAddressEntry> addressEntries() const;
 // 返回与此网络接口关联的标志
 InterfaceFlags flags() const;
 // 返回此接口的低级硬件地址。在以太网接口上，这将是一个以冒号分隔的字符串形式的 MAC 地址
 QString hardwareAddress() const;
-// 如果可以确定名称，则返回 Windows 上此网络接口的人类可读名称，例如“本地连接”。如果不能，则此函数返回与 name() 相同的值。人类可读的名称是用户可以在 Windows 控制面板中修改的名称，因此它可能会在程序执行过程中发生变化
-QString humanReadableName() const;
-// 如果已知，则返回接口系统索引。这是操作系统分配的一个整数来标识这个接口，它通常不会改变。它与 IPv6 地址中的范围 ID 字段匹配
+// 返回接口系统索引，与 IPv6 地址中的范围 ID字段匹配
 int index() const;
-// 如果此 QNetworkInterface 对象包含有关网络接口的有效信息，则返回 true
+// 如果包含有关网络接口的有效信息，则返回 true
 bool isValid() const;
-// 返回此网络接口的名称。在 Unix 系统上，这是一个包含接口类型和可选序列号的字符串，例如“eth0”、“lo”或“pcn0”。在 Windows 上，它是用户无法更改的内部 ID
+// 返回此网络接口名称。在Unix系统是一个包含接口类型和可选序列号的字符串，例如“eth0”、“lo”或“pcn0”。在 Windows 上它是用户无法更改的内部ID
 QString name() const;
+// 返回Windows上此网络接口的人类可读名称，例如“本地连接”
+QString humanReadableName() const;
 ```
 
 静态成员函数。
 
 ```c++
-// 此便捷函数返回在主机上找到的所有 IP 地址。这相当于对 allInterfaces() 返回的所有对象调用 addressEntries() 以获取 QHostAddress 对象的列表，然后对每个对象调用 QHostAddress::ip()
+// 返回所有IP地址。这相当于QNetworkInterface::addressEntries().ip()
 QList<QHostAddress> allAddresses();
-// 返回主机上找到的所有网络接口的列表。如果失败，它会返回一个包含零元素的列表
+// 返回所有网络接口
 QList<QNetworkInterface> allInterfaces();
-// 返回内部 ID 为 index 的接口的 QNetworkInterface 对象。网络接口有一个称为“接口索引”的唯一标识符，以将其与系统上的其他接口区分开来。通常，此值是逐步分配的，并且每次删除然后再次添加的接口都会获得不同的值
+// 返回内部ID为index的网络接口对象
 QNetworkInterface interfaceFromIndex(int index);
-// 返回名为 name 的接口的 QNetworkInterface 对象。如果不存在这样的接口，则此函数返回一个无效的 QNetworkInterface 对象
+// 返回名为name的接口的网络接口对象
 QNetworkInterface interfaceFromName(const QString &name);
-// 返回名称为 name 的接口的索引，如果没有该名称的接口，则返回 0。此函数应产生与以下代码相同的结果，但可能会执行得更快
+// 返回名称为name的网络接口的索引
 int interfaceIndexFromName(const QString &name);
-// 返回索引为 index 的接口的名称，如果没有具有该索引的接口，则返回空字符串。此函数应产生与以下代码相同的结果，但可能会执行得更快
+// 返回索引为index的网络接口名称
 QString interfaceNameFromIndex(int index);
 ```
 
-#### 13.5.4 QAbstractSocket
+#### 13.5.5 QAbstractSocket
 
 QAbstractSocket 类提供所有套接字类型共有的基本功能。
 **QAbstractSocket 是 QTcpSocket 和 QUdpSocket 的基类**，包含这两个类的所有通用功能。如果你需要一个套接字，你有两个选择：实例化 QTcpSocket 或 QUdpSocket。
@@ -16212,7 +16216,7 @@ void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *aut
 void stateChanged(QAbstractSocket::SocketState socketState);
 ```
 
-#### 13.5.5 QTcpSocket
+#### 13.5.6 QTcpSocket
 
 QTcpSocket 类提供了一个 TCP 套接字。
 TCP（传输控制协议）是一种可靠的、面向流的、面向连接的传输协议。它特别适用于数据的连续传输。
@@ -16224,10 +16228,9 @@ QTcpSocket(QObject *parent = Q_NULLPTR)
 virtual ~QTcpSocket();
 ```
 
-#### 13.5.6 QUdpSocket
+#### 13.5.8 QUdpSocket
 
 QUdpSocket 类提供了一个 UDP 套接字。
-UDP（用户数据报协议）是一种轻量级的、不可靠的、面向数据报的、无连接的协议。当可靠性不重要时可以使用它。 QUdpSocket 是 QAbstractSocket 的子类，允许您发送和接收 UDP 数据报。
 使用该类最**常见的方法是使用 bind() 绑定到地址和端口，然后调用 writeDatagram() 和 readDatagram() / receiveDatagram() 来传输数据。如果要使用标准 QIODevice 函数 read()、readLine()、write() 等，必须首先通过调用 connectToHost() 将套接字直接连接到对等方**。
 每次将数据报写入网络时，套接字都会发出 bytesWritten() 信号。如果你只是想发送数据报，你不需要调用bind()。每当数据报到达时，就会发出 readyRead() 信号。在这种情况下，hasPendingDatagrams() 返回 true。调用pendingDatagramSize() 获取第一个未决数据报的大小，调用readDatagram() 或receiveDatagram() 来读取它。注意：当您收到 readyRead() 信号时，应读取传入的数据报，否则将不会为下一个数据报发出此信号。
 
@@ -16256,9 +16259,6 @@ QUdpSocket 还支持 UDP 多播。使用 joinMulticastGroup() 和 leaveMulticast
 成员函数如下。
 
 ```c++
-QUdpSocket(QObject *parent = Q_NULLPTR);
-virtual ~QUdpSocket();
-
 // 如果至少有一个数据报正在等待读取，则返回 true；否则返回假
 bool hasPendingDatagrams() const;
 // 返回第一个挂起的 UDP 数据报的大小。如果没有可用的数据报，此函数返回 -1
@@ -16275,19 +16275,17 @@ bool leaveMulticastGroup(const QHostAddress &groupAddress, const QNetworkInterfa
 void setMulticastInterface(const QNetworkInterface &iface);
 QNetworkInterface multicastInterface() const;
 
-//接收不大于 maxSize 字节的数据报并将其存储在数据中。发送者的主机地址和端口存储在 *address 和 *port 中（除非指针为 0）
+//接收不大于 maxSize 字节的数据报并将其存储在数据中。发送者的主机地址和端口存储在 *address 和 *port
 qint64 readDatagram(char *data, qint64 maxSize, QHostAddress *address = Q_NULLPTR, quint16 *port = Q_NULLPTR);
-// 接收不大于 maxSize 字节的数据报，并在 QNetworkDatagram 对象中返回它，以及发送者的主机地址和端口。如果可能，此函数还将尝试确定数据报的目标地址、端口和接收时的跳数
+// 接收不大于 maxSize 字节的数据报，并在 QNetworkDatagram 对象中返回它，以及发送者的主机地址和端口。
 QNetworkDatagram receiveDatagram(qint64 maxSize = -1);
 // 将数据大小大小的数据报发送到端口端口的主机地址地址。返回成功发送的字节数；否则返回 -1
 qint64 writeDatagram(const char *data, qint64 size, const QHostAddress &address, quint16 port);
-// 将数据报数据报发送到数据报中包含的主机地址和端口号，使用也设置在那里的网络接口和跳数限制。如果未设置目标地址和端口号，此函数将发送到传递给 connectToHost() 的地址
 qint64 writeDatagram(const QNetworkDatagram &datagram);
-// 将数据报数据报发送到主机地址主机和端口端口
 qint64 writeDatagram(const QByteArray &datagram, const QHostAddress &host, quint16 port);
 ```
 
-#### 13.5.7 QTcpServer
+#### 13.5.9 QTcpServer
 
 QTcpServer 类提供了一个基于 TCP 的服务器。这个类使得接受传入的 TCP 连接成为可能。您可以指定端口或让 QTcpServer 自动选择一个。您可以监听特定地址或所有机器的地址。
 **调用listen() 让服务器监听传入的连接。然后每次客户端连接到服务器时都会发出 newConnection() 信号**。
@@ -16356,7 +16354,7 @@ void acceptError(QAbstractSocket::SocketError socketError);
 void newConnection();
 ```
 
-#### 13.5.8 QNetworkAccessManager
+#### 13.5.10 QNetworkAccessManager
 
 QNetworkAccessManager 类允许应用程序发送网络请求和接收回复 网络访问 API 是围绕一个 QNetworkAccessManager 对象构建的，该对象包含它发送的请求的通用配置和设置。它包含代理和缓存配置，以及与此类问题相关的信号，以及可用于监控网络操作进度的回复信号。**一个 QNetworkAccessManager 对于整个 Qt 应用程序应该足够了**。一旦创建了 QNetworkAccessManager 对象，应用程序就可以使用它通过网络发送请求。提供了一组标准函数，它们接受请求和可选数据，**每个函数都返回一个 QNetworkReply 对象**。返回的对象用于获取响应相应请求而返回的任何数据。
 可以通过以下方式完成简单的网络下载：
@@ -16500,7 +16498,7 @@ void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *aut
 void sslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
 ```
 
-#### 13.5.9 QNetWorkRequest
+#### 13.5.11 QNetWorkRequest
 
 QNetworkRequest 类保存一个请求，该请求将与 QNetworkAccessManager 一起发送。
 QNetworkRequest 是网络访问 API 的一部分，是保存通过网络发送请求所需信息的类。它包含一个 URL 和一些可用于修改请求的辅助信息。
@@ -16639,7 +16637,7 @@ void setUrl(const QUrl &url);
 QUrl url() const;
 ```
 
-#### 13.5.10 QNetworkReply
+#### 13.5.12 QNetworkReply
 
 QNetworkReply 类包含使用 QNetworkAccessManager 发送的请求的数据和标头 QNetworkReply 类包含与使用 QNetworkAccessManager 发布的请求相关的数据和元数据。与 QNetworkRequest 一样，它包含一个 URL 和标头（解析和原始形式）、有关回复状态的一些信息以及回复本身的内容。
 QNetworkReply 是一个顺序访问的 QIODevice，这意味着一旦从对象中读取数据，它就不再由设备保存。因此，如果需要，应用程序有责任保留这些数据。每当从网络接收到更多数据并进行处理时，就会发出 readyRead() 信号。接收到数据时也会发出 downloadProgress() 信号，但如果对内容进行任何转换（例如，解压缩和删除协议开销），则其中包含的字节数可能不代表实际接收到的字节数。
@@ -16740,7 +16738,7 @@ void sslErrors(const QList<QSslError> &errors);
 void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
 ```
 
-#### 13.5.11 QUrl
+#### 13.5.13 QUrl
 
 QUrl 类为处理 URL 提供了一个方便的接口。
 它可以解析和构造编码和未编码形式的 URL。 QUrl 还支持国际化域名 (IDN)。

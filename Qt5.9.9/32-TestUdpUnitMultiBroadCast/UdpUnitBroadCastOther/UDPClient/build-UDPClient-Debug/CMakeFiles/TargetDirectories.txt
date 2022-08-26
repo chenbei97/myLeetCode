@@ -1,0 +1,4 @@
+C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPClient/build-UDPClient-Debug/CMakeFiles/UDPClient.dir
+C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPClient/build-UDPClient-Debug/CMakeFiles/edit_cache.dir
+C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPClient/build-UDPClient-Debug/CMakeFiles/rebuild_cache.dir
+C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPClient/build-UDPClient-Debug/CMakeFiles/UDPClient_autogen.dir
