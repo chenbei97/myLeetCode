@@ -15441,9 +15441,9 @@ sequenceDiagram
 	QTcpServer -->> QTcpSocket: server to client
 ```
 
-首先是服务器的程序QTcpServer::listen开始服务器监听（需要指定IP地址和端口），有新的客户端接入时，QTcpServer::incomingConnection就会也创建1个QTcpSocket对象并发生信号newConnection。
+首先是服务器的程序**QTcpServer::listen开始服务器监听**（需要指定IP地址和端口），有新的客户端接入时，QTcpServer::incomingConnection就会也创建1个QTcpSocket对象并发生信号newConnection。
 
-在newConnection的槽函数中，可以使用nextPendingConnection()接受客户端的连接，然后使用QTcpSocket与客户端通信，一旦建立连接，具体的数据通信都是QTcpSocket完成的。
+在newConnection的槽函数中，可**以使用nextPendingConnection()接受客户端的连接**，然后使用QTcpSocket与客户端通信，一旦建立连接，具体的数据通信都是QTcpSocket完成的。
 
 客户端和服务器端建立通信，需要connectToHost连接到服务器（需要指定服务器IP地址和端口），如果是异步方式连接不会阻塞程序运行，连接后发射connected信号。connectToHost是异步方式连接服务器，不会阻塞程序运行，如果需要使用阻塞方式应当使用waitForConnected函数直到成功或者失败。
 
@@ -15471,9 +15471,9 @@ QTcpSocket==>|连接服务端相互通信|newQTcpSocket
 
 基于块的数据协议一般用于二进制数据传输，需要自定义具体的格式。
 
-这里给出了一个实例，可见[31-TestTcpServerClient/TCPServer](31-TestTcpServerClient/TCPServer)。
+这里给出了2个实例，可见[31-TestTcpServerClient](31-TestTcpServerClient)和[31-TestTcpServerClient/TCPServerClientOther](31-TestTcpServerClient/TCPServerClientOther)。
 
-服务器TCPServer的头文件如下。
+以第一个例子为例，服务器TCPServer的头文件如下。
 
 ```c++
 #include <QMainWindow>
@@ -15659,7 +15659,7 @@ UDP传送有3种方式，单播、广播和组播模式。
 
 组播模式：UDP客户端加入到另一个组播IP地址指定的多播组，成员向组播地址发送的数据报组内成员都可以接收到，类似于QQ群的功能。QUdpSocket::joinMulticastGroup函数实现加入多播组的功能，加入多播组后UDP数组的收发与正常的UDP数据收发一样。
 
-这里给出UDP通信的2个例子，[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast)和[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCastOther](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCastOther)，记得在工具-构建与运行这里设置stop applications before building为None，这样就可以多实例运行了，UDP的2个例子之间是可以互相通信的，它们可以在同一台电脑也可以不在同一台电脑。
+这里给出UDP通信的2个例子，[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCast)和[32-TestUdpUnitMultiBroadCast/UdpUnitBroadCastOther](32-TestUdpUnitMultiBroadCast/UdpUnitBroadCastOther)，记得在工具-构建与运行这里设置stop applications before building为None，这样就可以多实例运行了，UDP的2+个例子之间是可以互相通信的，它们可以在同一台电脑也可以不在同一台电脑。
 
 同一台电脑，因为IP地址都是相同的，在任意一个实例角度来看对方的IP地址都是当地地址，所以如果想要通信必须要绑定不同的端口，否则会造成冲突。绑定端口使用bind，解除绑定使用abort。
 
@@ -15998,10 +15998,10 @@ QAbstractSocket 可以与 QTextStream 和 QDataStream 的流操作符（operator
 
 ```c++
 enum QAbstractSocket::BindFlag{
-    QAbstractSocket::ShareAddress,//允许其他服务绑定到相同的地址和端口。当多个进程通过侦听相同的地址和端口来共享单个服务的负载时，这很有用（例如，具有多个预分叉侦听器的 Web 服务器可以大大提高响应时间）。但是，由于允许重新绑定任何服务，因此此选项受制于某些安全考虑。请注意，通过将此选项与 ReuseAddressHint 结合使用，您还将允许您的服务重新绑定现有的共享地址。在 Unix 上，这等效于 SO_REUSEADDR 套接字选项。在 Windows 上，此选项被忽略。
-    QAbstractSocket::DontShareAddress,//独占绑定地址和端口，不允许其他服务重新绑定。通过将此选项传递给 QAbstractSocket::bind()，您可以保证在成功时，您的服务是唯一侦听地址和端口的服务。任何服务都不允许重新绑定，即使它们通过了 ReuseAddressHint。此选项提供比 ShareAddress 更高的安全性，但在某些操作系统上，它要求您以管理员权限运行服务器。在 Unix 和 macOS 上，不共享是绑定地址和端口的默认行为，因此忽略此选项。在 Windows 上，此选项使用 SO_EXCLUSIVEADDRUSE 套接字选项。
-    QAbstractSocket::ReuseAddressHint,//向 QAbstractSocket 提供提示，即使地址和端口已经被另一个套接字绑定，它也应该尝试重新绑定服务。在 Windows 和 Unix 上，这相当于 SO_REUSEADDR 套接字选项
-    QAbstractSocket::DefaultForPlatform//当前平台的默认选项。在 Unix 和 macOS 上，这相当于 (DontShareAddress + ReuseAddressHint)，在 Windows 上，它相当于 ShareAddress
+    QAbstractSocket::ShareAddress,//允许其他服务绑定到相同的地址和端口
+    QAbstractSocket::DontShareAddress,//独占绑定地址和端口，不允许其他服务重新绑定
+    QAbstractSocket::ReuseAddressHint,//提示地址和端口已经被另一个套接字绑定，它应重新绑定服务
+    QAbstractSocket::DefaultForPlatform//当前平台的默认选项
 }
 ```
 
@@ -16037,20 +16037,20 @@ enum QAbstractSocket::SocketError{
     QAbstractSocket::SocketTimeoutError,//套接字操作超时
     QAbstractSocket::DatagramTooLargeError,//数据报大于操作系统的限制（可以低至 8192 字节）
     QAbstractSocket::NetworkError,//网络出现错误（例如，网络电缆被意外拔出）
-    QAbstractSocket::AddressInUseError,//指定给 QAbstractSocket::bind() 的地址已经在使用中并且被设置为独占
-    QAbstractSocket::SocketAddressNotAvailableError,//指定给 QAbstractSocket::bind() 的地址不属于主机
-    QAbstractSocket::UnsupportedSocketOperationError,//本地操作系统不支持请求的套接字操作（例如，缺乏 IPv6 支持）
+    QAbstractSocket::AddressInUseError,//指定给bind()的地址已在使用且独占
+    QAbstractSocket::SocketAddressNotAvailableError,//指定给bind()的地址不属于主机
+    QAbstractSocket::UnsupportedSocketOperationError,//不支持请求的套接字操作例如缺乏IPv6支持
     QAbstractSocket::ProxyAuthenticationRequiredError,//套接字正在使用代理，并且代理需要身份验证
     QAbstractSocket::SslHandshakeFailedError,//SSL/TLS 握手失败所以连接被关闭
-    QAbstractSocket::UnfinishedSocketOperationError,//仅由 QAbstractSocketEngine 使用，尝试的最后一个操作尚未完成（仍在后台进行）
+    QAbstractSocket::UnfinishedSocketOperationError,//尝试的最后一个操作尚未完成（仍在后台进行）
     QAbstractSocket::ProxyConnectionRefusedError,//无法联系代理服务器，因为与该服务器的连接被拒绝
-    QAbstractSocket::ProxyConnectionClosedError,//与代理服务器的连接意外关闭（在与最终对等方建立连接之前）
-    QAbstractSocket::ProxyConnectionTimeoutError,//与代理服务器的连接超时或代理服务器在身份验证阶段停止响应
+    QAbstractSocket::ProxyConnectionClosedError,//与代理服务器的连接意外关闭
+    QAbstractSocket::ProxyConnectionTimeoutError,//与代理服务器的连接超时或在身份验证阶段停止响应
     QAbstractSocket::ProxyNotFoundError,//未找到使用 setProxy()（或应用程序代理）设置的代理地址
     QAbstractSocket::ProxyProtocolError,//与代理服务器的连接失败，因为无法理解来自代理服务器的响应
     QAbstractSocket::OperationError,//在套接字处于不允许的状态时尝试了操作
-    QAbstractSocket::SslInternalError,//正在使用的SSL库报告了一个内部错误。这可能是库安装错误或配置错误的结果
-    QAbstractSocket::SslInvalidUserDataError,//提供了无效数据（证书、密钥、密码等），其使用导致 SSL 库出错
+    QAbstractSocket::SslInternalError,//正在使用的SSL库报告错误。这可能是库安装错误或配置错误
+    QAbstractSocket::SslInvalidUserDataError,//提供了无效数据（证书、密钥、密码等）导致SSL库出错
     QAbstractSocket::TemporaryError,//发生了临时错误（例如，操作将阻塞并且套接字是非阻塞的）
     QAbstractSocket::UnknownSocketError//发生不明错误
 }
@@ -16060,11 +16060,11 @@ enum QAbstractSocket::SocketError{
 
 ```c++
 enum QAbstractSocket::SocketOption{
-    QAbstractSocket::LowDelayOption,//尝试优化套接字以实现低延迟。对于 QTcpSocket，这将设置 TCP_NODELAY 选项并禁用 Nagle 算法。将此设置为 1 以启用
+    QAbstractSocket::LowDelayOption,//尝试优化套接字以实现低延迟
     QAbstractSocket::KeepAliveOption,//将此设置为 1 以启用 SO_KEEPALIVE 套接字选项
     QAbstractSocket::MulticastTtlOption,//将此设置为整数值以设置 IP_MULTICAST_TTL（多播数据报的 TTL）套接字选项
     QAbstractSocket::MulticastLoopbackOption,//将此设置为 1 以启用 IP_MULTICAST_LOOP（多播环回）套接字选项
-    QAbstractSocket::TypeOfServiceOption,//Windows 不支持此选项。这映射到 IP_TOS 套接字选项。有关可能的值，请参见下表
+    QAbstractSocket::TypeOfServiceOption,//Windows 不支持此选项
     QAbstractSocket::SendBufferSizeSocketOption,//在操作系统级别设置套接字发送缓冲区大小（以字节为单位）。这映射到 SO_SNDBUF 套接字选项。此选项不影响 QIODevice 或 QAbstractSocket 缓冲区
     QAbstractSocket::ReceiveBufferSizeSocketOption//在操作系统级别设置套接字接收缓冲区大小（以字节为单位）。这映射到 SO_RCVBUF 套接字选项。此选项不影响 QIODevice 或 QAbstractSocket 缓冲区（请参阅 setReadBufferSize()）
 }
@@ -16110,15 +16110,10 @@ enum QAbstractSocket::SocketType{
 QAbstractSocket(SocketType socketType, QObject *parent);
 
 SocketType socketType() const;//返回套接字类型（TCP、UDP 或其他）
-
-// 中止当前连接并重置套接字。与 disconnectFromHost() 不同，此函数立即关闭套接字，丢弃写入缓冲区中的任何未决数据
-void abort();
-// 该函数尽可能多地从内部写入缓冲区写入底层网络套接字，而不阻塞。如果写入了任何数据，则此函数返回 true；否则返回 false
-bool flush();
-// 如果套接字有效并且可以使用，则返回 true；否则返回假
-bool isValid() const;
-// 继续在套接字上传输数据。此方法仅应在套接字设置为暂停通知并收到通知后使用。当前支持的唯一通知是 QSslSocket::sslErrors()。如果套接字未暂停，则调用此方法会导致未定义的行为
-virtual void resume();
+void abort();//与disconnectFromHost()不同，此函数立即关闭套接字，丢弃写入缓冲区中的任何未决数据
+bool flush();// 尽可能多从内部写入缓冲区，而不阻塞如果写入了任何数据，则此函数返回 true
+bool isValid() const;// 如果套接字有效并且可以使用，则返回 true
+virtual void resume();// 继续在套接字上传输数据
 
 // 将连接本地端的地址设置为地址
 void QAbstractSocket::setLocalAddress(const QHostAddress &address);
@@ -16126,8 +16121,7 @@ QHostAddress localAddress() const;
 // 将连接本地端的端口设置为port
  void QAbstractSocket::setLocalPort(quint16 port);
 quint16 localPort() const;
-
-// 控制是否在收到通知时暂停。 pauseMode 参数指定应该暂停套接字的条件。当前支持的唯一通知是 QSslSocket::sslErrors()。如果设置为 PauseOnSslErrors，则套接字上的数据传输将暂停，需要通过调用 resume() 再次显式启用。默认情况下，此选项设置为 PauseNever。该选项必须在连接到服务器之前调用，否则会导致未定义的行为
+// 控制是否在收到通知时暂停
 void QAbstractSocket::setPauseMode(PauseModes pauseMode);
 PauseModes pauseMode() const;
 // 将连接的远程端的地址设置为address
@@ -16141,9 +16135,6 @@ void QAbstractSocket::setPeerPort(quint16 port);
 quint16 peerPort() const;
 
 // 使用 BindMode 模式绑定到端口端口上的地址。将此套接字绑定到地址地址和端口端口。
-// 对于 UDP 套接字，绑定后，只要 UDP 数据报到达指定的地址和端口，就会发出信号 QUdpSocket::readyRead()。因此，此函数对于编写 UDP 服务器很有用。
-// 对于 TCP 套接字，此函数可用于指定用于传出连接的接口，这在多个网络接口的情况下很有用。
-// 默认情况下，使用 DefaultForPlatform BindMode 绑定套接字。如果未指定端口，则选择随机端口。成功时，函数返回 true，套接字进入 BoundState；否则返回false。
 bool bind(const QHostAddress &address, quint16 port = 0, BindMode mode = DefaultForPlatform);
 bool bind(quint16 port = 0, BindMode mode = DefaultForPlatform);
 
@@ -16161,7 +16152,7 @@ SocketError error() const;
 void setSocketState(SocketState state)
 SocketState state() const;
 
-// 将此套接字的显式网络代理设置为 networkProxy，要禁用此套接字的代理，请使用 QNetworkProxy::NoProxy 代理类型
+// 将此套接字的显式网络代理设置为 networkProxy，要禁用此套接字代理，请使用 QNetworkProxy::NoProxy
 void setProxy(const QNetworkProxy &networkProxy);
 QNetworkProxy proxy() const;
 
@@ -16218,14 +16209,40 @@ void stateChanged(QAbstractSocket::SocketState socketState);
 
 #### 13.5.6 QTcpSocket
 
-QTcpSocket 类提供了一个 TCP 套接字。
-TCP（传输控制协议）是一种可靠的、面向流的、面向连接的传输协议。它特别适用于数据的连续传输。
-QTcpSocket 是 QAbstractSocket 的一个便利子类，它允许您建立 TCP 连接并传输数据流。有关详细信息，请参阅 QAbstractSocket 文档。
+QTcpSocket 类提供了一个 TCP 套接字。有关详细信息，请参阅 QAbstractSocket 文档。
 注意：不能在 QIODevice::Unbuffered 模式下打开 TCP 套接字。
 
-```c++
-QTcpSocket(QObject *parent = Q_NULLPTR)
-virtual ~QTcpSocket();
+一般是先启动服务器，一段时间再启动客户端，和服务器三次握手建立连接后，客户端会给服务器发送请求，然后服务器处理这个请求并回应。此过程持续下去直到客户端给服务器发一个文件结束符自行断开和服务器的连接，然后服务器也关闭和客户端的连接并阻塞监听，直到新的客户端连接进来。
+
+经典TCP编码模型如下。
+
+```mermaid
+graph RL
+	subgraph TCP客户端
+		A1[初始化套接字]-->A2[连接]
+		A2-->A3[发送]
+		A3-->A4[接收]
+		A4.->A3
+		A4-->A5[关闭]
+	end
+	subgraph TCP服务端
+		B1[初始化套接字]-->B2[绑定]
+		B2-->B3[绑定]
+		B3-->B4[监听]
+		B4-->B5[接收连接]
+		B5-->B6((阻塞直到客户连接服务端))
+		B6-->B7[接收]
+		B7-->|处理请求|B8[发送]
+		B8.->B7
+		B8-->B9[接收]
+		B9-->B10[关闭]
+		
+	end
+	A2-->|三次握手|B6
+	B6-->A2
+	A3-->|请求|B7
+	A5-->|文件结束通知|B9
+	B8-->|应答|A4
 ```
 
 #### 13.5.8 QUdpSocket

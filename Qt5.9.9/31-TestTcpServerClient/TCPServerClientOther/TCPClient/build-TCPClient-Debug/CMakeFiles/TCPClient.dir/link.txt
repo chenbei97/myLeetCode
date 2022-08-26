@@ -1,0 +1,3 @@
+C:\cmake-3.23.2-windows-x86_64\bin\cmake.exe -E rm -f CMakeFiles\TCPClient.dir/objects.a
+C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\ar.exe qc CMakeFiles\TCPClient.dir/objects.a @CMakeFiles\TCPClient.dir\objects1.rsp
+C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\TCPClient.dir/objects.a -Wl,--no-whole-archive -o TCPClient.exe -Wl,--out-implib,libTCPClient.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\TCPClient.dir\linklibs.rsp
