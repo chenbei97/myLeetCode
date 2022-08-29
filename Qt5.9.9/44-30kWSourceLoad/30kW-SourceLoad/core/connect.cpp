@@ -6,6 +6,7 @@ void MainWindow::initConnections()
       this->initSettingsActConnections();
       this->initFunctionsActConnections();
       this->initAboutActConnections();
+      this->initMonitorActConnections();
 }
 
 void MainWindow::initToolButtonsConnections()
@@ -45,3 +46,8 @@ void MainWindow::initAboutActConnections()
       connect(AboutCNAct,&QAction::triggered,this,&MainWindow::on_AboutCNAct);
 }
 
+void MainWindow::initMonitorActConnections()
+{
+        connect(MonitorSettingsAct,&QAction::triggered,this,&MainWindow::on_MonitorSettingsAct);
+        connect(MonitorInterfaceAct,&QAction::triggered,this,&MainWindow::on_MonitorInterfaceAct);
+}

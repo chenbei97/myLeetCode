@@ -16434,20 +16434,20 @@ enum QNetworkAccessManager::Operation{
 
 ```c++
 QNetworkAccessManager(QObject *parent = Q_NULLPTR);
-// 在端口端口启动与 hostName 给定的主机的连接。此功能有助于在发出 HTTP 请求之前完成与主机的 TCP 握手，从而降低网络延迟
+// 在端口端口启动与 hostName 给定的主机的连接
 void connectToHost(const QString &hostName, quint16 port = 80);
-// 使用 sslConfiguration 在端口端口发起与 hostName 给定的主机的连接。此功能有助于在发出 HTTPS 请求之前完成与主机的 TCP 和 SSL 握手，从而降低网络延迟
+// 使用 sslConfiguration 在端口端口发起与 hostName 给定的主机的连接
 void connectToHostEncrypted(const QString &hostName, quint16 port = 443, const QSslConfiguration &sslConfiguration = QSslConfiguration::defaultConfiguration());
 
 // 发送删除请求的 URL 标识的资源的请求
 QNetworkReply *deleteResource(const QNetworkRequest &request);
-// 发布请求以获取目标请求的内容并返回一个新的 QNetworkReply 对象，该对象打开以供读取，每当新数据到达时，该对象就会发出 readyRead() 信号
+// 发布请求获取一个新的 QNetworkReply 对象，该对每当新数据到达时，该对象就会发出 readyRead() 信号
 QNetworkReply *get(const QNetworkRequest &request);
 // 发布请求以获取请求的网络标头并返回一个新的 QNetworkReply 对象，该对象将包含此类标头
 QNetworkReply *head(const QNetworkRequest &request);
 QStringList supportedSchemes() const;//列出访问管理器支持的所有 URL 方案
 
-// 向 request 指定的目的地发送一个 HTTP POST 请求，并返回一个新的 QNetworkReply 对象，该对象打开以供读取，其中包含服务器发送的回复。数据设备的内容将被上传到服务器
+// 向 request 指定的目的地发送一个 HTTP POST 请求，并返回一个新的 QNetworkReply 对象
 QNetworkReply *post(const QNetworkRequest &request, QIODevice *data);
 QNetworkReply *post(const QNetworkRequest &request, const QByteArray &data);
 QNetworkReply *post(const QNetworkRequest &request, QHttpMultiPart *multiPart);
@@ -16476,18 +16476,18 @@ void setConfiguration(const QNetworkConfiguration &config);
 QNetworkConfiguration activeConfiguration() const;
 QNetworkConfiguration configuration() const;
 
-// 将经理的 cookie jar 设置为指定的 cookieJar。 cookie jar 被管理器发送的所有请求使用
+// 将经理的 cookie jar设置为指定的 cookieJar。 cookie jar被管理器发送的所有请求使用
 void setCookieJar(QNetworkCookieJar *cookieJar);
 QNetworkCookieJar *cookieJar() const;
 
-// 覆盖报告的网络可访问性。如果可访问是 NotAccessible，则报告的网络可访问性将始终为 NotAccessible。否则，报告的网络可访问性将反映实际的设备状态
+// 覆盖报告的网络可访问性。如果可访问是 NotAccessible，则报告的网络可访问性将始终为 NotAccessible
 void setNetworkAccessible(NetworkAccessibility accessible);
 NetworkAccessibility networkAccessible() const;
 
-// 将将来请求中使用的代理设置为代理。这不会影响已经发送的请求。如果代理请求身份验证，将发出 proxyAuthenticationRequired() 信号
+// 将将来请求中使用的代理设置为代理。如果代理请求身份验证，将发出 proxyAuthenticationRequired() 信号
 void setProxy(const QNetworkProxy &proxy);
 QNetworkProxy proxy() const;
-// 将此类的代理工厂设置为工厂。代理工厂用于确定要用于给定请求的更具体的代理列表，而不是尝试对所有请求使用相同的代理值
+// 设置此类的代理工厂。代理工厂用于给定请求的更具体的代理列表，而不是尝试对所有请求使用相同的代理值
 void setProxyFactory(QNetworkProxyFactory *factory);
 QNetworkProxyFactory *proxyFactory() const;
 
@@ -16495,7 +16495,7 @@ QNetworkProxyFactory *proxyFactory() const;
 void setRedirectPolicy(QNetworkRequest::RedirectPolicy policy);
 QNetworkRequest::RedirectPolicy redirectPolicy() const;
 
-// 如果启用为真，QNetworkAccessManager 遵循 HTTP 严格传输安全策略（HSTS，RFC6797）。处理请求时，QNetworkAccessManager 自动将“http”方案替换为“https”，并为 HSTS 主机使用安全传输。如果明确设置，则端口 80 将替换为端口 443。
+// 如果启用为真，QNetworkAccessManager 遵循 HTTP 严格传输安全策略，自动将“http”方案替换为“https”
 void setStrictTransportSecurityEnabled(bool enabled);
 bool isStrictTransportSecurityEnabled() const;
 // 将 HTTP 严格传输安全策略添加到 HSTS 缓存中
@@ -16527,29 +16527,29 @@ QNetworkRequest 和 QNetworkReply 的属性代码。属性是额外的元数据�
 ```c++
 enum QNetworkRequest::Attribute{
     QNetworkRequest::HttpStatusCodeAttribute,//仅回复，类型：QMetaType::Int（无默认值）表示从 HTTP 服务器接收到的 HTTP 状态码（如 200、304、404、401 等）。如果连接不是基于HTTP的，则该属性将不存在
-    QNetworkRequest::HttpReasonPhraseAttribute,//仅回复，类型：QMetaType::QByteArray（无默认值）指示从 HTTP 服务器接收到的 HTTP 原因短语（如“Ok”、“Found”、“Not Found”、“Access Denied”等）这是状态代码的人类可读表示（见上文）。如果连接不是基于 HTTP 的，则该属性将不存在
-    QNetworkRequest::RedirectionTargetAttribute,//仅回复，类型：QMetaType::QUrl（无默认值）如果存在，则表明服务器正在将请求重定向到不同的 URL。默认情况下，网络访问 API 不遵循重定向：应用程序可以根据其安全策略确定是否应允许请求的重定向，或者可以将 QNetworkRequest::FollowRedirectsAttribute 设置为 true（在这种情况下，将遵循重定向，并且此属性不会出现在回复中）。返回的 URL 可能是相对的。使用 QUrl::resolved() 从中创建一个绝对 URL
+    QNetworkRequest::HttpReasonPhraseAttribute,//仅回复，类型：QMetaType::QByteArray（无默认值）指示从 HTTP 服务器接收到的 HTTP 原因短语（如“Ok”、“Found”、“Not Found”、“Access Denied”等）
+    QNetworkRequest::RedirectionTargetAttribute,//仅回复，类型：QMetaType::QUrl（无默认值）如果存在，则表明服务器正在将请求重定向到不同的 URL。默认情况下，网络访问 API 不遵循重定向
     QNetworkRequest::ConnectionEncryptedAttribute,//仅回复，类型：QMetaType::Bool（默认值：false） 指示数据是否通过加密（安全）连接获得
-    QNetworkRequest::CacheLoadControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::PreferNetwork）控制应该如何访问缓存。可能的值是 QNetworkRequest::CacheLoadControl 的值。请注意，默认的 QNetworkAccessManager 实现不支持缓存。但是，某些后端可以使用此属性来修改其请求（例如，用于缓存代理）
-    QNetworkRequest::CacheSaveControlAttribute,//仅限请求，类型：QMetaType::Bool（默认值：true）控制是否应将获得的数据保存到缓存以供将来使用。如果值为false，则获取的数据不会被自动缓存。如果为 true，则数据可能会被缓存，前提是它是可缓存的（可缓存的内容取决于所使用的协议）
+    QNetworkRequest::CacheLoadControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::PreferNetwork）控制应该如何访问缓存
+    QNetworkRequest::CacheSaveControlAttribute,//仅限请求，类型：QMetaType::Bool（默认值：true）控制是否应将获得的数据保存到缓存以供将来使用。如果值为false，则获取的数据不会被自动缓存
     QNetworkRequest::SourceIsFromCacheAttribute,//仅回复，类型：QMetaType::Bool （默认：false） 指示数据是否从缓存中获取
-    QNetworkRequest::DoNotBufferUploadDataAttribute,//仅限请求，类型：QMetaType::Bool（默认：false） 表示是否允许 QNetworkAccessManager 代码缓冲上传数据，例如在进行 HTTP POST 时。当将此标志用于顺序上传数据时，必须设置 ContentLengthHeader 标头
+    QNetworkRequest::DoNotBufferUploadDataAttribute,//仅限请求，类型：QMetaType::Bool（默认：false） 表示是否允许 QNetworkAccessManager 代码缓冲上传数据
     QNetworkRequest::HttpPipeliningAllowedAttribute,//仅限请求，类型：QMetaType::Bool （默认值：false） 指示是否允许 QNetworkAccessManager 代码对这个请求使用 HTTP 流水线
     QNetworkRequest::HttpPipeliningWasUsedAttribute,//仅回复，类型：QMetaType::Bool 指示是否使用 HTTP 管道来接收此回复
-    QNetworkRequest::CustomVerbAttribute,//仅限请求，类型：QMetaType::QByteArray 保存要发送的自定义 HTTP 动词的值（用于使用 GET、POST、PUT 和 DELETE 之外的其他动词）。这个动词在调用 QNetworkAccessManager::sendCustomRequest() 时设置
-    QNetworkRequest::CookieLoadControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic）指示是否在请求中发送“Cookie”标头。在创建跨域 XMLHttpRequest 时，Qt WebKit 将此属性设置为 false，其中创建请求的 Javascript 未将 withCredentials 显式设置为 true。浏览此处获取更多信息
-    QNetworkRequest::CookieSaveControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic） 指示是否保存从服务器接收到的“Cookie”标头以响应请求。在创建跨域 XMLHttpRequest 时，Qt WebKit 将此属性设置为 false，其中创建请求的 Javascript 未将 withCredentials 显式设置为 true
-    QNetworkRequest::AuthenticationReuseAttribute，//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic）指示是否在请求中使用缓存的授权凭证（如果可用）。如果将其设置为 QNetworkRequest::Manual 并且身份验证机制是“基本”或“摘要”，Qt 将不会发送一个“授权”HTTP 标头以及它可能对请求的 URL 具有的任何缓存凭据。在创建跨域 XMLHttpRequest 时，此属性由 Qt WebKit 设置为 QNetworkRequest::Manual，其中创建请求的 Javascript 未将 withCredentials 显式设置为 true。浏览此处获取更多信息
-    QNetworkRequest::BackgroundRequestAttribute,//类型：QMetaType::Bool（默认值：false）表示这是一个后台传输，而不是用户发起的传输。根据平台的不同，后台传输可能会受制于不同的政策。 QNetworkSession ConnectInBackground 属性将根据该属性进行设置
-    QNetworkRequest::SpdyAllowedAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否允许 QNetworkAccessManager 代码在此请求中使用 SPDY。这仅适用于 SSL 请求，并且取决于支持 SPDY 的服务器
-    QNetworkRequest::SpdyWasUsedAttribute,//仅回复，类型：QMetaType::Bool 指示 SPDY 是否用于接收此回复
+    QNetworkRequest::CustomVerbAttribute,//仅限请求，类型：QMetaType::QByteArray 保存要发送的自定义 HTTP 动词的值（用于使用 GET、POST、PUT 和 DELETE 之外的其他动词）
+    QNetworkRequest::CookieLoadControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic）指示是否在请求中发送“Cookie”标头
+    QNetworkRequest::CookieSaveControlAttribute,//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic） 指示是否保存从服务器接收到的“Cookie”标头以响应请求
+    QNetworkRequest::AuthenticationReuseAttribute，//仅限请求，类型：QMetaType::Int（默认值：QNetworkRequest::Automatic）指示是否在请求中使用缓存的授权凭证（如果可用）
+    QNetworkRequest::BackgroundRequestAttribute,//类型：QMetaType::Bool（默认值：false）表示这是一个后台传输，而不是用户发起的传输。根据平台的不同，后台传输可能会受制于不同的政策
+    QNetworkRequest::SpdyAllowedAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否允许 QNetworkAccessManager代码在此请求中使用 SPDY。这仅适用于SSL请求，并取决于支持SPDY的服务器
+    QNetworkRequest::SpdyWasUsedAttribute,//仅回复，类型QMetaType::Bool指示SPDY是否接收此回复
     QNetworkRequest::HTTP2AllowedAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否允许 QNetworkAccessManager 代码使用 HTTP/2 处理此请求。这适用于 SSL 请求或“明文”HTTP/2
     QNetworkRequest::HTTP2WasUsedAttribute,//仅回复，类型：QMetaType::Bool（默认值：false）指示是否使用 HTTP/2 来接收此回复
-    QNetworkRequest::EmitAllUploadProgressSignalsAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示是否应发出所有上传信号。默认情况下，uploadProgress 信号仅以 100 毫秒的间隔发出
-    QNetworkRequest::FollowRedirectsAttribute,//仅限请求，类型：QMetaType::Bool（默认值：false）指示网络访问 API 是否应自动遵循 HTTP 重定向响应。目前不允许不安全的重定向，即从“https”重定向到“http”协议
+    QNetworkRequest::EmitAllUploadProgressSignalsAttribute,//仅限请求，类型：QMetaType::Bool（默认false）指示是否应发出所有上传信号。默认uploadProgress信号以100ms间隔发出
+    QNetworkRequest::FollowRedirectsAttribute,//仅限请求，类型：QMetaType::Bool（默认false）指示网络访问 API 是否应自动遵循 HTTP 重定向响应。目前不允许不安全的重定向，即从“https”重定向到“http”协议
     QNetworkRequest::OriginalContentLengthAttribute,//仅回复，类型 QMetaType::Int 在数据被压缩并且请求被标记为自动解压缩时，保留原始内容长度属性，然后使其失效并从标头中删除。
-    QNetworkRequest::RedirectPolicyAttribute,//仅限请求，类型：QMetaType::Int，应该是 QNetworkRequest::RedirectPolicy 值之一（默认值：ManualRedirectPolicy）。此属性已废弃 FollowRedirectsAttribute。
-    QNetworkRequest::User,//特种。附加信息可以在 QVariants 中传递，类型从 User 到 UserMax。网络访问的默认实现将忽略此范围内的任何请求属性，并且不会在回复中生成此范围内的任何属性。该范围是为 QNetworkAccessManager 的扩展保留的
+    QNetworkRequest::RedirectPolicyAttribute,//仅限请求，类型：QMetaType::Int，应该是 QNetworkRequest::RedirectPolicy 值之一（默认值：ManualRedirectPolicy）
+    QNetworkRequest::User,//特种。附加信息可以在 QVariants 中传递，类型从 User 到 UserMax。网络访问的默认实现将忽略此范围内的任何请求属性，并且不会在回复中生成此范围内的任何属性
     QNetworkRequest::UserMax//特种。请参阅用户
 }
 ```
@@ -16559,9 +16559,9 @@ enum QNetworkRequest::Attribute{
 ```c++
 enum QNetworkRequest::CacheLoadControl
 {
-    QNetworkRequest::AlwaysNetwork,//始终从网络加载，不检查缓存是否有有效条目（类似于浏览器中的“重新加载”功能）；此外，强制中间缓存重新验证
-    QNetworkRequest::PreferNetwork,//默认值;如果缓存的条目早于网络条目，则从网络加载。这永远不会从缓存中返回陈旧的数据，而是重新验证已经陈旧的资源
-    QNetworkRequest::PreferCache,//如果可用，从缓存加载，否则从网络加载。请注意，这可能会从缓存中返回可能陈旧（但未过期）的项目
+    QNetworkRequest::AlwaysNetwork,//始终从网络加载，不检查缓存是否有有效条目，强制中间缓存重新验证
+    QNetworkRequest::PreferNetwork,//永远不会从缓存中返回陈旧的数据，而是重新验证已经陈旧的资源
+    QNetworkRequest::PreferCache,//如果可用，从缓存加载，否则从网络加载
     QNetworkRequest::AlwaysCache//仅从缓存加载，如果项目未缓存（即离线模式）则指示错误
 }
 ```
@@ -16607,8 +16607,8 @@ enum QNetworkRequest::Priority{
 enum QNetworkRequest::RedirectPolicy{
     QNetworkRequest::ManualRedirectPolicy,//默认值：不遵循任何重定向
     QNetworkRequest::NoLessSafeRedirectPolicy,//只允许“http”->“http”、“http”->“https”或“https”->“https”重定向。相当于将旧的 FollowRedirectsAttribute 设置为 true
-    QNetworkRequest::SameOriginRedirectPolicy,//需要相同的协议、主机和端口。请注意，http://example.com 和 http://example.com:80 将在此策略下失败（隐式/显式端口被视为不匹配）
-    QNetworkRequest::UserVerifiedRedirectPolicy//客户端通过处理 redirected() 信号来决定是否遵循每个重定向，在 QNetworkReply 对象上发出 redirectAllowed() 以允许重定向或中止/完成它以拒绝重定向。例如，这可以用来询问用户是否接受重定向，或者根据某些特定于应用程序的配置来决定
+    QNetworkRequest::SameOriginRedirectPolicy,//需要相同的协议、主机和端口
+    QNetworkRequest::UserVerifiedRedirectPolicy//通过处理redirected()信号决定是否遵循每个重定向
 }
 ```
 
@@ -16616,12 +16616,12 @@ enum QNetworkRequest::RedirectPolicy{
 
 ```c++
 QNetworkRequest(const QUrl &url = QUrl());
-// 返回标头 headerName 的原始形式。如果不存在这样的标头，则返回一个空的 QByteArray，这可能与存在但没有内容的标头无法区分（使用 hasRawHeader() 来确定标头是否存在）
+// 返回标头headerName的原始形式。如果不存在这样的标头，则返回一个空的 QByteArray
 QByteArray rawHeader(const QByteArray &headerName) const;
 // 返回此网络请求中设置的所有原始标头的列表。该列表按照设置标题的顺序排列
 QList<QByteArray> rawHeaderList() const;
 
-// 将与代码代码关联的属性设置为值值。如果该属性已设置，则丢弃先前的值。特别是，如果 value 是无效的 QVariant，则该属性未设置
+// 将与代码代码关联的属性设置为value。如该属性已设置，则丢弃先前的值
 void setAttribute(Attribute code, const QVariant &value);
 QVariant attribute(Attribute code, const QVariant &defaultValue = QVariant()) const;
 
@@ -16645,11 +16645,11 @@ Priority priority() const;
 void setRawHeader(const QByteArray &headerName, const QByteArray &headerValue);
 bool hasRawHeader(const QByteArray &headerName) const;
 
-// 将此网络请求的 SSL 配置设置为 config。适用的设置是私钥、本地证书、SSL 协议（适用时为 SSLv2、SSLv3、TLSv1.0）、CA 证书和允许 SSL 后端使用的密码
+// 将此网络请求的SSL配置设置为 config。适用的设置是私钥、本地证书、SSL协议（适用时为SSLv2、SSLv3、TLSv1.0）、CA 证书和允许 SSL 后端使用的密码
 void setSslConfiguration(const QSslConfiguration &config);
 QSslConfiguration sslConfiguration() const;
 
-// 设置此网络请求引用的 URL 为 url
+// 设置此网络请求引用的URL为url
 void setUrl(const QUrl &url);
 QUrl url() const;
 ```
@@ -16657,8 +16657,8 @@ QUrl url() const;
 #### 13.5.12 QNetworkReply
 
 QNetworkReply 类包含使用 QNetworkAccessManager 发送的请求的数据和标头 QNetworkReply 类包含与使用 QNetworkAccessManager 发布的请求相关的数据和元数据。与 QNetworkRequest 一样，它包含一个 URL 和标头（解析和原始形式）、有关回复状态的一些信息以及回复本身的内容。
-QNetworkReply 是一个顺序访问的 QIODevice，这意味着一旦从对象中读取数据，它就不再由设备保存。因此，如果需要，应用程序有责任保留这些数据。每当从网络接收到更多数据并进行处理时，就会发出 readyRead() 信号。接收到数据时也会发出 downloadProgress() 信号，但如果对内容进行任何转换（例如，解压缩和删除协议开销），则其中包含的字节数可能不代表实际接收到的字节数。
-尽管 QNetworkReply 是一个连接到回复内容的 QIODevice，它也会发出 uploadProgress() 信号，该信号指示具有此类内容的操作的上传进度。
+QNetworkReply 是一个顺序访问的 QIODevice，这意味着一旦从对象中读取数据，它就不再由设备保存。因此，如果需要，应用程序有责任保留这些数据。**每当从网络接收到更多数据并进行处理时，就会发出 readyRead() 信号。接收到数据时也会发出 downloadProgress() 信号**，但如果对内容进行任何转换（例如，解压缩和删除协议开销），则其中包含的字节数可能不代表实际接收到的字节数。
+尽管 QNetworkReply 是一个连接到回复内容的 QIODevice，它也会发出 **uploadProgress() 信号，该信号指示具有此类内容的操作的上传进度**。
 注意：不要删除连接到 error() 或 finished() 信号的槽中的对象。使用 deleteLater()。
 
 ##### 枚举值
@@ -16746,7 +16746,7 @@ virtual void sslConfigurationImplementation(QSslConfiguration &configuration) co
 void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 void encrypted();
 void error(QNetworkReply::NetworkError code);
-void finished()
+void finished();
 void metaDataChanged();
 void preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator *authenticator)
 void redirectAllowed();
@@ -16788,9 +16788,9 @@ enum QUrl::ComponentFormattingOption{
 
 ```c++
 enum QUrl::ParsingMode{
-    QUrl::TolerantMode,//QUrl 将尝试纠正 URL 中的一些常见错误。此模式对于解析来自未知严格符合标准的来源的 URL 很有用
-    QUrl::StrictMode,//只接受有效的 URL。此模式对于常规 URL 验证很有用
-    QUrl::DecodedMode//QUrl 将以完全解码的形式解释 URL 组件，其中百分比字符代表自己，而不是百分比编码序列的开头。此模式仅对 URL 的 setter 设置组件有效；在 QUrl 构造函数、fromEncoded() 或 setUrl() 中是不允许的。
+    QUrl::TolerantMode,//QUrl将尝试纠正一些常见错误
+    QUrl::StrictMode,//只接受有效的URL
+    QUrl::DecodedMode//QUrl将以完全解码的形式解释URL组件，其中百分比字符代表自己，而不是百分比编码序列的开头。此模式仅对URL的setter设置组件有效；在QUrl构造函数、fromEncoded()或setUrl()中是不允许的。
 }
 ```
 

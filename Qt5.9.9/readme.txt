@@ -136,6 +136,7 @@
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
+
 16. 位置函数的区别
     1) this->x(),this->y(),this->pos(),获取整个窗体左上角在桌面上的坐标位置(只有窗口移动事件和左上角为中心调整窗口大小时会影响)
         this->pos().x()=this->x(),this->pos.y()=this->y()
@@ -186,10 +187,12 @@
     mainLayout->setColumnStretch(0,1);
     mainLayout->setColumnStretch(1,2);
 
-13. 禁用子控件
-    QSpinBox禁用上下拉三角按钮: spinbox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+13. setStyleSheet
+    QSpinBox禁用上下拉三角按钮: ->setButtonSymbols(QAbstractSpinBox::NoButtons);
     QToolButton禁止右下角下拉菜单: toolbutton->setStyleSheet("QToolButton::menu-indicator{image:none;}");
-
+    QLabel使用setPalette不能控制颜色,setFont不能控制字体大小：label->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
+    QGroupBox去除边框, groupbox->setStyleSheet("QGroupBox{border:none;}");
+    
 12. 实现下拉项选择颜色
 QStringList colorList = QColor::colorNames();
 qDebug()<<colorList.size(); // 148个

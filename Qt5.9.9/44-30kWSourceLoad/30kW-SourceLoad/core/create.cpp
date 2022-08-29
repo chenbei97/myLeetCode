@@ -138,6 +138,8 @@ void MainWindow::createActions()
       AboutQtAct = new QAction(tr("Qt"));
       AboutCNAct = new QAction(tr("中文"));
       AboutENAct = new QAction(tr("英文"));
+      MonitorInterfaceAct = new QAction(tr("监控界面"));
+      MonitorSettingsAct = new QAction(tr("监控模式"));
       AboutCNAct->setEnabled(false); // 默认中文
 
       SystemSettingsAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_1));
@@ -151,6 +153,10 @@ void MainWindow::createActions()
       AboutQtAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Q));
       AboutCNAct->setShortcut(QKeySequence(Qt::SHIFT+Qt::Key_C));
       AboutENAct->setShortcut(QKeySequence(Qt::SHIFT+Qt::Key_E));
+      MonitorSettingsAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_M));
+      MonitorInterfaceAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_N));
+
+      SystemSettingsAct->setToolTip(tr("系统相关的设置"));//好像不起作用,应该是
 
       QString pathPrefix = QStringLiteral(":/images/");
       QString pathSuffix = QStringLiteral(".png");
@@ -165,17 +171,24 @@ void MainWindow::createActions()
       AboutQtAct->setIcon(QIcon(pathPrefix+QStringLiteral("aboutQt")+pathSuffix));
       AboutCNAct->setIcon(QIcon(pathPrefix+QStringLiteral("CN")+pathSuffix));
       AboutENAct->setIcon(QIcon(pathPrefix+QStringLiteral("EN")+pathSuffix));
+      MonitorSettingsAct->setIcon(QIcon(pathPrefix+QStringLiteral("monitorSettings")+pathSuffix));
+      MonitorInterfaceAct->setIcon(QIcon(pathPrefix+QStringLiteral("monitorInterface")+pathSuffix));
 }
 
 void MainWindow::createMenus()
 {
        MenuBar = new QMenuBar(this);
        MenuBar->setGeometry(QRect(0,0,this->width(),30));
+       //MenuBar->setStatusTip(tr("菜单栏"));
+       MenuBar->setToolTip(tr("菜单栏"));
+       MenuBar->setMouseTracking(true);
+       MenuBar->setToolTipDuration(1000);
 
        MenuSettings = new QMenu(tr("设置"));
        MenuFunctions = new QMenu(tr("功能"));
        MenuAbout = new QMenu(tr("关于"));
        MenuLanguage = new QMenu(tr("语言"));
+       MenuMonitor = new QMenu(tr("监控"));
        MenuLanguage->setIcon(QIcon(":/images/aboutLanguage.png"));
 
        MenuSettings->addAction(SystemSettingsAct);
@@ -201,9 +214,15 @@ void MainWindow::createMenus()
        MenuAbout->addSeparator();
        MenuAbout->addMenu(MenuLanguage);//about菜单添加language菜单
 
+       MenuMonitor->addAction(MonitorSettingsAct);
+       MenuMonitor->addSeparator();
+       MenuMonitor->addAction(MonitorInterfaceAct);
+
        MenuBar->addMenu(MenuSettings);
        MenuBar->addSeparator();
        MenuBar->addMenu(MenuFunctions);
        MenuBar->addSeparator();
        MenuBar->addMenu(MenuAbout);
+       MenuBar->addSeparator();
+       MenuBar->addMenu(MenuMonitor);
 }

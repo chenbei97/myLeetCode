@@ -17,5 +17,7 @@
         <file>images/EN.png</file>
         <file>images/aboutLanguage.png</file>
         <file>images/question.png</file>
+        <file>images/monitorInterface.png</file>
+        <file>images/monitorSettings.png</file>
     </qresource>
 </RCC>

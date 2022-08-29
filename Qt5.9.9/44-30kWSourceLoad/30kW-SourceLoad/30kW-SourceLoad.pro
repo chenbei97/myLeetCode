@@ -16,10 +16,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    core/Monitor.cpp \
     core/about.cpp \
     core/connect.cpp \
     core/create.cpp \
     core/function.cpp \
+    core/monitoring.cpp \
     core/setting.cpp \
     core/tool.cpp \
     dialog/BasicAnalogInterface.cpp \
@@ -30,6 +32,8 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    core/Monitor.h \
+    core/enum.h \
     dialog/BasicAnalogInterface.h \
     dialog/BasicCommonSettings.h \
     dialog/BasicParallelSettings.h \

@@ -1,8 +1,10 @@
 INPUT(
+./debug\Monitor.o
 ./debug\about.o
 ./debug\connect.o
 ./debug\create.o
 ./debug\function.o
+./debug\monitoring.o
 ./debug\setting.o
 ./debug\tool.o
 ./debug\BasicAnalogInterface.o
@@ -12,6 +14,7 @@ INPUT(
 ./debug\main.o
 ./debug\mainwindow.o
 ./debug\qrc_images.o
+./debug\moc_Monitor.o
 ./debug\moc_BasicAnalogInterface.o
 ./debug\moc_BasicCommonSettings.o
 ./debug\moc_BasicParallelSettings.o
