@@ -136,6 +136,12 @@
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
+17. 设置对话框的属性
+    setWindowFlag(Qt::MSWindowsFixedSizeDialogHint);//不能更改大小
+    setFixedSize(this->geometry().size());
+    setWindowModality(Qt::ApplicationModal);// 设置为模态对话框
+    etWindowFlag(Qt::WindowStaysOnTopHint);//保持在前
+    setWindowFlags(Qt::Dialog | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint); // 添加最大最小化按钮
 
 16. 位置函数的区别
     1) this->x(),this->y(),this->pos(),获取整个窗体左上角在桌面上的坐标位置(只有窗口移动事件和左上角为中心调整窗口大小时会影响)
@@ -391,15 +397,85 @@ if (file.open(QFile::ReadOnly)) {
     }
     5.2 hideEvent():窗口隐藏事件
     5.3 paintEvent():窗口绘制事件,可以用来加入背景图片
+    void Window::paintEvent(QPaintEvent *event)
+    {
+        Q_UNUSED(event);
+        QPainter painter(this);
+        // 使用给定的宽度width和高度height将像素图绘制到位置 (x, y) 的矩形中
+        int x  = 0, y = ui->toolBar->height(), width = this->width(); // 位置在工具栏下方,左上角是(0,0),所以y是工具栏高度,x就是0
+        int height = this->height()-ui->toolBar->height()-ui->statusbar->height(); // 图片的高度就是主窗口高度减去状态栏和工具栏的高度
+        painter.drawPixmap(x,y,width,height, QPixmap(":/images/back2.jpg"));
+
+        // 还有一种使用begin和end的写法
+        QPainter p;
+        p.begin(this);
+        p.drawPixmap(QPoint(0,0),*pix);
+        p.end();
+    }
     5.4 showEvent():窗口显示时触发的事件
     5.5 mouseMoveEvent():鼠标移动事件
+    void Window::mouseMoveEvent(QMouseEvent * e)
+    {
+        if (e->buttons() & Qt::LeftButton) // 鼠标左键按下
+        {
+            // 鼠标移动到新位置时窗口移动到新位置
+            // 注意: 鼠标的新位置就是e->globalPos(),但是move函数要求提供的窗口左上角顶点要移动到的新位置
+            // 鼠标新位置减去鼠标相对于窗口左上角顶点的距离relativePos就是窗口左上角顶点的新位置
+            // relativePos可以在mousePressEvent()就先计算好,之后拖动窗口不会影响这个相对位置
+            this->move(e->globalPos()-relativePos);
+            e->accept();
+        }
+    }
     5.6 mouseReleaseEvent():鼠标键释放事件
     5.7 mousePressEvent():鼠标键单击事件(左键或者右键)
-    5.8 mouseDoubleClickEvent():鼠标双击事件
-    5.9 keyPressEvent():键盘按键按下事件
+    void Window::mousePressEvent(QMouseEvent * e)
+    {
+        if (e->button() == Qt::LeftButton)
+        {
+            relativePos = e->globalPos() - frameGeometry().topLeft();//提供的是整个窗口大小的左上角
+            e->accept();
+        }
+        if (e->button() == Qt::RightButton)
+        {
+            //...
+        }
+    }
+    oldPos是原来窗口左上角的位置，也就是frameGeometry().topLeft()
+    要移动的新位置是newPos，也就是要传递给move函数的新坐标，很显然需要用新的鼠标全局位置减去相对位置就可以
+                                    鼠标移动的相对位置、全局位置以及窗口左上角位置(move)之间的关系
+            ← - - - - - - - - - - - - - - - gloablX - - - - - - - - - - - →
+            ← - - - - - - - - - - - newPosX - - - - - - - - - - → 【newPosX = gloablX - relativeX】
+    oldPos→ * * * * * * * * * * * * * * * * * * ↑ ← - - - - - - - - - - - →
+            *         * ↑                     * |                         ↑
+            *         * | relativeY           * | gloablY                 | 【newPosY = gloablY - relativeY】
+            *         * |                     * |                         ↓
+            * * * * * * ↓                     * |        newPos→* * * * * * * * * * * * * * * * * *
+            * ← - - - - →                     * |               *         * ↑                     *
+            *  relativeX                      * |               *         * | relativeY           *
+            *                                 * |               *         * |                     *
+            *                                 * |               * * * * * * ↓                     *
+            * * * * * * * * * * * * * * * * * * ↓ - - - - - - - * ← - - - - →                     *
+                                                                * relativeX                       *
+                                                                *                                 *
+                                                                *                                 *
+                                                                * * * * * * * * * * * * * * * * * *
+    5.8 mouseDoubleClickEvent():鼠标双击事件                     
+    5.9 keyPressEvent():键盘按键按下事件                         
+    void MainWindow::keyReleaseEvent(QKeyEvent * e)             
+    {
+        if (e->modifiers() == Qt::ControlModifiers) // 如果修饰符ctrl被按下
+        {
+            if (e->key() == Qt::Key_Left) 
+                // dosomething
+        }
+    }
     5.10 keyReleaseEvent():键盘按键释放事件
     5.11 actionEvent():添加工具栏动作事件
     5.12 resizeEvent():调整窗口大小事件
+    void MainWindow::resizeEvent(QResizeEvent *e)
+    {
+      MenuBar->setGeometry(QRect(0,0,e->size().width(),30));
+    }
     5.13 hoverEvent():悬停事件
     5.14 timerEvent():定时器事件
     5.15 contextMenuEvent():上下文菜单事件

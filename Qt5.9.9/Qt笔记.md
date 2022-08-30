@@ -20245,6 +20245,65 @@ QEvent 类是所有事件类的基类。事件对象包含事件参数。
 通常，事件来自底层窗口系统（spontaneous() 返回 true），但也**可以使用 QCoreApplication::sendEvent() 和 QCoreApplication::postEvent() 手动发送事件（spontaneous() 返回 false）**。QObjects 通过**调用它们的 QObject::event() 函数来接收事件**。该功能可以在子类中重新实现，以自定义事件处理并添加额外的事件类型； QWidget::event() 是一个值得注意的例子。**默认情况下，事件被分派给像 QObject::timerEvent() 和 QWidget::mouseMoveEvent() 这样的事件处理程序**。 QObject::installEventFilter() 允许一个对象拦截发往另一个对象的事件。基本的 QEvent 只包含一个事件类型参数和一个“接受”标志。**接受标志用accept()设置，用ignore()清除**。它是默认设置的，但不要依赖它，因为子类可能会选择在其构造函数中清除它。
 QEvent 的子类包含描述特定事件的附加参数。
 
+事件过滤器的一个用法，基于公共槽函数的实现。
+
+```c++
+bool Monitor:: eventFilter(QObject* watchedObj, QEvent * event)
+{
+      if (watchedObj == ShowPower)
+      {
+          if (event->type() == QEvent::HoverEnter )
+          {
+               ShowPower->setStyleSheet("QLabel{font:bold 128px;background-color: red;color: blue;}");
+
+          }
+          if (event->type() == QEvent::HoverLeave)
+          {
+                ShowPower->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
+          }
+      }
+      else if (watchedObj == ShowResistance)
+      {
+           if (event->type() == QEvent::HoverEnter )
+          {
+               ShowResistance->setStyleSheet("QLabel{font:bold 128px;background-color: red;color: blue;}");
+
+          }
+          if (event->type() == QEvent::HoverLeave)
+          {
+                ShowResistance->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
+          }
+      }
+      else if (watchedObj == ShowCurrent)
+      {
+           if (event->type() == QEvent::HoverEnter )
+          {
+               ShowCurrent->setStyleSheet("QLabel{font:bold 128px;background-color: red;color: blue;}");
+
+          }
+          if (event->type() == QEvent::HoverLeave)
+          {
+                ShowCurrent->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
+          }
+      }
+      else if (watchedObj == ShowVoltage)
+      {
+           if (event->type() == QEvent::HoverEnter )
+          {
+               ShowVoltage->setStyleSheet("QLabel{font:bold 128px;background-color: red;color: blue;}");
+
+          }
+          if (event->type() == QEvent::HoverLeave)
+          {
+                ShowVoltage->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
+          }
+      }
+      return QMainWindow::eventFilter(watchedObj,event);
+}
+```
+
+
+
 ##### 枚举类型
 
 这个枚举类型定义了 Qt 中的有效事件类型。常用的事件类型和对应的类如下。
@@ -20559,8 +20618,8 @@ QKeyEvent 类描述了一个按键事件。
 ```c++
 int count() const;//返回此事件中涉及的键数。如果 text() 不为空，则这只是字符串的长度
 bool isAutoRepeat() const;//如果此事件来自自动重复键，则返回 true；如果它来自初始按键，则返回 false
-int key() const;//返回被按下或释放的键的代码,键盘代码列表见 Qt::Key。这些代码独立于底层的窗口系统。请注意，此函数不区分大写字母和非大写字母，为此使用 text() 函数（返回生成的密钥的 Unicode 文本）
-bool matches(QKeySequence::StandardKey key) const;//如果键事件与给定的标准键匹配，则返回 true；否则返回假
+int key() const;//返回被按下或释放的键的代码,键盘代码列表见 Qt::Key，注意不区分大小写
+bool matches(QKeySequence::StandardKey key) const;//如果键事件与给定的标准键匹配，则返回 true
 Qt::KeyboardModifiers modifiers() const;//返回事件发生后立即存在的键盘修饰符标志
 quint32 nativeModifiers() const;//返回键事件的本机修饰符。如果键事件不包含此数据，则返回 0
 quint32 nativeScanCode() const;//返回按键事件的原生扫描码。如果键事件不包含此数据，则返回 0
@@ -20592,6 +20651,105 @@ const QRegion &region() const;//返回需要更新的区域
 ```
 
 涉及的相关函数：QWidget::update、QWidget::repaint
+
+例子，设置背景图片。
+
+```c++
+void TestMultiWindow::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+    QPainter painter(this);
+    // void QPainter::drawPixmap(int x, int y, int width, int height, const QPixmap &pixmap);
+    // 使用给定的宽度width和高度height将像素图绘制到位置 (x, y) 的矩形中
+    int x  = 0, y = ui->toolBar->height(), width = this->width(); // 位置在工具栏下方,左上角是(0,0),所以y是工具栏高度,x就是0
+    int height = this->height()-ui->toolBar->height()-ui->statusbar->height(); // 图片的高度就是主窗口高度减去状态栏和工具栏的高度
+    painter.drawPixmap(x,y,width,height, QPixmap(":/images/back2.jpg"));
+}
+// 或使用begin,end
+void TestMultiWindow::paintEvent(QPaintEvent *event)
+{
+    QPainter p;
+    p.begin(this);
+    p.drawPixmap(QPoint(0,0),*pix);
+    p.end();
+}
+```
+
+例子，绘制电池外观。
+
+```c++
+void QBattery::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event);
+
+    QPainter    painter(this);
+    QRect rect(0,0,this->width(),this->height()); //viewport矩形区
+    painter.setViewport(rect);//设置Viewport
+    painter.setWindow(0,0,120,50); // 设置窗口大小，逻辑坐标
+    painter.setRenderHint(QPainter::Antialiasing); // 设置渲染提示
+    painter.setRenderHint(QPainter::TextAntialiasing);
+
+    // 绘制电池边框
+    QPen pen;//设置画笔
+    pen.setWidth(2); //线宽
+    pen.setColor(this->mColorBorder); //用于绘制边界的颜色
+    pen.setStyle(Qt::SolidLine);//线的类型，实线、虚线等
+    pen.setCapStyle(Qt::FlatCap);//线端点样式
+    pen.setJoinStyle(Qt::BevelJoin);//线的连接点样式
+    painter.setPen(pen);
+
+    QBrush  brush;//设置画刷
+    brush.setColor(this->mColorBack); // 背景的画刷颜色
+    brush.setStyle(Qt::SolidPattern); // 画刷填充样式
+    painter.setBrush(brush);
+
+    // 绘制1个矩形作为背景,到上下左边界距离1,到右边界距离0
+    // 背景颜色就是mColorBack,边框颜色mColorBorder
+    rect.setRect(1,1,109,48);// 所以起点变成(1,1),宽度是109,高度48
+    painter.drawRect(rect);//绘制电池边框
+
+    // 现在是绘制电池的正极头,背景和边框都是相同颜色均为mColorBorder
+    rect.setRect(110,15,10,20); // 这个位置和宽度长度需要事先自己设计好
+    brush.setColor(this->mColorBorder); // 重设画刷颜色
+    painter.setBrush(brush);
+    painter.drawRect(rect); //画电池正极头
+
+    //画电池柱
+    if (this->mPowerLevel>this->mWarnLevel)
+    {  //正常颜色电量柱
+        brush.setColor(this->mColorPower); //画刷颜色设为绿色
+        pen.setColor(this->mColorPower); //划线颜色设为绿色
+    }
+    else
+    { //电量低电量柱
+        brush.setColor(this->mColorWarning); //画刷颜色设为红色
+        pen.setColor(this->mColorWarning); //划线颜色设为红色
+    }
+    painter.setBrush(brush);
+    painter.setPen(pen);
+
+    if (this->mPowerLevel>0)
+    {
+        rect.setRect(5,5,this->mPowerLevel,40);
+        painter.drawRect(rect);//画电池柱
+    }
+
+    // 绘制电量百分比文字
+    QFontMetrics textSize(this->font()); // 这个类可以将字符串的字体格式进行像素级量化
+    QString powStr=QString::asprintf("%d%%",this->mPowerLevel);
+    QRect textRect=textSize.boundingRect(powStr);//得到字符串的rect范围
+
+    painter.setFont(this->font());
+    pen.setColor(this->mColorBorder); //划线颜色
+    painter.setPen(pen);
+
+    painter.drawText(55-textRect.width()/2, // 把字体格式占据的像素宽度和长度考虑进去
+               23+textRect.height()/2,
+               powStr);
+}
+```
+
+
 
 ##### paintEvent
 
@@ -23083,6 +23241,28 @@ enum Qt::CursorShape{
 ```
 
 ![cursorShape.jpg](cursorShape.jpg)
+
+#### 16.10.10 Qt::Key
+
+非常的多，这里不一一列举，详见Qt文档。
+
+#### 16.10.11 Qt::KeyboardModifier
+
+键盘修饰符，常用的就是ctrl+shift+alt。
+
+```c++
+enum Qt::KeyboardModifier{
+    Qt::NoModifier
+    Qt::ShiftModifier
+    Qt::ControlModifier
+    Qt::AltModifier
+    Qt::MetaModifier // meta key
+    Qt::KeypadModifier // 小键盘被按下
+    Qt::GroupSwitchModifier // only win11
+}
+```
+
+
 
 ## 串口通信
 
