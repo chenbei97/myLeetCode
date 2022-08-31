@@ -1023,6 +1023,220 @@ void someFunc()
 }
 ```
 
+#### 2.1.5 QObject
+
+QObject 类是所有 Qt 对象的基类。
+QObject 是 Qt 对象模型的核心。该模型的核心特征是一种非常强大的无缝对象通信机制，称为信号和槽。您可以使用 connect() 将信号连接到插槽，并使用 disconnect() 破坏连接。为避免永无止境的通知循环，您可以使用 blockSignals() 临时阻止信号。受保护的函数 connectNotify() 和 disconnectNotify() 可以跟踪连接。
+QObjects 在对象树中组织自己。当您以另一个对象作为父对象创建 QObject 时，该对象将自动将自身添加到父对象的 children() 列表中。父级获得对象的所有权；即，它将自动删除其析构函数中的子级。您可以按名称查找对象，也可以选择使用 findChild() 或 findChildren() 键入。
+每个对象都有一个 objectName()，它的类名可以通过相应的 metaObject() 找到（参见 QMetaObject::className()）。您可以通过使用inherits() 函数来确定对象的类是否继承了QObject 继承层次结构中的另一个类。
+当一个对象被删除时，它会发出一个destroy() 信号。您可以捕获此信号以避免对 QObjects 的悬空引用。
+QObjects可以通过event()接收事件，过滤其他对象的事件。有关详细信息，请参阅 installEventFilter() 和 eventFilter()。可以重新实现便利处理程序 childEvent() 以捕获子事件。
+最后但同样重要的是，QObject 在 Qt 中提供了基本的计时器支持；请参阅 QTimer 以获得对计时器的高级支持。
+请注意，对于任何实现信号、槽或属性的对象，Q_OBJECT 宏都是必需的。您还需要在源文件上运行 Meta Object Compiler。我们强烈建议在 QObject 的所有子类中使用此宏，无论它们是否实际使用信号、槽和属性，因为不这样做可能会导致某些函数表现出奇怪的行为。
+所有 Qt 小部件都继承 QObject。便利函数 isWidgetType() 返回一个对象是否真的是一个小部件。它比 qobject_cast&lt;QWidget *&gt;(obj) 或 obj-&gt;inherits(&quot;QWidget&quot;) 快得多。
+
+
+
+（1）线程亲和性
+
+QObject 实例被称为具有线程亲和性，或者说它存在于某个线程中。当 QObject 接收到排队的信号或发布的事件时，插槽或事件处理程序将在对象所在的线程中运行。
+注意：如果 QObject 没有线程关联（即，如果 thread() 返回零），或者如果它存在于没有运行事件循环的线程中，则它无法接收排队信号或发布的事件。
+默认情况下，QObject 存在于创建它的线程中。可以使用 thread() 查询对象的线程亲和性，并使用 moveToThread() 更改对象的线程亲和性。
+所有 QObject 必须与其父对象存在于同一线程中。因此：如果涉及的两个 QObject 存在于不同的线程中，setParent() 将失败。
+当一个 QObject 被移动到另一个线程时，它的所有子对象也将被自动移动。
+如果 QObject 有父对象，则 moveToThread() 将失败。
+如果 QObjects 在 QThread::run() 中创建，它们不能成为 QThread 对象的子对象，因为 QThread 并不存在于调用 QThread::run() 的线程中。
+
+（2）没有复制构造函数或赋值运算符
+
+QObject 既没有复制构造函数也没有赋值运算符。这是设计使然。实际上，它们是被声明的，但是在一个带有宏 Q_DISABLE_COPY() 的私有部分中。事实上，所有从 QObject 派生的 Qt 类（直接或间接）都使用这个宏来声明它们的复制构造函数和赋值运算符是私有的。推理可以在 Qt 对象模型页面上关于 Identity vs Value 的讨论中找到。
+主要结果是您应该使用指向 QObject（或指向您的 QObject 子类）的指针，否则您可能会试图将 QObject 子类用作值。例如，如果没有复制构造函数，就不能使用 QObject 的子类作为要存储在容器类之一中的值。您必须存储指针。
+
+（3）自动连接
+
+Qt 的元对象系统提供了一种在 QObject 子类及其子类之间自动连接信号和槽的机制。只要用合适的对象名称定义对象，并且槽遵循简单的命名约定，这种连接就可以在运行时由 QMetaObject::connectSlotsByName() 函数执行。
+uic 生成调用此函数的代码，以便在使用 Qt Designer 创建的表单上的小部件之间执行自动连接。 Qt Designer 手册的 Using a Designer UI File in Your Application 部分提供了有关使用 Qt Designer 自动连接的更多信息。
+
+（4）动态属性
+
+从 Qt 4.2 开始，可以在运行时向 QObject 实例添加和删除动态属性。动态属性不需要在编译时声明，但它们提供与静态属性相同的优势，并且使用相同的 API 进行操作 - 使用 property() 读取它们并使用 setProperty() 写入它们。从 Qt 4.3 开始，Qt Designer 支持动态属性，标准 Qt 小部件和用户创建的表单都可以被赋予动态属性。
+
+（5）国际化 (I18n) 
+
+所有 QObject 子类都支持 Qt 的翻译功能，从而可以将应用程序的用户界面翻译成不同的语言。为了使用户可见的文本可翻译，它必须包含在对 tr() 函数的调用中。这在为翻译文档编写源代码中有详细说明。
+
+##### 成员函数
+
+```c++
+virtual const QMetaObject *metaObject() const;//返回指向此对象的元对象的指针
+
+QMetaObject::Connection connect(const QObject *sender, const char *signal, const char *method, Qt::ConnectionType type = Qt::AutoConnection) const;
+bool disconnect(const char *signal = Q_NULLPTR, const QObject *receiver = Q_NULLPTR, const char *method = Q_NULLPTR) const;
+bool disconnect(const QObject *receiver, const char *method = Q_NULLPTR) const;
+connect(const QObject *sender, const char *signal, const QObject *receiver, const char *method, Qt::ConnectionType type);
+
+void dumpObjectInfo() const;//将此对象的有关信号连接等的信息转储到调试输出
+void dumpObjectTree() const;//将子树转储到调试输出
+QList<QByteArray> dynamicPropertyNames() const;//返回使用 setProperty() 动态添加到对象的所有属性的名称
+
+const QObjectList &children() const;//返回子对象的列表
+T findChild(const QString &name = QString(), Qt::FindChildOptions options = Qt::FindChildrenRecursively) const;//返回此对象的子对象，该子对象可以转换为类型 T 并称为名称，如果没有此类对象，则返回 0。省略 name 参数会导致匹配所有对象名称。搜索以递归方式执行，除非选项指定选项 FindDirectChildrenOnly
+QList<T> findChildren(const QString &name = QString(), Qt::FindChildOptions options = Qt::FindChildrenRecursively) const;
+QList<T> findChildren(const QRegExp &regExp, Qt::FindChildOptions options = Qt::FindChildrenRecursively) const;
+QList<T> findChildren(const QRegularExpression &re, Qt::FindChildOptions options = Qt::FindChildrenRecursively) const;
+
+bool inherits(const char *className) const;//如果此对象是继承 className 的类或继承 className 的 QObject 子类的实例，则返回 true
+
+virtual bool event(QEvent *e);//这个虚函数接收一个对象的事件，如果事件 e 被识别和处理，应该返回 true
+virtual bool eventFilter(QObject *watched, QEvent *event);//如果此对象已安装为被监视对象的事件过滤器，则过滤事件
+void installEventFilter(QObject *filterObj);
+void removeEventFilter(QObject *obj);
+
+bool isWidgetType() const;
+bool isWindowType() const;
+
+//更改此对象及其子对象的线程亲和性。如果对象有父对象，则不能移动它。事件处理将在 targetThread 中继续进行。要将对象移动到主线程，请使用 QApplication::instance() 检索指向当前应用程序的指针，然后使用 QApplication::thread() 检索应用程序所在的线程。例如：
+// Obj->moveToThread(QApplication::instance()->thread());
+void moveToThread(QThread *targetThread);
+QThread *thread() const;
+
+QString objectName() const;
+void setObjectName(const QString &name);
+
+void setParent(QObject *parent);//返回一个指向父对象的指针
+QObject *parent() const;
+
+bool setProperty(const char *name, const QVariant &value);
+QVariant property(const char *name) const;//将对象的 name 属性的值设置为 value
+
+bool signalsBlocked() const;//如果 block 为真，则此对象发出的信号将被阻塞（即，发出信号不会调用任何与之连接的东西）。如果 block 为 false，则不会发生这样的阻塞
+bool blockSignals(bool block);
+
+//启动计时器并返回计时器标识符，如果无法启动计时器，则返回零
+int startTimer(int interval, Qt::TimerType timerType = Qt::CoarseTimer);
+int startTimer(std::chrono::milliseconds time, Qt::TimerType timerType = Qt::CoarseTimer);
+void killTimer(int id);//使用计时器标识符 id 终止计时器
+```
+
+##### 信号和槽函数
+
+```c++
+//计划删除此对象。当控制返回事件循环时，该对象将被删除。如果调用此函数时事件循环未运行（例如，在 QCoreApplication::exec() 之前对对象调用 deleteLater()），则一旦启动事件循环，该对象将被删除。如果在主事件循环停止后调用 deleteLater()，则不会删除对象。从 Qt 4.8 开始，如果在没有运行事件循环的线程中调用 deleteLater() 对象，则该对象将在线程完成时被销毁。请注意，进入和离开新的事件循环（例如，通过打开模式对话框）不会执行延迟删除；对于要删除的对象，控件必须返回到调用 deleteLater() 的事件循环。
+slot void deleteLater();
+// 该信号在对象 obj 被销毁之前立即发出，并且不能被阻塞。发出此信号后，立即销毁所有对象的子对象。
+signal void destroyed(QObject *obj = Q_NULLPTR);
+// 此信号在对象名称更改后发出。新对象名称作为 objectName 传递
+signal void objectNameChanged(const QString &objectName);
+```
+
+静态成员函数。
+
+```c++
+QMetaObject::Connection connect(const QObject *sender, const char *signal, const QObject *receiver, const char *method, Qt::ConnectionType type = Qt::AutoConnection);
+QMetaObject::Connection connect(const QObject *sender, const QMetaMethod &signal, const QObject *receiver, const QMetaMethod &method, Qt::ConnectionType type = Qt::AutoConnection);
+QMetaObject::Connection connect(const QObject *sender, PointerToMemberFunction signal, const QObject *receiver, PointerToMemberFunction method, Qt::ConnectionType type = Qt::AutoConnection);
+QMetaObject::Connection connect(const QObject *sender, PointerToMemberFunction signal, Functor functor);
+QMetaObject::Connection connect(const QObject *sender, PointerToMemberFunction signal, const QObject *context, Functor functor, Qt::ConnectionType type = Qt::AutoConnection)
+bool disconnect(const QObject *sender, const char *signal, const QObject *receiver, const char *method);
+bool disconnect(const QObject *sender, const QMetaMethod &signal, const QObject *receiver, const QMetaMethod &method);
+bool disconnect(const QMetaObject::Connection &connection);
+bool disconnect(const QObject *sender, PointerToMemberFunction signal, const QObject *receiver, PointerToMemberFunction method);
+
+//此变量存储类的元对象。元对象包含有关继承 QObject 的类的信息，例如类名、超类名、属性、信号和槽。每个包含 Q_OBJECT 宏的类也会有一个元对象。信号/槽连接机制和属性系统需要元对象信息。 inherits() 函数也使用元对象。如果您有指向对象的指针，则可以使用 metaObject() 检索与该对象关联的元对象。
+/*
+QPushButton::staticMetaObject.className();  // returns "QPushButton"
+QObject *obj = new QPushButton;
+obj->metaObject()->className();             // returns "QPushButton"
+*/
+const QMetaObject staticMetaObject;
+//返回 sourceText 的翻译版本，可选地基于消歧字符串和包含复数的字符串的 n 值；如果没有合适的翻译字符串可用，则返回 QString::fromUtf8(sourceText)。如果相同的 sourceText 在相同的上下文中用于不同的角色，则可以在消歧中传递一个附加的标识字符串（默认为 0）
+QString tr(const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1);
+```
+
+##### 保护成员函数
+
+```c++
+//此事件处理程序可以在子类中重新实现以接收子事件。事件在 event 参数中传递
+virtual void childEvent(QChildEvent *event);
+
+//当有东西连接到这个对象中的信号时，这个虚函数被调用。如果要将信号与特定信号进行比较，可以使用 QMetaMethod::fromSignal()
+/*
+  if (signal == QMetaMethod::fromSignal(&MyObject::valueChanged)) {
+      // signal is valueChanged
+  }
+*/
+virtual void connectNotify(const QMetaMethod &signal);
+virtual void disconnectNotify(const QMetaMethod &signal);
+bool isSignalConnected(const QMetaMethod &signal) const;
+
+// 此事件处理程序可以在子类中重新实现以接收自定义事件。自定义事件是用户定义的事件，其类型值至少与 QEvent::Type 枚举的 QEvent::User 项一样大，并且通常是 QEvent 子类。事件在 event 参数中传递。
+virtual void customEvent(QEvent *event);
+
+//返回连接到信号的接收器数量。由于时隙和信号都可以用作信号的接收器，并且可以多次建立相同的连接，因此接收器的数量与从此信号建立的连接数相同。调用此函数时，您可以使用 SIGNAL() 宏来传递特定信号：
+/*
+ if (receivers(SIGNAL(valueChanged(QByteArray))) > 0) {
+      QByteArray data;
+      get_the_value(&data);       // expensive operation
+      emit valueChanged(data);
+  }
+*/
+int receivers(const char *signal) const;
+
+// 如果在由信号激活的槽中调用，则返回指向发送信号的对象的指针；否则返回 0。该指针仅在从该对象的线程上下文调用该函数的槽执行期间有效。如果发送方被销毁，或者槽与发送方的信号断开连接，则此函数返回的指针无效。
+QObject *sender() const;
+
+// 返回调用当前执行槽的信号的元方法索引，它是sender()返回的类的成员。如在信号激活的槽之外调用，则返回 -1
+int senderSignalIndex() const;
+
+// 此事件处理程序可以在子类中重新实现，以接收对象的计时器事件。QTimer 为定时器功能提供了一个更高级别的接口，以及关于定时器的更一般的信息。定时器事件在 event 参数中传递
+virtual void timerEvent(QTimerEvent *event);
+
+
+T qobject_cast(QObject *object); // 强制转换
+```
+
+##### 宏定义
+
+```c++
+//当信号和槽使用基于PMF的语法连接时，此宏将禁用信号携带的参数和槽接受的参数之间的缩小和浮点到整数的转换。
+QT_NO_NARROWING_CONVERSIONS_IN_CONNECT
+// 这个宏将额外的信息与类相关联，可以使用 QObject::metaObject()。额外信息采用名称字符串和值文字字符串的形式。Q_CLASSINFO("Author", "Pierre Gendron")
+Q_CLASSINFO(Name, Value)
+Q_DISABLE_COPY(Class)//禁用给定类的复制构造函数和赋值运算符
+Q_EMIT//使用此宏替换用于发出信号的emit关键字
+Q_ENUM(...)//该宏向元对象系统注册一个枚举类型。它必须放在具有 Q_OBJECT 或 Q_GADGET 宏的类中的枚举声明之后。对于命名空间，请改用 Q_ENUM_NS()
+Q_ENUM_NS(...)//该宏向元对象系统注册一个枚举类型。它必须放在具有 Q_NAMESPACE 宏的命名空间中的枚举声明之后。它与 Q_ENUM 相同，但在命名空间中
+Q_FLAG(...)//该宏向元对象系统注册一个标志类型。它通常用于类定义中，以声明给定枚举的值可以用作标志并使用按位 OR 运算符进行组合。对于命名空间，请改用 Q_FLAG_NS()
+Q_FLAG_NS(...)//该宏向元对象系统注册一个标志类型。它在具有 Q_NAMESPACE 宏的命名空间中使用，以声明给定枚举的值可以用作标志并使用按位 OR 运算符组合。它与 Q_FLAG 相同，但在名称空间中
+Q_GADGET//Q_GADGET 宏是 Q_OBJECT 宏的轻量级版本，适用于不从 QObject 继承但仍希望使用 QMetaObject 提供的某些反射功能的类。就像 Q_OBJECT 宏一样，它必须出现在类定义的私有部分中
+Q_INTERFACES(...)//这个宏告诉 Qt 类实现了哪些接口。这在实现插件时使用
+Q_INVOKABLE//将此宏应用于成员函数的声明，以允许通过元对象系统调用它们。宏写在返回类型之前,例如Q_INVOKABLE void invokableMethod();
+Q_OBJECT//Q_OBJECT 宏必须出现在声明自己的信号和槽或使用 Qt 元对象系统提供的其他服务的类定义的私有部分中
+Q_PROPERTY(...)//该宏用于在继承 QObject 的类中声明属性。属性的行为类似于类数据成员，但它们具有可通过元对象系统访问的附加功能
+/*
+
+  Q_PROPERTY(type name
+             (READ getFunction [WRITE setFunction] |
+              MEMBER memberName [(READ getFunction | WRITE setFunction)])
+             [RESET resetFunction]
+             [NOTIFY notifySignal]
+             [REVISION int]
+             [DESIGNABLE bool]
+             [SCRIPTABLE bool]
+             [STORED bool]
+             [USER bool]
+             [CONSTANT]
+             [FINAL])
+  Q_PROPERTY(QString title READ title WRITE setTitle USER true)         
+*/
+Q_REVISION//将此宏应用于成员函数的声明，以在元对象系统中用修订号标记它们。宏写在返回类型之前，如Q_REVISION(1) void newMethod();
+Q_SET_OBJECT_NAME(Object)//此宏为 Object 分配 objectName“Object”。Object 是否是指针并不重要，宏会自己计算出来
+Q_SIGNAL//这是一个附加宏，允许您将单个函数标记为信号
+Q_SIGNALS//当您想将 Qt 信号和插槽与 3rd 方信号/插槽机制一起使用时，使用此宏替换类声明中的信号关键字
+Q_SLOT//这是一个附加宏，允许您将单个函数标记为插槽
+Q_SLOTS//当您想将 Qt 信号和插槽与第 3 方信号/插槽机制一起使用时，使用此宏替换类声明中的插槽关键字
+```
+
 
 
 ### 2.2 Qt全局定义
@@ -20911,6 +21125,57 @@ void setAccepted(bool accepted);
 bool spontaneous() const;//如果事件源自应用程序外部（系统事件），则返回 true；否则返回false
 Type type() const;//返回事件类型
 static int registerEventType(int hint = -1);//注册并返回自定义事件类型。如果提供的提示可用，将使用它，否则它将返回尚未注册的 QEvent::User 和 QEvent::MaxUser 之间的值。如果它的值不在 QEvent::User 和 QEvent::MaxUser 之间，则忽略该提示
+```
+
+#### 16.2.2 QEventLoop
+
+QEventLoop 类提供了进入和离开事件循环的方法。
+在任何时候，您都可以创建一个 QEventLoop 对象并在其上调用 exec() 以启动本地事件循环。在事件循环中，调用 exit() 将强制 exec() 返回。
+
+此枚举控制由 processEvents() 函数处理的事件类型。
+
+```c++
+enum QEventLoop::ProcessEventsFlag{ 
+    QEventLoop::AllEvents//所有事件。请注意，DeferredDelete事件是经过特殊处理的
+    QEventLoop::ExcludeUserInputEvents//不要处理用户输入事件，例如 ButtonPress 和 KeyPress。请注意，事件不会被丢弃；它们将在下一次没有ExcludeUserInputEvents标志的情况下调用processEvents()时传递
+    QEventLoop::ExcludeSocketNotifiers//不要处理套接字通知事件。请注意，事件不会被丢弃；它们将在下一次没有 ExcludeSocketNotifiers 标志的情况下调用 processEvents() 时传递
+    QEventLoop::WaitForMoreEvents//如果没有待处理的事件可用，则等待事件
+}
+```
+
+成员函数。
+
+```c++
+QEventLoop(QObject *parent = Q_NULLPTR);
+~QEventLoop();
+// 进入主事件循环并等待直到 exit() 被调用。返回传递给 exit() 的值
+int exec(ProcessEventsFlags flags = AllEvents);
+// 告诉事件循环以返回码退出。调用此函数后，事件循环从对 exec() 的调用返回。 exec() 函数返回 returnCode。按照惯例，returnCode 为 0 表示成功，任何非零值都表示错误。
+void exit(int returnCode = 0);
+//如果事件循环正在运行，则返回 true。事件循环被认为是从调用 exec() 到调用 exit() 的时间开始运行的
+bool isRunning() const;
+// 处理与标志匹配的挂起事件，直到没有更多事件要处理。如果处理了挂起的事件，则返回 true；如果您有长时间运行的操作并希望在不允许用户输入的情况下显示其进度，则此功能特别有用
+bool processEvents(ProcessEventsFlags flags = AllEvents);
+//处理与标志匹配的未决事件最多maxTime毫秒，或者直到没有更多事件要处理，以较短者为准。
+void processEvents(ProcessEventsFlags flags, int maxTime);
+void wakeUp();//唤醒事件循环
+slot void quit(); // <=> exit(0)
+```
+
+#### 16.2.3 QEventLoopLocker
+
+QEventLoopLocker 类提供了一种在不再需要时退出事件循环的方法。
+QEventLoopLocker 对特定对象进行操作——QCoreApplication 实例、QEventLoop 实例或 QThread 实例。
+例如，这使得可以使用事件循环运行一批作业并在最后一个作业完成后退出该事件循环。这是通过为每个作业实例保留一个 QEventLoopLocker 来实现的。
+在 QCoreApplication 上运行的变体可以在最后一个 gui 窗口关闭后完成异步运行的作业。例如，这对于运行将数据上传到网络的作业很有用。
+
+成员函数。
+
+```c++
+QEventLoopLocker();//创建一个在 QCoreApplication 上运行的事件锁。当没有更多的 QEventLoopLocker 在运行时，应用程序将退出
+QEventLoopLocker(QEventLoop *loop);//创建一个在循环上运行的事件锁
+QEventLoopLocker(QThread *thread);//创建一个在线程上操作的事件锁
+~QEventLoopLocker();
 ```
 
 #### 16.2.2 QCloseEvent
