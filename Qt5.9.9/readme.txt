@@ -134,6 +134,8 @@
 
 45. TestLocationFunction 测试位置相关的函数size(),geometry(),x(),y(),pos(),frameGeometry(),rect()等
 
+46. AutoTestFramework 使用Qt的自动化测试框架，包括单元测试、数据驱动测试和性能测试的一个示例
+
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
 17. 设置对话框的属性

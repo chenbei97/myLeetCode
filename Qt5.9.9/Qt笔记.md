@@ -658,6 +658,373 @@ void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  se
 }
 ```
 
+#### 2.1.4 QMetaType
+
+QMetaType 类管理元对象系统中的命名类型。
+该类用作编组 QVariant 和排队信号和插槽连接中的类型的帮助器。它将类型名称与类型相关联，以便可以在运行时动态创建和销毁它。**使用 Q_DECLARE_METATYPE() 声明新类型**，使它们可用于 QVariant 和其他基于模板的函数。**调用 qRegisterMetaType() 使类型可用于非基于模板的函数**，例如排队的信号和槽连接。任何具有公共默认构造函数、公共复制构造函数和公共析构函数的类或结构都可以注册。
+如果我们希望流运算符 operator&lt;&lt;() 和 operator&gt;&gt;() 对存储自定义类型的 QVariant 对象起作用，自定义类型必须提供 operator&lt;&lt;() 和 operator&gt;&gt;() 运算符。以下代码分配和销毁 MyClass 的实例：
+
+```c++
+int id = QMetaType::type("MyClass");
+if (id != QMetaType::UnknownType) {
+    void *myClassPtr = QMetaType::create(id);
+    ...
+    QMetaType::destroy(id, myClassPtr);
+    myClassPtr = 0;
+}
+```
+
+##### 枚举类型
+
+这些是 QMetaType 支持的内置类型：
+
+```c++
+enum QMetaType::Type{
+    QMetaType::Void
+    QMetaType::Bool
+    QMetaType::Int
+    QMetaType::UInt
+    QMetaType::Double
+    QMetaType::QChar
+    QMetaType::QString
+    QMetaType::QByteArray
+    QMetaType::VoidStar
+    QMetaType::Long
+    QMetaType::LongLong
+    QMetaType::Short
+    QMetaType::Char
+    QMetaType::ULong
+    QMetaType::ULongLong
+    QMetaType::UShort
+    QMetaType::SChar
+    QMetaType::UChar
+    QMetaType::Float
+    QMetaType::QObjectStar
+    QMetaType::QVariant
+    QMetaType::QCursor
+    QMetaType::QDate
+    QMetaType::QSize
+    QMetaType::QTime
+    QMetaType::QVariantList
+    QMetaType::QPolygon
+    QMetaType::QPolygonF
+    QMetaType::QColor
+    QMetaType::QSizeF
+    QMetaType::QRectF
+    QMetaType::QLine
+    QMetaType::QTextLength
+    QMetaType::QStringList
+    QMetaType::QVariantMap
+    QMetaType::QVariantHash
+    QMetaType::QIcon
+    QMetaType::QPen
+    QMetaType::QLineF
+    QMetaType::QTextFormat
+    QMetaType::QRect
+    QMetaType::QPoint
+    QMetaType::QUrl
+    QMetaType::QRegExp
+    QMetaType::QRegularExpression
+    QMetaType::QDateTime
+    QMetaType::QPointF
+    QMetaType::QPalette
+    QMetaType::QFont
+    QMetaType::QBrush
+    QMetaType::QRegion
+    QMetaType::QBitArray
+    QMetaType::QImage
+    QMetaType::QKeySequence
+    QMetaType::QSizePolicy
+    QMetaType::QPixmap
+    QMetaType::QLocale
+    QMetaType::QBitmap
+    QMetaType::QMatrix
+    QMetaType::QTransform
+    QMetaType::QMatrix4x4
+    QMetaType::QVector2D
+    QMetaType::QVector3D
+    QMetaType::QVector4D
+    QMetaType::QQuaternion
+    QMetaType::QEasingCurve
+    QMetaType::QJsonValue
+    QMetaType::QJsonObject
+    QMetaType::QJsonArray
+    QMetaType::QJsonDocument
+    QMetaType::QModelIndex
+    QMetaType::QPersistentModelIndex
+    QMetaType::QUuid
+    QMetaType::QByteArrayList
+    QMetaType::User
+    QMetaType::UnknownType
+}
+```
+
+枚举描述了 QMetaType 支持的类型的属性。
+
+```c++
+enum QMetaType::TypeFlag{ 
+    QMetaType::NeedsConstruction//这种类型有非平凡的构造函数。如果未设置标志，则可以使用 memset 将实例安全地初始化为 0
+    QMetaType::NeedsDestruction//这种类型有一个重要的析构函数。如果未设置标志，则在丢弃对象之前不需要调用析构函数
+    QMetaType::MovableType//memcpy 可以安全地移动具有此属性的类型的实例
+    QMetaType::IsEnumeration//这种类型是枚举
+    QMetaType::PointerToQObject//这个类型是一个指向 QObject 派生的指针。这个类型是一个 Q_GADGET，它对应的 QMetaObject 可以用 QMetaType::metaObject 从 5.5 开始访问
+}
+```
+
+##### 成员函数
+
+```c++
+QMetaType(const int typeId);
+~QMetaType();
+void *construct(void *where, const void *copy = Q_NULLPTR) const;//在 where 寻址的现有内存中构造此 QMetaType 实例所针对的类型的值，即副本的副本，并返回 where。如果 copy 为零，则默认构造该值
+void *create(const void *copy = Q_NULLPTR) const;//返回副本的副本，假设它是创建此 QMetaType 实例的类型。如果 copy 为 null，则创建一个默认构造实例
+void destroy(void *data) const;//销毁数据，假设它是创建此 QMetaType 实例的类型
+void destruct(void *data) const;//破坏位于 data 的值，假设它是构造此 QMetaType 实例的类型。与destroy() 不同，这个函数只调用类型的析构函数，它不调用delete 操作符
+TypeFlags flags() const;//返回构造此 QMetaType 实例的类型的标志
+bool isRegistered() const;//如果此 QMetaType 对象包含有关类型的有效信息，则返回 true
+bool isValid() const;//如果此 QMetaType 对象包含有关类型的有效信息，则返回 true
+const QMetaObject *metaObject() const;//返回与此类型相关的 QMetaObject。如果类型是指向 QObject 子类的指针类型，flags() 包含 QMetaType::PointerToQObject 并且该函数返回相应的 QMetaObject。这可以与 QMetaObject::construct 结合使用来创建这种类型的 QObject。如果类型是 Q_GADGET，flags() 包含 QMetaType::IsGadget，并且此函数返回其 QMetaObject。这可用于检索 QMetaMethod 和 QMetaProperty 并在此类型的指针上使用它们。 （例如由 QVariant::data 给出）如果类型是枚举，flags() 包含 QMetaType::IsEnumeration，如果枚举注册为 Q_ENUM，则此函数返回封闭对象的 QMetaObject，否则返回 0
+int sizeOf() const;//返回类型的大小，以字节为单位（即 sizeof(T)，其中 T 是构造此 QMetaType 实例的实际类型）。此函数通常与construct() 一起使用，以对类型使用的内存执行低级管理
+```
+
+##### 静态成员函数
+
+```c++
+//比较 lhs 和 rhs 处的对象。两个对象都必须是 typeId 类型。如果 lhs 小于、等于或大于 rhs，则 result 设置为小于、等于或大于零。如果比较成功，则返回 true，否则返回 false。]
+bool compare(const void *lhs, const void *rhs, int typeId, int *result);
+// 在由where寻址的现有内存中构造给定类型的值，即副本的副本，并返回 where。如果copy为零，则默认构造该值
+void *construct(int type, void *where, const void *copy);
+//将对象从 fromTypeId 转换为预先分配的空间at以键入toTypeId。如果转换成功，则返回 true
+bool convert(const void *from, int fromTypeId, void *to, int toTypeId);
+//返回副本的副本，假设它是 type 类型。如果 copy 为零，则创建一个默认构造实例
+void *create(int type, const void *copy = Q_NULLPTR);
+//将 rhs 中 typeId 类型的对象流式传输到调试流 dbg。成功返回真，否则返回false
+bool debugStream(QDebug &dbg, const void *rhs, int typeId);
+//销毁数据，假设它是给定的类型
+void destroy(int type, void *data);
+// 破坏给定类型的值，位于 where
+void destruct(int type, void *where);
+// 比较 lhs 和 rhs 处的对象。两个对象都必须是 typeId 类型。如果 lhs 等于 rhs，则结果设置为零。如果比较成功，则返回 true，否则返回 false
+bool equals(const void *lhs, const void *rhs, int typeId, int *result);
+//如果元类型系统已注册类型 T 的比较器，则返回 true
+bool hasRegisteredComparators();
+//如果元类型系统为类型 id typeId 注册了比较器，则返回 true
+bool hasRegisteredComparators(int typeId);
+// 如果元类型系统具有从元类型 id fromTypeId 到 toTypeId 的注册转换，则返回 true
+bool hasRegisteredConverterFunction(int fromTypeId, int toTypeId);
+//如果元类型系统具有从类型 From 到类型 To 的注册转换，则返回 true
+bool hasRegisteredConverterFunction();
+//如果元类型系统具有类型 T 的已注册调试流运算符，则返回 true
+bool hasRegisteredDebugStreamOperator();
+// 如果元类型系统具有类型 id typeId 的已注册调试流运算符，则返回 true
+bool hasRegisteredDebugStreamOperator(int typeId);
+// 如果注册了 ID 类型的数据类型，则返回 true；否则返回假
+bool isRegistered(int type);
+// 将给定流中指定类型的对象读入数据。如果对象加载成功，则返回 true；否则返回假
+bool load(QDataStream &stream, int type, void *data);
+// 为类型返回 QMetaType::metaObject
+const QMetaObject *metaObjectForType(int type);
+// 为用户注册的类型T注册比较运算符。这要求T同时具有 operator==和operator<;。注册成功返回真
+bool registerComparators();
+//在元类型系统中注册从类型 From 到类型 To 的隐式转换的可能性。注册成功返回真，否则返回假
+bool registerConverter();
+// 元类型系统中注册方法函数，如To From::function() const作为从类型From到To的转换器。注册成功返回真
+bool registerConverter(MemberFunction function);
+//元类型系统中注册方法函数，如To From::function(bool *ok) const,注册成功返回真，否则返回假
+bool registerConverter(MemberFunctionOk function);
+// 在元类型系统中将一元函数对象函数注册为从类型 From 到类型 To 的转换器。注册成功返回真，否则返回假
+bool registerConverter(UnaryFunction function);
+// 为用户注册的类 T注册调试流运算符。要求T具有operator<<t;(QDebug dbg, T)。注册成功返回真
+bool registerDebugStreamOperator();
+// 为用户注册的类型 T 注册等于运算符。这要求 T 有一个 operator==。注册成功返回真，否则返回假。
+bool registerEqualsComparator();
+//将 ID 类型的数据指向的对象写入给定的流。如果对象保存成功，则返回 true；否则返回假。该类型必须事先在 qRegisterMetaType() 和 qRegisterMetaTypeStreamOperators() 中注册
+bool save(QDataStream &stream, int type, const void *data);
+//返回以字节为单位的给定类型的大小（即 sizeof(T)，其中 T 是由 type 参数标识的实际类型）。此函数通常与construct() 一起使用，以对类型使用的内存执行低级管理
+int sizeOf(int type);
+//返回类型名称的句柄，如果没有这种类型，则返回 QMetaType::UnknownType
+int type(const char *typeName);
+// 返回名为 typeName 的类型的句柄，如果没有此类类型，则返回 0
+int type(const QByteArray &typeName);
+// 返回给定类型的标志
+TypeFlags typeFlags(int type);
+// 返回与给定 typeId 关联的类型名称，如果未找到匹配类型，则返回空指针。返回的指针不能被删除
+const char *typeName(int typeId);
+```
+
+##### 关联的非成员函数
+
+（1）int qMetaTypeId();
+
+在编译时返回类型T的元类型 id。如果没有使用 Q_DECLARE_METATYPE() 声明类型，编译将失败。QMetaType::type() 返回与 qMetaTypeId() 相同的 ID，但在运行时根据类型名称进行查找。 QMetaType::type() 有点慢，但如果没有注册类型，编译会成功。用法如下：
+
+```c++
+int id = qMetaTypeId<QString>();// id就是QMetaType::QString
+id = qMetaTypeId<MyStruct>(); // 如果 MyStruct 未声明，则编译错误
+```
+
+（2）int qRegisterMetaType(const char *typeName);
+
+为类型 T 注册类型名称 typeName。返回 QMetaType 使用的内部 ID。任何具有公共默认构造函数、公共复制构造函数和公共析构函数的类或结构都可以注册。
+此函数要求 T 在调用函数时是完全定义的类型。对于指针类型，它还要求完全定义指向的类型。使用 Q_DECLARE_OPAQUE_POINTER() 能够注册指针以转发声明的类型。注册类型后，您可以在运行时动态创建和销毁该类型的对象。
+
+这个例子注册了 MyClass 类：
+
+```c++
+qRegisterMetaType<MyClass>("MyClass");
+```
+
+此函数用于注册TypeDef，以便QMetaProperty或QueuedConnections可以使用它们。警告：**此函数仅用于为每个其他用例注册别名 (typedef)**，应使用 Q_DECLARE_METATYPE 和 qMetaTypeId()。
+
+```c++
+typedef QString CustomString;
+qRegisterMetaType<CustomString>("CustomString");
+```
+
+（3）int qRegisterMetaType();
+
+调用此函数来注册类型 T。T 必须使用 Q_DECLARE_METATYPE() 声明。返回元类型 ID。例子：
+
+```c++
+int id = qRegisterMetaType<MyStruct>();
+```
+
+此函数要求 T 在调用函数时是完全定义的类型。对于指针类型，它还要求完全定义指向的类型。使用 Q_DECLARE_OPAQUE_POINTER() 能够注册指针以转发声明的类型。注册类型后，您可以在运行时动态创建和销毁该类型的对象。
+要在 QVariant 中使用类型 T，使用 Q_DECLARE_METATYPE() 就足够了。要在排队的信号和槽连接中使用类型 T，必须在建立第一个连接之前调用 qRegisterMetaType&lt;T&gt;()。
+此外，要将类型 T 与 QObject::property() API 一起使用，必须在使用之前调用 qRegisterMetaType&lt;T&gt;()，通常在使用 T 的类的构造函数中或在 main() 函数中。
+
+（4）void qRegisterMetaTypeStreamOperators(const char *typeName);
+
+为名为 typeName 的类型 T 注册流运算符。之后，可以使用 QMetaType::load() 和 QMetaType::save() 流式传输类型。这些函数在流式传输 QVariant 时使用。
+
+```c++
+ qRegisterMetaTypeStreamOperators<MyClass>("MyClass");
+```
+
+流运算符应具有以下签名：
+
+```c++
+QDataStream &operator<<(QDataStream &out, const MyClass &myObj);
+QDataStream &operator>>(QDataStream &in, MyClass &myObj);
+```
+
+##### 宏定义
+
+（1）Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(Container)
+
+该宏使容器 Container 被 QMetaType 称为关联容器。如果 QMetaType 知道 T 和 U 本身，这使得将 Container&lt;T, U&gt; 的实例放入 QVariant 成为可能。请注意，所有 Qt 关联容器都已内置支持，因此不必对它们使用此宏。 std::map 容器也有内置支持。
+此示例显示了 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE() 的典型用法：
+
+```c++
+#include <unordered_list>
+Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::unordered_map)
+void someFunc()
+{
+    std::unordered_map<int, bool> container;
+    QVariant var = QVariant::fromValue(container);
+	// ...
+}
+```
+
+（2）Q_DECLARE_METATYPE(Type)
+
+只要这个**宏提供了一个公共的默认构造函数、一个公共的拷贝构造函数和一个公共的析构函数，这个宏就可以让 QMetaType 知道类型 Type**。在 QVariant 中需要使用类型 Type 作为自定义类型。
+此宏要求 Type 在使用时是完全定义的类型。对于指针类型，它还要求完全定义指向的类型。与 Q_DECLARE_OPAQUE_POINTER() 一起使用来注册指向转发声明类型的指针。
+理想情况下，**这个宏应该放在类或结构的声明之下**。如果这是不可能的，它可以放在一个私有头文件中，每次在 QVariant 中使用该类型时都必须包含该头文件。
+**添加 Q_DECLARE_METATYPE() 使所有基于模板的函数都知道该类型，包括 QVariant**。请注意，如果您打算在排队的信号和槽连接或 QObject 的属性系统中使用该类型，您**还必须调用 qRegisterMetaType()**，因为名称是在运行时解析的。
+此示例显示了 Q_DECLARE_METATYPE() 的典型用例：
+
+```c++
+struct MyStruct
+{
+    int i;
+    ...
+};
+Q_DECLARE_METATYPE(MyStruct)
+```
+
+如果 MyStruct 在命名空间中，则 Q_DECLARE_METATYPE() 宏必须在命名空间之外：
+
+```c++
+namespace MyNamespace
+{
+    ...
+}
+
+Q_DECLARE_METATYPE(MyNamespace::MyStruct)
+```
+
+由于 MyStruct 现在为 QMetaType 所知，它可以在 QVariant 中使用：
+
+```c++
+ MyStruct s;
+QVariant var;
+var.setValue(s); // copy s into the variant
+
+...
+
+// 再拿到这个值
+MyStruct s2 = var.value<MyStruct>();
+```
+
+有些类型是自动注册的，不需要这个宏，例如：
+
+① 指向从QObject派生的类的指针；
+
+② QList&lt;T&gt;、QVector&lt;T&gt;、QQueue&lt;T&gt;、QStack&lt;T&gt;、QSet&lt;T&gt; 或 QLinkedList&lt;T&gt; 其中 T 是已注册的元类型 
+
+③ QHash&lt;T1, T2&gt;、QMap&lt;T1, T2&gt; 或 QPair&lt;T1, T2&gt;，其中 T1 和 T2 是已注册的元类型 ；
+
+④ QPointer&lt;T&gt;、QSharedPointer&lt;T&gt;、QWeakPointer&lt;T&gt;，其中 T 是派生自QObject
+
+⑤ 使用 Q_ENUM 或 Q_FLAG 注册的枚举
+
+⑥ 具有 Q_GADGET 宏的类
+
+（3）Q_DECLARE_OPAQUE_POINTER(PointerType)
+
+该宏允许使用 Q_DECLARE_METATYPE() 或 qRegisterMetaType() 将指向前向声明类型 (PointerType) 的指针注册到 QMetaType。
+
+（4）Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(Container)
+
+这个宏使得容器 Container 被 QMetaType 识别为一个顺序容器。如果 QMetaType 知道 T 本身，这使得将 Container&lt;T&gt; 的实例放入 QVariant 成为可能。
+请注意，所有 Qt 顺序容器都已内置支持，因此不必对它们使用此宏。 std::vector 和 std::list 容器也有内置支持。
+此示例显示了 Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE() 的典型用法：
+
+```c++
+#include <deque>
+Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque)
+void someFunc()
+{
+    std::deque<QFile*> container;
+    QVariant var = QVariant::fromValue(container);
+    // ...
+}
+```
+
+（5）Q_DECLARE_SMART_POINTER_METATYPE(SmartPointer)
+
+该宏使 QMetaType 将智能指针 SmartPointer 称为智能指针。如果 T 是继承 QObject 的类型，这使得将 SmartPointer&lt;T&gt; 的实例放入 QVariant 成为可能。
+请注意，QWeakPointer、QSharedPointer 和 QPointer 已经内置了支持，没有必要与它们一起使用这个宏。
+此示例显示了 Q_DECLARE_SMART_POINTER_METATYPE() 的典型用法：
+
+```c++
+ #include <memory>
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+void someFunc()
+{
+    auto smart_ptr = std::make_shared<QFile>();
+    QVariant var = QVariant::fromValue(smart_ptr);
+    // ...
+    if (var.canConvert<QObject*>()) {
+        QObject *sp = var.value<QObject*>();
+        qDebug() << sp->metaObject()->className(); // Prints 'QFile'.
+    }
+}
+```
+
+
+
 ### 2.2 Qt全局定义
 
 #### 2.2.1 QtGlobal
@@ -23034,6 +23401,308 @@ QFont::Style style() const;
 QFont::StyleHint styleHint() const;
 QString styleName() const;
 int weight() const;
+```
+
+### 16.9 单元测试
+
+Qt Test 是一个用于对基于 Qt 的应用程序和库进行单元测试的框架。 Qt Test 提供了单元测试框架中常见的所有功能以及用于测试图形用户界面的扩展。
+Qt Test 旨在简化基于 Qt 的应用程序和库的单元测试的编写。要创建测试，请将 QObject 子类化并为其添加一个或多个私有插槽。每个私有插槽都是您测试中的一个测试函数。 QTest::qExec() 可用于执行测试对象中的所有测试函数。此外，还有四个私有槽不被视为测试功能。它们将由测试框架执行，可用于初始化和清理整个测试或当前测试功能。一个例子可见
+
+initTestCase() 将在第一个测试函数执行之前被调用。
+cleanupTestCase() 将在最后一个测试函数执行后被调用。
+init() 将在每个测试函数执行之前被调用。
+cleanup() 将在每个测试函数之后调用。
+
+如果 initTestCase() 失败，则不会执行任何测试函数。如果 init() 失败，则不会执行下面的测试函数，测试将继续下一个测试函数。
+
+例子。
+
+```c++
+class MyFirstTest: public QObject
+{
+      Q_OBJECT
+  private slots:
+      void initTestCase()
+      { qDebug("called before everything else"); }
+      void myFirstTest()
+      { QVERIFY(1 == 1); }
+      void mySecondTest()
+      { QVERIFY(1 != 2); }
+      void cleanupTestCase()
+      { qDebug("called after myFirstTest and mySecondTest"); }
+};
+```
+
+如果您使用 qmake 作为构建工具，只需将以下内容添加到您的项目文件中：
+
+```c++
+QT += testlib
+```
+
+如果使用cmake，则需要
+
+```c++
+CONFIG += testcase
+```
+
+#### 16.9.1 QTest Namespace
+
+##### 枚举类型
+
+这个枚举对不同的测试进行编号。
+
+```c++
+enum QTest::AttributeIndex{
+    QTest::AI_Undefined
+    QTest::AI_Name
+    QTest::AI_Result
+    QTest::AI_Tests
+    QTest::AI_Failures
+    QTest::AI_Errors
+    QTest::AI_Type
+    QTest::AI_Description
+    QTest::AI_PropertyValue
+    QTest::AI_QTestVersion
+    QTest::AI_QtVersion
+    QTest::AI_File
+    QTest::AI_Line
+    QTest::AI_Metric
+    QTest::AI_Tag
+    QTest::AI_Value
+    QTest::AI_Iterations
+}
+```
+
+此枚举描述了密钥处理的可能操作。
+
+```c++
+enum QTest::KeyAction{
+    QTest::Press
+    QTest::Release
+    QTest::Click
+    QTest::Shortcut
+}
+```
+
+枚举指定测试日志消息的种类。
+
+```c++
+enum QTest::LogElementType{  
+    QTest::LET_Undefined
+    QTest::LET_Property
+    QTest::LET_Properties
+    QTest::LET_Failure
+    QTest::LET_Error
+    QTest::LET_TestCase
+    QTest::LET_TestSuite
+    QTest::LET_Benchmark
+    QTest::LET_SystemError
+}
+```
+
+此枚举描述了鼠标处理的可能操作。
+
+```c++
+enum QTest::MouseAction{
+    QTest::MousePress
+    QTest::MouseRelease
+    QTest::MouseClick
+    QTest::MouseDClick
+    QTest::MouseMove
+}
+```
+
+这个枚举列出了所有可以进行基准测试的东西。
+
+```c++
+enum QTest::QBenchmarkMetric{
+    QTest::FramesPerSecond
+    QTest::BitsPerSecond
+    QTest::BytesPerSecond
+    QTest::WalltimeMilliseconds
+    QTest::WalltimeNanoseconds
+    QTest::BytesAllocated
+    QTest::Events
+    QTest::CPUTicks
+    QTest::CPUMigrations
+    QTest::CPUCycles
+    QTest::RefCPUCycles
+    QTest::BusCycles
+    QTest::StalledCycles
+    QTest::InstructionReads
+    QTest::Instructions
+    QTest::BranchInstructions
+    QTest::BranchMisses
+    QTest::CacheReferences
+    QTest::CacheMisses
+    QTest::CacheReads
+    QTest::CacheReadMisses
+    QTest::CacheWrites
+    QTest::CacheWriteMisses
+    QTest::CachePrefetches
+    QTest::CachePrefetchMisses
+    QTest::ContextSwitches
+    QTest::PageFaults
+    QTest::MinorPageFaults
+    QTest::MajorPageFaults
+    QTest::AlignmentFaults
+    QTest::EmulationFaults
+}
+```
+
+此枚举描述了用于处理 QVERIFY() 或 QCOMPARE() 宏的预期失败的模式。
+
+```c++
+enum QTest::TestFailMode{  
+    QTest::Abort
+    QTest::Continue
+}
+```
+
+##### 成员函数
+
+```c++
+int qExec(QObject *testObject, int argc = 0, char **argv = Q_NULLPTR);//执行在 testObject 中声明的测试
+int qExec(QObject *testObject, const QStringList &arguments);
+void qSleep(int ms);//休眠 ms 毫秒，阻止执行测试。 qSleep() 不会做任何事件处理并且让你的测试没有响应。睡眠时网络通信可能会超时。使用 qWait() 进行非阻塞睡眠
+static void qWait(int ms);//等待 ms 毫秒。在等待期间，将处理事件，并且您的测试将保持对用户界面事件或网络通信的响应
+const char *currentAppName();//返回当前执行的二进制文件的名称
+const char *currentDataTag();//返回当前测试数据的名称。如果测试没有任何分配的测试数据，则函数返回 0
+bool currentTestFailed();//如果当前测试函数失败，则返回 true，否则返回 false
+const char *currentTestFunction();//返回当前执行的测试函数的名称
+
+void addColumn(const char *name, T *dummy = nullptr);//将类型为T的列添加到当前测试数据。name 是列的名称。dummy 是错误编译器的一种解决方法，可以忽略
+QTestData &addRow(const char *format, ...);//将新行追加到当前测试数据。函数的参数被传递给 qsnprintf() 以根据格式进行格式化
+QTestData &newRow(const char *dataTag);
+
+void setBenchmarkResult(qreal result, QBenchmarkMetric metric);//将此测试功能的基准测试结果设置为结果。如果您想在不使用 QBENCHMARK 宏的情况下报告基准测试结果，请使用此功能
+const char *benchmarkMetricName(QBenchmarkMetric metric);//将枚举值度量作为字符串返回
+const char *benchmarkMetricUnit(QBenchmarkMetric metric);//重新调整指定度量的度量单位。
+
+QTouchDevice *createTouchDevice(QTouchDevice::DeviceType devType = QTouchDevice::TouchScreen);//创建一个 devType 类型的虚拟触摸设备，用于模拟触摸事件
+QSharedPointer<QTemporaryDir> qExtractTestData(const QString &dirName);
+
+void ignoreMessage(QtMsgType type, const char *message);//忽略由 qDebug()、qInfo() 或 qWarning() 创建的消息。如果输出了对应类型的消息，则会从测试日志中删除。如果测试完成并且没有输出消息，则测试失败将附加到测试日志中
+void ignoreMessage(QtMsgType type, const QRegularExpression &messagePattern);//忽略由 qDebug()、qInfo() 或 qWarning() 创建的消息。如果输出了与相应类型的messagePattern匹配的消息，则将其从测试日志中删除。如果测试完成并且没有输出消息，则测试失败将附加到测试日志中
+
+//等待超时毫秒或直到窗口处于活动状态
+static bool qWaitForWindowActive(QWindow *window, int timeout = 5000);
+static bool qWaitForWindowActive(QWidget *widget, int timeout = 5000);
+// 等待超时毫秒或直到窗口暴露。如果窗口在 timeout 毫秒内暴露，则返回 true，否则返回 false
+static bool qWaitForWindowExposed(QWindow *window, int timeout = 5000);
+static bool qWaitForWindowExposed(QWidget *widget, int timeout = 5000);
+
+//返回指向字符串的指针，该字符串表示为以空格分隔的十六进制字符序列。如果输入被认为太长，则将其截断。在返回的字符串中将 trucation 指示为末尾的省略号
+char *toHexRepresentation(const char *ba, int length);
+char *toPrettyCString(const char *unicode, int length);
+char *toPrettyUnicode(const ushort *unicode, int length);
+```
+
+不常用函数。
+
+```c++
+bool compare_ptr_helper(const volatile void *t1, const volatile void *t2, const char *actual, const char *expected, const char *file, int line)
+bool compare_ptr_helper(const volatile void *t1, std::nullptr_t, const char *actual, const char *expected, const char *file, int line);
+bool compare_ptr_helper(std::nullptr_t, const volatile void *t2, const char *actual, const char *expected, const char *file, int line);
+
+void keyClick(QWidget *widget, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyClick(QWindow *window, char key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyClick(QWidget *widget, char key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyClick(QWindow *window, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyClicks(QWidget *widget, const QString &sequence, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyEvent(KeyAction action, QWidget *widget, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyEvent(KeyAction action, QWindow *window, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyEvent(KeyAction action, QWidget *widget, char ascii, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyEvent(KeyAction action, QWindow *window, char ascii, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyPress(QWidget *widget, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyPress(QWindow *window, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyPress(QWidget *widget, char key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyPress(QWindow *window, char key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyRelease(QWidget *widget, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyRelease(QWindow *window, Qt::Key key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void keyRelease(QWidget *widget, char key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1)void keyRelease(QWindow *window, char key, Qt::KeyboardModifiers modifier = Qt::NoModifier, int delay = -1);
+void mouseClick(QWidget *widget, Qt::MouseButton button, Qt::KeyboardModifiers modifier = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mouseClick(QWindow *window, Qt::MouseButton button, Qt::KeyboardModifiers stateKey = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mouseDClick(QWidget *widget, Qt::MouseButton button, Qt::KeyboardModifiers modifier = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mouseDClick(QWindow *window, Qt::MouseButton button, Qt::KeyboardModifiers stateKey = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mouseMove(QWidget *widget, QPoint pos = QPoint(), int delay = -1);
+void mouseMove(QWindow *window, QPoint pos = QPoint(), int delay = -1);
+void mousePress(QWidget *widget, Qt::MouseButton button, Qt::KeyboardModifiers modifier = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mousePress(QWindow *window, Qt::MouseButton button, Qt::KeyboardModifiers stateKey = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mouseRelease(QWidget *widget, Qt::MouseButton button, Qt::KeyboardModifiers modifier = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+void mouseRelease(QWindow *window, Qt::MouseButton button, Qt::KeyboardModifiers stateKey = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1);
+QTouchEventSequence touchEvent(QWidget *widget, QTouchDevice *device, bool autoCommit = true);
+QTouchEventSequence touchEvent(QWindow *window, QTouchDevice *device, bool autoCommit = true);
+char *toString(const QUuid &uuid);
+char *toString(const QLatin1String &string);
+char *toString(const QByteArray &ba);
+char *toString(const QTime &time);
+char *toString(const QDate &date);
+char *toString(const QDateTime &dateTime);
+char *toString(const QChar &character);
+char *toString(const QPoint &point);
+char *toString(const QSize &size);
+char *toString(const QRect &rectangle);
+char *toString(const QPointF &point);
+char *toString(const QSizeF &size);
+char *toString(const QRectF &rectangle);
+char *toString(const QUrl &url);
+char *toString(const QString &string);
+char *toString(const QVariant &variant);
+char *toString(std::nullptr_t);;
+char *toString(QSizePolicy::Policy p)
+char *toString(QSizePolicy::ControlTypes cts);
+char *toString(QSizePolicy::ControlType ct);
+char *toString(QSizePolicy sp);
+char *toString(const T &value);
+```
+
+##### 宏定义
+
+```c++
+QBENCHMARK//此宏用于测量测试中代码的性能。要进行基准测试的代码包含在此宏之后的代码块中
+
+QBENCHMARK_ONCE//QBENCHMARK_ONCE 宏用于通过运行一次来测量代码块的性能
+
+QCOMPARE(actual, expected)//QCOMPARE 宏使用等号运算符将实际值与预期值进行比较。如果实际和预期相同，则继续执行。如果不是，则在测试日志中记录失败，并且不会进一步执行测试
+
+QEXPECT_FAIL(dataIndex, comment, mode)//QEXPECT_FAIL() 宏将下一个 QCOMPARE() 或 QVERIFY() 标记为预期失败。将报告预期的失败，而不是向测试日志添加失败
+
+QFAIL(message)//此宏可用于强制测试失败。测试停止执行，失败消息将附加到测试日志中
+
+QFETCH(type, name)//fetch 宏在堆栈上创建一个名为 name 的局部变量，其类型为 type。 name 必须与测试数据中的元素名称匹配。如果不存在这样的元素，则测试将断言
+
+QFINDTESTDATA(filename)//为文件名引用的 testdata 文件返回一个 QString，如果找不到 testdata 文件，则返回一个空的 QString
+
+QSKIP(description)//如果从测试函数调用，QSKIP() 宏会停止执行测试，而不会将失败添加到测试日志。您可以使用它来跳过在当前配置中没有意义的测试。文本描述附加到测试日志中，并应包含对无法执行测试的原因的解释
+
+QTEST(actual, testElement)//QTEST() 是 QCOMPARE() 的一个便利宏，它将实际值与测试数据中的元素 testElement 进行比较。如果没有这样的元素，则测试断言
+
+QTEST_APPLESS_MAIN(TestClass)//实现一个执行 TestClass 中所有测试的 main() 函数
+
+QTEST_GUILESS_MAIN(TestClass)//实现一个 main() 函数，该函数实例化一个 QCoreApplication 对象和 TestClass，并按照定义的顺序执行所有测试。使用此宏构建独立的可执行文件
+
+QTEST_MAIN(TestClass)//实现一个 main() 函数，该函数实例化一个应用程序对象和 TestClass，并按照定义的顺序执行所有测试。使用此宏构建独立的可执行文件
+
+QTRY_COMPARE(actual, expected)//通过调用 QTRY_COMPARE_WITH_TIMEOUT() 执行实际值和预期值的比较，超时为 5 秒
+
+QTRY_COMPARE_WITH_TIMEOUT(actual, expected, timeout)//QTRY_COMPARE_WITH_TIMEOUT() 宏与 QCOMPARE() 类似，但重复执行实际值和预期值的比较，直到两个值相等或达到超时（以毫秒为单位）。在每次比较之间，将处理事件。如果达到超时，则在测试日志中记录失败，并且不会进一步执行测试
+
+QTRY_VERIFY2(condition, message)//通过调用 QTRY_VERIFY2_WITH_TIMEOUT() 检查条件，超时为 5 秒。如果条件仍然为假，则输出消息。该消息是一个纯 C 字符串
+
+QTRY_VERIFY(condition)//通过调用 QTRY_VERIFY_WITH_TIMEOUT() 来检查条件，超时为 5 秒
+
+QTRY_VERIFY2_WITH_TIMEOUT(condition, message, timeout)//QTRY_VERIFY2_WITH_TIMEOUT 宏与 QTRY_VERIFY_WITH_TIMEOUT() 类似，只是它在指定超时（以毫秒为单位）后条件仍然为假时输出详细消息。该消息是一个纯 C 字符串
+
+QTRY_VERIFY_WITH_TIMEOUT(condition, timeout)//QTRY_VERIFY_WITH_TIMEOUT() 宏类似于 QVERIFY()，但会反复检查条件，直到条件变为真或达到超时（以毫秒为单位）。在每次评估之间，将处理事件。如果达到超时，则在测试日志中记录失败，并且不会进一步执行测试
+
+QVERIFY2(condition, message)//QVERIFY2() 宏的行为与 QVERIFY() 完全相同，只是它在条件为假时输出详细消息。该消息是一个纯 C 字符串
+
+QVERIFY(condition)//QVERIFY() 宏检查条件是否为真。如果为真，则继续执行。如果不是，则在测试日志中记录失败，并且不会进一步执行测试
+
+QVERIFY_EXCEPTION_THROWN(expression, exceptiontype)//QVERIFY_EXCEPTION_THROWN 宏执行一个表达式并尝试捕获从该表达式抛出的异常。如果表达式抛出异常并且其类型与 exceptiontype 相同或 exceptiontype 可以替换为抛出异常的类型（即通常抛出异常的类型是从 exceptiontype 公开派生的），则将继续执行。如果抛出了不可替代类型的异常，或者表达式根本没有抛出异常，那么将在测试日志中记录失败，并且不会进一步执行测试
+
+QWARN(message)//将消息作为警告附加到测试日志。这个宏可以在你的测试中的任何地方使用
 ```
 
 
