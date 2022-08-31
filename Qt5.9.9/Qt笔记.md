@@ -23406,7 +23406,7 @@ int weight() const;
 ### 16.9 单元测试
 
 Qt Test 是一个用于对基于 Qt 的应用程序和库进行单元测试的框架。 Qt Test 提供了单元测试框架中常见的所有功能以及用于测试图形用户界面的扩展。
-Qt Test 旨在简化基于 Qt 的应用程序和库的单元测试的编写。要创建测试，请将 QObject 子类化并为其添加一个或多个私有插槽。每个私有插槽都是您测试中的一个测试函数。 QTest::qExec() 可用于执行测试对象中的所有测试函数。此外，还有四个私有槽不被视为测试功能。它们将由测试框架执行，可用于初始化和清理整个测试或当前测试功能。一个例子可见
+Qt Test 旨在简化基于 Qt 的应用程序和库的单元测试的编写。要创建测试，请将 QObject 子类化并为其添加一个或多个私有插槽。每个私有插槽都是您测试中的一个测试函数。 QTest::qExec() 可用于执行测试对象中的所有测试函数。此外，还有四个私有槽不被视为测试功能。它们将由测试框架执行，可用于初始化和清理整个测试或当前测试功能。一个例子可见[46-AutoTestFramework\AreaTest](46-AutoTestFramework\AreaTest)。
 
 initTestCase() 将在第一个测试函数执行之前被调用。
 cleanupTestCase() 将在最后一个测试函数执行后被调用。
@@ -23933,11 +23933,11 @@ enum Qt::KeyboardModifier{
 
 
 
-## 串口通信
+## 17. 串口通信
 
-### 数据类型
+### 17.1 数据类型
 
-#### QtSerialPort/QSerialPort
+#### 17.1.1 QSerialPort
 
 需要包含2个头文件，并在.pro工程文件配置。
 
@@ -24336,7 +24336,7 @@ void MySerial::recSerialData()
 }
 ```
 
-#### QtSerialPort/QSerialPortInfo
+#### 17.1.2 QSerialPortInfo
 
 此类提供有关现有串行端口的信息。可以使用静态函数生成QSerialPortInfo对象的列表。列表中的每个QSerialPortInfo对象表示一个串行端口，可以查询端口名称、系统位置、描述和制造商。QSerialPortInfo类还可以用作QSerialPort类的setPort()方法的输入参数。
 
@@ -24367,9 +24367,9 @@ static QList<qint32> QSerialPortInfo::standardBaudRates();// 返回平台支持�
 static QList<QSerialPortInfo> QSerialPortInfo::availablePorts();// 返回系统可用串行端口列表
 ```
 
-### 案例
+### 17.2 案例
 
-#### 案例1
+#### 17.2.1 案例1
 
 使用阻塞型代码编写，展示如何在工作线程和非GUI线程中使用同步型API，2个案例正好可以作为串口的客户端和服务端，分别用于发起请求并读取回复以及处理请求并回复，涉及的API就是waitForBytesWritten和waitForReadyRead，不涉及readyRead和bytesWritten(异步API)。要注意的是，调用write写数据后要立刻调用waitForBytesWritten。如果没有写入没有超时意味着可以读取数据，此时可以调用read/readLine/readAll等函数，同样调用读取的函数之前必须先调用waitForReadyRead。
 
@@ -24668,7 +24668,7 @@ void serverThread::run()
 }
 ```
 
-#### 案例2
+#### 17.2.2 案例2
 
 案例为[41-SerialPortExamples\AsynchronousSerialCommunication](41-SerialPortExamples\AsynchronousSerialCommunication)。
 
