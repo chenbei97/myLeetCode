@@ -24192,6 +24192,117 @@ enum Qt::KeyboardModifier{
 }
 ```
 
+### 16.11 屏幕
+
+#### 16.11.1 QDesktopWidget
+
+QDesktopWidget 类提供对多头系统的屏幕信息的访问。
+此类提供有关用户桌面的信息，例如其总大小、屏幕数量、每个屏幕的几何形状，以及它们是配置为单独的桌面还是单个虚拟桌面。Qt 提供的小部件使用此类将工具提示、菜单和对话框放置在其父或应用小部件的正确屏幕上。应用程序可以使用此类来获取可用于保存窗口位置的信息，或将子窗口小部件和对话框放置在一个特定的屏幕上。QApplication::desktop() 函数用于获取 QDesktopWidget 的实例。小部件的 screenGeometry() 函数提供有关可用屏幕的几何形状的信息。 screenCount 返回可用的屏幕数量，添加或删除屏幕时会发出 screenCountChanged() 信号。特定点或小部件所在的屏幕编号由 screenNumber() 返回。
+
+要获取特定屏幕的尺寸，请调用 screenGeometry() 函数。在某些桌面环境中，并非所有屏幕都可供应用程序使用；例如，应用程序停靠栏或菜单栏可能会占用一些空间。使用 availableGeometry() 函数获取应用程序的可用区域。QDesktopWidget 还继承了 QWidget 属性 width() 和 height()，它们指定了桌面的大小。但是，对于具有多个屏幕的桌面，桌面的大小是所有屏幕大小的并集，因此不应使用 width() 和 height() 来计算要放置在其中一个屏幕上的小部件的大小。在配置为将可用屏幕用作单个大型虚拟桌面的系统上，virtualDesktop 属性将设置为 true。在这种情况下，小部件的大小通常是所有屏幕的边界矩形的大小。
+
+对于应用程序，主窗口小部件所在的屏幕是主屏幕。这存储在 primaryScreen 属性中。在应用程序上下文中打开的所有窗口都应限制在主屏幕的边界内；例如，如果一个对话框在不同的屏幕上弹出，或者分成两个屏幕，会很不方便。下图中，应用一的主屏是屏幕 0，应用二的主屏是屏幕 1。
+
+![QDesktopWidget.jpg](QDesktopWidget.jpg)
+
+常用公共函数。
+
+```c++
+// 返回带有索引屏幕的屏幕的可用几何图形。可用的内容将是 screenGeometry() 的子区域，具体取决于平台决定可用的内容（例如，不包括 macOS 上的停靠栏和菜单栏，或 Windows 上的任务栏）。如果屏幕为-1，则使用默认屏幕
+const QRect availableGeometry(int screen = -1) const;
+// 返回包含小部件的屏幕的可用几何图形
+const QRect availableGeometry(const QWidget *widget) const;
+// 返回包含 p 的屏幕的可用几何图形
+const QRect availableGeometry(const QPoint &p) const;
+
+const QRect screenGeometry(int screen = -1) const;
+const QRect screenGeometry(const QWidget *widget) const;
+const QRect screenGeometry(const QPoint &p) const;
+
+// 对于虚拟桌面，screen() 将始终返回相同的小部件。虚拟桌面的大小就是这个桌面小部件的大小。
+bool isVirtualDesktop() const;
+// 此属性保存配置为系统主屏幕的屏幕的索引
+int primaryScreen() const;
+// 返回一个小部件，它表示具有索引屏幕的屏幕（值 -1 表示默认屏幕）
+QWidget *screen(int screen = -1);
+// 此属性保存系统上当前可用的屏幕数
+int screenCount() const;
+// 返回包含小部件最大部分的屏幕的索引，如果小部件不在屏幕上，则返回 -1
+int screenNumber(const QWidget *widget = Q_NULLPTR) const;
+// 返回包含该点的屏幕的索引，或距该点最短距离的屏幕
+int screenNumber(const QPoint &point) const;
+```
+
+信号函数。
+
+```c++
+void primaryScreenChanged();//每当主屏幕发生变化时，都会发出此信号
+void resized(int screen);//当屏幕尺寸发生变化时发出此信号
+void screenCountChanged(int newCount);//当屏幕数量更改为 newCount 时发出此信号
+void workAreaResized(int screen);//当屏幕上可用的工作区域发生变化时，会发出此信号
+```
+
+#### 16.11.2 QScreen
+
+QScreen 类用于查询屏幕属性。
+关于每英寸逻辑点数与物理点数的说明：物理 DPI 基于可用的实际物理像素大小，对于打印预览和其他需要了解屏幕显示内容的确切物理尺寸的情况很有用。
+每英寸逻辑点数用于将字体和用户界面元素从点大小转换为像素大小，并且可能与每英寸物理点数不同。每英寸的逻辑点数有时可由用户在桌面环境的设置面板中设置，以让用户在不同的应用程序中全局控制 UI 和字体大小。
+
+公共函数。
+
+```c++
+// 计算从旋转 a 到旋转 b 的旋转角度的便利函数
+int angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b) const;
+
+QRect geometry() const;//此属性以像素为单位保存屏幕的几何图形
+QRect availableGeometry() const;//此属性以像素为单位保存屏幕的可用几何图形
+QRect virtualGeometry() const;//此属性保存此屏幕所属的虚拟桌面的像素几何形状
+QRect availableVirtualGeometry() const;//此属性保存此屏幕所属的虚拟桌面的可用几何图形
+
+QSize availableSize() const;//此属性保存屏幕的可用大小（以像素为单位）
+QSize virtualSize() const;//此属性保存此屏幕所属的虚拟桌面的像素大小
+QSize availableVirtualSize() const;//此属性保存此屏幕所属虚拟桌面的可用大小
+QSizeF physicalSize() const;//此属性保存屏幕的物理尺寸（以毫米为单位）
+
+qreal logicalDotsPerInch() const;// 不分方向
+qreal logicalDotsPerInchX() const;// 水平方向
+qreal logicalDotsPerInchY() const;//此属性保存垂直方向上每英寸的逻辑点数或像素数
+qreal physicalDotsPerInch() const;//此属性保存每英寸的物理点数或像素数
+qreal physicalDotsPerInchX() const;// 此属性保存水平方向每英寸的物理点数或像素数
+qreal physicalDotsPerInchY() const;// 垂直方向
+
+QString manufacturer() const;//该属性持有屏幕的制造商
+QString model() const;//该属性保存屏幕的模型
+QString name() const;//此属性包含一个用户可呈现的字符串，表示屏幕
+QString serialNumber() const;//该属性保存屏幕的序列号
+QSize size() const;//该属性保存屏幕的像素分辨率
+qreal refreshRate() const;//此属性以 Hz 为单位保存屏幕的近似垂直刷新率
+int depth() const;//此属性保存屏幕的颜色深度
+qreal devicePixelRatio() const;//此属性保存屏幕的物理像素和设备无关像素之间的比率
+bool isLandscape(Qt::ScreenOrientation o) const;//如果是横向或倒置横向，则返回 true
+bool isPortrait(Qt::ScreenOrientation o) const;//如果 o 是纵向或倒置纵向，则返回true
+
+Qt::ScreenOrientation nativeOrientation() const;//此属性保存本机屏幕方向
+Qt::ScreenOrientation orientation() const;//该属性保存屏幕方向
+void setOrientationUpdateMask(Qt::ScreenOrientations mask);//设置应用程序有兴趣与此屏幕一起接收更新的方向
+Qt::ScreenOrientations orientationUpdateMask() const;//返回当前设置的方向更新掩码
+Qt::ScreenOrientation primaryOrientation() const;//此属性保存主屏幕方向
+```
+
+信号函数。
+
+```c++
+void availableGeometryChanged(const QRect &geometry);
+void geometryChanged(const QRect &geometry);
+void logicalDotsPerInchChanged(qreal dpi);
+void orientationChanged(Qt::ScreenOrientation orientation);//当屏幕的方向以方向作为参数而改变时，会发出此信号
+void physicalDotsPerInchChanged(qreal dpi);
+void physicalSizeChanged(const QSizeF &size);
+void primaryOrientationChanged(Qt::ScreenOrientation orientation);//当屏幕的主要方向以方向作为参数改变时，会发出此信号
+void refreshRateChanged(qreal refreshRate);
+void virtualGeometryChanged(const QRect &rect);
+```
+
 
 
 ## 17. 串口通信
