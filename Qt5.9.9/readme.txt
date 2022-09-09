@@ -138,12 +138,22 @@
 
 至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
 
+18. 注册元对象类型
+    例如注册枚举值对象，在一个头文件内声明了2个枚举类型，那么在头文件末尾使用宏声明
+    Q_DECLARE_METATYPE(TIMEOUTCODE) 
+    Q_DECLARE_METATYPE(SERIALERROR)
+    并在main.cpp中注册该类型
+    int id1 = qRegisterMetaType<TIMEOUTCODE>("TIMEOUTCODE");
+    int id2 = qRegisterMetaType<SERIALERROR>("SERIALERROR");
+
 17. 设置对话框的属性
+    setWindowFlag(Qt::Window); // 设置window属性就不会总是让界面在前或者在后
     setWindowFlag(Qt::MSWindowsFixedSizeDialogHint);//不能更改大小
     setFixedSize(this->geometry().size());
-    setWindowModality(Qt::ApplicationModal);// 设置为模态对话框
-    etWindowFlag(Qt::WindowStaysOnTopHint);//保持在前
+    setWindowModality(Qt::ApplicationModal);// 设置为模态对话框 Qt::NonModal,Qt::WindowModal
+    setWindowFlag(Qt::WindowStaysOnTopHint);//保持在前
     setWindowFlags(Qt::Dialog | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint); // 添加最大最小化按钮
+    setWindowFlags(flags^Qt::WindowCloseButtonHint^Qt::WindowContextHelpButtonHint);// 不想要帮助和关闭按钮
 
 16. 位置函数的区别
     1) this->x(),this->y(),this->pos(),获取整个窗体左上角在桌面上的坐标位置(只有窗口移动事件和左上角为中心调整窗口大小时会影响)
@@ -397,6 +407,7 @@ if (file.open(QFile::ReadOnly)) {
         }
         event->accept();
     }
+    还可以获取父类窗口的指针
     5.2 hideEvent():窗口隐藏事件
     5.3 paintEvent():窗口绘制事件,可以用来加入背景图片
     void Window::paintEvent(QPaintEvent *event)

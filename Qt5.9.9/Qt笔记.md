@@ -928,10 +928,7 @@ void someFunc()
 
 （2）Q_DECLARE_METATYPE(Type)
 
-只要这个**宏提供了一个公共的默认构造函数、一个公共的拷贝构造函数和一个公共的析构函数，这个宏就可以让 QMetaType 知道类型 Type**。在 QVariant 中需要使用类型 Type 作为自定义类型。
-此宏要求 Type 在使用时是完全定义的类型。对于指针类型，它还要求完全定义指向的类型。与 Q_DECLARE_OPAQUE_POINTER() 一起使用来注册指向转发声明类型的指针。
-理想情况下，**这个宏应该放在类或结构的声明之下**。如果这是不可能的，它可以放在一个私有头文件中，每次在 QVariant 中使用该类型时都必须包含该头文件。
-**添加 Q_DECLARE_METATYPE() 使所有基于模板的函数都知道该类型，包括 QVariant**。请注意，如果您打算在排队的信号和槽连接或 QObject 的属性系统中使用该类型，您**还必须调用 qRegisterMetaType()**，因为名称是在运行时解析的。
+只要这个**宏提供了一个公共的默认构造函数、一个公共的拷贝构造函数和一个公共的析构函数，这个宏就可以让 QMetaType 知道类型 Type，Type必须是enum QMetaType::Type支持的类型，如果是新的类型且打算在信号和槽连接使用该类型，则除了使用该宏声明以外还要在main.cpp使用qRegisterMetaType<>("")注册该类型**。在 QVariant 中需要使用类型 Type 作为自定义类型。理想情况下，**这个宏应该放在类或结构的声明之下**。如果这是不可能的，它可以放在一个私有头文件中，每次在 QVariant 中使用该类型时都必须包含该头文件。
 此示例显示了 Q_DECLARE_METATYPE() 的典型用例：
 
 ```c++
@@ -1197,10 +1194,11 @@ T qobject_cast(QObject *object); // 强制转换
 
 ##### 宏定义
 
-```c++
 //当信号和槽使用基于PMF的语法连接时，此宏将禁用信号携带的参数和槽接受的参数之间的缩小和浮点到整数的转换。
 QT_NO_NARROWING_CONVERSIONS_IN_CONNECT
+
 // 这个宏将额外的信息与类相关联，可以使用 QObject::metaObject()。额外信息采用名称字符串和值文字字符串的形式。Q_CLASSINFO("Author", "Pierre Gendron")
+
 Q_CLASSINFO(Name, Value)
 Q_DISABLE_COPY(Class)//禁用给定类的复制构造函数和赋值运算符
 Q_EMIT//使用此宏替换用于发出信号的emit关键字
@@ -1229,15 +1227,13 @@ Q_PROPERTY(...)//该宏用于在继承 QObject 的类中声明属性。属性的
              [FINAL])
   Q_PROPERTY(QString title READ title WRITE setTitle USER true)         
 */
+
 Q_REVISION//将此宏应用于成员函数的声明，以在元对象系统中用修订号标记它们。宏写在返回类型之前，如Q_REVISION(1) void newMethod();
 Q_SET_OBJECT_NAME(Object)//此宏为 Object 分配 objectName“Object”。Object 是否是指针并不重要，宏会自己计算出来
 Q_SIGNAL//这是一个附加宏，允许您将单个函数标记为信号
 Q_SIGNALS//当您想将 Qt 信号和插槽与 3rd 方信号/插槽机制一起使用时，使用此宏替换类声明中的信号关键字
 Q_SLOT//这是一个附加宏，允许您将单个函数标记为插槽
 Q_SLOTS//当您想将 Qt 信号和插槽与第 3 方信号/插槽机制一起使用时，使用此宏替换类声明中的插槽关键字
-```
-
-
 
 ### 2.2 Qt全局定义
 
