@@ -1,0 +1,13 @@
+INPUT(
+./release\main.o
+./release\dialog.o
+./release\newdialog.o
+./release\newreceivefile.o
+./release\newtcpserver.o
+./release\receivefile.o
+./release\moc_dialog.o
+./release\moc_newdialog.o
+./release\moc_newreceivefile.o
+./release\moc_newtcpserver.o
+./release\moc_receivefile.o
+);

@@ -90,6 +90,10 @@
 30. TestHostInformationQuery 演示如何使用QHostInfo和QNetworkInterface获取本机或指定域名IP地址
 
 31. TestTcpServerClient 演示如何进行TCP通信(本机作为服务器也作为客户端)
+    TCPClient和TCPServer是Qt书上的一对例子
+    TCPServerClientOther是Qt文档的例子
+    TcpByRunThreadOrNot比较重要，是B站视频的例子，非常清晰演示了如何用2种方式使用线程
+    https://www.bilibili.com/video/BV1LB4y1F7P7?p=16
 
 32. TestUdpUnitMultiBroadCast 演示如何进行UDP通信(单播、广播和组播模式)
 
