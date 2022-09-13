@@ -312,6 +312,9 @@ void on_lineEdit_textChanged(const QString &text)
     //....
     QLineEdit * lineEdit = qobject_cast<QLineEdit*>(sender()) ;
 }
+(7) 如果是匿名函数作为槽函数,当信号具有参数时可以这样做
+connect(worker,static_cast<void (SendFile::*)(int)>(&SendFile::sendPercentProgress),
+                                    this,[=](int percent){PBar->setValue(percent);});
 
 9. QWidget及其被继承的子类想要绘图，都需要依赖绘图事件paintEvent，这里可以定义自己的绘图，例如设置背景图片
 void TestQSplash::paintEvent(QPaintEvent *event)
@@ -343,6 +346,8 @@ int main()
 }
 
 7. 选择文件对话框的使用方式
+QDir curpath = QDir::current(); // exe路径
+curpath.cdUp(); // 回到上一级,也就是工作代码的路径
 QString aFileName=QFileDialog::getOpenFileName(this,tr("打开一个文件"),curPath,
                 "C++文件(*.h *cpp);;文本文件(*.txt);;所有文件(*.*)");
 if (aFileName.isEmpty()) return; //如果未选择文件，退出
