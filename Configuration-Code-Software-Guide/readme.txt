@@ -1,7 +1,6 @@
 这是1个各类软件、环境配置的指南。
 
-222详情可见configuration-guide.md
-1111详情可见configuration-guide.md
+详情可见configuration-guide.md
 
 文档目录为：
 安装Python
