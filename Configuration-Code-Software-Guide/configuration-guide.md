@@ -2527,3 +2527,189 @@ Get-ExecutionPolicy -List // 查看所有状态
 具体的安装过程，只要下载好系统后，使用U盘启动。
 
 对于联想电脑应该是按Fn+F10或者Fn+F11就可以选择启动模式，选择U盘启动即可。
+
+### Git配置局域网服务器
+
+#### 使用共享文件夹的方式
+
+**第一步：**新建1个文件夹，例如在桌面新建1个Project文件夹。
+
+**第二步：**右键文件夹属性，然后按照步骤设置共享属性。
+
+![SetSharedProperties_1.png](SetSharedProperties_1.png)
+
+**第三步：**设置Everyone的权限为读取/写入，这样同一局域网内其他电脑就可以操作你电脑的这个文件夹了。
+
+![](Everyone.png)
+
+**第四步：**点击共享以后，就会看到共享文件夹的路径，点击完成。
+
+```powershell
+\\PHY-U\Users\chenb\Desktop\Project
+```
+
+![](EveryoneDone.png)
+
+**第五步：**选择高级共享，按照步骤设置后确定。
+
+![EveryoneSuperDone.png](EveryoneSuperDone.png)
+
+这里设置后，共享路径发生了一些变化。注意这里**路径用反斜杠**，因为bash的终端是模拟Linux的，所以使用windows的斜杠可能会出现问题。
+
+```powershell
+//PHY-U/Users/chenb/Desktop/Project # 变为
+//PHY-U/Project # 以后就用这个路径
+```
+
+**第六步：**选择网络和共享中心，分别在专用、来宾或公用、所有网络这里进行设置。
+
+![](Internetshare1.png)
+
+![](internetshare2.png)
+
+![](internetshare3.png)
+
+**第七步：**然后可以在Project内新建1个文件夹HELLO，模拟某个项目文件夹的远程仓库，然后进入此文件夹初始化仓库即可。
+
+```powershell
+mkdir HELLO
+cd HELLO
+git init
+```
+
+记住，这个仓库**模拟的是远程仓库**，它自身不执行任何操作，初始化完后就可以了，相当于把服务器放在了当前的电脑中。
+
+**第八步：**在当前电脑的**另一个地方**新建1个文件夹HELLO，这个HELLO**模拟的是本地仓库**，然后同样在文件夹内初始化仓库。然后手动指定上边Project内的HELLO文件夹作为远程仓库。
+
+方式1：
+
+```powershell
+git init
+git remote # 测试远程仓库对象,不存在
+git remote add origin //PHY-U/Project/HELLO/.git # 手动指定当前仓库的远程仓库,注意用反斜杠
+git remote # 测试远程仓库对象有了origin
+```
+
+如果不使用先init再reomte add origin的方式，直接git clone也是可以的，克隆项目时自动绑定了远程仓库。
+
+方式2：
+
+```powershell
+# 或
+git clone //PHY-U/Project/HELLO/.git # 注意用反斜杠
+git remote # 测试远程仓库对象,发现已经有了origin
+```
+
+**第九步：**可以在本地仓库的HELLO文件夹内创建1个文件，并添加、提交和推送，推送的代码有2种。
+
+```c++
+touch 1.c
+git add .
+git commit -m "1.c"
+```
+
+推送代码有2种：
+
+```powershell
+git push
+# 或
+git push origin master # 这个是指推送到origin的master分支(默认存在)
+```
+
+如果选择第1种，可能会提示以下信息，这个意思是git push没有指定默认推送分支对象，使用下方的命令可以指定git push默认推送到master分支，下次就可以直接使用git push了，这种情况是远程仓库没有其他分支。
+
+```powershell
+The current branch master has no upstream branch.
+To push the current branch and set the remote as upstream, use
+git push --set-upstream origin master
+```
+
+如果有其他分支例如dev，还是需要第2种代码，只不过变为
+
+```powershell
+git push origin dev
+```
+
+![git_push_origin_master.png](git_push_origin_master.png)
+
+其实这时候已经推送成功了，但是可能在远程仓库没有显示，这个时候可以在远程仓库的bash界面使用切换分支的命令来刷新显示。（远程仓库其实已经就在默认主分支master，这个切换只是为了刷新一下显示结果）
+
+```c++
+git checkout master
+```
+
+**第十步：** 现在为止，当前电脑有个远程仓库也有个本地仓库，现在另一台电脑也想有个本地仓库。首先确保两台电脑处于同一局域网内。然后右击电脑选择映射驱动器（驱动器型号无所谓默认就可），或者图中的位置添加一个映射器。因为之前设置了无需密码共享，所以点击完成以后新电脑就可以操作本地电脑的文件了。
+
+![mapTheDrive.png](mapTheDrive.png)
+
+![](mapdrive.png)
+
+同样的方法，可以在新电脑的任何地方例如桌面新建自己的本地仓库。不过这里不使用先init再添加remote origin的方式，而是直接使用git clone，这是为了说明第八步另一种方式也是可以的。这里想克隆到桌面的HELLO文件夹内，故进入HELLO文件夹右击bash界面，然后输入以下命令生成本地仓库。
+
+```powershell
+git clone Z:/HELLO/.git # 注意使用反斜杠
+cd HELLO
+```
+
+![](gitclonesharegit.png)
+
+**第十一步：**此时新电脑的本地仓库肯定是和远程仓库一致的，因为是直接clone的，如果是先init然后再指定远程仓库的话还需要先拉取代码。
+
+```powershell
+# 如果是第1种方式初始化本地仓库的还要额外执行下方代码
+git pull origin master # 方式1指定拉取的分支
+# 或
+git branch --set-upstream-to=origin/master # 方式2先指定默认拉取分支再拉取
+git pull
+```
+
+然后开始进行测试，同样新建一个文件2.c然后提交推送。
+
+```powershell
+touch 2.c
+git add .
+git commit -m "2.c"
+git push origin master # 或git push --set-upstream origin master + git push
+```
+
+之后在原来电脑使用git pull拉取就可以得到2.c这个文件。同理原来电脑新建3.c文件推送后，在新电脑的本地仓库拉取也可以得到3.c文件，这样实现了协作。
+
+**第十二步：**第十一步有个现象，2个本地仓库之间互相推送，发现是可以同步的，但是远程仓库却看起来没有同步，并没有出现同步的文件。这就是本步要解决的问题，参见[Git建立本地远程仓库](https://blog.csdn.net/lusyoe/article/details/52876728)的说法，可以看到文件是有提交到远程仓库的，只是还没有**checkout** 出来而已。那如何每次提交到远程仓库都使其自动**checkout**出文件来呢？按照解决方案是找到远程仓库的hooks文件夹，找到post_update.sample文件，去除后缀后以文本方式打开，并注释掉原有的执行代码，添加以下三行代码。
+
+```c++
+unset GIT_DIR
+cd ..
+git checkout -f
+```
+
+![](hook_post_update.png)
+
+这时候无论本地电脑还是新电脑的本地仓库提交并推送文件后都会立刻在远程仓库显示，可以使用git show显示是谁提交的。
+
+**其它：**可以新建分支，使用git branch name来创建，一般是**本地仓库新建分支**，然后推送的时候如果远程仓库没有就会需要使用额外的参数来保证远程仓库自动创建同名分支。
+
+```powershell
+git branch qian
+git checkout qian
+touch qian.c
+git add .
+git commmit -m "qian"
+git push -u origin qian # 远端仓库创建并更新
+```
+
+或者如果不使用-u参数，则需要事先把新建分支推送到远端仓库。
+
+```powershell
+git branch li
+git checkout li
+git push --set-upstream origin li # 推送到远端仓库先创建
+touch li.c
+git add .
+git commmit -m "li"
+git push origin li # 再更新
+```
+
+如果是服务器事先新建了分支，那么本地仓库必须先使用git pull拉取保持同步，就可以拿到远程仓库新分支的内容了。
+
+#### 使用VSCODE的方式
+

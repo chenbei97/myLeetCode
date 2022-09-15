@@ -47,3 +47,7 @@ ubuntu配置
     cmd对文件改名
     切换磁盘
     office0x426-0x0 错误代码
+    profile.ps1文件无法加载
+    win系统重装
+    Git配置局域网服务器
+        使用共享文件夹的方式
