@@ -1,6 +1,6 @@
 这是1个各类软件、环境配置的指南。
 
-详情1可见configuration-guide.md
+详情12可见configuration-guide.md
 
 文档目录为：
 安装Python
