@@ -1815,6 +1815,50 @@ cd C:\Users\Lenovo\Desktop
 git clone https://github.com/chenbei97/myLeetCode.git
 ```
 
+常见git命令，具体可见[GIT常用命令大全](https://blog.csdn.net/weixin_49851451/article/details/123944431)。
+
+```powershell
+git config --global user.name "Your Name" #配置邮箱和用户名
+git config --global user.email "email@example.com"
+git config --global alias.st status	# 配置别名
+git config --global alias.unstage 'reset HEAD'  # 配置操作别名
+git config --global alias.last 'log -1'	# 显示最后一次提交信息
+
+git log	#查看提交历史记录，从最近到最远，可以看到3次
+git log --pretty=oneline	#加参，简洁查看
+git show # 查看是谁提交了什么信息
+git reflog	#查看每一次修改历
+git clone # 克隆项目
+git init # 初始化仓库
+git status	# 查看工作区中文件当前状态
+git --bare init # 初始化裸仓库
+git commit -m "remove test.txt" # 提交注释
+git last	#显示最近一次的提交
+
+git checkout -b dev	# 创建并切换到分支dev
+git checkout branchname # 转换到新分支
+git checkout -b dev origin/dev	# 拉取本地不存在的远程dev分支到本地
+git switch -c dev	#创建并切换到分支dev
+git switch master	# 切换到新分支
+
+git branch branchname # 创建新分支
+git branch -d dev	#删除dev分支 
+git branch		# 查看当前分支
+git branch --set-upstream-to=origin/master #指定本地与远程master的链接,这样pull默认拉取master
+
+git merge dev #合并dev分支的工作成果合并到当前分支
+
+git remote	#查看远程库的信息
+git remote -v	#查看远程库的详细信息
+ggit remote add origin //PHY-U/Project/HELLO/.git # 添加远程仓库
+git remote rm origin	#删除远程仓库（解绑）
+
+git push -u origin master	# 将本地内容推送到远程仓库（第一次），那么远程仓库会自动创建没有的分支
+git push origin master	# 将本地内容推送到远程仓库（之后）
+git push --set-upstream origin dev # 把当前分支关联到远程分支dev
+git push --set-upstream origin master # 单独使用git push时会默认推送到master
+```
+
 ## msys配置
 
 下载地址：[msys2-x86_64-20220603.exe](https://www.msys2.org/)
