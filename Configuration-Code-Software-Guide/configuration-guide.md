@@ -2757,3 +2757,49 @@ git push origin li # 再更新
 
 #### 使用VSCODE的方式
 
+可以不使用代码的方式，借助vscode的图形可视化来操作。
+
+如果远程仓库依然选择本地仓库的话，那么还是需要使用共享文件夹的方式在其他电脑git clone远程仓库。
+
+如果远程仓库选择的是Github网页创建的项目，那就无需共享文件夹，每台电脑只需要git clone Github网页上的根目录即可。
+
+不过为了模拟，这里没有选择Github网页创建的项目，而是新建了3个文件夹，root文件夹只需要git init即可，其它2个文件夹使用git clone root文件夹的git根目录即可，模拟的是2个本地仓库。
+
+![rootu1u2.png](rootu1u2.png)
+
+然后用Vscode分别打开3个文件夹即可。
+
+![vscode_root_u1_u1.png](vscode_root_u1_u1.png)
+
+之后的事，就是在u1提交了1.c，然后推送，那么root就会和u1保持一致，u2可以拉取下来和root保持一致。
+
+这是最简单的协作方式。
+
+除此之外，可能存在提交冲突情况，根据[git冲突解决问题---多人修改同一文件](https://www.cnblogs.com/zhangshijiezsj/p/16198903.html)所说，冲突情况分为2种。
+
+第一种是：两个人同时修改了一个文件，其中一个人先push上去，另外一人push的时候会出现冲突
+
+第二种是：两个人修改了不同的文件，一个人push上去后，另外一个人push也会出现冲突
+
+第二种情况先说明：这种情况是最简单处理的，不同的文件提交不上去，其实不存在冲突的问题，存在的是本地仓库和远程仓库不同步的问题，一般是远程仓库版本更新。
+
+第一种情况复杂一些：另外一个人推送的时候如果也修改提交过自己的改动，就会出现下图情况。
+
+![u1pushu2push.png](u1pushu2push.png)
+
+在u2处理，例如选择Accept Both Changes，然后同步提交，就会更新root，此时u1只需要拉取下来即可。
+
+![u2rootu1pull.png](u2rootu1pull.png)
+
+如果是在root直接修改的，那么u1和u2直接拉取下来即可，版本又保持一致。
+
+但是假定root修改了文件并提交，u1也修改了文件，此时拉取会提示先清理工作树。也就是u1要不放弃之前的修改，要么就提交，这里当然选择提交，提交上去以后，也会出现冲突，如下图所示。
+
+![rootu1pullu2change.png](rootu1pullu2change.png)
+
+![rootu1u2merge.png](rootu1u2merge.png)
+
+之后的事就简单了，u2处理完冲突合并推送到root实现覆盖，u1直接pull即可实现同步。
+
+![u2mergerrootu1pull.png](u2mergerrootu1pull.png)
+
