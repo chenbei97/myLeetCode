@@ -52,3 +52,5 @@ ubuntu配置
     Git配置局域网服务器
         使用共享文件夹的方式
         使用VSCode的方式
+    Git的main和master分支的问题
+    

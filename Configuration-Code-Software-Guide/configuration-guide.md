@@ -2803,3 +2803,76 @@ git push origin li # 再更新
 
 ![u2mergerrootu1pull.png](u2mergerrootu1pull.png)
 
+### Git的main和master分支的问题
+
+下载项目到本地以后，推送代码到远程仓库可能推送到项目的master分支而不是main分支。
+
+这个历史原因是Github官方造成的，2020年之后默认的分支从master改成main了。
+
+#### 使用命令行
+
+但是用户习惯于还是推送到主分支，那么可以这样做：
+
+首先在Github创建一个新项目，并添加一个1.c文件，然后复制code的根目录地址。
+
+在桌面的git bash here，使用git clone克隆。
+
+```powershell
+git clone https://github.com/chenbei97/HELLO.git
+```
+
+这个下载的项目就是主分支main，推送代码也会推送到main分支，然后再用vscode打开下载的文件夹，之后任何代码的操作其实都是main分支下了。
+
+**顺便演示一下冲突情况的一个处理**，假定Github修改了1.c文件添加了一串"1"，然后本地仓库也修改了1.c文件，添加了一串"2"。然后提交代码并推送，就会提示错误，这是因为远程版本和现在的版本不一致的原因，必须先拉取处理代码。
+
+![](gitpushconflict.png)
+
+然后按照它的要求，执行git pull，显示有冲突需要解决，这是因为拉取的代码有1，而你修改的代码有2，假如你不修改代码，那么拉取就可以直接覆盖了你本地文件。由于你修改了，所以git无权替你决定，这个时候你只需要打开这个文件就可以解决，利用vscode的提示处理。
+
+![dealconflict.png](dealconflict.png)
+
+合并后需要add+commit，再次使用git push即可，这个时候去看Github官网的项目显示得到了更新。
+
+![updateconflict.png](updateconflict.png)
+
+#### 使用vscode
+
+上边的创建方法不会看到关于master的任何东西，但是如果使用vscode创建，即新建1个文件夹，然后vscode打开以后初始化仓库，选择添加远程仓库，是可能看见这个问题的。
+
+这时候默认创建的分支是master，先不管这个，把远程的仓库先添加进来。
+
+![addremote.png](C:/Users/chenb/Desktop/myLeetCode/Configuration-Code-Software-Guide/addremote.png)
+
+添加进来以后会看到，有三个选项。第一个选项表示创建1个分支，例如你可以创建chen的分支，创建的时候是基于当前所在分支创建的，所以会继承当前分支的一切，然后推送后Github就会出现chen的分支；第二个选项是切换到main分支，那么修改的任何内容以及推送都是基于main的；第三个选项同理，是居于master的。
+
+![createbranch.png](createbranch.png)
+
+现在就涉及到合并分支的操作了，可以在vscode直接操作也可以在GitHub官网操作。
+
+譬如现在的main版本是有1、2、3、5四个文件，但是master版本有1、2、3、4四个文件，所以就有区别了。
+
+在Github的操作是这样的。
+
+![github-pullrequest.png](github-pullrequest.png)
+
+![compare_branch.png](compare_branch.png)
+
+![leavecommentpullrequest.png](leavecommentpullrequest.png)
+
+![mergepullrequest.png](mergepullrequest.png)
+
+![confirm merge.png](confirm merge.png)
+
+确定合并以后就完成了，那么现在main分支就有了master的4.c文件了。然后在本地仓库拉取，本地仓库的main分支也同步了。这是用Github的方式，可以添加评论，当然也可以直接在Vscode操作。
+
+现在main分支有了1、2、3、4、5共5个文件，但是master只有1、2、3、4共4个文件，所以是可以合并的。合并方法可以还使用Github操作，就像这样，选好base和compare即可。
+
+![mastermainmerge.png](mastermainmerge.png)
+
+或者vscode直接选择合并某个分支。
+
+![vscode-main-to-master.png](vscode-main-to-master.png)
+
+选择合并的分支是main，之后同步更改即可。
+
+![selectmain.png](selectmain.png)
