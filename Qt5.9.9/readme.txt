@@ -140,7 +140,19 @@
 
 46. AutoTestFramework 使用Qt的自动化测试框架，包括单元测试、数据驱动测试和性能测试的一个示例
 
-至今遇见的有价值的问题、技巧等（序号从大到小倒序）：
+【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
+
+20. 列出系统支持的字体家族和字体大小
+    QList<int> sizes = QFontDatabase::standardSizes();
+    QStringList sizeString;
+    for(auto size : sizes) sizeString << QString::number(size);
+    ui->sizeComboBox->addItems(sizeString);
+    ui->sizeComboBox->setCurrentIndex(ui->sizeComboBox->findText(
+        QString::number(this->font().pointSize())
+    )); // 跟随当前窗口字体大小
+    QFontDatabase base;
+    ui->fontComboBox->addItems(base.families(QFontDatabase::Any));
+    ui->fontComboBox->setCurrentText(this->font().family()); // 跟随窗口字体风格
 
 19. 关于串口指针/套接字指针无法在工作线程使用的问题
     1) 在主线程创建的对象不能跨线程调用,所以如果指针调用close/start/open等函数就会出错

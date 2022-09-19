@@ -23664,6 +23664,132 @@ QString styleName() const;
 int weight() const;
 ```
 
+#### 16.8.18 QFontDatabase
+
+QFontDatabase 类提供有关底层窗口系统中可用字体的信息。
+此类最常见的用途是查询数据库以获取字体系列（）的列表以及每个系列可用的 pointSizes（）和样式（）。 pointSizes() 的替代方法是 smoothSizes()，它返回给定系列和样式看起来有吸引力的尺寸。
+如果字体系列可从两个或多个铸造厂获得，则铸造厂名称包含在系列名称中；例如：“Helvetica [Adobe]”和“Helvetica [Cronyx]”。当您指定一个族时，您可以使用旧的带连字符的“foundry-family”格式或带括号的“family [foundry]”格式；例如：“Cronyx-Helvetica”或“Helvetica [Cronyx]”。如果族有代工厂，则始终使用括号格式返回，与family() 返回的值一样。
+font() 函数返回一个给定系列、样式和磅值的 QFont。
+可以检查系列和样式组合以查看它是斜体（）还是粗体（），并检索其权重（）。类似地，我们可以调用 isBitmapScalable()、isSmoothlyScalable()、isScalable() 和 isFixedPitch()。
+使用 styleString() 获取样式的文本版本。
+QFontDatabase 类还支持一些静态函数，例如standardSizes()。您可以使用 writingSystemName() 检索书写系统的描述，并使用 writingSystemSample() 检索书写系统中的字符样本。
+
+例如下方示例获取字体系列列表、每个系列的样式列表以及可用于每个系列和样式组合的磅值，并在树视图中显示此信息。
+
+```c++
+QFontDatabase database;
+QTreeWidget fontTree;
+fontTree.setColumnCount(2);
+fontTree.setHeaderLabels(QStringList() << "Font" << "Smooth Sizes");
+
+foreach (const QString &family, database.families()) 
+{
+    QTreeWidgetItem *familyItem = new QTreeWidgetItem(&fontTree);
+    familyItem->setText(0, family);
+
+    foreach (const QString &style, database.styles(family)) 
+    {
+        QTreeWidgetItem *styleItem = new QTreeWidgetItem(familyItem);
+        styleItem->setText(0, style);
+
+        QString sizes;
+        foreach (int points, database.smoothSizes(family, style))
+        sizes += QString::number(points) + ' ';
+
+        styleItem->setText(1, sizes.trimmed());
+	}
+}
+```
+
+枚举值
+
+```c++
+enum QFontDatabase::SystemFont{
+    QFontDatabase::GeneralFont//默认系统字体
+    QFontDatabase::FixedFont//系统推荐的固定字体
+    QFontDatabase::TitleFont//标题的系统标准字体
+    QFontDatabase::SmallestReadableFont//最小的可读系统字体
+}
+```
+
+```c++
+enum QFontDatabase::WritingSystem{
+    QFontDatabase::Any
+    QFontDatabase::Latin
+    QFontDatabase::Greek
+    QFontDatabase::Cyrillic
+    QFontDatabase::Armenian
+    QFontDatabase::Hebrew
+    QFontDatabase::Arabic
+    QFontDatabase::Syriac
+    QFontDatabase::Thaana
+    QFontDatabase::Devanagari
+    QFontDatabase::Bengali
+    QFontDatabase::Gurmukhi
+    QFontDatabase::Gujarati
+    QFontDatabase::Oriya
+    QFontDatabase::Tamil
+    QFontDatabase::Telugu
+    QFontDatabase::Kannada
+    QFontDatabase::Malayalam
+    QFontDatabase::Sinhala
+    QFontDatabase::Thai
+    QFontDatabase::Lao
+    QFontDatabase::Tibetan
+    QFontDatabase::Myanmar
+    QFontDatabase::Georgian
+    QFontDatabase::Khmer
+    QFontDatabase::SimplifiedChinese
+    QFontDatabase::TraditionalChinese
+    QFontDatabase::Japanese
+    QFontDatabase::Korean
+    QFontDatabase::Vietnamese
+    QFontDatabase::Symbol
+    QFontDatabase::Other
+    QFontDatabase::Ogham
+    QFontDatabase::Runic
+    QFontDatabase::Nko
+}
+```
+
+成员函数。
+
+```c++
+bool bold(const QString &family, const QString &style) const;
+bool isBitmapScalable(const QString &family, const QString &style = QString()) const;
+bool isFixedPitch(const QString &family, const QString &style = QString()) const;
+bool isPrivateFamily(const QString &family) const;
+bool isScalable(const QString &family, const QString &style = QString()) const;
+bool isSmoothlyScalable(const QString &family, const QString &style = QString()) const;
+bool italic(const QString &family, const QString &style) const;
+QStringList families(WritingSystem writingSystem = Any) const;//返回支持 writingSystem 的可用字体系列的排序列表
+QFont font(const QString &family, const QString &style, int pointSize) const;//返回一个 QFont 对象，该对象具有家族、样式样式和磅值 pointSize。如果无法创建匹配的字体，则返回使用应用程序默认字体的 QFont 对象
+QList<int> pointSizes(const QString &family, const QString &styleName = QString());//返回具有家族家族和样式 styleName 的字体可用的磅值列表。该列表可能为空
+QList<int> smoothSizes(const QString &family, const QString &styleName);//返回具有看起来很吸引人的家庭系列和样式 styleName 的字体的磅值。该列表可能为空。对于不可缩放字体和位图可缩放字体，该函数等价于pointSizes()
+QString styleString(const QFont &font);//返回描述字体样式的字符串。例如，“粗斜体”、“粗体”、“斜体”或“正常”。可能会返回一个空字符串
+QString styleString(const QFontInfo &fontInfo);//返回描述 fontInfo 样式的字符串。例如，“粗斜体”、“粗体”、“斜体”或“正常”。可能会返回一个空字符串
+QStringList styles(const QString &family) const;//返回可用于字体系列的样式列表。一些示例样式：“Light”、“Light Italic”、“Bold”、“Oblique”、“Demi”。该列表可能为空
+int weight(const QString &family, const QString &style) const;//返回具有家族家族和样式样式的字体的权重。如果没有这样的系列和风格组合，则返回 -1
+QList<WritingSystem> writingSystems() const;//返回带有来自 writingSystem 的示例字符的字符串
+QList<WritingSystem> writingSystems(const QString &family) const;
+```
+
+ 静态成员函数。
+
+```c++
+int addApplicationFont(const QString &fileName);
+int addApplicationFontFromData(const QByteArray &fontData);
+QStringList applicationFontFamilies(int id);
+bool removeAllApplicationFonts();
+bool removeApplicationFont(int id);
+QList<int> standardSizes();
+QFont systemFont(SystemFont type);
+QString writingSystemName(WritingSystem writingSystem);
+QString writingSystemSample(WritingSystem writingSystem);
+```
+
+
+
 ### 16.9 单元测试
 
 Qt Test 是一个用于对基于 Qt 的应用程序和库进行单元测试的框架。 Qt Test 提供了单元测试框架中常见的所有功能以及用于测试图形用户界面的扩展。
