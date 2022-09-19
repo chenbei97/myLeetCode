@@ -6645,29 +6645,38 @@ enum QMdiArea::WindowOrder {
 常见的成员函数如下。
 
 ```c++
-WindowOrder activationOrder() const;
+WindowOrder activationOrder() const;//此属性保存子窗口列表的排序标准
+void setActivationOrder(WindowOrder order);
+
+void setBackground(const QBrush &background);//此属性保存工作区的背景画笔
+QBrush background() const;
+
+void setDocumentMode(bool enabled);//此属性保存选项卡栏是否在选项卡视图模式下设置为文档模式
+bool documentMode() const;
+
+void setOption(AreaOption option, bool on = true);//
+bool testOption(AreaOption option) const;
+
+void setTabPosition(QTabWidget::TabPosition position);//此属性保存选项卡在选项卡视图模式下的位置
+QTabWidget::TabPosition tabPosition() const;
+
+void setTabShape(QTabWidget::TabShape shape);//此属性在选项卡视图模式下保存选项卡的形状
+QTabWidget::TabShape tabShape() const;
+
+void setTabsClosable(bool closable);//此属性保存选项卡栏是否应在选项卡视图模式下的每个选项卡上放置关闭按钮
+bool tabsClosable() const;
+
+void setTabsMovable(bool movable);//此属性保存用户是否可以在选项卡视图模式下在选项卡区域内移动选项卡
+bool tabsMovable() const;
+
+void setViewMode(ViewMode mode);//该属性保存子窗口在 QMdiArea 中的显示方式
+ViewMode viewMode() const;
+
+void removeSubWindow(QWidget *widget);
 QMdiSubWindow *activeSubWindow() const;
 QMdiSubWindow *addSubWindow(QWidget *widget, Qt::WindowFlags windowFlags = Qt::WindowFlags());
-QBrush background() const;
 QMdiSubWindow *currentSubWindow() const;
-bool documentMode() const;
-void removeSubWindow(QWidget *widget);
-void setActivationOrder(WindowOrder order);
-void setBackground(const QBrush &background);
-void setDocumentMode(bool enabled);
-void setOption(AreaOption option, bool on = true);
-void setTabPosition(QTabWidget::TabPosition position);
-void setTabShape(QTabWidget::TabShape shape);
-void setTabsClosable(bool closable);
-void setTabsMovable(bool movable);
-void setViewMode(ViewMode mode);
 QList<QMdiSubWindow *> subWindowList(WindowOrder order = CreationOrder) const;
-QTabWidget::TabPosition tabPosition() const;
-QTabWidget::TabShape tabShape() const;
-bool tabsClosable() const;
-bool tabsMovable() const;
-bool testOption(AreaOption option) const;
-ViewMode viewMode() const;
 ```
 
 公共信号和槽函数如下。
@@ -22167,7 +22176,89 @@ virtual QAxAggregated *createAggregate();//当您希望为ActiveX控件的客户
 bool doVerb(const QString &verb);//请求 ActiveX 控件执行动作动词。 可能的动词由verbs() 返回
 ```
 
-#### 16.5.5 QScrollArea
+#### 16.5.5 QAbstractScrollArea
+
+QAbstractScrollArea 小部件提供了一个带有按需滚动条的滚动区域。
+QAbstractScrollArea 是滚动区域的低级抽象。该区域提供了一个称为视口的中央小部件，该区域的内容将在其中滚动（即，内容的可见部分在视口中呈现）。
+视口旁边是一个垂直滚动条，下面是一个水平滚动条。当所有区域内容都适合视口时，每个滚动条可以是可见的或隐藏的，具体取决于滚动条的 Qt::ScrollBarPolicy。当滚动条被隐藏时，视口会扩大以覆盖所有可用空间。当滚动条再次可见时，视口会缩小以便为滚动条腾出空间。可以在视口周围保留一个边距区域，请参阅 setViewportMargins()。该功能主要用于在滚动区域上方或旁边放置 QHeaderView 小部件。 QAbstractScrollArea 的子类应该实现边距。
+在继承 QAbstractScrollArea 时，您需要做以下事情： 通过设置滚动条的范围、值、页面步长和跟踪滚动条的移动来控制滚动条。
+根据滚动条的值在视口中绘制区域的内容。
+在 viewportEvent() 中处理视口接收到的事件 - 特别是调整事件大小。
+使用 viewport-&gt;update() 来更新视口的内容，而不是 update()，因为所有的绘画操作都发生在视口上。
+使用 Qt::ScrollBarAsNeeded（默认）的滚动条策略，QAbstractScrollArea 在滚动条提供非零滚动范围时显示滚动条，否则隐藏滚动条。
+每当视口接收到调整大小事件或内容的大小发生更改时，都应更新滚动条和视口。当滚动条值改变时，视口也需要更新。滚动条的初始值通常在区域接收到新内容时设置。我们举一个简单的例子，其中我们实现了一个可以滚动任何QWidget的滚动区域。我们使小部件成为视口的子项；这样，我们不必计算要绘制小部件的哪一部分，而是可以简单地使用 QWidget::move() 移动小部件。当区域内容或视口大小发生变化时，我们执行以下操作：
+
+```c++
+QSize areaSize = viewport()->size();
+QSize  widgetSize = widget->size();
+
+verticalScrollBar()->setPageStep(areaSize.height());
+horizontalScrollBar()->setPageStep(areaSize.width());
+verticalScrollBar()->setRange(0, widgetSize.height() - areaSize.height());
+horizontalScrollBar()->setRange(0, widgetSize.width() - areaSize.width());
+updateWidgetPosition();
+```
+
+当滚动条改变值时，我们需要更新小部件位置，即在视口中找到要绘制的小部件部分：
+
+```c++
+int hvalue = horizontalScrollBar()->value();
+int vvalue = verticalScrollBar()->value();
+QPoint topLeft = viewport()->rect().topLeft();
+
+widget->move(topLeft.x() - hvalue, topLeft.y() - vvalue);
+```
+
+为了跟踪滚动条的移动，重新实现虚函数 scrollContentsBy()。为了微调滚动行为，连接到滚动条的 QAbstractSlider::actionTriggered() 信号并根据需要调整 QAbstractSlider::sliderPosition。
+为方便起见，QAbstractScrollArea 使所有视口事件在虚拟 viewportEvent() 处理程序中可用。在有意义的情况下，QWidget 的专用处理程序被重新映射到视口事件。重新映射的专用处理程序是：paintEvent()、mousePressEvent()、mouseReleaseEvent()、mouseDoubleClickEvent()、mouseMoveEvent()、wheelEvent()、dragEnterEvent()、dragMoveEvent()、dragLeaveEvent()、dropEvent()、contextMenuEvent()、和调整大小事件（）。
+QScrollArea 继承了 QAbstractScrollArea，为任何 QWidget 提供平滑滚动（即，小部件逐像素滚动）。如果您需要更专业的行为，您只需要子类化 QAbstractScrollArea。例如，如果该区域的全部内容不适合在 QWidget 上绘制或者如果您不希望平滑滚动，则这是正确的。
+
+枚举类型。
+
+这个枚举指定当视口大小改变时 QAbstractScrollArea 的大小提示应该如何调整。
+
+```c++
+enum QAbstractScrollArea::SizeAdjustPolicy{
+	QAbstractScrollArea::AdjustIgnored //滚动区域将像以前一样运行 - 并且不进行任何调整
+    QAbstractScrollArea::AdjustToContents//滚动区域将始终调整到视口
+    QAbstractScrollArea::AdjustToContentsOnFirstShow//滚动区域将在第一次显示时调整到其视口
+}
+```
+
+成员函数，
+
+```c++
+QWidget *cornerWidget() const;
+void setCornerWidget(QWidget *widget);
+
+QWidgetList scrollBarWidgets(Qt::Alignment alignment);
+void addScrollBarWidget(QWidget *widget, Qt::Alignment alignment);
+
+
+void setHorizontalScrollBar(QScrollBar *scrollBar);
+QScrollBar *horizontalScrollBar() const;
+
+void setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy);
+Qt::ScrollBarPolicy horizontalScrollBarPolicy() const;
+
+void setSizeAdjustPolicy(SizeAdjustPolicy policy);
+SizeAdjustPolicy sizeAdjustPolicy() const;
+
+void setVerticalScrollBar(QScrollBar *scrollBar);
+QScrollBar *verticalScrollBar() const;
+
+void setVerticalScrollBarPolicy(Qt::ScrollBarPolicy);
+Qt::ScrollBarPolicy verticalScrollBarPolicy() const;
+
+void setViewport(QWidget *widget);
+QWidget *viewport() const;
+virtual void setupViewport(QWidget *viewport);
+QSize maximumViewportSize() const;
+```
+
+
+
+#### 16.5.6 QScrollArea
 
 QScrollArea类提供了另一个小部件的滚动视图。
 滚动区域用于显示框架内子控件的内容。如果小部件超过了框架的大小，视图可以提供滚动条，以便可以查看子小部件的整个区域。必须使用setWidget（）指定子小部件。例如：
