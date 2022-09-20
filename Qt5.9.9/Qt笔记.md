@@ -373,7 +373,7 @@ void on_valueChanged(int) // QSpinBox的某个槽函数
 }
 ```
 
-##### 2.1.3.2 signals&slots
+##### 2.1.3.3 signals&slots
 
 自定义信号类，需要3个部分组成。第一个是声明Q_OBJECT具备信号与槽的机制；其次使用signals声明为信号函数，信号函数可以带参数，但是不能有返回值；然后其他函数可以依据条件emit信号函数。至于信号是否绑定了槽函数与信号类无关。
 
@@ -433,7 +433,6 @@ signals:
  public slots: // 此类无与该信号绑定的槽函数
 };
 #endif // Q_PERSON_H
-
 ```
 
 而QPerson的实现，主要关注的就是2个设定函数，**设定年龄或者增加年龄的时候同时发出信号**。
@@ -657,6 +656,84 @@ void QMetaObjectTest::printClassInfo(const QMetaObject * meta,const QString&  se
   }
 }
 ```
+
+##### 2.1.3.4 QSignalMapper
+
+QSignalMapper 类捆绑来自可识别发送者的信号。
+**此类收集一组无参数信号**，并**使用与发送信号的对象相对应的整数、字符串或小部件参数重新发出它们**。
+该类支持使用 setMapping() 将特定字符串或整数与特定对象进行映射。然后可以将对象的信号连接到 map() 插槽，该插槽将使用与原始信号对象关联的字符串或整数发出 mapped() 信号。稍后可以使用 removeMappings() 删除映射。
+
+示例：假设我们要创建一个包含**一组按钮**的自定义小部件（如工具面板）。**一种方法是将每个按钮的 clicked() 信号连接到其自己的自定义插槽**；但在本例中，我们**希望将所有按钮连接到单个插槽**，**并通过单击的按钮对插槽进行参数化**。这是一个简单的自定义小部件的定义，它有一个信号 clicked()，它与被点击的按钮的文本一起发出：
+
+```c++
+ class ButtonWidget : public QWidget
+  {
+      Q_OBJECT
+  public:
+      ButtonWidget(const QStringList &texts, QWidget *parent = 0);
+  signals:
+      void clicked(const QString &text);
+  private:
+      QSignalMapper *signalMapper;
+  };
+// 我们需要实现的唯一函数是构造函数：
+ButtonWidget::ButtonWidget(const QStringList &texts, QWidget *parent)
+    : QWidget(parent)
+{
+    signalMapper = new QSignalMapper(this);
+    QGridLayout *gridLayout = new QGridLayout;
+        
+    for (int i = 0; i < texts.size(); ++i) 
+    {
+        QPushButton *button = new QPushButton(texts[i]);
+        //只需把按钮的信号先映射到信号映射器的map槽函数,内部会发射mapped()信号实现1个带参数的转发
+        connect(button, SIGNAL(clicked()), signalMapper, SLOT(map()));
+        // 每个按钮设置它的独有名称,可以使用int也可以使用string,这里用string文本表示按钮的名称
+        signalMapper->setMapping(button, texts[i]);
+        gridLayout->addWidget(button, i / 3, i % 3);
+    }
+	// 按钮信号到信号映射器槽函数连接完成,还要连接映射器的信号和要执行的槽函数
+    // 因为之前绑定的是文本映射关系,故这里连接的信号也是文本参数信号
+    connect(signalMapper, SIGNAL(mapped(QString)),this, SIGNAL(clicked(QString)));
+    setLayout(gridLayout);
+}
+```
+
+公共函数。
+
+```c++
+void removeMappings(QObject *sender);//删除发件人的所有映射
+
+QObject *mapping(int id) const;//返回与id关联的发送者QObject
+void setMapping(QObject *sender, int id);//当发送者发出map信号时，发出信号mapped(id)
+
+QObject *mapping(const QString &id) const; //返回与id关联的发送者QObject
+void setMapping(QObject *sender, const QString &text);//发送者发出map信号时发出信号 mapped(text)，每个发件人最多可以有一个文本
+
+QObject *mapping(QWidget *widget) const;//返回与小部件关联的发送方 QObject
+void setMapping(QObject *sender, QWidget *widget);//发送者发出map信号时发出信号mapped(widget )，每个发件人最多可以有一个小部件
+
+QObject *mapping(QObject *object) const;//返回与对象关联的发送方 QObject
+void setMapping(QObject *sender, QObject *object);//发送者发出map()信号时发出信号 mapped(object)，每个发送者最多可以有一个对象
+```
+
+公共槽函数。
+
+```c++
+void map();
+void map(QObject *sender);
+```
+
+公共信号函数。
+
+```c++
+void mapped(int i);
+void mapped(const QString &text);
+void mapped(QWidget *widget);
+void mapped(QObject *object);
+```
+
+
 
 #### 2.1.4 QMetaType
 
@@ -6149,16 +6226,82 @@ void Operation::cancel()
 }
 ```
 
-#### 5.1.7 QPrintDialog
+#### 5.1.7 QAbstractPrintDialog
+
+QAbstractPrintDialog 类为用于配置打印机的打印对话框提供了一个基本实现。
+此类实现用于自定义打印对话框中显示的设置的 getter 和 setter 函数，但不直接使用。使用 QPrintDialog 在您的应用程序中显示打印对话框。
+
+枚举值。
+
+用于指定打印对话框的哪些部分应该可见。
+
+```c++
+enum QAbstractPrintDialog::PrintDialogOption{
+    QAbstractPrintDialog::None
+    QAbstractPrintDialog::PrintToFile
+    QAbstractPrintDialog::PrintSelection
+    QAbstractPrintDialog::PrintPageRange
+    QAbstractPrintDialog::PrintShowPageSize
+    QAbstractPrintDialog::PrintCollateCopies
+    QAbstractPrintDialog::PrintCurrentPage
+    QAbstractPrintDialog::DontUseSheet
+}
+```
+
+用于指定打印范围选择选项。
+
+```c++
+enum QAbstractPrintDialog::PrintRange{  
+    QAbstractPrintDialog::AllPages
+    QAbstractPrintDialog::Selection
+    QAbstractPrintDialog::PageRange
+    QAbstractPrintDialog::CurrentPage
+}
+```
+
+公共函数。
+
+```c++
+QAbstractPrintDialog(QPrinter *printer, QWidget *parent = Q_NULLPTR);
+QPrinter *printer() const;
+
+void setFromTo(int from, int to);
+int fromPage() const;//返回要打印的第一页 默认情况下，此值设置为 0
+int toPage() const;//返回要打印的最后一页。默认情况下，此值设置为 0
+
+int maxPage() const;//返回页面范围内的最大页面和最小页面
+int minPage() const;
+void setMinMax(int min, int max);
+
+void setOptionTabs(const QList<QWidget *> &tabs);//如果支持，将小部件列表设置为要在打印对话框上显示的选项卡
+
+void setPrintRange(PrintRange range);
+PrintRange printRange() const;//返回打印范围
+```
+
+信号函数。
+
+```c++
+void paintRequested(QPrinter *printer);//当需要生成一组预览页面时，会发出此信号。提供的打印机实例是绘制设备，您应该在其上绘制每个页面的内容，使用 QPrinter 实例的方式与直接打印时相同。
+```
+
+#### 5.1.8 QPrintDialog
 
 QPrintDialog 类提供了一个用于指定打印机配置的对话框，使用的话需要在pro文件添加QT += printsupport。
 该对话框允许用户更改与文档相关的设置，例如纸张尺寸和方向、打印类型（彩色或灰度）、页面范围和要打印的份数。还提供了控件以使用户能够从可用的打印机中进行选择，包括任何已配置的网络打印机。
 通常，QPrintDialog 对象是用 QPrinter 对象构造的，并使用 exec() 函数执行。
 
 ```c++
-QPrintDialog printDialog(printer, parent);
-if (printDialog.exec() == QDialog::Accepted) {
-    // print ...
+void MainWindow::on_actPrint_triggered()
+{
+    QPrinter pter(QPrinter::HighResolution);
+    QPrintDialog *dlg = new QPrintDialog(&pter, this);
+    if (textEdit->textCursor().hasSelection())
+        pdlg->addEnabledOption(QAbstractPrintDialog::PrintSelection);
+    pdlg->setWindowTitle(tr("打印文档"));
+    if (dlg->exec() == QDialog::Accepted)
+        textEdit->print(&pter);
+    delete pdlg;
 }
 ```
 
@@ -6193,7 +6336,41 @@ bool testOption(PrintDialogOption option) const;
 void accepted(QPrinter *printer);
 ```
 
+#### 5.1.9 QPrintPreviewDialog
 
+QPrintPreviewDialog 类提供了一个对话框，用于预览和配置打印机输出的页面布局。
+您可以使用现有的 QPrinter 对象构造一个 QPrintPreviewDialog，或者您可以让 QPrintPreviewDialog 为您创建一个，这将是系统默认打印机。将paintRequested() 信号连接到插槽。
+当对话框需要生成一组预览页面时，将发出paintRequested() 信号。您可以使用与生成预览完全相同的代码进行实际打印，包括调用 QPrinter::newPage() 在预览中开始新页面。将一个插槽连接到paintRequested() 信号，您可以在其中绘制到传递到插槽中的 QPrinter 对象。
+最后调用 QPrintPreviewDialog::exec() 来显示预览对话框。
+
+```c++
+void MainWindow::on_actPrintPreview_triggered()
+{
+    QPrinter pter(QPrinter::HighResolution);
+    QPrintPreviewDialog pview(&pter, this);
+    //connect(&pview, SIGNAL(paintRequested(QPrinter*)), SLOT(printPreview(QPrinter*)));
+    connect(&pview,static_cast<void (QPrintPreviewDialog::*)(QPrinter*)>				 			(&QPrintPreviewDialog::paintRequested),this,
+          [=](QPrinter * printer)
+            {
+            	textEdit->print(printer);
+    		}
+    );
+    pview.exec();
+}
+```
+
+公共函数。
+
+```c++
+void open(QObject *receiver, const char *member);//打开对话框并将其finished(int) 信号连接到receiver 和member 指定的槽。当对话框关闭时，信号将与插槽断开连接
+QPrinter *printer();
+```
+
+信号函数。
+
+```c++
+void paintRequested(QPrinter *printer);//当需要生成一组预览页面时，会发出此信号。提供的打印机实例是绘制设备，您应该在其上绘制每个页面的内容，使用 QPrinter 实例的方式与直接打印时相同。
+```
 
 ### 5.2 自定义对话框
 
@@ -6654,7 +6831,7 @@ QBrush background() const;
 void setDocumentMode(bool enabled);//此属性保存选项卡栏是否在选项卡视图模式下设置为文档模式
 bool documentMode() const;
 
-void setOption(AreaOption option, bool on = true);//
+void setOption(AreaOption option, bool on = true);//设置选项
 bool testOption(AreaOption option) const;
 
 void setTabPosition(QTabWidget::TabPosition position);//此属性保存选项卡在选项卡视图模式下的位置
@@ -6672,26 +6849,26 @@ bool tabsMovable() const;
 void setViewMode(ViewMode mode);//该属性保存子窗口在 QMdiArea 中的显示方式
 ViewMode viewMode() const;
 
-void removeSubWindow(QWidget *widget);
-QMdiSubWindow *activeSubWindow() const;
-QMdiSubWindow *addSubWindow(QWidget *widget, Qt::WindowFlags windowFlags = Qt::WindowFlags());
-QMdiSubWindow *currentSubWindow() const;
-QList<QMdiSubWindow *> subWindowList(WindowOrder order = CreationOrder) const;
+void removeSubWindow(QWidget *widget);//从 MDI 区域中删除小部件。小部件必须是 QMdiSubWindow 或作为子窗口内部小部件的小部件
+QMdiSubWindow *activeSubWindow() const;//返回指向当前活动子窗口的指针。如果当前没有活动窗口返回0
+QMdiSubWindow *addSubWindow(QWidget *widget, Qt::WindowFlags windowFlags = Qt::WindowFlags());//将小部件作为新的子窗口添加到 MDI 区域。如果 windowFlags 不为零，它们将覆盖小部件上设置的标志
+QMdiSubWindow *currentSubWindow() const;//返回指向当前子窗口的指针，如果没有当前子窗口，则返回 0
+QList<QMdiSubWindow *> subWindowList(WindowOrder order = CreationOrder) const;//返回 MDI 区域中所有子窗口的列表
 ```
 
 公共信号和槽函数如下。
 
 ```c++
 // 槽函数
-void activateNextSubWindow();
-void activatePreviousSubWindow();
-void cascadeSubWindows();
-void closeActiveSubWindow();
+void activateNextSubWindow();//将键盘焦点赋予子窗口列表中的另一个窗口。激活的窗口将是当前激活顺序确定的下一个窗口
+void activatePreviousSubWindow();//将键盘焦点赋予子窗口列表中的另一个窗口。激活的窗口将是由当前激活顺序确定的前一个窗口
+void cascadeSubWindows();//以级联模式排列所有子窗口
+void closeActiveSubWindow();//通过向每个窗口发送 QCloseEvent 来关闭所有子窗口
 void closeAllSubWindows();
-void setActiveSubWindow(QMdiSubWindow *window);
-void tileSubWindows();
+void setActiveSubWindow(QMdiSubWindow *window);//激活子窗口窗口。如果 window 为 0，则任何当前活动窗口都将被停用
+void tileSubWindows();//以平铺模式排列所有子窗口
 // 信号
-void subWindowActivated(QMdiSubWindow *window);
+void subWindowActivated(QMdiSubWindow *window);//有窗口处于激活时发出,如果window=0说明没有激活
 ```
 
 #### 5.4.2 QMdiSubWindow
@@ -6719,17 +6896,22 @@ enum QMdiSubWindow::SubWindowOption{
 主要的成员函数类型。
 
 ```c++
-bool isShaded() const;
-int keyboardPageStep() const;
-int keyboardSingleStep() const;
+bool isShaded() const;//如果此窗口被遮蔽，则返回 true；否则返回假
 QMdiArea *mdiArea() const;
-void setKeyboardPageStep(int step);
-void setKeyboardSingleStep(int step);
-void setOption(SubWindowOption option, bool on = true);
-void setSystemMenu(QMenu *systemMenu);
-void setWidget(QWidget *widget);
-QMenu *systemMenu() const;
+
+void setKeyboardPageStep(int step);//设置使用键盘页面键时小部件应移动多远或调整大小
+int keyboardSingleStep() const;
+
+void setKeyboardSingleStep(int step);//设置使用键盘箭头键时小部件应移动多远或调整大小
+int keyboardPageStep() const;
+
+void setOption(SubWindowOption option, bool on = true);//如果启用选项，则返回 true
 bool testOption(SubWindowOption option) const;
+
+void setSystemMenu(QMenu *systemMenu);
+QMenu *systemMenu() const;//返回指向当前系统菜单的指针，如果没有设置系统菜单，则返回零。 QMdiSubWindow 提供了默认的系统菜单，但您也可以使用 setSystemMenu() 设置菜单
+
+void setWidget(QWidget *widget);//返回当前的内部小部件
 QWidget *widget() const;
 ```
 
@@ -23441,7 +23623,7 @@ int columnNumber() const;
 QTextList *createList(const QTextListFormat &format);
 QTextList *createList(QTextListFormat::Style style);
 QTextFrame *currentFrame() const;
-QTextList *currentList() const;
+QTextList *currentList() const;//如果光标位置在作为列表一部分的块内，则返回当前列表；否则返回 0
 QTextTable *currentTable() const;
 QTextDocument *document() const;
 bool hasComplexSelection() const;
@@ -23462,7 +23644,7 @@ QTextDocumentFragment selection() const;
 int selectionEnd() const;
 int selectionStart() const;
 // 写函数
-void beginEditBlock();
+void beginEditBlock();//指示文档上的一组编辑操作的开始，从撤消/重做的角度来看，该操作应显示为单个操作
 void clearSelection();
 void deleteChar();
 void deletePreviousChar();
@@ -23479,11 +23661,11 @@ void insertImage(const QImage &image, const QString &name = QString());
 void insertText(const QString &text);
 void insertText(const QString &text, const QTextCharFormat &format);
 void joinPreviousEditBlock();
-void mergeBlockCharFormat(const QTextCharFormat &modifier);
+void mergeBlockCharFormat(const QTextCharFormat &modifier);//将光标的当前字符格式与格式修饰符描述的属性合并
 void mergeBlockFormat(const QTextBlockFormat &modifier);
 void mergeCharFormat(const QTextCharFormat &modifier);
 void removeSelectedText();
-void select(SelectionType selection);
+void select(SelectionType selection);//根据给定的selection选择文档中的文本
 void selectedTableCells(int *firstRow, int *numRows, int *firstColumn, int *numColumns) const;
 void setBlockCharFormat(const QTextCharFormat &format);
 void setBlockFormat(const QTextBlockFormat &format);

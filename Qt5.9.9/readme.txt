@@ -140,7 +140,18 @@
 
 46. AutoTestFramework 使用Qt的自动化测试框架，包括单元测试、数据驱动测试和性能测试的一个示例
 
+47. MyWord 关于文本处理的综合示例,创建一个仿Word的应用
+
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
+
+21. 菜单动作分组
+// 各对齐方式功能项加入同一个菜单项组，这样程序运行的任一时刻用户能且只能选中其中一项
+QActionGroup *alignGroup = new QActionGroup(this);
+alignGroup->addAction(ui->actLeft);
+alignGroup->addAction(ui->actCenter);
+alignGroup->addAction(ui->actRight);
+alignGroup->addAction(ui->actJusitify);
+ui->actLeft->setChecked(true);
 
 20. 列出系统支持的字体家族和字体大小
     QList<int> sizes = QFontDatabase::standardSizes();
