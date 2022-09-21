@@ -24702,6 +24702,59 @@ void refreshRateChanged(qreal refreshRate);
 void virtualGeometryChanged(const QRect &rect);
 ```
 
+### 16.12 动作
+
+#### 16.12.1 QActionGroup
+
+QActionGroup 类将动作组合在一起。在某些情况下，将 QAction 对象组合在一起很有用。例如，如果您有一个左对齐动作、一个右对齐动作、一个对齐动作和一个居中动作，那么**任何时候都应该只有其中一个动作处于活动状态。实现此目的的一种简单方法是将动作分组到一个动作组中**。
+这是一个示例（来自菜单示例）：
+
+```c++
+alignmentGroup = new QActionGroup(this);
+alignmentGroup->addAction(leftAlignAct);
+alignmentGroup->addAction(rightAlignAct);
+alignmentGroup->addAction(justifyAct);
+alignmentGroup->addAction(centerAct);
+leftAlignAct->setChecked(true);
+```
+
+在这里，我们创建一个新的操作组。由于动作组默认是独占的，所以任何时候只检查组中的一个动作。
+
+当选择QActionGroup的某个动作时，它会发出triggered（）信号。动作组中的每个动作都像往常一样发出其trigger() 信号。如上所述，**一个动作组默认是独占的**；它确保在任何时候只有一个可检查的操作处于活动状态。如果您想对可检查的操作进行分组而不使它们排他性，**您可以通过调用 setExclusive(false) 来关闭排他性**。
+可以使用 addAction() 将动作添加到动作组中，但通常在创建动作时指定组更方便；这确保了动作是由父级自动创建的。通过在组中添加分隔符动作，可以在视觉上将动作彼此分开；创建一个动作并使用 QAction 的 setSeparator() 函数将其视为分隔符。使用 QWidget::addActions() 函数将操作组添加到小部件。
+
+公共函数。
+
+```c++
+QList<QAction *> actions() const
+QAction *addAction(QAction *action);
+QAction *addAction(const QString &text);
+QAction *addAction(const QIcon &icon, const QString &text);
+QAction *checkedAction() const; // 返回组中当前检查的操作，如果没有检查，则返回 0
+bool isEnabled() const;//操作组是否启用,除非已明确禁用，否则组中的每个操作都将启用或禁用
+bool isExclusive() const;//动作组是否进行独占检查 如果独占为真，则动作组中只有一个可检查的动作可以在任何时候处于活动状态
+bool isVisible() const; //操作组是否可见,操作组中的每个操作都将匹配该组的可见状态，除非它已被显式隐藏
+void removeAction(QAction *action);//从此组中删除操作。结果，该操作将没有父级
+```
+
+槽函数。
+
+```c++
+void setDisabled(bool b);
+void setEnabled(bool);
+void setExclusive(bool);
+void setVisible(bool);
+```
+
+信号函数。
+
+```c++
+void hovered(QAction *action);//当用户突出显示操作组中的给定操作时，会发出此信号；例如，当用户将光标悬停在菜单选项、工具栏按钮上或按下操作的快捷键组合时
+void triggered(QAction *action);
+```
+
+#### 16.12.2 QAction
+
 
 
 ## 17. 串口通信

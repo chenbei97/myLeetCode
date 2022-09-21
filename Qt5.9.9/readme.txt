@@ -146,11 +146,20 @@
 
 21. 菜单动作分组
 // 各对齐方式功能项加入同一个菜单项组，这样程序运行的任一时刻用户能且只能选中其中一项
+ui->actLeft->setCheckable(true); // 默认是false,先开启选项(必须要做)
+ui->actCenter->setCheckable(true);
+ui->actRight->setCheckable(true);
 QActionGroup *alignGroup = new QActionGroup(this);
-alignGroup->addAction(ui->actLeft);
-alignGroup->addAction(ui->actCenter);
-alignGroup->addAction(ui->actRight);
-alignGroup->addAction(ui->actJusitify);
+//alignGroup->addAction(ui->actLeft);
+//alignGroup->addAction(ui->actCenter);
+//alignGroup->addAction(ui->actRight);
+//Menu->addAction(actLeft);
+//Menu->addAction(actCenter);
+//Menu->addAction(actRight);
+或
+Menu->addAction(alignGroup->addAction(ui->actLeft));
+Menu->addAction(alignGroup->addAction(ui->actCenter));
+Menu->addAction(alignGroup->addAction(ui->actRight));
 ui->actLeft->setChecked(true);
 
 20. 列出系统支持的字体家族和字体大小
@@ -214,6 +223,7 @@ ui->actLeft->setChecked(true);
     setWindowModality(Qt::ApplicationModal);// 设置为模态对话框 Qt::NonModal,Qt::WindowModal
     setWindowFlag(Qt::WindowStaysOnTopHint);//保持在前
     setWindowFlags(Qt::Dialog | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint); // 添加最大最小化按钮
+    Qt::WindowFlags flags = windowFlags();
     setWindowFlags(flags^Qt::WindowCloseButtonHint^Qt::WindowContextHelpButtonHint);// 不想要帮助和关闭按钮
 
 16. 位置函数的区别
