@@ -144,6 +144,59 @@
 
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
 
+23. 进度条对话框的使用方法
+mTcpSocket->connectToHost(ip,port);
+QProgressDialog * dlg = new QProgressDialog(tr("正在尝试连接"),tr("取消连接"),0,400000);
+dlg->setWindowTitle(tr("TCP连接"));
+dlg->setFont(QFont("Times New Roman",12));
+dlg->setFixedSize(400,150);
+dlg->setModal(true);
+dlg->setAutoClose(true);
+dlg->show();
+int i = 1;
+while (mTcpSocket->state() != QAbstractSocket::ConnectedState &&(i<=400000))
+{
+        dlg->setValue(i); // 35-45万之间的循环模拟一个进度条,数字太小看不到进度条,太大等待时间有点久
+        ++i;
+        if (dlg->wasCanceled())
+        break;
+}
+
+if (mTcpSocket->state() != QAbstractSocket::ConnectedState) // 如果还没连上就报错
+{
+        QMessageBox::critical(Q_NULLPTR,tr("错误"),mTcpSocket->errorString());
+        emit disconnected();
+        emit errorCode(TCPERRORSTATE::UnconnectedState);
+        return;
+}
+emit errorCode(TCPERRORSTATE::ConnectedState);
+dlg->deleteLater();
+
+22. 信号映射器的使用方法
+    注意映射器接收一组无参数信号,有参数不支持
+    而且是一类组件的同一个信号映射到同1个函数执行时才有意义,这样依据不同的参数可以执行不同的内容
+    不过这些内容都是同一个函数完成的,如果不采用映射就需要每个按钮/动作各自映射到不同的函数执行对象的内容
+    现在依据按钮的文字标识可以确定是哪个按钮发生了点击，然后执行对应的功能
+    
+    void setMapping(QObject *sender, QObject *object);
+    void setMapping(QObject *sender, QWidget *widget);
+    void setMapping(QObject *sender, const QString &text);
+
+    1) 创建1个映射器
+    2) 首先把按钮或者动作在创建的时候绑定clicked或triggered信号到映射器的map()信号
+    3) 然后使用setMapping函数,设置按钮或动作和某个对象的关联,这个对象是一种映射关系,将来依靠这个对象来指向1个槽函数
+
+    signalMapper = new QSignalMapper(this); // 创建1个映射器
+    // 按钮信号 => 信号映射器槽函数
+    for (int i = 0; i < 3; ++i) 
+    {
+        QPushButton *button = new QPushButton(texts[i]); 
+        connect(button, SIGNAL(clicked()), signalMapper, SLOT(map())); // 关联到map()
+        signalMapper->setMapping(button, texts[i]); // 绑定的文本映射关系
+    }
+	// 映射器的信号 => 信号或槽函数
+    connect(signalMapper, SIGNAL(mapped(QString)),this, SIGNAL(clicked(QString))); //这里clicked信号可以关联某个槽函数进行执行
+
 21. 菜单动作分组
 // 各对齐方式功能项加入同一个菜单项组，这样程序运行的任一时刻用户能且只能选中其中一项
 ui->actLeft->setCheckable(true); // 默认是false,先开启选项(必须要做)

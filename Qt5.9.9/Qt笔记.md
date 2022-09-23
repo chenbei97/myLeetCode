@@ -6154,6 +6154,38 @@ if (customMsgBox..clickedButton() == cancelBtn)
 
 进度对话框，包含一个进度条，消息标签和取消按钮。
 
+例子如下。
+
+```c++
+mTcpSocket->connectToHost(ip,port);
+QProgressDialog * dlg = new QProgressDialog(tr("正在尝试连接"),tr("取消连接"),0,400000);
+dlg->setWindowTitle(tr("TCP连接"));
+dlg->setFont(QFont("Times New Roman",12));
+dlg->setFixedSize(400,150);
+dlg->setModal(true);
+dlg->setAutoClose(true);
+dlg->show();
+
+int i = 1;
+while (mTcpSocket->state() != QAbstractSocket::ConnectedState &&(i<=400000))
+{
+    dlg->setValue(i); // 35-45万之间的循环模拟一个进度条,数字太小看不到进度条,太大等待时间有点久
+    ++i;
+    if (dlg->wasCanceled())
+        break;
+}
+
+if (mTcpSocket->state() != QAbstractSocket::ConnectedState) // 如果还没连上就报错
+{
+    QMessageBox::critical(Q_NULLPTR,tr("错误"),mTcpSocket->errorString());
+    emit disconnected();
+    emit errorCode(TCPERRORSTATE::UnconnectedState);
+    return;
+}
+emit errorCode(TCPERRORSTATE::ConnectedState);
+dlg->deleteLater();
+```
+
 成员函数。
 
 ```c++
