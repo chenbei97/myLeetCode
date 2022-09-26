@@ -1,0 +1,22 @@
+<root>
+
+    <user>chenbei</user>
+    <!-- <sex>m</sex> -->
+    <gt>a &gt; b则说明a大于b</gt>
+    <lt>a &lt; b则说明a小于b</lt>
+    <kk><![CDATA[a < b 则说明a小于b]]></kk>
+    <getaddr>取值符是 &amp;</getaddr>
+    <单引号>单引号是 &apos;</单引号>
+    <双引号>双引号是 &quot;</双引号>
+
+    <man> 
+        <name>A</name>
+        <age>14</age>
+        <ok>o</ok>
+        <yes>y</yes>
+    </man> 
+    <man> 
+        <name age="15">B</name>
+        <yes ok="k" age="27">n</yes>
+    </man> 
+</root>
