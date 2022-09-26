@@ -1,0 +1,14 @@
+INPUT(
+./release\filereceive.o
+./release\filesend.o
+./release\login.o
+./release\main.o
+./release\mainwindow.o
+./release\mainwindow_func.o
+./release\mainwindow_slot.o
+./release\qrc_res.o
+./release\moc_filereceive.o
+./release\moc_filesend.o
+./release\moc_login.o
+./release\moc_mainwindow.o
+);
