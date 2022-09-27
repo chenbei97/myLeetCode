@@ -24787,26 +24787,361 @@ void triggered(QAction *action);
 
 #### 16.12.2 QAction
 
+枚举值。
 
+调用 QAction::activate() 时使用此枚举类型。
+
+```c++
+enum QAction::ActionEvent{
+    QAction::Trigger //触发trigger信号
+    QAction::Hover // 触发hover信号
+}
+```
+
+此枚举描述了如何将操作移动到 macOS 上的应用程序菜单中。
+
+```c++
+enum QAction::MenuRole{
+    QAction::NoRole//此操作不应放入应用程序菜单
+    QAction::TextHeuristicRole//此操作应根据 QMenuBar 文档中描述的操作文本放置在应用程序菜单中
+    QAction::ApplicationSpecificRole//此操作应放在具有应用程序特定角色的应用程序菜单中
+    QAction::AboutQtRole//此操作处理“关于 Qt”菜单项
+    QAction::AboutRole//此操作应放置在应用程序菜单中“关于”菜单项的位置。菜单项的文本将设置为“关于<应用程序名称>”
+    QAction::PreferencesRole//此操作应放置在应用程序菜单中“首选项...”菜单项的位置
+    QAction::QuitRole//此操应放置在应用程序菜单中退出菜单项的位置
+}
+```
+
+此枚举定义用户界面中操作的优先级。
+
+```c++
+enum QAction::Priority{   
+    QAction::LowPriority
+    QAction::NormalPriority
+    QAction::HighPriority
+}
+```
+
+成员函数。
+
+```c++
+QAction(const QString &text, QObject *parent = nullptr);
+QAction(const QIcon &icon, const QString &text, QObject *parent = nullptr);
+
+QWidget *parentWidget() const;//返回父小部件
+QList<QGraphicsWidget *> associatedGraphicsWidgets() const;//返回已添加此操作的小部件列表
+QList<QWidget *> associatedWidgets() const;//返回已添加此操作的小部件列表
+
+slot void hover();//等价于activate(Hover)的便利槽
+slot void toggle();//这是检查属性的便利功能。连接到它以将选中状态更改为相反的状态
+slot void trigger();//等价于activate(Trigger)的便利槽
+void activate(ActionEvent event);//发送triggered或hovered信号
+bool showStatusText(QWidget *widget = Q_NULLPTR);
+
+slot void setEnabled(bool);
+slot void setDisabled(bool b);
+bool isEnabled() const;
+
+slot void setVisible(bool);
+bool isVisible() const;
+
+// 设置动作组之前必须设置setCheckable(true),默认是独占式动作,组内动作互斥
+// 另外如果动作是有图标的,那么可能无法显示独占的视觉效果
+void setActionGroup(QActionGroup *group);
+QActionGroup *actionGroup() const;
+
+// 动作是否可以自动重复
+void setAutoRepeat(bool);
+bool autoRepeat() const;
+
+// 设置动作是具有开/关状态的动作
+void setCheckable(bool);
+bool isCheckable() const;
+
+// 在isCheckable()=true时可用,是否选中该操作,默认false
+slot void setChecked(bool);
+bool isChecked() const;
+
+void setData(const QVariant &userData);
+QVariant data() const;
+
+void setFont(const QFont &font);
+QFont font() const;
+
+void setIcon(const QIcon &icon);
+QIcon icon() const;
+
+void setIconText(const QString &text);
+QString iconText() const;
+
+// 是否在菜单中显示图标
+void setIconVisibleInMenu(bool visible);
+bool isIconVisibleInMenu() const;
+
+void setMenu(QMenu *menu);
+QMenu *menu() const;
+
+// 设置动作的菜单角色,默认所有动作都具有 TextHeuristicRole
+void setMenuRole(MenuRole menuRole);
+MenuRole menuRole() const;
+
+// 设置动作在用户界面中的优先级。例如，当工具栏设置了 Qt::ToolButtonTextBesideIcon 模式时，具有 LowPriority 的操作将不会显示文本标签
+void setPriority(Priority priority);
+Priority priority() const;
+
+void setSeparator(bool b);
+bool isSeparator() const;
+
+void setShortcut(const QKeySequence &shortcut);
+QKeySequence shortcut() const;
+
+// 设置动作快捷方式的上下文。此属性的有效值可在Qt::ShortcutContext中找到。默认 Qt::WindowShortcut
+void setShortcutContext(Qt::ShortcutContext context);
+Qt::ShortcutContext shortcutContext() const;
+
+void setShortcuts(const QList<QKeySequence> &shortcuts);
+void setShortcuts(QKeySequence::StandardKey key);
+QList<QKeySequence> shortcuts() const;
+
+// 设置动作的状态提示,状态提示显示在操作的顶级父窗口小部件提供的所有状态栏上,默认空字符串
+void setStatusTip(const QString &statusTip);
+QString statusTip() const;
+
+void setText(const QString &text);
+QString text() const;
+
+// 设置动作的工具提示,如果未指定工具提示,则使用动作的名称。默认情况下，工具提示是动作名称
+void setToolTip(const QString &tip);
+QString toolTip() const;
+
+// 设置动作的帮助文本,提供操作的简要说明
+void setWhatsThis(const QString &what);
+QString whatsThis() const;
+```
+
+信号函数。
+
+```c++
+void changed();//当动作发生变化时，会发出此信号
+void hovered();//当用户突出显示一个动作时发出此信号；例如，当用户将光标悬停在菜单选项、工具栏按钮上或按下操作的快捷键组合时
+void toggled(bool checked);//isChecked()状态改变时发出此信号。如果选中了该操作，则checked为true，如未选中该操作则为 false
+void triggered(bool checked = false);//用户激活操作时发出此信号；例如用户单击菜单选项、工具栏按钮或调用trigger()。注意调用setChecked()或 toggle()时不会发出它
+```
 
 ### 16.13 XML
 
-#### 16.13.1 QDomNode
+QtXML下的类如下。
+
+| 类                        | 用途                                        |
+| ------------------------- | ------------------------------------------- |
+| QDomAttr                  | 表示 QDomElement 的一个属性                 |
+| QDomCDATASection          | 表示 XML CDATA 部分                         |
+| QDomCharacterData         | 表示 DOM 中的通用字符串                     |
+| QDomComment               | 表示 XML 注释                               |
+| QDomDocument              | 表示一个 XML 文档                           |
+| QDomDocumentFragment      | QDomNodes 树，通常不是完整的 QDomDocument   |
+| QDomDocumentType          | DTD 在文档树中的表示                        |
+| QDomElement               | 表示 DOM 树中的一个元素                     |
+| QDomEntity                | 表示一个 XML 实体                           |
+| QDomEntityReference       | 表示一个 XML 实体引用                       |
+| QDomImplementation        | 有关 DOM 实现的功能的信息                   |
+| QDomNamedNodeMap          | 包含可以按名称访问的节点集合                |
+| QDomNode                  | DOM 树中所有节点的基类                      |
+| QDomNodeList              | QDomNode 对象列表                           |
+| QDomNotation              | 表示 XML 表示法                             |
+| QDomProcessingInstruction | 表示 XML 处理指令                           |
+| QDomText                  | 表示解析的 XML 文档中的文本数据             |
+| QXmlAttributes            | XML 属性                                    |
+| QXmlContentHandler        | 用于报告 XML 数据的逻辑内容的接口           |
+| QXmlDTDHandler            | 用于报告 XML 数据的 DTD 内容的接口          |
+| QXmlDeclHandler           | 上报 XML 数据声明内容的接口                 |
+| QXmlDefaultHandler        | 所有 XML 处理程序类的默认实现               |
+| QXmlEntityResolver        | 解析 XML 数据中包含的外部实体的接口         |
+| QXmlErrorHandler          | 用于报告 XML 数据中的错误的接口             |
+| QXmlInputSource           | QXmlReader 子类的输入数据                   |
+| QXmlLexicalHandler        | 用于报告 XML 数据的词法内容的接口           |
+| QXmlLocator               | 具有文件中解析位置信息的 XML 处理程序类     |
+| QXmlNamespaceSupport      | 想要包含命名空间支持的 XML 阅读器的帮助器类 |
+| QXmlParseException        | 用于使用 QXmlErrorHandler 接口报告错误      |
+| QXmlReader                | XML 阅读器（即解析器）的接口                |
+| QXmlSimpleReader          | 一个简单的 XML 解析器的实现                 |
+
+#### QDomDocument*
+
+**QDomDocument 类表示一个 XML 文档**。文档类包含创建这些各种节点类型所需的**工厂函数**。创建的节点对象有一个 ownerDocument() 函数，该函数将它们与在其上下文中创建它们的文档相关联。**最常使用的 DOM 类是 QDomNode、QDomDocument、QDomElement 和 QDomText**。QDomDocument 类具有多个用于创建文档数据的函数，例如 createElement()、createTextNode()、createComment()、createCDATASection()、createProcessingInstruction()、createAttribute() 和 createEntityReference()。其中一些函数具有支持命名空间的版本，即 createElementNS() 和 createAttributeNS()。 createDocumentFragment() 函数用于保存部分文档；这对于处理复杂的文档很有用。
+**文档的全部内容由 setContent() 设置**。此函数解析它作为 XML 文档传递的字符串，并创建表示该文档的 DOM 树。**根元素可使用 documentElement() 获得**。可以使用 toString() 获得文档的文本表示。
+注意：如果 XML 文档很大，DOM 树最终可能会保留大量内存。对于此类文档，QXmlStreamReader 或 QXmlQuery 类可能是更好的解决方案。
+QDom 类通常按如下方式使用：
+
+```c++
+QDomDocument doc("mydocument");
+QFile file("mydocument.xml");
+if (!file.open(QIODevice::ReadOnly))
+    return;
+if (!doc.setContent(&file)) {
+    file.close();
+    return;
+}
+file.close();
+
+// 获取根元素
+QDomElement docElem = doc.documentElement();
+QDomNode n = docElem.firstChild();// 根元素的第1个节点
+while(!n.isNull()) {
+    QDomElement e = n.toElement(); // 尝试将节点转换为元素
+    if(!e.isNull()) { // 节点是元素,就可以打印出元素所属类别
+        cout << qPrintable(e.tagName()) << endl; // the node really is an element.
+    }
+    n = n.nextSibling();
+}
+
+// 这里我们在文档末尾追加一个新元素(图形)
+QDomElement elem = doc.createElement("img");
+elem.setAttribute("src", "myimage.png");//设置属性
+docElem.appendChild(elem);//添加
+```
+
+一旦 doc 和 elem 超出范围，代表 XML 文档的整个内部树会被删除。要使用 DOM 创建文档，请使用如下代码
+
+```c++
+QDomDocument doc("MyML");
+QDomElement root = doc.createElement("MyML");//创建根元素
+doc.appendChild(root);
+
+QDomElement tag = doc.createElement("Greeting");//创建tag元素
+root.appendChild(tag);
+
+QDomText t = doc.createTextNode("Hello World");//创建文本节点添加进tag元素
+tag.appendChild(t);
+
+QString xml = doc.toString();//转为字符串
+```
+
+成员函数。
+
+```c++
+// 创建各种不同类型的节点
+QDomAttr createAttribute(const QString &name);//创建属性
+QDomAttr createAttributeNS(const QString &nsURI, const QString &qName);
+QDomCDATASection createCDATASection(const QString &value);//创建CDATA部分
+QDomComment createComment(const QString &value);//创建注释
+QDomDocumentFragment createDocumentFragment();//创建文档片段
+QDomElement createElement(const QString &tagName);//创建类别tagName的新元素
+QDomElement createElementNS(const QString &nsURI, const QString &qName);
+QDomEntityReference createEntityReference(const QString &name);//创建一个实体引用
+QDomProcessingInstruction createProcessingInstruction(const QString &target, const QString &data);//创建处理指令
+QDomText createTextNode(const QString &value);//创建文本节点
+
+QDomDocumentType doctype() const;//返回文档类型
+QDomElement documentElement() const;//返回文档的根元素
+QDomElement elementById(const QString &elementId);//返回指定名称的元素
+QDomNodeList elementsByTagName(const QString &tagname) const;//返回属于tag的节点列表
+QDomNodeList elementsByTagNameNS(const QString &nsURI, const QString &localName);
+QDomImplementation implementation() const;//返回一个 QDomImplementation 对象
+QDomNode importNode(const QDomNode &importedNode, bool deep);//从另一个文档导入节点到此文档
+QDomNode::NodeType nodeType() const;//返回节点类型
+
+// 此函数从字节数组数据中解析 XML 文档并将其设置为文档的内容。它尝试按照 XML 规范的要求检测文档的编码
+bool setContent(const QByteArray &data, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(const QString &text, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(QIODevice *dev, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(QXmlInputSource *source, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(const QByteArray &buffer, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(const QString &text, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(QIODevice *dev, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+bool setContent(QXmlInputSource *source, QXmlReader *reader, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
+
+QByteArray toByteArray(int indent = 1) const;//将已解析的文档转换回编码为UTF-8的 QByteArray
+QString toString(int indent = 1) const;//将已解析的文档转换回其文本表示
+```
+
+##### QDomDocumentFragment*
+
+QDomDocumentFragment 类是**QDomDocument的一部分文档片段**。
+QDomDocumentFragment 最重要的特点是它被 QDomNode::insertAfter()、QDomNode::insertBefore()、QDomNode::replaceChild() 和 QDomNode::appendChild() 以特殊方式处理：不是插入片段本身，而是所有片段的孩子都被插入。
+
+```c++
+QDomNode::NodeType nodeType() const;
+```
+
+##### QDomDocumentType*
+
+QDomDocumentType 类是**文档树中 DTD 的表示**。
+QDomDocumentType 类允许对 DTD 中的某些数据结构进行只读访问：它可以返回所有entities() 和 notations() 的映射。此外，函数 name() 返回在 &lt;!DOCTYPE name&gt; 中指定的文档类型的名称。标签。该类还提供了 publicId()、systemId() 和 internalSubset() 函数。
+
+```c++
+QDomNode::NodeType nodeType() const;
+QDomNamedNodeMap entities() const;//返回 DTD 中描述的所有实体的映射
+QString internalSubset() const;//如果没有内部子集，则返回文档类型的内部子集或空字符串
+QString name() const;//返回在 &amp;lt;!DOCTYPE name&amp;gt; 中指定的文档类型的名称。标签
+QDomNamedNodeMap notations() const;//返回 DTD 中描述的所有符号的映射
+QString publicId() const;//如果没有公共标识符，则返回外部 DTD 子集的公共标识符或空字符串
+QString systemId() const;//如果没有系统标识符，则返回外部 DTD 子集的系统标识符或空字符串
+```
+
+##### QDomImplementation
+
+**QDomImplementation 类提供有关 DOM 实现特性的信息**。
+通常使用函数 QDomDocument::implementation() 来获取实现对象。
+可以使用 createDocumentType() 创建新文档类型，使用 createDocument() 创建新文档。
+
+一个例子。
+
+```c++
+QDomDocument doc;
+QDomImplementation impl;
+
+// 这将创建元素，但生成的 XML 文档将无效，因为'~'不是标记名称中的有效字符
+impl.setInvalidDataPolicy(QDomImplementation::AcceptInvalidData);
+QDomElement elt1 = doc.createElement("foo~bar");
+
+//这将创建一个标签名为“foobar”的元素
+impl.setInvalidDataPolicy(QDomImplementation::DropInvalidData);
+QDomElement elt2 = doc.createElement("foo~bar");
+
+// 这将创建一个空元素
+impl.setInvalidDataPolicy(QDomImplementation::ReturnNullNode);
+QDomElement elt3 = doc.createElement("foo~bar");
+```
+
+此枚举指定当使用无效数据调用 QDomDocument 中的工厂函数时应执行的操作。
+
+```c++
+enum QDomImplementation::InvalidDataPolicy{
+    QDomImplementation::AcceptInvalidChars//无论如何，数据都应该存储在 DOM 对象中
+    QDomImplementation::DropInvalidChars//应从数据中删除无效字符
+    QDomImplementation::ReturnNullNode//工厂函数应该返回一个空节点
+}
+```
+
+```c++
+QDomDocument createDocument(const QString &nsURI, const QString &qName, const QDomDocumentType &doctype);//创建一个文档类型为 doctype 的 DOM 文档。此函数还添加一个具有限定名称 qName 和命名空间 URI nsURI 的根元素节点
+QDomDocumentType createDocumentType(const QString &qName, const QString &publicId, const QString &systemId);//为名称 qName 创建一个文档类型节点
+bool hasFeature(const QString &feature, const QString &version) const;//如果 QDom 实现了所请求的功能版本，则该函数返回 true
+bool isNull();//如果对象是由 QDomDocument::implementation() 创建的，则返回 false
+
+// 返回无效数据策略，该策略指定当 QDomDocument 中的工厂函数传递无效数据时应执行的操作
+static InvalidDataPolicy invalidDataPolicy();
+// 设置无效数据策略，指定当 QDomDocument 中的工厂函数传递无效数据时应执行的操作
+static void setInvalidDataPolicy(InvalidDataPolicy policy);
+```
+
+
+
+#### QDomNode*
 
 此类的子类有QDomAttr, QDomCharacterData, QDomDocument, QDomDocumentFragment, QDomDocumentType, QDomElement, QDomEntity, QDomEntityReference, QDomNotation, and QDomProcessingInstruction。
 
 **QDomNode 类是 DOM 树中所有节点的基类**。
-DOM 中的许多函数都返回一个 QDomNode。可以使用 isAttr()、isCDATASection()、isDocumentFragment()、isDocument()、isDocumentType()、isElement()、isEntityReference()、isText()、isEntity()、isNotation() 来找出节点的类型isProcessingInstruction()、isCharacterData() 和 isComment()。
-可以使用 toAttr()、toCDATASection()、toDocumentFragment()、toDocument()、toDocumentType()、toElement()、toEntityReference()、toText()、toEntity()、toNotation() 将 QDomNode 转换为其子类之一、toProcessingInstruction()、toCharacterData() 或 toComment()。您可以使用 clear() 将节点转换为空节点。
+DOM 中的许多函数都返回一个 QDomNode。可以使用 isAttr()、isCDATASection()、isDocumentFragment()、isDocument()、isDocumentType()、isElement()、isEntityReference()、isText()、isEntity()、isNotation() **来找出节点的类型**。isProcessingInstruction()、isCharacterData() 和 isComment()。
+可以使用 toAttr()、toCDATASection()、toDocumentFragment()、toDocument()、toDocumentType()、toElement()、toEntityReference()、toText()、toEntity()、toNotation()、toProcessingInstruction()、toCharacterData() 或 toComment()**将QDomNode 转换为子类之一**。您可以使用 clear() 将节点转换为空节点。
 QDomNode 类的副本使用显式共享来共享它们的数据。这意味着修改一个节点将更改所有副本。这在与返回 QDomNode 的函数结合使用时特别有用，例如fisrChild()。您可以使用 cloneNode() 制作节点的深层副本。
 QDomNode 可以为空，很像空指针。创建空节点的副本会产生另一个空节点。无法修改空节点，但可以为其分配另一个可能非空的节点。在这种情况下，空节点的副本将保持为空。您可以通过调用 isNull() 检查 QDomNode 是否为空。 QDomNode（或任何派生类）的空构造函数创建一个空节点。
 使用 insertBefore()、insertAfter() 或 appendChild() 插入节点。您可以使用 replaceChild() 将一个节点替换为另一个节点，并使用 removeChild() 删除一个节点。
 
-要遍历节点，请使用 firstChild() 获取节点的第一个子节点（如果有），然后使用 nextSibling() 进行遍历。 QDomNode 还提供 lastChild()、previousSibling() 和 parentNode()。要查找具有特定节点名称的第一个子节点，请使用 namedItem()。
+要遍历节点，请使用 **firstChild() 获取节点的第一个子节点**（如果有），然后使用 **nextSibling() 进行遍历**。 QDomNode 还提供 lastChild()、previousSibling() 和 parentNode()。**要查找具有特定节点名称的第一个子节点，请使用 namedItem()**。
 要确定一个节点是否有子节点，请使用 hasChildNodes() 并获取节点所有子节点的列表，请使用 childNodes()。
-节点的名称和值（其含义取决于其类型）分别由 nodeName() 和 nodeValue() 返回。节点的类型由 nodeType() 返回。可以使用 setNodeValue() 设置节点的值。
-节点所属的文档由 ownerDocument() 返回。
-可以使用 normalize() 将相邻的 QDomText 节点合并为单个节点。
+节点的名称和值（其含义取决于其类型）分别由 nodeName() 和 nodeValue() 返回。**节点的类型由 nodeType() 返回**。可以使用 setNodeValue() 设置节点的值。**节点所属的文档由 ownerDocument() 返回**。可以使用 normalize() 将相邻的 QDomText 节点合并为单个节点。
 QDomElement 节点具有可以使用 attributes() 检索的属性。
 QDomElement 和 QDomAttr 节点可以具有可以使用 namespaceURI() 检索的命名空间。使用 localName() 检索它们的本地名称，使用 prefix() 检索它们的前缀。可以使用 setPrefix() 设置前缀。
 您可以使用 save() 将节点的 XML 表示形式写入文本流。
@@ -24816,7 +25151,7 @@ QDomElement 和 QDomAttr 节点可以具有可以使用 namespaceURI() 检索的
 ```c++
 QDomDocument d;
 d.setContent(someXML);
-QDomNode n = d.firstChild();
+QDomNode n = d.firstChild();//获取首个节点
 while (!n.isNull()) {
     if (n.isElement()) {
         QDomElement e = n.toElement();
@@ -24863,7 +25198,7 @@ enum QDomNode::NodeType{
 
 ```c++
 void clear();//将节点转换为空节点；如果之前不是空节点，则删除其类型和内容
-void normalize();//对元素调用 normalize() 会将其所有子元素转换为标准形式。这意味着相邻的 QDomText 对象将被合并为一个单独的文本对象（QDomCDATASection 节点不被合并）
+void normalize();//对元素调用 normalize() 会将其所有子元素转换为标准形式
 void save(QTextStream &amp;stream, int indent, EncodingPolicy encodingPolicy = QDomNode::EncodingFromDocument) const;//将节点及其所有子节点的 XML 表示形式写入流
 void setNodeValue(const QString &v);//将节点的值设置为 v
 void setPrefix(const QString &pre);//如果节点没有命名空间前缀，则返回节点的命名空间前缀或空字符串
@@ -24939,10 +25274,9 @@ QDomProcessingInstruction toProcessingInstruction() const;//To QDomProcessingIns
 QDomText toText() const;//将 QDomNode 转换为 QDomText。如果节点不是文本，则返回的对象将为空
 ```
 
-#### 16.13.2 QDomNodeList
+##### QDomNodeList
 
 QDomNodeList 类是 QDomNode 对象的列表。
-列表可以通过 QDomDocument::elementsByTagName() 和 QDomNode::childNodes() 获取。文档对象模型 (DOM) 要求这些列表是“实时的”：每当您更改基础文档时，列表的内容都会更新。
 您可以使用 item() 从列表中获取特定节点。列表中的项目数由 length() 返回。
 
 成员函数。
@@ -24956,18 +25290,147 @@ int length() const;
 int size() const;
 ```
 
-#### 16.13.3 QDomAttr
+##### QDomNamedNodeMap
 
+QDomNamedNodeMap 类**包含可以按名称访问的节点集合**。
+请注意，**QDomNamedNodeMap 不继承自 QDomNodeList**。 QDomNamedNodeMaps 不提供任何特定的节点排序。尽管 QDomNamedNodeMap 中的节点可以通过序号索引访问，但这只是为了方便枚举 QDomNamedNodeMap 的内容，并不意味着 DOM 指定了节点的顺序。
+QDomNamedNodeMap 用在三个地方： 
 
+**1) QDomDocumentType::entities() 返回 DTD 中描述的所有实体的映射**。
+**2) QDomDocumentType::notations() 返回 DTD 中描述的所有符号的映射。**
+**3) QDomNode::attributes() 返回一个元素所有属性的映射。**
 
-#### 16.13.4 QDomCDATASection
+项目由 QDomNode::name() 返回的名称标识。使用 namedItem()、namedItemNS() 或 item() 检索节点。使用 setNamedItem() 或 setNamedItemNS() 插入新节点，并使用 removeNamedItem() 或 removeNamedItemNS() 删除。使用 contains() 查看具有给定名称的项目是否在命名节点映射中。项目数由 length() 返回。
 
+```c++
+bool contains(const QString &name) const;//如果地图包含一个名为 name 的节点，则返回 true
+int count() const;//这个函数是为了 Qt API 的一致性而提供的。它相当于length()
+int length() const;//返回节点数
+int size() const;
+bool isEmpty() const;//如果map为空，则返回 true
+QDomNode item(int index) const;
+QDomNode namedItem(const QString &name) const;//返回名为 name 的节点
+QDomNode namedItemNS(const QString &nsURI, const QString &localName) const;
+QDomNode removeNamedItem(const QString &name);
+QDomNode removeNamedItemNS(const QString &nsURI, const QString &localName);
+QDomNode setNamedItem(const QDomNode &newNode);
+QDomNode setNamedItemNS(const QDomNode &newNode);
+```
 
+#### QDomElement*
 
-#### 16.13.5 QDomCharacterData
+QDomElement 类**代表 DOM 树中的一个元素**。**基类是QDomNode**。
+**元素有一个 tagName() 和零个或多个与之关联的属性**。可以使用 setTagName() 更改标签名称。
+**元素属性由 QDomAttr 对象表示**，可以使用 attribute() 和 attributeNode() 函数进行查询。您可以使用 setAttribute() 和 setAttributeNode() 函数设置属性。可以使用 removeAttribute() 删除属性。还有一些函数有**命名空间感知等价物**，即 setAttributeNS()、setAttributeNodeNS() 和 removeAttributeNS()。
+如果要**访问节点的文本，请使用 text()**。text() 函数递归操作以查找文本（因为并非所有元素都包含文本）。如果要查找节点的所有子节点中的所有文本，请遍历子节点以查找 QDomText 节点，例如
+
+```c++
+QString text;
+QDomElement element = doc.documentElement();
+for(QDomNode n = element.firstChild(); !n.isNull(); n = n.nextSibling())
+{
+    QDomText t = n.toText();//文本数据对象
+    if (!t.isNull())//请注意，我们尝试将每个节点转换为文本节点并使用 text() 而不是直接在节点上使用 firstChild().toText().data() 或 n.toText().data()，因为节点可能不是文本元素
+        text += t.data();
+}
+```
+
+可以使用 elementsByTagName() 或 elementsByTagNameNS() 获取具有指定标签名称的元素的所有后代的列表。要浏览 dom 文档的元素，使用 firstChildElement()、lastChildElement()、nextSiblingElement() 和 previousSiblingElement()。例如，要在**名为“database”的根元素中遍历所有名为“entry”的子元素：**
+
+```c++
+QDomDocument doc = // ...
+QDomElement root = doc.firstChildElement("database");
+QDomElement elt = root.firstChildElement("entry");
+for (; !elt.isNull(); elt = elt.nextSiblingElement("entry")) {
+    // ...
+}
+```
+
+成员函数。
+
+```c++
+//返回一个 QDomNodeList，其中包含在以该元素为根的元素子树的前序遍历期间遇到的名为 tagname 的该元素的所有后代。返回列表中元素的顺序是它们在前序遍历过程中遇到的顺序
+QDomNodeList elementsByTagName(const QString &tagname) const;
+// 返回一个 QDomNodeList ，其中包含该元素的所有后代，其本地名称为 localName 和命名空间 URI nsURI 在以该元素为根的元素子树的前序遍历期间遇到。返回列表中元素的顺序是它们在前序遍历过程中遇到的顺序
+QDomNodeList elementsByTagNameNS(const QString &nsURI, const QString &localName) const;
+
+QDomNode::NodeType nodeType() const;
+void setTagName(const QString &name);//将此元素的标签名称设置为 name
+QString tagName() const;//例如<img src="myimg.png">会返回img
+QString text() const;//例如<h1>Hello <b>Qt</b> <![CDATA[<xml is cool>]]></h1>会返回Hello Qt <xml is cool>
+
+// 从元素中移除属性 oldAttr 并返回它
+void removeAttribute(const QString &name);
+QDomAttr removeAttributeNode(const QDomAttr &oldAttr);
+void removeAttributeNS(const QString &nsURI, const QString &localName);
+//将属性 newAttr 添加到此元素
+QDomAttr setAttributeNode(const QDomAttr &newAttr);
+QDomAttr attributeNode(const QString &name);
+QDomAttr setAttributeNodeNS(const QDomAttr &newAttr);
+QDomAttr attributeNodeNS(const QString &nsURI, const QString &localName);
+
+//添加一个名为 name 的属性，其值为 value。如果存在同名属性，则将其值替换为值
+void setAttribute(const QString &name, const QString &value);
+void setAttribute(const QString &name, qlonglong value);
+void setAttribute(const QString &name, qulonglong value);
+void setAttribute(const QString &name, int value);
+void setAttribute(const QString &name, uint value);
+void setAttribute(const QString &name, float value);
+void setAttribute(const QString &name, double value);
+QString attribute(const QString &name, const QString &defValue = QString()) const;
+bool hasAttribute(const QString &name) const;
+QDomNamedNodeMap attributes() const;
+
+// 添加具有限定名称 qName 的属性和具有值 value 的命名空间 URI nsURI。如果存在具有相同本地名称和命名空间 URI 的属性，则将其前缀替换为 qName 的前缀，并将其值替换为 value
+void setAttributeNS(const QString nsURI, const QString &qName, const QString &value);
+void setAttributeNS(const QString nsURI, const QString &qName, int value);
+void setAttributeNS(const QString nsURI, const QString &qName, uint value);
+void setAttributeNS(const QString nsURI, const QString &qName, qlonglong value);
+void setAttributeNS(const QString nsURI, const QString &qName, qulonglong value);
+void setAttributeNS(const QString nsURI, const QString &qName, double value);
+QString attributeNS(const QString nsURI, const QString &localName, const QString &defValue = QString()) const;
+bool hasAttributeNS(const QString &nsURI, const QString &localName) const;
+```
+
+#### QDomAttr*
+
+QDomAttr 类**表示 QDomElement 的一个属性**。**基类是QDomNode**。
+
+例如，以下 XML 生成一个没有子元素但有两个属性href和color的元素：
+
+```xml
+ <link href="http://qt-project.org" color="red" />
+```
+
+您可以使用如下代码访问元素的属性：
+
+```c++
+QDomElement e = //... 元素节点
+QDomAttr a = e.attributeNode("href"); // 通过名称获取对应的属性节点
+cout << a.value() << endl;                // 属性值 prints "http://qt-project.org"
+a.setValue("http://qt-project.org/doc"); // change the node's attribute
+QDomAttr a2 = e.attributeNode("href");
+cout << a2.value() << endl;               // prints "http://qt-project.org/doc"
+```
+
+QDomAttr 可以返回属性的 name() 和 value()。使用 setValue() 设置属性的值。如果 specified() 返回 true，则使用 setValue() 设置值。 ownerElement() 返回此属性附加到的节点（如果有）。
+
+成员函数。
+
+```c++
+QString name() const;//属性名称
+QDomNode::NodeType nodeType() const;//节点类型
+QDomElement ownerElement() const;//此属性附加到的节点,如果未附加到任何元素则返回空节点
+void setValue(const QString &v);// 设置属性值
+bool specified() const;//用户使用setValue()设置了属性则返回true
+QString value() const;//返回属性值
+```
+
+#### QDomCharacterData*
 
 QDomCharacterData 类表示 **DOM 中的通用字符串**。
-XML 中使用的字符数据指定了一个通用数据字符串。此类更专业的版本是 QDomText、QDomComment 和 QDomCDATASection。
+此类更专业的版本是 QDomText、QDomComment 和 QDomCDATASection。**其中QDomText和QDomComment是本类的子类，QDomCDATASection又是QDomText的子类**。
+
 数据字符串使用 setData() 设置并使用 data() 检索。您可以使用 substringData() 检索数据字符串的一部分。额外的数据可以用 appendData() 追加，或者用 insertData() 插入。数据字符串的部分可以用 deleteData() 删除或用 replaceData() 替换。数据字符串的长度由length() 返回。
 包含此字符数据的节点的节点类型由 nodeType() 返回。
 
@@ -24975,178 +25438,102 @@ XML 中使用的字符数据指定了一个通用数据字符串。此类更专�
 
 ```c++
 void appendData(const QString &arg);
-void deleteData(unsigned long offset, unsigned long count);
+void deleteData(unsigned long offset, unsigned long count);//从offset中删除count的子字符串
 void insertData(unsigned long offset, const QString &arg);
 void replaceData(unsigned long offset, unsigned long count, const QString &arg);
 void setData(const QString &v);
-
-QString substringData(unsigned long offset, unsigned long count);
+QString data() const;
+QString substringData(unsigned long offset, unsigned long count);//从offset返回count子字符串
 int length() const;
 QDomNode::NodeType nodeType() const;
-QString data() const;
 ```
 
-#### 16.13.6 QDomComment
+##### QDomComment*
 
-QDomComment 类表示一个 XML 注释。
+QDomComment 类**表示一个 XML 注释**。由解析后的 Dom 树中的 QDomComment 对象表示。
 解析后的 XML 中的注释如下：
 
 ```xml
 <!-- this is a comment -->
 ```
 
-由解析后的 Dom 树中的 QDomComment 对象表示。
-成员函数。
-
 ```c++
-QDomComment();
-QDomComment(const QDomComment &x);
 QDomNode::NodeType nodeType() const;
 ```
 
-#### 16.13.7 QDomDocument
-
-**QDomDocument 类表示一个 XML 文档**。
-QDomDocument 类代表整个 XML 文档。从概念上讲，它是文档树的根，提供对文档数据的主要访问。
-由于元素、文本节点、注释、处理指令等不能存在于文档的上下文之外，因此文档类还包含创建这些对象所需的工厂函数。创建的节点对象有一个 ownerDocument() 函数，该函数将它们与在其上下文中创建它们的文档相关联。**最常使用的 DOM 类是 QDomNode、QDomDocument、QDomElement 和 QDomText**。
-解析的 XML 在内部由可以使用各种 QDom 类访问的对象树表示。所有 QDom 类只引用内部树中的对象。一旦最后一个引用它们的 QDom 对象或 QDomDocument 本身被删除，DOM 树中的内部对象将被删除。
-使用**此类中提供的各种工厂函数来创建元素、文本节点等**。使用 QDom 类的默认构造函数只会导致无法操作或插入到 Document 中的空对象。
-QDomDocument 类具有多个用于创建文档数据的函数，例如 createElement()、createTextNode()、createComment()、createCDATASection()、createProcessingInstruction()、createAttribute() 和 createEntityReference()。其中一些函数具有支持命名空间的版本，即 createElementNS() 和 createAttributeNS()。 createDocumentFragment() 函数用于保存部分文档；这对于处理复杂的文档很有用。
-**文档的全部内容由 setContent() 设置**。此函数解析它作为 XML 文档传递的字符串，并创建表示该文档的 DOM 树。根元素可使用 documentElement() 获得。可以使用 toString() 获得文档的文本表示。
-注意：如果 XML 文档很大，DOM 树最终可能会保留大量内存。对于此类文档，QXmlStreamReader 或 QXmlQuery 类可能是更好的解决方案。
-可以使用 importNode() 将另一个文档中的节点插入到文档中。
-您可以使用 elementsByTagName() 或 elementsByTagNameNS() 获取具有特定标签的所有元素的列表。
-QDom 类通常按如下方式使用：
-
-```c++
-QDomDocument doc("mydocument");
-QFile file("mydocument.xml");
-if (!file.open(QIODevice::ReadOnly))
-    return;
-if (!doc.setContent(&file)) {
-    file.close();
-    return;
-}
-file.close();
-
-// 打印出所有最外层直接子元素的元素名称
-QDomElement docElem = doc.documentElement();
-
-QDomNode n = docElem.firstChild();
-while(!n.isNull()) {
-    QDomElement e = n.toElement(); // 尝试将节点转换为元素
-    if(!e.isNull()) {
-        cout << qPrintable(e.tagName()) << endl; // the node really is an element.
-    }
-    n = n.nextSibling();
-}
-
-// 这里我们在文档末尾追加一个新元素
-QDomElement elem = doc.createElement("img");
-elem.setAttribute("src", "myimage.png");
-docElem.appendChild(elem);
-```
-
-一旦 doc 和 elem 超出范围，代表 XML 文档的整个内部树会被删除。要使用 DOM 创建文档，请使用如下代码
-
-```c++
-QDomDocument doc("MyML");
-QDomElement root = doc.createElement("MyML");
-doc.appendChild(root);
-
-QDomElement tag = doc.createElement("Greeting");
-root.appendChild(tag);
-
-QDomText t = doc.createTextNode("Hello World");
-tag.appendChild(t);
-
-QString xml = doc.toString();
-```
-
-成员函数。
-
-```c++
-// 创建各种不同类型的节点
-QDomAttr createAttribute(const QString &name);//创建一个名为 name 的新属性，可以插入到元素中，例如使用 QDomElement::setAttributeNode()。
-QDomAttr createAttributeNS(const QString &nsURI, const QString &qName);//创建一个具有命名空间支持的新属性，该属性可以插入到元素中
-QDomCDATASection createCDATASection(const QString &value);//为可以插入到文档中的字符串值创建一个新的 CDATA 部分
-QDomComment createComment(const QString &value);//为可以插入到文档中的字符串值创建一个新注释
-QDomDocumentFragment createDocumentFragment();//创建一个新的文档片段，可用于保存文档的某些部分，例如在对文档树进行复杂操作时
-QDomElement createElement(const QString &tagName);//创建一个名为 tagName 的新元素，可以插入到 DOM 树中
-QDomElement createElementNS(const QString &nsURI, const QString &qName);//创建一个具有命名空间支持的新元素，可以插入到 DOM 树中
-QDomEntityReference createEntityReference(const QString &name);//创建一个名为 name 的新实体引用，可以插入到文档中
-QDomProcessingInstruction createProcessingInstruction(const QString &target, const QString &data);//创建可以插入到文档中的新处理指令
-QDomText createTextNode(const QString &value);//为可以插入到文档树中的字符串值创建一个文本节点
-
-QDomDocumentType doctype() const;//返回此文档的文档类型
-QDomElement documentElement() const;//返回文的根元素
-QDomElement elementById(const QString &elementId);//返回 ID等于 elementId 的元素。如果没有找到具有 ID 的元素，则此函数返回一个空元素
-QDomNodeList elementsByTagName(const QString &tagname) const;//返回一个 QDomNodeList，它包含文档中带有名称标记名的所有元素。节点列表的顺序是它们在元素树的前序遍历中遇到的顺序/
-QDomNodeList elementsByTagNameNS(const QString &nsURI, const QString &localName);//返回一个 QDomNodeList，它包含文档中的所有元素，本地名称为 localName，命名空间 URI 为 nsURI。节点列表的顺序是它们在元素树的前序遍历中遇到的顺序
-QDomImplementation implementation() const;//返回一个 QDomImplementation 对象
-QDomNode importNode(const QDomNode &importedNode, bool deep);//将节点importedNode 从另一个文档导入到此文档。 importNode 保留在原始文档中；此函数创建可在本文档中使用的副本
-QDomNode::NodeType nodeType() const;//返回节点类型
-
-// 此函数从字节数组数据中解析 XML 文档并将其设置为文档的内容。它尝试按照 XML 规范的要求检测文档的编码
-bool setContent(const QByteArray &data, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(const QString &text, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(QIODevice *dev, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(QXmlInputSource *source, bool namespaceProcessing, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(const QByteArray &buffer, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(const QString &text, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(QIODevice *dev, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-bool setContent(QXmlInputSource *source, QXmlReader *reader, QString *errorMsg = Q_NULLPTR, int *errorLine = Q_NULLPTR, int *errorColumn = Q_NULLPTR);
-
-QByteArray toByteArray(int indent = 1) const;//将已解析的文档转换回其文本表示形式并返回包含编码为 UTF-8 的数据的 QByteArray
-QString toString(int indent = 1) const;//将已解析的文档转换回其文本表示
-```
-
-
-
-#### 16.13.8 QDomDocumentFragment
-
-
-
-#### 16.13.9 QDomDocumentType
-
-
-
-#### 16.13.10 QDomElement
-
-
-
-#### 16.13.11 QDomEntity
-
-
-
-#### 16.13.12 QDomEntityReference
-
-
-
-#### 16.13.13 QDomNotation
-
-
-
-#### 16.13.14 QDomProcessingInstruction
-
-
-
-#### 16.13.15 QDomText
+##### QDomText*
 
 **QDomText 类表示已解析 XML 文档中的文本数据**。
 您可以使用 splitText() 将 QDomText 对象中的文本拆分为两个 QDomText 对象。
-成员函数。
 
 ```c++
-QDomText();
-QDomText(const QDomText &x);
 QDomNode::NodeType nodeType() const;
-QDomText splitText(int offset);
+QDomText splitText(int offset);//拆分为两个QDomText。保留其第一个偏移字符，第二个（新创建的）对象与剩余字符一起插入到该对象之后的文档树中
 ```
 
-#### 16.13.16 QDomNamedNodeMap
+###### QDomCDATASection*
 
+QDomCDATASection 类表示一个 XML的CDATA 部分。**基类是QDomText**。
+CDATA在XML的用法是这样的，首先是尖括号内有个!，然后1对[]，然后是CDATA再跟上一对[]。"a < b"如果不放在CDATA中会被转义为"a  "&lt; b"。
 
+```xml
+<kk><![CDATA[a < b 则说明a小于b]]></kk>
+```
+
+QDomNode::normalize() 函数不会合并相邻的 QDomCDATASection 节点。
+
+```c++
+QDomNode::NodeType nodeType() const;//节点类型
+```
+
+#### QDomEntity*
+
+QDomEntity 类**表示一个 XML 实体**。
+此类表示 XML 文档中的已解析或未解析实体。请注意，这对实体本身而不是实体声明进行建模。
+DOM 不支持编辑实体节点；如果用户想要更改实体的内容，则**必须在 DOM 树中将每个相关的 QDomEntityReference 节点替换为实体内容的克隆**，然后必须对每个克隆进行所需的更改。实**体节点的所有后代都是只读的**。实体节点没有任何父节点。
+您可以在可用时访问实体的 publicId()、systemId() 和 notationName()。
+
+```c++
+QDomNode::NodeType nodeType() const;
+QString notationName() const;//对于未解析的实体，此函数返回实体的符号名称。对于已解析的实体，此函数返回一个空字符串
+QString publicId() const;//返回与此实体关联的公共标识符。如果未指定公共标识符，则返回空字符串
+QString systemId() const;//返回与此实体关联的系统标识符。如果未指定系统标识符，则返回空字符串
+```
+
+#### QDomEntityReference*
+
+QDomEntityReference 类**表示一个 XML 实体引用**。
+当实体引用在源文档中时，或者当用户希望插入实体引用时，可以将 QDomEntityReference 对象插入到 DOM 树中。与实体节点一样，实体引用的所有后代都是只读的。
+
+```c++
+QDomNode::NodeType nodeType() const;
+```
+
+#### QDomNotation*
+
+QDomNotation 类**表示 XML 表示法**。
+DOM 不支持编辑符号节点；因此它们是只读的。符号节点没有任何父节点。
+您可以从符号节点检索 publicId() 和 systemId()。
+
+```c++
+QDomNode::NodeType nodeType() const;
+QString publicId() const;
+QString systemId() const;
+```
+
+#### QDomProcessingInstruction*
+
+QDomProcessingInstruction 类表示**一个 XML 处理指令**。
+XML 中使用处理指令来将特定于处理器的信息保存在文档的文本中。
+**出现在 XML 文档顶部的 XML 声明，通常是 &lt;?xml version=&#39;1.0&#39; encoding=&#39;UTF-8&#39;?&gt;，被 QDom 视为处理指令。**这是不幸的，因为 XML 声明不是处理指令；除其他差异外，它不能插入到文档中的任何位置，只能在第一行。不要使用此函数来创建 xml 声明，因为尽管它具有与处理指令相同的语法，但它不是，并且可能不会被 QDom 视为这样。
+处理指令的内容用 data() 检索并用 setData() 设置。使用 target() 检索处理指令的目标
+
+```c++
+QString data() const;//返回此处理指令的内容
+void setData(const QString &d);
+QDomNode::NodeType nodeType() const;
+QString target() const;//返回此处理指令的目标
+```
 
 
 
