@@ -2104,17 +2104,17 @@ C:\opencv4.5.5\build
 
 编译选项设定是在[Mingw编译](#Mingw编译)指定好编译器后再做的。
 
-OPECV_EXTRA_MODULES_PATH 设置地址为
+**OPECV_EXTRA_MODULES_PATH** 设置地址为
 
 ```powershell
 C:/opencv4.5.5/opencv-4.5.5/opencv_contrib-4.5.5/modules
 ```
 
-WITH_OPENGL 勾选
+**WITH_OPENGL** 勾选
 
-OPENCV_ENABLE_NONFREE 勾选(包含SURF算法)
+**OPENCV_ENABLE_NONFREE 勾选**(包含SURF算法)
 
-BUILD_opencv_world 勾选(可以不单独生成多个lib而是整体1个)
+**BUILD_opencv_world 勾选**(可以不单独生成多个lib而是整体1个)
 
 OPECV_ENABLE_ALLOCATOR_STATS 不勾选
 
@@ -2128,7 +2128,7 @@ WITH_IPP 不勾选
 
 BUILD_JAVA 不勾选
 
-BUILD_TRESTS 不勾选
+BUILD_TESTS 不勾选
 
 BUILD_PERF_TESTS 不勾选
 
@@ -2173,7 +2173,7 @@ C:\opencv4.5.5\build
 
 shift+右键打开powershell，输入命令，指定线程数16(取决于你的机器配置，笔者的电脑是8核16线程)加快编译速度，预计等待时间10分钟，如果机器不行可能30~60minutes。
 
-```
+```cmake
 mingw32-make -j 16
 ```
 
@@ -2465,6 +2465,20 @@ Times passed in seconds: 0.7416 ms
 #### 参考链接
 
 [1.使用VS编译opencv](https://blog.csdn.net/qq_33389308/article/details/88063918)。
+
+### Qt编译
+
+使用Qt编译时需要先把qt的编译器所在bin文件夹路径添加到环境变量，否则会提示无法启动cmake。
+
+例如作者的Qt编译器版本是5.9.9，安装在C盘文件下，考虑到平常Qt项目编译使用的是mingw比较多，所以使用Qt的mingw编译器去编译。
+
+```powershell
+C:\Qt\Qt5.9.9\Tools\mingw530_32\bin
+```
+
+之后的编译方法和前边说的[Mingw编译](#Mingw编译)一样。
+
+不过目前不知道为什么总是有错误，暂时没解决。
 
 ## ubuntu配置
 
