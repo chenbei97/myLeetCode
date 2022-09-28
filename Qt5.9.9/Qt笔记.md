@@ -25535,6 +25535,215 @@ QDomNode::NodeType nodeType() const;
 QString target() const;//返回此处理指令的目标
 ```
 
+### 16.14 插件
+
+Qt 提供了两个用于创建插件的 API： 一个用于编写 Qt 本身扩展的高级 API：自定义数据库驱动程序、图像格式、文本编解码器、自定义样式等；二是用于扩展 Qt 应用程序的低级 API。
+例如，如果您想编写自定义 QStyle 子类并让 Qt 应用程序动态加载它，您将使用更高级别的 API。
+由于较高级别的 API 是在较低级别的 API 之上构建的，因此两者都存在一些共同问题。
+如果您想提供用于 Qt Designer 的插件，请参阅 Qt Designer 模块文档。
+
+高级API插件：
+
+编写扩展 Qt 本身的插件是通过继承适当的插件基类、实现一些功能并添加宏来实现的。
+有几个插件基类。派生插件默认存储在标准插件目录的子目录中。如果插件没有存储在适当的目录中，Qt 将找不到插件。下表总结了插件基类。有些类是私有的，因此没有记录。您可以使用它们，但没有与更高 Qt 版本的兼容性承诺。
+
+![qtplugin.jpg](qtplugin.jpg)
+
+如果有一个名为MyStyle的新样式类要作为插件提供，则需要按如下方式定义该类（mystyleplugin.h）：
+
+```c++
+class MyStylePlugin : public QStylePlugin
+  {
+      Q_OBJECT
+      Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QStyleFactoryInterface" FILE "mystyleplugin.json")
+  public:
+      QStyle *create(const QString &key);
+  };
+```
+
+确保类实现位于 .cpp 文件中：
+
+```c++
+#include "mystyleplugin.h"
+
+QStyle *MyStylePlugin::create(const QString &key)
+{
+    if (key.toLower() == "mystyle")
+    	return new MyStyle;
+    return 0;
+}
+```
+
+（请注意，QStylePlugin 不区分大小写，我们的 create() 实现中使用了小写版本的密钥；大多数其他插件都区分大小写。）此外，包含描述插件的元数据的 json 文件（mystyleplugin.json）大多数插件都需要。对于样式插件，它只包含可由插件创建的样式列表：
+
+```json
+{ "Keys": [ "mystyleplugin" ] }
+```
+
+json 文件中需要提供的信息类型取决于插件，有关文件中需要包含的信息的详细信息，请参阅类文档。
+对于数据库驱动程序、图像格式、文本编解码器和大多数其他插件类型，不需要显式创建对象。 Qt 会根据需要找到并创建它们。样式是一个例外，因为您可能希望在代码中显式设置样式。要应用样式，请使用如下代码：
+
+```c++
+ QApplication::setStyle(QStyleFactory::create("MyStyle"));
+```
+
+一些插件类需要实现额外的功能。有关必须为每种类型的插件重新实现的虚函数的详细信息，请参阅类文档。
+
+**低级API插件。**
+
+不仅 Qt 本身，Qt 应用程序也可以通过插件进行扩展。这需要应用程序使用 QPluginLoader 检测和加载插件。在这种情况下，插件可以提供任意功能，并且不限于数据库驱动程序、图像格式、文本编解码器、样式以及扩展 Qt 功能的其他类型的插件。通过插件使应用程序可扩展涉及以下步骤： 定义一组用于与插件通信的接口（仅具有纯虚函数的类）。
+使用 **Q_DECLARE_INTERFACE() 宏**告诉 Qt 的元对象系统有关接口的信息。
+在应用程序中使用 QPluginLoader 来加载插件。
+使用 qobject_cast() 来测试插件是否实现了给定的接口。
+编写插件涉及以下步骤： 声明一个从 QObject 和插件想要提供的接口继承的插件类。
+使用 **Q_INTERFACES() 宏告诉 Qt 的元对象系统有关接口的信息**。
+使用 **Q_PLUGIN_METADATA() 宏导出插件**。
+使用合适的 .pro 文件构建插件。
+例如，这是一个接口类的定义：
+
+```c++
+class FilterInterface
+  {
+  public:
+      virtual ~FilterInterface() {}
+
+      virtual QStringList filters() const = 0;
+      virtual QImage filterImage(const QString &filter, const QImage &image,
+                                 QWidget *parent) = 0;
+  };
+```
+
+这是实现该接口的插件类的定义：
+
+```c++
+#include <QObject>
+#include <QtPlugin>
+#include <QStringList>
+#include <QImage>
+
+#include <plugandpaint/interfaces.h>
+
+class ExtraFiltersPlugin : public QObject, public FilterInterface
+{
+      Q_OBJECT
+      Q_PLUGIN_METADATA(IID "org.qt-project.Qt.Examples.PlugAndPaint.FilterInterface" FILE "extrafilters.json")
+      Q_INTERFACES(FilterInterface)
+
+  public:
+      QStringList filters() const;
+      QImage filterImage(const QString &filter, const QImage &image,
+                         QWidget *parent);
+};
+```
+
+Plug &amp; Paint 示例文档详细解释了这个过程。有关特定于 Qt Designer 的问题的信息，另请参阅为 Qt Designer 创建自定义小部件。您还可以查看 Echo 插件示例，这是一个关于如何实现扩展 Qt 应用程序的插件的更简单的示例。请注意，必须先初始化 QCoreApplication，然后才能加载插件。
+
+**定位插件。**
+
+Qt 应用程序自动知道哪些插件可用，因为插件存储在标准插件子目录中。因为这个应用程序不需要任何代码来查找和加载插件，因为 Qt 会自动处理它们。
+在开发过程中，插件的目录是 QTDIR/plugins（其中 QTDIR 是安装 Qt 的目录），每种类型的插件都在该类型的子目录中，例如，styles。如果您希望您的应用程序使用插件并且您不想使用标准插件路径，请让您的安装过程确定您要用于插件的路径，并保存路径，例如，通过使用 QSettings，为应用程序在运行时读取。然后应用程序可以使用此路径调用 QCoreApplication::addLibraryPath() 并且您的插件将可供应用程序使用。请注意，路径的最后部分（例如样式）不能更改。
+如果您希望插件可加载，那么一种方法是在应用程序下创建一个子目录，并将插件放在该目录中。如果您分发 Qt 附带的任何插件（位于 plugins 目录中的插件），您必须将插件所在的 plugins 下的子目录复制到您的应用程序根文件夹（即，不包括 plugins 目录）。
+
+**静态插件。**
+
+将插件包含在应用程序中的正常且最灵活的方法是将其编译为单独提供的动态库，并在运行时检测和加载。
+插件可以静态链接到您的应用程序中。如果您构建 Qt 的静态版本，这是包含 Qt 预定义插件的唯一选项。使用静态插件可以减少部署出错的可能性，但缺点是如果不完全重建和重新分发应用程序，就无法添加插件的功能。
+要静态链接插件，您需要使用 QTPLUGIN 将所需的插件添加到您的构建中。
+在您的应用程序的 .pro 文件中，您需要以下条目：
+
+```c++
+QTPLUGIN     += qjpeg \
+                  qgif \
+                  qkrcodecs
+```
+
+qmake 会自动将插件添加到 QTPLUGIN 中，这些插件通常是使用的 Qt 模块所需的（参见 QT），而更专业的插件需要手动添加。可以根据类型覆盖自动添加的插件的默认列表。例如，要链接最小插件而不是默认的 Qt 平台适配插件，请使用：
+
+```c++
+QTPLUGIN.platforms = qminimal
+```
+
+如果您既不想自动链接默认插件，也不想自动链接最小 QPA 插件，请使用：
+
+```c++
+QTPLUGIN.platforms = -
+```
+
+默认值已针对开箱即用的最佳体验进行了调整，但可能会不必要地使应用程序膨胀。建议检查 qmake 构建的链接器命令行并消除不必要的插件。
+
+为了实际链接和实例化静态插件，应用程序代码中还需要Q_IMPORT_PLUGIN（）宏，但这些宏是由qmake自动生成并添加到应用程序项目中的。
+如果不希望自动链接添加到QTPLUGIN的所有插件，请从CONFIG变量中删除import_plugins：
+
+```c++
+CONFIG -= import_plugins
+```
+
+也可以按照以下步骤创建自己的静态插件： 将 CONFIG += static 添加到插件的 .pro 文件中。
+在您的应用程序中使用 Q_IMPORT_PLUGIN() 宏。
+如果插件附带 qrc 文件，请在您的应用程序中使用 Q_INIT_RESOURCE() 宏。
+使用 .pro 文件中的 LIBS 将您的应用程序与插件库链接。
+有关如何执行此操作的详细信息，请参阅 Plug &amp; Paint 示例和相关的基本工具插件。
+注意：如果您不使用 qmake 来构建您的插件，您需要确保定义了 QT_STATICPLUGIN 预处理器宏。
+
+部署插件文档涵盖了使用应用程序部署插件并在出现问题时对其进行调试的过程。
+
+#### 16.14.1 Q_DECLARE_INTERFACE(*ClassName*, *Identifier*)
+
+此宏将给定的标识符（字符串文字）与名为ClassName的接口类相关联。标识符必须唯一。例如：
+
+```c++
+#define BrushInterface_iid "org.qt-project.Qt.Examples.PlugAndPaint.BrushInterface/1.0"
+
+Q_DECLARE_INTERFACE(BrushInterface, BrushInterface_iid)
+```
+
+此宏通常在头文件中ClassName的类定义之后使用。有关详细信息，请参见Plug&Paint示例。
+如果要将Q_DECLARE_INTERFACE与命名空间中声明的接口类一起使用，则必须确保Q_DECLARE_INTERFACE不在命名空间中。例如：
+
+```c++
+namespace Foo
+{
+    struct MyInterface { ... };
+}
+
+Q_DECLARE_INTERFACE(Foo::MyInterface, "org.examples.MyInterface")
+```
+
+#### 16.14.2 Q_IMPORT_PLUGIN(*PluginName*)
+
+此宏导入名为 PluginName 的插件，该插件与使用 Q_PLUGIN_METADATA() 为插件声明元数据的类的名称相对应。将此宏插入应用程序的源代码将允许您使用静态插件。
+
+```c++
+Q_IMPORT_PLUGIN(qjpeg)
+```
+
+构建应用程序时，链接器还必须包含静态插件。对于 Qt 的预定义插件，您可以使用 QTPLUGIN 将所需的插件添加到您的构建中。例如：
+
+```c++
+TEMPLATE      = app
+QTPLUGIN     += qjpeg qgif    # image formats
+```
+
+#### 16.14.3 Q_PLUGIN_METADATA(*...*)
+
+此宏用于声明元数据，该元数据是实例化此对象的插件的一部分。
+宏需要声明通过对象实现的接口的IID，并引用一个包含插件元数据的文件。
+Qt 插件的源代码中应该恰好出现一次此宏。
+例子：
+
+```c++
+class MyInstance : public QObject
+{
+      Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDummyPlugin" FILE "mymetadata.json")
+};
+```
+
+有关详细信息，请参见Plug&Paint示例。
+请注意，出现此宏的类必须是默认可构造的。FILE是可选的，它指向一个json文件。
+json文件必须位于构建系统指定的一个include目录中。moc在找不到指定的文件时退出并返回错误。
+
+#### 16.14.4 案例
+
 
 
 ## 17. 串口通信
@@ -26429,4 +26638,750 @@ void portConfig::updateConfigs()
         this->currentConfigs.stringFlowControl = ui->portFlowControlCombo->currentText();// 字符串表示
 }
 ```
+
+## 18. CAN通信
+
+控制器局域网 (CAN) 是一种车辆总线标准，旨在允许微控制器和设备在没有主机的应用程序中相互通信。
+
+它是一种基于消息的协议，最初设计用于汽车内的多路电线，但也用于许多其他环境。
+CAN Bus API 提供了一些通用的 API 来访问 CAN 设备： QCanBus 提供了一个 API 来从选定的插件创建 QCanBusDevice。
+QCanBusDevice 提供了一个用于直接访问 CAN 设备的 API。
+QCanBusFrame 定义了一个可以从 QCanBusDevice 读写的 CAN 帧
+
+多家供应商提供具有不同API的CAN设备以供访问。QtSerialBus模块支持以下CAN总线插件：
+
+1) CAN over Linux 套接字 SocketCAN (**socketcan**) CAN 总线插件，使用 Linux 套接字和开源驱动程序。
+2) SYS TEC 电子 SystecCAN (**systeccan**) CAN 总线后端使用 SYS TEC CAN 适配器。
+3) 使用 PEAK CAN 适配器的 PEAK-System PeakCAN (**peakcan**) CAN 总线插件。
+4) MHS Elektronik TinyCAN (**tinycan**) CAN 总线插件，使用 MHS CAN 适配器。
+5) Vector Informatik VectorCAN (**vectorcan**) CAN 总线插件，使用 Vector CAN 适配器。
+
+如果 Qt 提供的插件不适合所需的目标平台，可以实现自定义 CAN 总线插件。该实现遵循实现 Qt 插件的标准方式。**自定义插件必须部署到 $QTDIR/plugins/canbus**。
+**每个插件都必须定义一个键，用于加载插件**。这是通过一个小的 json 文件完成的。例如，socketcan 插件使用以下 plugin.json：
+
+```json
+{"key"："socketcan"};
+```
+
+此密钥必须与CAN总线适配器的接口名称一起传递给QCanBus:：createDevice()。QCanBus使用QCanBusFactoryV2接口加载并实例化插件，每个插件必须实现该接口作为中心入口点。该接口充当工厂，其唯一目的是返回QCanBusDevice实例。上述接口名称通过工厂的QCanBusFactory:：createDevice()方法传递。以下是socketcan插件的工厂实现：
+
+```c++
+class SocketCanBusPlugin : public QObject, public QCanBusFactoryV2//继承此类
+  {
+      Q_OBJECT
+          //宏声明为插件元对象,指定ID和json文件
+      Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QCanBusFactory" FILE "plugin.json")
+      Q_INTERFACES(QCanBusFactoryV2)//指定接口
+
+  public:
+      QList<QCanBusDeviceInfo> availableDevices(QString *errorMessage) const override
+      {
+          Q_UNUSED(errorMessage);
+          return SocketCanBackend::interfaces();//后端接口
+      }
+
+      QCanBusDevice *createDevice(const QString &interfaceName, QString *errorMessage) const override//这是必须实现的重载接口
+      {
+          Q_UNUSED(errorMessage);
+          auto device = new SocketCanBackend(interfaceName);
+          return device;
+      }
+  };
+```
+
+下一步是提供QCanBusDevice的实现。至少，必须实现以下4个函数的纯虚拟功能：
+QCanBusDevice::open()
+QCanBusDevice::close()
+QCanBusDevice::writeFrame()
+QCanBusDevice::interpreteErrorFrame()
+open()和close()方法分别与QCanBusDevice::connectDevice()和QCanBusDevice::disconnectDevice()结合使用。
+QCanBusDevice::writeFrame()负责进行健全性检查，例如QCanBusFrame的有效性以及设备是否仍处于连接状态。如果检查通过，它会将帧写入CAN总线。成功后，它会发出QCanBusDevice::framesWritten()信号；否则，将调用QCanBusDevice::setError()并显示相应的错误消息。此函数还可用于实现异步写入操作。插件实现者负责在适当的时间发出适当的信号。
+最后但并非最不重要的是，QCanBusDevice::interpreteErrorFrame提供了一种将CAN总线错误帧的内容转换为可读错误字符串的便捷方法。
+
+### 18.1 数据类型
+
+#### 18.1.1 QCanBus
+
+QCanBus 类处理总线插件的注册和创建。
+QCanBus 在运行时加载 Qt CAN Bus 插件。串行总线插件的所有权转移给加载程序。
+
+例如，以下调用返回所有可用 SocketCAN 接口的列表（可用于 createDevice()）：
+
+```c++
+QString errorString;
+const QList<QCanBusDeviceInfo> devices = QCanBus::instance()->availableDevices(
+    QStringLiteral("socketcan"), &errorString);
+if (!errorString.isEmpty())
+    qDebug() << errorString;
+```
+
+例如，以下调用将连接到 SocketCAN 接口 vcan0：
+
+```c++
+QString errorString;
+QCanBusDevice *device = QCanBus::instance()->createDevice(
+    QStringLiteral("socketcan"), QStringLiteral("vcan0"), &errorString);
+if (!device)
+    qDebug() << errorString;
+else
+    device->connectDevice();
+```
+
+成员函数。
+
+```c++
+QList<QCanBusDeviceInfo> availableDevices(const QString &plugin, QString *errorMessage = nullptr) const;//返回插件的可用接口。如果失败，可选参数 errorMessage 返回文本错误描述
+
+QCanBusDevice *createDevice(const QString &plugin, const QString &interfaceName, QString *errorMessage = nullptr) const;//创建一个 CAN 总线设备。 plugin 是 plugins() 方法返回的插件名称。 interfaceName 是 CAN 总线接口名称。如果失败，可选参数 errorMessage 返回文本错误描述。返回插件的所有权转移给调用者。如果找不到合适的设备，则返回 nullptr。
+
+QStringList plugins() const;//返回所有已加载插件的标识符列表
+
+static QCanBus *QCanBus::instance();//返回指向QCanBus类的指针。如有必要将加载对象。QCanBus使用单例设计模式
+```
+
+#### 18.1.2 QCanBusDevice
+
+QCanBusDevice 类是 CAN 总线的接口类。
+QCanBusDevice 与 CAN 插件通信，为用户提供方便的 API。 CAN 插件必须在对象创建期间指定。
+
+枚举值。
+
+```c++
+enum QCanBusDevice::CanBusDeviceState{
+    QCanBusDevice::UnconnectedState
+    QCanBusDevice::ConnectingState
+    QCanBusDevice::ConnectedState
+    QCanBusDevice::ClosingState
+}
+enum QCanBusDevice::CanBusError{   
+    QCanBusDevice::NoError
+    QCanBusDevice::ReadError
+    QCanBusDevice::WriteError
+    QCanBusDevice::ConnectionError
+    QCanBusDevice::ConfigurationError
+    QCanBusDevice::UnknownError
+}
+// 该枚举描述了 CAN 总线连接的可能配置选项
+enum QCanBusDevice::ConfigurationKey{
+    QCanBusDevice::RawFilterKey
+    QCanBusDevice::ErrorFilterKey
+    QCanBusDevice::LoopbackKey
+    QCanBusDevice::ReceiveOwnKey
+    QCanBusDevice::BitRateKey
+    QCanBusDevice::CanFdKey
+    QCanBusDevice::DataBitRateKey
+    QCanBusDevice::UserKey
+}
+```
+
+成员函数。
+
+```c++
+QVector<int> configurationKeys() const;//返回 CAN 总线连接使用的键列表
+QVariant configurationParameter(int key) const;//返回分配给 ConfigurationKey 键的当前值；否则为无效的 QVariant
+bool connectDevice();
+void disconnectDevice();
+CanBusError error() const;//返回发生的最后一个错误。错误值始终设置为发生的最后一个错误，并永远不会重置
+QString errorString() const;
+qint64 framesAvailable() const;//返回可用帧的数量。如果没有可用的帧，则此函数返回 0
+qint64 framesToWrite() const;//对于缓冲设备此函数返回等待写入的帧数。对于无缓冲设备，此函数始终返回0
+CanBusDeviceState state() const;//返回设备的当前状态
+QCanBusFrame readFrame();//从队列中返回下一个 QCanBusFrame；否则返回一个空的 QCanBusFrame。返回的帧从队列中移除
+
+virtual QString interpretErrorFrame(const QCanBusFrame &frame) = 0;//将帧解释为错误帧并返回人类可读的错误描述。如果 frame 不是错误帧，则返回的字符串为空
+virtual void setConfigurationParameter(int key, const QVariant &value);//将 CAN 总线连接的配置参数键设置为值。潜在的密钥由 ConfigurationKey 表示
+virtual bool waitForFramesReceived(int msecs);//阻塞，直到有新的帧可供读取并且发出了 framesReceived() 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时
+virtual bool waitForFramesWritten(int msecs);//对于缓冲设备，此函数会一直等待，直到所有缓冲帧都已写入设备并发出 framesWritten() 信号，或者直到 msecs 毫秒过去。如果 msecs 为 -1，则此函数不会超时。对于无缓冲设备，它会立即返回 false，因为 writeFrame() 不需要写入缓冲区
+virtual bool writeFrame(const QCanBusFrame &frame) = 0;//将帧写入CAN总线，并在成功时返回true；否则为false
+```
+
+信号函数。
+
+```c++
+void errorOccurred(QCanBusDevice::CanBusError error);
+void framesReceived();
+void framesWritten(qint64 framesCount);
+void stateChanged(QCanBusDevice::CanBusDeviceState state);
+```
+
+保护函数。
+
+```c++
+virtual void close() = 0;//该函数负责关闭 CAN 总线连接。实现必须确保实例的 state() 设置为 QCanBusDevice::UnconnectedState
+virtual bool open() = 0;//此函数由 connectDevice() 调用。如果可以建立 CAN 总线连接，子类必须提供返回 true 的实现；否则为假。 QCanBusDevice 实现确保在进入此函数时设备的 state() 已设置为 QCanBusDevice::ConnectingState
+// 将最后一个设备错误的可读描述设置为 errorText。 errorId 对错误类型进行分类。CAN 总线实现必须使用此函数来更新设备的错误状态
+void setError(const QString &errorText, QCanBusDevice::CanBusError errorId);
+// 将设备的状态设置为 newState。 CAN 总线实现必须使用此函数来更新设备状态
+void setState(QCanBusDevice::CanBusDeviceState newState);
+
+QCanBusFrame dequeueOutgoingFrame();//从传出帧的内部列表中返回下一个 QCanBusFrame；否则返回无效的 QCanBusFrame。返回的帧从内部列表中删除
+void enqueueOutgoingFrame(const QCanBusFrame &newFrame);//将 newFrame 附加到可通过 writeFrame() 访问的传出帧的内部列表。子类在编写新框架时必须调用此函数
+void enqueueReceivedFrames(const QVector<QCanBusFrame> &newFrames);
+bool hasOutgoingFrames() const;//如果传出帧的内部列表不为空，则返回true；否则返回false
+```
+
+#### 18.1.3 QCanBusDeviceInfo
+
+QCanBusDeviceInfo **提供有关 CAN 总线接口的信息**。
+每个插件可能支持一个或多个具有不同功能的接口。此类提供有关可用功能的信息
+
+成员函数。
+
+```c++
+QCanBusDeviceInfo() = delete
+QCanBusDeviceInfo(const QCanBusDeviceInfo &other);
+void swap(QCanBusDeviceInfo &other);
+bool hasFlexibleDataRate() const;//如果 CAN 总线接口支持 CAN FD（灵活数据速率），则返回真
+bool isVirtual() const;//如果 CAN 总线接口是虚拟的（即未连接到真实的 CAN 硬件），则返回 true
+QString name() const;//返回此 CAN 总线接口的接口名称，例如可以0
+```
+
+#### 18.1.4 QCanBusFactoryV2
+
+QCanBusFactoryV2 类是一个工厂类，**用作 CAN 总线插件的插件接口**。
+所有插件都必须实现这个工厂类提供的功能。
+
+```c++
+virtual QList<QCanBusDeviceInfo> availableDevices(QString *errorMessage) const = 0;
+// 返回 QCanBusDevice 的可用设备列表及其功能。errorMessage 包含失败时的错误描述
+
+virtual QCanBusDevice *createDevice(const QString &interfaceName, QString *errorMessage) const = 0;//需要从 QCanBusFactory::createDevice() 重新实现。创建一个新的 QCanBusDevice。调用者必须拥有返回的指针的所有权。interfaceName 是 CAN 接口名称，errorMessage 包含失败时的错误描述。如果工厂无法创建插件，则返回 nullptr
+```
+
+#### 18.1.5 QCanBusFrame
+
+QCanBusFrame 是**代表单个 CAN 帧的容器类**。
+QCanBusDevice 可以使用 QCanBusFrame 进行读写操作。它包含帧标识符和数据有效载荷。 QCanBusFrame 包含读取时的时间戳。
+
+嵌套时间戳类TimeStamp。TimeStamp 类提供具有微秒精度的时间戳信息。
+
+```c++
+TimeStamp(qint64 s = 0, qint64 usec = 0);//以秒、秒和微秒为单位构造TimeStamp，usec
+qint64 microSeconds() const;//返回时间戳的微秒
+qint64 seconds() const;//返回时间戳的秒数
+static TimeStamp fromMicroSeconds(qint64 usec);//从微秒 usec 构造一个标准化的 TimeStamp。创建的时间戳是标准化的，即大于 1000000 的微秒转换为秒
+```
+
+枚举值。
+
+```c++
+// 这个枚举描述了可能的错误类型
+enum QCanBusFrame::FrameError{   
+    QCanBusFrame::NoError
+    QCanBusFrame::TransmissionTimeoutError
+    QCanBusFrame::LostArbitrationError
+    QCanBusFrame::ControllerError
+    QCanBusFrame::ProtocolViolationError
+    QCanBusFrame::TransceiverError
+    QCanBusFrame::MissingAcknowledgmentError
+    QCanBusFrame::BusOffError
+    QCanBusFrame::BusError
+    QCanBusFrame::ControllerRestartError
+    QCanBusFrame::UnknownError
+    QCanBusFrame::AnyError
+}
+// 此枚举描述CAN帧的类型
+enum QCanBusFrame::FrameType{
+    QCanBusFrame::UnknownFrame
+    QCanBusFrame::DataFrame
+    QCanBusFrame::ErrorFrame
+    QCanBusFrame::RemoteRequestFrame
+    QCanBusFrame::InvalidFrame
+}
+```
+
+成员函数。
+
+```c++
+QCanBusFrame(FrameType type = DataFrame);//构造指定类型的 CAN 帧
+QCanBusFrame(quint32 identifier, const QByteArray &data);//使用标识符作为帧标识符和数据作为有效载荷构造一个 CAN 帧
+
+bool isValid() const;
+// 如果 frameType() 为 InvalidFrame，则返回 false，尽管 frameId() 长于 11 位，或者如果启用了灵活数据速率模式或 8 有效负载长于最大允许有效负载长度 64 字节，但未设置 hasExtendedFrameFormat()字节，如果它被禁用。如果 frameType() 是 RemoteRequestFrame 并且同时启用了灵活数据速率模式，也会返回 false
+QString toString() const;
+// 将 CAN 帧作为格式化字符串返回。输出包含十六进制格式的 CAN 标识符，右调整为 32 位，后跟方括号中的数据长度和十六进制格式的有效负载。标准标识符用空格填充，而扩展标识符用零填充。典型的输出是：
+/*
+(Error)                                  - error frame
+       7FF   [1]  01                       - data frame with standard identifier
+  1FFFFFFF   [8]  01 23 45 67 89 AB CD EF  - data frame with extended identifier
+       400  [10]  01 23 45 67 ... EF 01 23 - CAN FD frame
+       123   [5]  Remote Request           - remote frame with standard identifier
+  00000234   [0]  Remote Request           - remote frame with extended identifier
+
+*/
+
+void setError(FrameErrors error);
+FrameErrors error() const;
+
+void setFrameId(quint32 newFrameId);//返回 CAN 帧标识符。如果 CAN 帧使用扩展帧格式，则标识符最大为 29 位；否则为 11 位
+quint32 frameId() const;
+
+void setFrameType(FrameType newType);//返回帧的类型
+FrameType frameType() const;
+
+void setBitrateSwitch(bool bitrateSwitch);//如果CAN使用具有比特率开关的灵活数据速率以更高的数据比特率传输有效负载数据，则返回true
+bool hasBitrateSwitch() const;
+
+void setErrorStateIndicator(bool errorStateIndicator);//如果CAN使用设置了错误状态指示器的灵活数据速率，则返回true
+bool hasErrorStateIndicator() const;
+
+void setExtendedFrameFormat(bool isExtended);//如果CAN帧使用29位标识符，则返回true；否则为false，表示11位标识符
+bool hasExtendedFrameFormat() const;
+
+void setFlexibleDataRateFormat(bool isFlexibleData);//如果 CAN 帧使用允许最多 64 个数据字节的灵活数据速率，则返回真，否则返回假，意味着最多 8 个字节的有效负载
+bool hasFlexibleDataRateFormat() const;
+
+void setPayload(const QByteArray &data);//返回帧的数据有效载荷
+QByteArray payload() const;
+
+void setTimeStamp(TimeStamp ts);//将 ts 设置为 CAN 帧的时间戳。通常不需要这个函数，因为时间戳是在读操作期间创建的，而在写操作期间不需要
+TimeStamp timeStamp() const;
+```
+
+### 18.2 案例
+
+
+
+## 19. Modbus通信
+
+### 19.1 数据类型
+
+#### 19.1.1 QModbusDevice
+
+QModbusDevice类是QModbusServer和QModbusClient的基类。
+
+枚举类型。
+
+此枚举描述了可为 Modbus 设备连接设置的可能值。通用值（和相关类型）是：
+
+```c++
+enum QModbusDevice::ConnectionParameter{
+    QModbusDevice::SerialPortNameParameter//此参数保存用于设备通信的串行端口，例如COM1。字符串
+    QModbusDevice::SerialParityParameter//该参数保存奇偶校验模式。 QSerialPort::Parity
+    QModbusDevice::SerialBaudRateParameter//此参数保存通信的数据波特率。 QSerialPort::BaudRate
+    QModbusDevice::SerialDataBitsParameter//该参数保存帧中的数据位。 QSerialPort::DataBits
+    QModbusDevice::SerialStopBitsParameter//该参数保存帧中停止位的数量。 QSerialPort::StopBits
+    QModbusDevice::NetworkPortParameter//该参数保存网络端口。整数
+    QModbusDevice::NetworkAddressParameter//此参数保存网络通信的主机地址。字符串
+	QModbusDevice::UserParameter//第一个可用于用户特定目的的参数。 QVariant
+}
+```
+
+这个枚举描述了所有可能的错误情况。
+
+```c++
+enum QModbusDevice::Error{ 
+    QModbusDevice::NoError
+    QModbusDevice::ReadError
+    QModbusDevice::WriteError
+    QModbusDevice::ConnectionError
+    QModbusDevice::ConfigurationError
+    QModbusDevice::TimeoutError
+    QModbusDevice::ProtocolError
+    QModbusDevice::ReplyAbortedError
+    QModbusDevice::UnknownError
+}
+```
+
+```c++
+enum QModbusDevice::State{
+    QModbusDevice::UnconnectedState
+    QModbusDevice::ConnectingState
+    QModbusDevice::ConnectedState
+    QModbusDevice::ClosingState
+}
+```
+
+成员函数。
+
+```c++
+bool connectDevice();
+void disconnectDevice();
+Error error() const;
+QString errorString() const;
+State state() const;
+
+// 将参数的值设置为值。如果参数已经存在，则覆盖之前的值。活动或正在运行的连接不受此类参数更改的影响
+// 返回与给定连接参数关联的值。返回值可以为空。默认情况下，QModbusDevice 使用一些常用值进行初始化。串行端口设置为偶校验、每秒 19200 位的波特率、8 个数据位和 1 个停止位。主机地址的网络设置设置为本地主机，端口设置为 502。注意：要使串行连接成功，需要将 SerialPortNameParameter 设置为有效的通信端口。有效串口信息可以从 QSerialPortInfo 中获取。注意：如果设备已连接，则重新连接设备后会考虑设置。
+QVariant connectionParameter(int parameter) const;
+void setConnectionParameter(int parameter, const QVariant &value);
+```
+
+信号函数。
+
+```c++
+void errorOccurred(QModbusDevice::Error error);
+void stateChanged(QModbusDevice::State state);
+```
+
+##### QModbusClient
+
+QModbusClient 类是**发送 Modbus 请求的接口**。
+QModbusClient API 是围绕一个 QModbusClient 对象构建的，该对象包含它发送的请求的通用配置和设置。一个 QModbusClient 应该足以满足整个 Qt 应用程序的需求。一旦创建了 QModbusClient 对象，应用程序就可以使用它来发送请求。返回的对象用于获取响应相应请求而返回的任何数据。
+QModbusClient 有一个异步 API。当调用完成的槽时，它采用的参数是包含 PDU 以及元数据（寻址等）的 **QModbusReply 对象**。
+注意：QModbusClient 将它收到的请求排队。并行执行的请求数取决于协议。例如，桌面平台上的 HTTP 协议为一个主机/端口组合并行发出 6 个请求。
+
+成员函数。
+
+```c++
+//发送原始Modbus请求。原始请求可以包含Modbus PDU数据段内的任何内容，并具有有效的功能代码
+QModbusReply *sendRawRequest(const QModbusRequest &request, int serverAddress);
+// 发送请求读取read指向的数据内容。如没有发生错误则返回一个新的有效QModbusReply对象，否则返回 nullptr
+QModbusReply *sendReadRequest(const QModbusDataUnit &read, int serverAddress);
+// 使用 Modbus函数代码 QModbusPdu::ReadWriteMultipleRegisters 发送读取 read 指向的数据内容并修改 write 指向的数据内容的请求。如果没有发生错误，则返回一个新的有效 QModbusReply 对象，否则返回 nullptr
+QModbusReply *sendReadWriteRequest(const QModbusDataUnit &read, const QModbusDataUnit &write, int serverAddress);
+// 发送修改write指向的数据内容的请求。没有发生错误则返回一个新的有效QModbusReply对象，否则返回nullptr
+QModbusReply *sendWriteRequest(const QModbusDataUnit &write, int serverAddress);
+void setNumberOfRetries(int number);//设置客户端在请求失败之前将执行的重试次数。默认值设置为 3
+void setTimeout(int newTimeout);//设置此 QModbusClient 实例的 newTimeout。最小超时为 50 毫秒
+int numberOfRetries() const;//返回请求失败前客户端将执行的重试次数。默认值设置为 3
+int timeout() const;//返回此QModbusClient实例使用的超时值ms。超时由TimeoutError指示。默认1000ms
+```
+
+信号函数。
+
+```c++
+void timeoutChanged(int newTimeout);
+```
+
+###### QModbusTcpClient
+
+QModbusTcpClient 类是 Modbus TCP 客户端设备的接口类。
+QModbusTcpClient 与 Modbus 后端通信，为用户提供方便的 API。
+
+###### QModbusRtuSerialMaster
+
+QModbusRtuSerialMaster 类**代表一个 Modbus 客户端，它使用串行总线与 Modbus 服务器进行通信**。
+通过 Modbus 进行通信需要单个 Modbus 客户端实例和多个 Modbus 服务器之间的交互。此类通过串行端口提供客户端实现。
+
+```c++
+int interFrameDelay() const;//返回两个连续 Modbus 消息之间的静默间隔的微秒数
+void setInterFrameDelay(int microseconds);
+```
+
+##### QModbusServer
+
+QModbusServer 类是接收和处理 Modbus 请求的接口。
+Modbus 网络可以有多个 Modbus 服务器。 Modbus 服务器由 QModbusClient 代表的 Modbus 客户端读取/写入。 QModbusServer 与 Modbus 后端通信，为用户提供方便的 API。
+
+枚举值。
+
+每个 Modbus 服务器都有一组与之关联的值，每个值都有自己的选项。通用选项（和相关类型）是：
+
+```c++
+enum QModbusServer::Option{
+    QModbusServer::DiagnosticRegister//服务器的诊断寄存器 quint16
+    QModbusServer::ExceptionStatusOffset//服务器的异常状态字节偏移量 quint16
+    QModbusServer::DeviceBusy//表示服务器正在处理长时间程序命令的标志 quint16
+    QModbusServer::AsciiInputDelimiter//Modbus ASCII消息结束分隔符 char
+    QModbusServer::ListenOnlyMode//用于设置服务器的仅侦听模式的标志,仅由Modbus串行设备支持 bool
+    QModbusServer::ServerIdentifier//服务器的标识符，而不是服务器地址 quint8
+    QModbusServer::RunIndicatorStatus//服务器的运行指示器 quint8
+    QModbusServer::AdditionalData//服务器的附加数据 QByteArray
+    QModbusServer::DeviceIdentification//服务器的物理和功能描述 QModbusDeviceIdentification
+    QModbusServer::UserOption//可用于用户特定目的的第一个选项
+}
+```
+
+成员函数。
+
+```c++
+bool data(QModbusDataUnit *newData) const
+bool data(QModbusDataUnit::RegisterType table, quint16 address, quint16 *data) const
+bool setData(const QModbusDataUnit &newData);//将 newData 写入 Modbus 服务器映射。如果 newData 范围超出地图范围，则返回 false
+// 将数据写入Modbus服务器。Modbus服务器有四个表（表），每个表都有一个唯一的地址字段，用于将数据写入所需字段。如果地址超出映射范围，则返回false
+bool setData(QModbusDataUnit::RegisterType table, quint16 address, quint16 data);
+
+// 如果传输层要处理广播，子类应该实现这个功能。如果当前处理的请求是广播请求，则true,默认false
+virtual bool processesBroadcast() const;
+// 设置来自其他ModBus客户端的请求的注册映射结构以进行映射。寄存器值初始化为零。成功后返回true
+virtual bool setMap(const QModbusDataUnitMap &map);
+
+void setServerAddress(int serverAddress);//将此 Modbus 服务器实例的地址设置为 serverAddress
+int serverAddress() const;
+
+virtual bool setValue(int option, const QVariant &newValue);//为选项设置 newValue 并在成功时返回 true
+virtual QVariant value(int option) const;
+```
+
+信号函数。
+
+```c++
+// 当 Modbus 客户端已将一个或多个数据字段写入 Modbus 服务器时，会发出此信号。该信号包含有关已写入字段的信息：已写入的寄存器类型、已写入的第一个字段的地址以及从地址开始写入的连续字段的大小。当要写入的字段由于值没有变化而没有变化时，不发出信号。
+void dataWritten(QModbusDataUnit::RegisterType register, int address, int size);
+```
+
+###### QModbusTcpServer
+
+QModbusTcpServer 类表示一个 Modbus 服务器，**它使用 TCP 服务器与 Modbus 客户端进行通信**。
+通过 Modbus 进行通信需要单个 Modbus 客户端实例和单个 Modbus 服务器之间的交互。此类通过 TCP 服务器提供 Modbus 服务器实现。Modbus TCP 网络可以有多个服务器。服务器由 QModbusTcpClient 代表的客户端设备读取/写入。
+
+###### QModbusRtuSerialSlave
+
+QModbusRtuSerialSlave 类表示使用**串行端口与 Modbus 客户端通信的 Modbus 服务器**。
+通过 Modbus 进行通信需要单个 Modbus 客户端实例和多个 Modbus 服务器之间的交互。此类通过串行端口提供 Modbus 服务器实现。由于多个 Modbus 服务器实例可以同时与 Modbus 客户端交互（使用串行总线），因此服务器由它们的 serverAddress() 标识。
+
+#### 19.1.2 QModbusReply
+
+QModbusReply 类包含使用 QModbusClient **派生类发送的请求的数据**。
+
+这个枚举描述了可能的回复类型。
+
+```c++
+enum QModbusReply::ReplyType{
+    QModbusReply::Raw//回复源自原始 Modbus 请求。请参阅 QModbusClient::sendRawRequest
+    QModbusReply::Common//回复源自普通的读、写或读/写请求。参见QModbusClient的sendReadRequest、sendWriteRequest和sendReadWriteRequest
+}
+```
+
+```c++
+QModbusDevice::Error error() const;
+QString errorString() const;
+bool isFinished() const;//当回复完成或中止时返回真
+QModbusResponse rawResult() const;//返回 Modbus 请求的原始响应。如果请求尚未完成，则返回的 QModbusResponse 实例无效
+QModbusDataUnit result() const;//返回 Modbus 请求的预处理结果。对于通过 QModbusClient::sendReadWriteRequest() 发送的读请求和组合读/写请求，它包含从服务器实例读取的值。如果请求尚未完成、因错误而失败或者是写入请求，则返回的 QModbusDataUnit 实例无效。
+int serverAddress() const;//返回此回复对象所针对的服务器地址
+ReplyType type() const;//返回回复的类型
+```
+
+#### 19.1.3 QModbusDeviceIdentification
+
+QModbusDeviceIdentification **是一个容器类，表示 Modbus 服务器的物理和功能描述**。
+设备标识接口被建模为由一组可寻址数据元素组成的地址空间。数据元素称为对象，ObjectId 标识它们。
+
+```c++
+// 定义设备的识别一致性级别和支持的访问类型
+enum QModbusDeviceIdentification::ConformityLevel{
+    BasicConformityLevel//基本标识（流访问）
+    RegularConformityLevel//定期识别（流访问）
+    ExtendedConformityLevel//扩展标识（流访问）
+    BasicIndividualConformityLevel//基本标识（流访问和个人访问）
+    RegularIndividualConformityLevel//定期识别（流访问和个人访问）
+    ExtendedIndividualConformityLevel//扩展标识（流访问和个人访问）
+}
+// 这个枚举描述了可能的服务器对象。该接口由三类对象组成： 基本设备标识。此类别的所有对象都是强制性的
+enum QModbusDeviceIdentification::ObjectId{
+    VendorNameObjectId//设备的供应商名称
+    ProductCodeObjectId //设备的产品代码
+    MajorMinorRevisionObjectId//产品版本编号
+	VendorUrlObjectId//设备的供应商 URL
+	ProductNameObjectId//设备的产品名称
+    ModelNameObjectId//设备的型号名称
+	UserApplicationNameObjectId//设备的用户应用程序名称
+	ReservedObjectId//保留对象 ID 的第一个值
+	ProductDependentObjectId//产品相关标识符的第一个可能值
+    UndefinedObjectId//不使用
+}
+//定义读取识别请求的访问类型
+enum QModbusDeviceIdentification::ReadDeviceIdCode{
+    BasicReadDeviceIdCode//请求获取基本设备标识
+    RegularReadDeviceIdCode//请求获取常规设备标识
+    ExtendedReadDeviceIdCode//请求获取扩展设备标识
+	IndividualReadDeviceIdCode//请求获取一个特定的标识对象
+}
+```
+
+```c++
+ConformityLevel conformityLevel() const;//返回设备的标识一致性级别和支持的访问类型
+bool contains(uint objectId) const;//如果给定 objectId 有项目，则返回 true；否则为假
+bool insert(uint objectId, const QByteArray &value);//插入一个带有 objectId 和 value 值的新项目。如果已经存在具有 objectId 的项目，则该项目的值将替换为值。如果 value 的大小小于 245 字节并且 objectId 小于 QModbusDeviceIdentification::UndefinedObjectId，则返回 true
+bool isValid() const;//如果设备标识对象有效，则返回 true；否则为假
+QList<int> objectIds() const;//以升序返回包含QModbusDeviceIdentification对象中所有对象ID的列表
+void remove(uint objectId);//删除给定 objectId 的项目
+void setConformityLevel(ConformityLe;vel level);//设置设备的标识一致性级别和支持的访问类型
+QByteArray value(uint objectId) const;//返回与 objectId 关联的值。如果没有具有 objectId 的项目，则该函数返回一个默认构造的值
+
+// 将字节数组ba转换为QModbusDeviceIdentification对象
+static QModbusDeviceIdentification fromByteArray(const QByteArray &ba);
+```
+
+#### 19.1.4 QModbusDataUnit
+
+QModbusDataUnit 是**一个容器类，表示 Modbus 寄存器中的单个位和 16 位字条目**。
+QModbusDataUnit 可用于读写操作。条目通过 startAddress() 和 valueCount() 连续条目数寻址。 registerType() 确定哪个寄存器用于操作。请注意，某些寄存器是只读寄存器。
+实际values()是基于单个位或 16 位的。 QModbusDataUnit::DiscreteInputs 和 QModbusDataUnit::Coils 只接受单个位。因此 0 被解释为 0 而其他任何东西都被解释为 1。
+
+```c++
+//这个枚举描述了所有支持的寄存器类型
+enum QModbusDataUnit::RegisterType{ 
+    QModbusDataUnit::Invalid//由默认构造函数设置，请勿使用
+    QModbusDataUnit::DiscreteInputs//这种类型的数据可以由 I/O 系统提供
+    QModbusDataUnit::Coils//这种类型的数据可以由应用程序更改
+    QModbusDataUnit::InputRegisters//这种类型的数据可以由 I/O 系统提供
+    QModbusDataUnit::HoldingRegisters//这种类型的数据可以由应用程序更改
+}
+
+QModbusDataUnit(RegisterType type);
+QModbusDataUnit(RegisterType type, int address, quint16 size);
+QModbusDataUnit(RegisterType type, int address, const QVector<quint16> &data);
+bool isValid() const;//如果 QModbusDataUnit 有效，则返回 true；否则为假。如果 registerType() 不是 QModbusDataUnit::Invalid 并且 startAddress() 大于或等于 0，则认为 QModbusDataUnit 有效
+
+RegisterType registerType() const;//返回寄存器的类型
+void setRegisterType(RegisterType type);
+
+void setStartAddress(int address);//设置数据单元的起始地址
+int startAddress() const;
+
+void setValue(int index, quint16 value);//将位置索引处的寄存器设置为value
+quint16 value(int index) const;
+
+void setValueCount(uint newCount);//将请求的寄存器数据块的大小设置为 newCount
+uint valueCount() const;
+
+void setValues(const QVector<quint16> &values);//设置数据单元的值。DiscreteInputs和Coils 表只接受单个位值，因此0被解释为 0，其他任何值都被解释为 1
+QVector<quint16> values() const;
+
+// 别名
+typedef QModbusDataUnitMap = QMap<QModbusDataUnit::RegisterType, QModbusDataUnit>;
+```
+
+#### 19.1.5 QModbusPdu
+
+QModbusPdu 是一个**抽象容器类，包含存储在 Modbus ADU 内的功能代码和有效负载**。
+该类提供对 Modbus 应用协议规范 1.1b 定义的原始 Modbus 协议数据包的访问。
+
+```c++
+//该枚举描述了 Modbus 异常代码定义的所有可能的错误情况。它们由服务器在检查响应请求中的适当错误条件后设置，并且必须由客户端解码以对异常代码进行操作
+enum QModbusPdu::ExceptionCode{
+    QModbusPdu::IllegalFunction
+    QModbusPdu::IllegalDataAddress
+    QModbusPdu::IllegalDataValue
+    QModbusPdu::ServerDeviceFaiure
+    QModbusPdu::Acknowledge
+    QModbusPdu::ServerDeviceBusy
+    QModbusPdu::NegativeAcknowledge
+    QModbusPdu::MemoryParityError
+    QModbusPdu::GatewayPathUnavailable
+    QModbusPdu::GatewayTargetDeviceFailedToRespond
+    QModbusPdu::ExtendedException
+}
+// 定义服务器所需的功能代码和隐式操作类型。并非所有 Modbus 设备都可以处理同一组功能代码
+enum QModbusPdu::FunctionCode{  
+    QModbusPdu::Invalid
+    QModbusPdu::ReadCoils
+    QModbusPdu::ReadDiscreteInputs
+    QModbusPdu::ReadHoldingRegisters
+    QModbusPdu::ReadInputRegisters
+    QModbusPdu::WriteSingleCoil
+    QModbusPdu::WriteSingleRegister
+    QModbusPdu::ReadExceptionStatus
+    QModbusPdu::Diagnostics
+    QModbusPdu::GetCommEventCounter
+    QModbusPdu::GetCommEventLog
+    QModbusPdu::WriteMultipleCoils
+    QModbusPdu::WriteMultipleRegisters
+    QModbusPdu::ReportServerId
+    QModbusPdu::ReadFileRecord
+    QModbusPdu::WriteFileRecord
+    QModbusPdu::MaskWriteRegister
+    QModbusPdu::ReadWriteMultipleRegisters
+    QModbusPdu::ReadFifoQueue
+    QModbusPdu::EncapsulatedInterfaceTransport
+    QModbusPdu::UndefinedFunctionCode
+}
+```
+
+```c++
+void decodeData(Args &&... data) const;//将有效负载转换为主机字节序并将其读入数据。数据可以是可变长度的参数列表
+void encodeData(Args... data);//将有效负载设置为数据。数据以大端字节顺序转换和存储
+
+virtual void setFunctionCode(FunctionCode code);
+FunctionCode functionCode() const;//返回 PDU 的功能代码
+
+bool isException() const;//如果 PDU 包含异常代码，则返回 true
+ExceptionCode exceptionCode() const;//返回响应的异常代码
+
+bool isValid() const;//如果 PDU 有效，则返回 true
+void setData(const QByteArray &data);//将 PDU 的功能负载设置为数据。预计数据已经以大端字节顺序存储
+QByteArray data() const;
+qint16 dataSize() const;//返回 PDU 的数据大小，不包括功能代码
+qint16 size() const;//返回 PDU 的完整大小，包括功能代码和数据大小
+
+static const quint8 ExceptionByte = 0x80;
+```
+
+##### QModbusResponse
+
+QModbusResponse 是一个容器类，**包含存储在 Modbus ADU 中的功能代码和有效负载**。
+典型的 Modbus 响应如下所示：
+
+```c++
+QModbusResponse response(QModbusResponse::ReadCoils, QByteArray::fromHex("02cd01"));
+```
+
+使用带 QByteArray 的构造函数时，请确保在创建请求之前将包含的数据转换为大端字节序。如果在编译时知道值，则可以像这样创建相同的响应：
+
+```c++
+quint8 payloadInBytes = 2, outputHigh = 0xcd, outputLow = 0x01;
+QModbusResponse response(QModbusResponse::ReadCoils, payloadInBytes, outputHigh, outputLow);
+```
+
+成员函数。
+
+```c++
+QModbusResponse() = default;
+QModbusResponse(const QModbusPdu &pdu);
+QModbusResponse(FunctionCode code, const QByteArray &data = QByteArray());
+QModbusResponse(FunctionCode code, Args... data);
+
+//根据响应的功能代码和数据计算响应的预期数据大小。返回响应数据部分的完整大小； -1 如果无法正确计算大小
+static int calculateDataSize(const QModbusResponse &response);
+// 根据响应的功能代码返回响应的预期最小数据大小； -1 如果功能代码未知
+static int minimumDataSize(const QModbusResponse &response);
+// 该函数注册一个用户定义的实现来计算函数代码 fc 的响应数据大小。它可用于扩展或覆盖 QModbusResponse::calculateDataSize() 内部的实现
+static void registerDataSizeCalculator(FunctionCode fc, CalcFuncPtr calculator);
+```
+
+###### QModbusExceptionResponse
+
+QModbusExceptionResponse 是一个容器类，**包含 Modbus ADU 中的函数和错误代码**。
+典型的 QModbusExceptionResponse 响应可能如下所示：
+
+```c++
+QModbusExceptionResponse exception（QModbusExceptionResponse::ReportServerId, 	QModbusExceptionResponse::ServerDeviceFailure）；
+```
+
+成员函数。
+
+```c++
+QModbusExceptionResponse() = default;
+QModbusExceptionResponse(const QModbusPdu &pdu);
+QModbusExceptionResponse(FunctionCode code, ExceptionCode ec);
+void setExceptionCode(ExceptionCode ec);
+```
+
+##### QModbusRequest
+
+QModbusRequest 是一个容器类，包含存储在 Modbus ADU 内的功能代码和有效负载。
+Modbus 请求通常由描述 FunctionCode 的单个字节和 N 字节的有效负载组成。典型的 Modbus 请求可能如下所示：
+
+```c++
+QModbusRequest request(QModbusRequest::WriteMultipleCoils,
+      QByteArray::fromHex("0013000a02cd01"));
+```
+
+使用带 QByteArray 的构造函数时，请确保在创建请求之前将包含的数据转换为大端字节序。
+如果在编译时知道值，则可以像这样创建相同的请求：
+
+```c++
+quint16 startAddress = 19, numberOfCoils = 10;
+quint8 payloadInBytes = 2, outputHigh = 0xcd, outputLow = 0x01;
+QModbusRequest request(QModbusRequest::WriteMultipleCoils, startAddress, numberOfCoils,
+                       payloadInBytes, outputHigh, outputLow);
+```
+
+成员函数。
+
+```c++
+QModbusRequest() = default;
+QModbusRequest(const QModbusPdu &pdu);
+QModbusRequest(FunctionCode code, const QByteArray &data = QByteArray());
+QModbusRequest(FunctionCode code, Args... data);
+
+static int calculateDataSize(const QModbusRequest &request);
+static int minimumDataSize(const QModbusRequest &request);
+static void registerDataSizeCalculator(FunctionCode fc, CalcFuncPtr calculator);
+```
+
+### 19.2 案例
 
