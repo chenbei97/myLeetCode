@@ -25535,6 +25535,227 @@ QDomNode::NodeType nodeType() const;
 QString target() const;//返回此处理指令的目标
 ```
 
+#### QXmlStreamReader
+
+注意，这个类属于QtCore不是QtXml下的，下节的QXmlStreamWriter也是如此。
+
+QXmlStreamReader 类提供了一个快速解析器，用于通过简单的流 API 读取格式良好的 XML。
+QXmlStreamReader 是 Qt 自己的 SAX 解析器的更快、更方便的替代品（请参阅 QXmlSimpleReader）。在某些情况下，它也可能是一种更快、更方便的替代方案，可用于原本使用 DOM 树的应用程序（请参阅 QDomDocument）。 QXmlStreamReader 从 QIODevice（参见 setDevice()）或原始 QByteArray（参见 addData()）中读取数据。
+Qt 提供 QXmlStreamWriter 用于编写 XML。
+流阅读器的基本概念是将 XML 文档报告为令牌流，类似于 SAX。 QXmlStreamReader 和 SAX 之间的主要区别在于这些 XML 令牌的报告方式。对于 SAX，应用程序必须提供处理程序（回调函数），以便在解析器方便时从解析器接收所谓的 XML 事件。使用 QXmlStreamReader，应用程序代码本身驱动循环并根据需要从阅读器中一个接一个地提取令牌。这是通过调用 readNext() 来完成的，读取器从输入流中读取，直到完成下一个标记，此时它返回 tokenType()。然后可以使用一组方便的函数，包括 isStartElement() 和 text() 来检查令牌以获取有关已读取内容的信息。这种拉取方法的最大优势是可以使用它构建递归下降解析器，这意味着您可以轻松地将 XML 解析代码拆分为不同的方法或类。这使得在解析 XML 时跟踪应用程序自身的状态变得很容易。
+使用 QXmlStreamReader 的典型循环如下所示：
+
+```c++
+QXmlStreamReader xml;
+...
+while (!xml.atEnd()) 
+{
+    xml.readNext();
+    ... // do processing
+}
+if (xml.hasError()) {
+    ... // do error handling
+}
+```
+
+QXmlStreamReader是一个格式良好的XML 1.0解析器，它不包括外部解析的实体。只要没有出现错误，应用程序代码就可以确保流读取器提供的数据满足W3C的格式良好的XML标准。例如，您可以确定所有标记都已正确嵌套和关闭，对内部实体的引用已替换为正确的替换文本，属性已根据DTD的内部子集进行规范化或添加。
+如果解析时发生错误，atEnd()和hasError()将返回true，error()则返回发生的错误。函数errorString()、lineNumber()、columnNumber()和characterOffset()用于构造适当的错误或警告消息。为了简化应用程序代码，QXmlStreamReader包含一个raiseError()机制，允许您引发触发所述相同错误处理的自定义错误。
+
+QXmlStream理解并解析XML名称空间。对于StartElement，**namespaceUri()返回元素所在的名称空间**，name()返回该元素的本地名称。namespaceUri和name的组合唯一标识元素。如果读取器分析的XML实体中未声明命名空间前缀，则namespaceUri为空。
+如果根据XML规范解析不使用名称空间的XML数据，或者根本没有使用名称空间，则可以改用元素的qualifiedName()。限定名是元素的prefix()，后跟冒号，后跟元素的本地name()，与原始XML数据中的元素完全相同。由于namespaceUri到前缀的映射既不是唯一的，也不是通用的，因此对于符合命名空间的XML数据，应避免使用qualifiedName()。
+为了分析使用未声明名称空间前缀的独立文档，可以使用namespaceProcessing属性完全关闭名称空间处理。
+
+QXmlStreamReader 是一个增量解析器。它可以处理文档无法一次全部解析的情况，因为它以块的形式到达（例如，来自多个文件，或通过网络连接）。当阅读器在完整文档被解析之前用完数据时，它会报告 PrematureEndOfDocumentError。当更多数据到达时，无论是因为调用 addData() 还是因为更多数据可通过网络 device() 获得，阅读器将从 PrematureEndOfDocumentError 错误中恢复，并在下一次调用 readNext() 时继续解析新数据。
+例如，如果应用程序使用网络访问管理器从网络读取数据，将向管理器发出网络请求并收到网络回复作为回报。由于 QNetworkReply 是 QIODevice，可将readyRead() 信号连接到自定义插槽，然后使用 readAll() 读取所有可用数据，并使用 addData() 将其传递给 XML 流读取器。然后调用从阅读器读取 XML 事件的自定义解析函数。
+
+枚举值。
+
+```c++
+// 错误类型
+enum QXmlStreamReader::Error{
+    QXmlStreamReader::NoError
+    QXmlStreamReader::CustomError//raiseError() 引发了一个自定义错误
+    QXmlStreamReader::NotWellFormedError//由于读取的 XML 格式不正确，解析器在内部引发了错误
+    QXmlStreamReader::PrematureEndOfDocumentError//在分析格式良好的XML文档之前，输入流结束。如果流中有更多XML到达，则可以通过调用addData()或等待它到达device()来恢复此错误
+    QXmlStreamReader::UnexpectedElementError//解析器遇到了与预期不同的元素
+}
+// 此枚举指定readElementText()的不同行为
+enum QXmlStreamReader::ReadElementTextBehaviour{
+    QXmlStreamReader::ErrorOnUnexpectedElement//引发UnexpectedElementError并返回到目前为止遇到子元素时读取的内容
+    QXmlStreamReader::IncludeChildElements//递归地包含来自子元素的文本
+    QXmlStreamReader::SkipChildElements//跳过子元素
+}
+// 此枚举指定读取器刚刚读取的标记的类型
+enum QXmlStreamReader::TokenType{
+    QXmlStreamReader::NoToken//读者还没有读到任何东西
+    QXmlStreamReader::Invalid//发生错误，在error() 和errorString() 中报告
+    QXmlStreamReader::StartDocument//isStandaloneDocument()
+    QXmlStreamReader::EndDocument// isEndDocument()
+    QXmlStreamReader::StartElement//具有namespaceUri()和name()的元素的开头,isStartElement()
+    QXmlStreamReader::EndElement//isEndElement()
+    QXmlStreamReader::Characters// isCharacters() 
+    QXmlStreamReader::Comment//isComment()
+    QXmlStreamReader::DTD// isDTD()
+    QXmlStreamReader::EntityReference//isEntityReference()
+    QXmlStreamReader::ProcessingInstruction//isProcessingInstruction()
+}
+```
+
+成员函数。
+
+```c++
+QXmlStreamReader(QIODevice *device);
+QXmlStreamReader(const QByteArray &data);
+QXmlStreamReader(const QString &data);
+QXmlStreamReader(const char *data);
+
+void clear();//从读取器中删除任何设备或数据，并将其内部状态重置为初始状态
+void setDevice(QIODevice *device);//将当前设备设置为设备。设置设备会将流重置为其初始状态
+QIODevice *device() const;
+void setEntityResolver(QXmlStreamEntityResolver *resolver);
+QXmlStreamEntityResolver *entityResolver() const;//设置新的实体解析器
+void setNamespaceProcessing(bool);
+bool namespaceProcessing() const;//
+void raiseError(const QString &message = QString());//使用可选的错误消息引发自定义错误
+Error error() const;//返回当前错误的类型，如果没有发生错误，则返回NoError
+QString errorString() const;//返回使用 raiseError() 设置的错误消息
+bool hasError() const;
+
+//添加更多数据供读卡器读取。如果读取器有device()，则此函数不执行任何操作
+void addData(const QByteArray &data);
+void addData(const QString &data);
+void addData(const char *data);
+void addExtraNamespaceDeclaration(const QXmlStreamNamespaceDeclaration &extraNamespaceDeclaration);//添加额外的NamespaceDeclaration
+void addExtraNamespaceDeclarations(const QXmlStreamNamespaceDeclarations &extraNamespaceDeclarations);//添加extraNamespaceDeclarations指定的声明向量
+
+QStringRef documentEncoding() const;//tokenType是StartDocument，则返回XML声明中指定的编码
+QStringRef documentVersion() const;//tokenType()为StartDocument，则返回XML声明指定的版本
+QStringRef dtdName() const;//如果tokenType()是DTD，则此函数返回DTD的名称
+QStringRef dtdPublicId() const;//如果tokenType()为DTD，则此函数返回DTD的公共标识符
+QStringRef dtdSystemId() const;//如果tokenType()为DTD，则此函数返回DTD的系统标识符
+QStringRef namespaceUri() const;//返回 StartElement 或 EndElement 的 namespaceUri
+QStringRef name() const;//返回StartElement、EndElement或EntityReference的本地名称
+QStringRef text() const;//返回字符、注释、DTD或EntityReference的文本
+QStringRef prefix() const;//返回StartElement或EndElement的前缀
+QStringRef processingInstructionData() const;//返回ProcessingInstruction的数据
+QStringRef processingInstructionTarget() const;//返回ProcessingInstruction的目标
+QStringRef qualifiedName() const;//返回 StartElement 或 EndElement 的限定名称
+
+QString tokenString() const;//以字符串形式返回阅读器的当前标记
+TokenType tokenType() const;//返回当前标记的类型
+TokenType readNext();//读取下一个标记并返回其类型
+bool atEnd() const;//如果已经读取到 XML 文档的结尾，或者发生了 error() 并且读取已中止，则返回 true
+bool isCDATA() const; //如果阅读器报告来自 CDATA 部分的字符，则返回 true
+bool isCharacters() const;//tokenType==Characters?
+bool isComment() const;//tokenType==Comment?
+bool isDTD() const;//tokenType==DTD?
+bool isEndDocument() const;//tokenType==EndDocument?
+bool isEndElement() const;// tokenType == EndElement?
+bool isEntityReference() const;// tokenType == EntityReference?
+bool isProcessingInstruction() const; // tokenType == ProcessingInstruction?
+bool isStandaloneDocument() const; // tokenType == StartDocument?
+bool isStartDocument() const; // tokenType == StartDocument?
+bool isStartElement() const;// tokenType == StartElement?
+bool isWhitespace() const;//如果阅读器报告的字符仅包含空格，则返回 true
+bool readNextStartElement();//读取直到当前元素中的下一个起始元素。到达起始元素时返回 true
+
+void skipCurrentElement();//读取到当前元素的末尾，跳过任何子节点。此功能对于跳过未知元素很有用
+
+qint64 characterOffset() const;//返回当前字符偏移量，从0开始
+qint64 columnNumber() const;//返回当前列号，从0开始
+qint64 lineNumber() const;//返回当前行号，从1开始
+
+//如果 tokenType() 是 DTD，则此函数返回 DTD 的未解析（外部）实体声明。否则返回一个空向量
+QXmlStreamEntityDeclarations entityDeclarations() const;
+//如果 tokenType() 是 StartElement，则此函数返回元素的命名空间声明。否则返回一个空向量
+QXmlStreamNamespaceDeclarations namespaceDeclarations() const;
+//如果 tokenType() 是 DTD，则此函数返回 DTD 的符号声明。否则返回一个空向量
+QXmlStreamNotationDeclarations notationDeclarations() const;
+QXmlStreamAttributes attributes() const;//返回StartElement的属性
+
+//在读取 StartElement 时调用的便利函数。读取到对应的 EndElement 并返回其间的所有文本。在没有错误的情况下，调用此函数后的当前标记（参见 tokenType()）为 EndElement
+QString readElementText(ReadElementTextBehaviour behaviour = ErrorOnUnexpectedElement);
+```
+
+#### QXmlStreamWriter
+
+QXmlStreamWriter 类为 XML 编写器提供了一个简单的流 API。
+用 **writeStartDocument() 开始一个文档，用 writeEndDocument() 结束它**。这将隐式关闭所有剩余的打开标签。**元素标签使用 writeStartElement() 打开，然后是 writeAttribute() 或 writeAttributes()**，元素内容，然后是 **writeEndElement()**。更短的形式 writeEmptyElement() 可用于写入空元素，然后是 writeAttributes()。
+**元素内容由字符、实体引用或嵌套元素组成。它是用 writeCharacters() 编写的**，它还负责转义所有禁止的字符和字符序列、writeEntityReference() 或对 writeStartElement() 的后续调用。方便的方法 **writeTextElement() 可用于编写仅包含文本的终端元素**。
+下面的代码片段显示了类的基本用法来编写带有缩进的格式化 XML：
+
+```c++
+QXmlStreamWriter stream(&output);
+stream.setAutoFormatting(true);
+stream.writeStartDocument(); // 文档开始
+...
+stream.writeStartElement("bookmark"); // 元素开始
+stream.writeAttribute("href", "http://qt-project.org/");//元素属性
+stream.writeTextElement("title", "Qt Project"); // 嵌套的最后一级元素
+stream.writeEndElement(); // 元素结束
+...
+stream.writeEndDocument();//文档结束
+```
+
+成员函数。
+
+```c++
+QXmlStreamWriter(QIODevice *device);
+QXmlStreamWriter(QByteArray *array);
+QXmlStreamWriter(QString *string);
+
+void setAutoFormatting(bool enable);
+bool autoFormatting() const;//启用自动格式化，默认false
+
+void setAutoFormattingIndent(int spacesOrTabs);//此属性保存启用自动格式化时用于缩进的空格或制表符的数量。正数表示空格，负数表示制表符
+int autoFormattingIndent() const;//默认值4
+
+void setCodec(QTextCodec *codec);//设置编码格式
+void setCodec(const char *codecName);
+QTextCodec *codec() const;
+
+QIODevice *device() const;
+void setDevice(QIODevice *device);
+
+bool hasError() const;
+
+// 写入属性可以直接使用属性类，也可以用字符串依次指定命名空间、属性名称和属性值
+void writeAttribute(const QString &namespaceUri, const QString &name, const QString &value);
+void writeAttribute(const QString &qualifiedName, const QString &value);
+void writeAttribute(const QXmlStreamAttribute &attribute);
+void writeAttributes(const QXmlStreamAttributes &attributes);
+
+// 写入各种类型的节点
+void writeCDATA(const QString &text);
+void writeCharacters(const QString &text);
+void writeComment(const QString &text);
+void writeCurrentToken(const QXmlStreamReader &reader);
+void writeDTD(const QString &dtd);
+void writeDefaultNamespace(const QString &namespaceUri);
+void writeEmptyElement(const QString &namespaceUri, const QString &name);
+void writeEmptyElement(const QString &qualifiedName);
+void writeEntityReference(const QString &name);
+void writeNamespace(const QString &namespaceUri, const QString &prefix = QString());
+void writeProcessingInstruction(const QString &target, const QString &data = QString());
+
+// 文档开始时可以指定版本、编码,要与文档结束成对使用
+void writeStartDocument(const QString &version);
+void writeStartDocument();
+void writeStartDocument(const QString &version, bool standalone);
+void writeEndDocument();
+// 元素节点同理成对使用,命令空间+元素名称+值
+void writeStartElement(const QString &namespaceUri, const QString &name);
+void writeStartElement(const QString &qualifiedName);
+void writeEndElement();
+
+// 等价于writeStartElement(namespaceUri, name)+writeCharacters(text)+writeEndElement();
+void writeTextElement(const QString &namespaceUri, const QString &name, const QString &text);
+// 等价于writeStartElement(qualifiedName)+writeCharacters(text)+writeEndElement()
+void writeTextElement(const QString &qualifiedName, const QString &text);
+```
+
+
+
 ### 16.14 插件
 
 Qt 提供了两个用于创建插件的 API： 一个用于编写 Qt 本身扩展的高级 API：自定义数据库驱动程序、图像格式、文本编解码器、自定义样式等；二是用于扩展 Qt 应用程序的低级 API。
