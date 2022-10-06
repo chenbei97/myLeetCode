@@ -59,3 +59,14 @@ net stop mysql80
 
 ![](C:\Users\Lenovo\Desktop\myLeetCode\markdown\sql_start_command.jpg)
 
+## 基本语法
+
+SQL分类：
+
+DDL，数据定义语言，用来定义数据库对象（数据库、表、字段）
+
+DML，数据操作语言，用来对数据库表中的数据增删改查
+
+DQL，数据查询语言，查询数据库表中的记录
+
+DCL，数据控制语言，用来创建数据库用户、控制数据库访问权限
