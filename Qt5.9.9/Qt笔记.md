@@ -27165,6 +27165,46 @@ TimeStamp timeStamp() const;
 
 ## 19. Modbus通信
 
+Modbus是一种请求/应答协议，在其网络中有一个Modbus客户端，并且可能有多个Modbus服务器。服务器只能控制自己的内部状态，客户端可以在其中读取和写入数据。Modbus不受网络类型的限制，理论上它可以使用任何QIODevice。然而，并非每个插件都支持从QIODevice派生的所有类。
+
+每个Modbus服务器有四个表，可以在其中存储数据。
+
+| 姓名                          | 数据范围         | 权限 |
+| ----------------------------- | ---------------- | ---- |
+| Discrete Inputs(离散输入)     | 0-1              | 只读 |
+| Coils(线圈)                   | 0-1              | 读写 |
+| Input Registers(输入寄存器)   | 0-65535 (0xffff) | 只读 |
+| Holding Registers(保持寄存器) | 0-65535 (0xffff) | 读写 |
+
+Modbus API提供了一些用于访问Modbus设备的通用API：QModbusDevice提供了一个用于客户端和服务器的通用功能的API。
+QModbusClient提供了一个API，用于直接访问Modbus客户端。
+QModbusServer提供了一个API，用于直接访问Modbus服务器。
+QModbusDataUnit表示数据值。
+QModbusReply由QModbusClient创建，作为写入/读取操作的句柄。
+
+```mermaid
+graph LR
+QModubusDevice-->QModbusClient
+QModubusDevice-->QModbusServer
+QModbusClient-->QModbusTcpClient
+QModbusClient-->QModbusTcpRtuSerialMaster
+QModbusClient-.->|关注|reply,dataUnit,request
+
+QModbusReply-.->|关注|ReplyType:Raw/原始/,Common/读写/
+QModbusReply-.->|原始回复|QModBusResponse,功能代码,有效负载的回复
+QModbusReply-.->|读写回复|QModbusDataUnit,数据单元的回复
+
+QModbusDataUnit-.->|关注|RegisterType,寄存器类型
+QModbusDataUnit-.->|关注|StartAddress,数据单元起始地址
+QModbusDataUnit-.->|关注|SetValue,SetValueCount,设置寄存器值和数据块大小
+
+QModbusPdu-.->抽象容器,ADU功能代码/有效负载
+QModbusPdu-->QModbusResponse
+QModbusPdu-->QModbusRequest
+```
+
+
+
 ### 19.1 数据类型
 
 #### 19.1.1 QModbusDevice
@@ -27242,7 +27282,7 @@ QModbusClient API 是围绕一个 QModbusClient 对象构建的，该对象包�
 QModbusClient 有一个异步 API。当调用完成的槽时，它采用的参数是包含 PDU 以及元数据（寻址等）的 **QModbusReply 对象**。
 注意：QModbusClient 将它收到的请求排队。并行执行的请求数取决于协议。例如，桌面平台上的 HTTP 协议为一个主机/端口组合并行发出 6 个请求。
 
-成员函数。
+成员函数。从成员函数来看，需要关注的类是QModbusRequest、QModbusReply和QModbusDataUnit，表示请求、回复和操作数据
 
 ```c++
 //发送原始Modbus请求。原始请求可以包含Modbus PDU数据段内的任何内容，并具有有效的功能代码
@@ -27282,7 +27322,7 @@ void setInterFrameDelay(int microseconds);
 
 ##### QModbusServer
 
-QModbusServer 类是接收和处理 Modbus 请求的接口。
+QModbusServer 类是**接收和处理 Modbus 请求的接口**。
 Modbus 网络可以有多个 Modbus 服务器。 Modbus 服务器由 QModbusClient 代表的 Modbus 客户端读取/写入。 QModbusServer 与 Modbus 后端通信，为用户提供方便的 API。
 
 枚举值。
@@ -27350,8 +27390,8 @@ QModbusReply 类包含使用 QModbusClient **派生类发送的请求的数据**
 
 ```c++
 enum QModbusReply::ReplyType{
-    QModbusReply::Raw//回复源自原始 Modbus 请求。请参阅 QModbusClient::sendRawRequest
-    QModbusReply::Common//回复源自普通的读、写或读/写请求。参见QModbusClient的sendReadRequest、sendWriteRequest和sendReadWriteRequest
+    QModbusReply::Raw//原始Modbus请求=>QModbusClient::sendRawRequest
+    QModbusReply::Common//普通的读、写或读/写请求=>sendReadRequest、sendWriteRequest和sendReadWriteRequest
 }
 ```
 
@@ -27359,8 +27399,8 @@ enum QModbusReply::ReplyType{
 QModbusDevice::Error error() const;
 QString errorString() const;
 bool isFinished() const;//当回复完成或中止时返回真
-QModbusResponse rawResult() const;//返回 Modbus 请求的原始响应。如果请求尚未完成，则返回的 QModbusResponse 实例无效
-QModbusDataUnit result() const;//返回 Modbus 请求的预处理结果。对于通过 QModbusClient::sendReadWriteRequest() 发送的读请求和组合读/写请求，它包含从服务器实例读取的值。如果请求尚未完成、因错误而失败或者是写入请求，则返回的 QModbusDataUnit 实例无效。
+QModbusResponse rawResult() const;//返回Modbus请求的原始响应
+QModbusDataUnit result() const;//返回Modbus请求的预处理结果。对于通过 QModbusClient::sendReadWriteRequest()发送的读请求和组合读/写请求，它包含从服务器实例读取的值
 int serverAddress() const;//返回此回复对象所针对的服务器地址
 ReplyType type() const;//返回回复的类型
 ```
@@ -27435,7 +27475,7 @@ enum QModbusDataUnit::RegisterType{
 QModbusDataUnit(RegisterType type);
 QModbusDataUnit(RegisterType type, int address, quint16 size);
 QModbusDataUnit(RegisterType type, int address, const QVector<quint16> &data);
-bool isValid() const;//如果 QModbusDataUnit 有效，则返回 true；否则为假。如果 registerType() 不是 QModbusDataUnit::Invalid 并且 startAddress() 大于或等于 0，则认为 QModbusDataUnit 有效
+bool isValid() const;//如果registerType()不是Invalid且startAddress()≥0，则认为有效
 
 RegisterType registerType() const;//返回寄存器的类型
 void setRegisterType(RegisterType type);
@@ -27449,7 +27489,7 @@ quint16 value(int index) const;
 void setValueCount(uint newCount);//将请求的寄存器数据块的大小设置为 newCount
 uint valueCount() const;
 
-void setValues(const QVector<quint16> &values);//设置数据单元的值。DiscreteInputs和Coils 表只接受单个位值，因此0被解释为 0，其他任何值都被解释为 1
+void setValues(const QVector<quint16> &values);//设置数据单元的值
 QVector<quint16> values() const;
 
 // 别名
@@ -27503,7 +27543,7 @@ enum QModbusPdu::FunctionCode{
 ```
 
 ```c++
-void decodeData(Args &&... data) const;//将有效负载转换为主机字节序并将其读入数据。数据可以是可变长度的参数列表
+void decodeData(Args &&... data) const;//将有效负载转换为主机字节序并读入数据
 void encodeData(Args... data);//将有效负载设置为数据。数据以大端字节顺序转换和存储
 
 virtual void setFunctionCode(FunctionCode code);
@@ -27573,7 +27613,7 @@ void setExceptionCode(ExceptionCode ec);
 
 ##### QModbusRequest
 
-QModbusRequest 是一个容器类，包含存储在 Modbus ADU 内的功能代码和有效负载。
+QModbusRequest 是一个容器类，包含**存储在 Modbus ADU 内的功能代码和有效负载**。
 Modbus 请求通常由描述 FunctionCode 的单个字节和 N 字节的有效负载组成。典型的 Modbus 请求可能如下所示：
 
 ```c++
