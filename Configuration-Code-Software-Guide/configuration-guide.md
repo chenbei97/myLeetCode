@@ -1,4 +1,4 @@
-## 安装Python
+安装Python
 
 下载地址：[Download Python | Python.org](https://www.python.org/downloads/)
 
@@ -1183,6 +1183,49 @@ D:\MatlabProjects
 参考链接1：[Qt音乐播放器播放不了音乐并出现DirectShowPlayerService::doRender: Unresolved error code0x80040266](https://blog.csdn.net/mmmmmmyy/article/details/81877233?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~default-1-81877233-blog-105031139.pc_relevant_vip_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~default-1-81877233-blog-105031139.pc_relevant_vip_default&utm_relevant_index=2)
 
 参考链接2：[qt无法播放视频DirectShowPlayerService::doRender: Unresolved error code 0x80040266](https://blog.csdn.net/weixin_44228194/article/details/105031139)
+
+## 安装MySql
+
+社区版下载地址：[MySQL :: Download MySQL Installer](https://dev.mysql.com/downloads/installer/)
+
+![install_sql_1.jpg](install_sql_1.jpg)
+
+点击安装全部。
+
+![install_sql_2.jpg](install_sql_2.jpg)
+
+![install_sql_3.jpg](install_sql_3.jpg)
+
+端口号3306自动分配的。
+
+然后设置密码，这里是199791。
+
+![](install_sql_4.jpg)
+
+设置完密码下一步，要记得这个Windows Service Details的名称是**MySQL80**，以后命令行启动的时候需要使用。
+
+![install_sql_5.jpg](install_sql_5.jpg)
+
+然后下一步，点击配置然后完成即可。
+
+![install_sql_6.jpg](install_sql_6.jpg)
+
+输入密码，然后核对下一步。
+
+![install_sql_6.jpg](install_sql_7.jpg)
+
+输入密码，下一步，结束即可启动界面。
+
+如果命令行启动数据库，可以使用cmd+ctrl+shift+enter，这样有权访问。
+
+```powershell
+net start mysql80
+net stop mysql80
+```
+
+如下图所示。
+
+![sql_start_command.jpg](sql_start_command.jpg)
 
 ## VSCode配置
 
