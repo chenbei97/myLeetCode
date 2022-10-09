@@ -338,17 +338,17 @@ ui->actLeft->setChecked(true);
     QGroupBox去除边框, groupbox->setStyleSheet("QGroupBox{border:none;}");
     
 12. 实现下拉项选择颜色
-QStringList colorList = QColor::colorNames();
-qDebug()<<colorList.size(); // 148个
-ui->comboBox->resize(100,30);
-foreach(const QString &color, colorList)
-{6
-    QPixmap pix(ui->comboBox->size()); // 这个大小要设置
-    pix.fill(QColor(color));// pix是个纯色图标
-    ui->comboBox->addItem(QIcon(pix),nullptr); // 添加图标
-    ui->comboBox->setIconSize(ui->comboBox->size()); // 这个大小也要设置,因为图标默认方形,这里设置为矩形长度
-    ui->comboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);//设置这个最好,其它的略短,符合内容大小的调整策略
-}
+    QStringList colorList = QColor::colorNames();
+    qDebug()<<colorList.size(); // 148个
+    ui->comboBox->resize(100,30);
+    foreach(const QString &color, colorList)
+    {6
+        QPixmap pix(ui->comboBox->size()); // 这个大小要设置
+        pix.fill(QColor(color));// pix是个纯色图标
+        ui->comboBox->addItem(QIcon(pix),nullptr); // 添加图标
+        ui->comboBox->setIconSize(ui->comboBox->size()); // 这个大小也要设置,因为图标默认方形,这里设置为矩形长度
+        ui->comboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);//设置这个最好,其它的略短,符合内容大小的调整策略
+    }
 
 11. 串口通信的使用方法
 (1) 同步阻塞型-工作线程用法
@@ -551,10 +551,19 @@ if (file.open(QFile::ReadOnly)) {
         painter.drawPixmap(x,y,width,height, QPixmap(":/images/back2.jpg"));
 
         // 还有一种使用begin和end的写法
-        QPainter p;
-        p.begin(this);
-        p.drawPixmap(QPoint(0,0),*pix);
-        p.end();
+        int x = 0;
+        int y = MenuBar->height();
+        int height = this->height()- y; //要绘制的高度
+        int width = this->width(); // 要绘制的宽度
+        QRect rect(x,y,width,height);
+        QPixmap pix;
+        pix.load(":/images/DH.png");
+        QPainter painter; // 不要使用指针的方式,new出来的无法销毁
+        painter.begin(this);
+        painter.setOpacity(0.2);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        painter.drawPixmap(rect,pix);
+        painter.end();
     }
     5.4 showEvent():窗口显示时触发的事件
     5.5 mouseMoveEvent():鼠标移动事件
@@ -569,6 +578,19 @@ if (file.open(QFile::ReadOnly)) {
             this->move(e->globalPos()-relativePos);
             e->accept();
         }
+        return QDialog::mousePressEvent(e);
+    }
+    void Login::mouseMoveEvent(QMouseEvent *e)
+    {
+        bool isLeftButton = e->buttons() & Qt::LeftButton; // 是左键按下
+        bool isDrag = (e->globalPos() - mMouseLastPos).manhattanLength()  > QApplication::startDragDistance();
+
+        if (mMouseMove && isLeftButton && isDrag)
+        {
+            move(e->globalPos()-mMouseLastPos);//窗口移动到新的位置
+            mMouseLastPos = e->globalPos()-pos();//新的相对位置
+        }
+        return QDialog::mouseMoveEvent(e);
     }
     5.6 mouseReleaseEvent():鼠标键释放事件
     5.7 mousePressEvent():鼠标键单击事件(左键或者右键)
