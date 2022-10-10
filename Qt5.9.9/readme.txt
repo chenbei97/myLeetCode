@@ -146,6 +146,101 @@
 
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
 
+24. xml文档的写法
+    1) 使用QXmlStreamWriter写入
+        QFile file("config.xml");
+        QXmlStreamWriter wstream(&file);
+        wstream.setAutoFormatting(true);
+        wstream.setCodec("UTF-8");
+        file.open(QIODevice::WriteOnly|QIODevice::Text);
+        wstream.writeStartDocument("1.0"); // 文档的开始
+        wstream.writeStartElement("user"); // 根元素的开始
+
+        wstream.writeStartElement("username"); // 用户名元素
+        wstream.writeAttribute("id", "1");//元素属性
+        wstream.writeCharacters(username);
+        wstream.writeEndElement();
+
+        wstream.writeStartElement("password"); // 密码元素
+        wstream.writeAttribute("id", "1");//元素属性
+        wstream.writeCharacters(pwd);
+        wstream.writeEndElement();
+
+        wstream.writeEndElement(); // 根元素的结束
+        wstream.writeEndDocument(); // 文档的结束
+        file.close();
+    2) 使用QDomDocument写入
+        QDomDocument doc("config");
+        doc.setContent(&file); // 获取了文件的内容
+        QDomElement root = doc.documentElement(); // root.tagName()==user 根元素
+
+        QDomElement usernElemnode = doc.createElement("username"); // 新的用户名节点
+        usernElemnode.setAttribute("id",n/2+1); // 用户数+1
+        QDomText usernTextnode = doc.createTextNode(username); //新用户名的文本
+        usernElemnode.appendChild(usernTextnode);
+
+        QDomElement pwdElemnode = doc.createElement("password");// 新的密码节点
+        pwdElemnode.setAttribute("id",n/2+1);
+        QDomText pwdTextnode = doc.createTextNode(pwd); // 新密码的文本
+        pwdElemnode.appendChild(pwdTextnode);
+
+        root.appendChild(usernElemnode); // user根依次添加username和password节点
+        root.appendChild(pwdElemnode);
+
+        QString xml = doc.toString(4); // 缩进4字符, qDebug()<<"xml = "<<xml;
+        QTextStream stream(&file);
+        file.close(); // setContent已经打开了所以要先关闭
+        while (!file.isOpen())
+        file.open(QIODevice::Truncate|QIODevice::WriteOnly|QIODevice::Text);// 覆盖
+        stream<<xml;
+        file.close();
+    3) 使用QXmlStreamReader访问
+        QFile file(currentDir.path()+"/config.xml");
+        QXmlStreamReader stream(&file);
+        file.open(QIODevice::ReadOnly);
+        while (!stream.atEnd())
+        {
+            if (!file.isOpen()) file.open(QIODevice::ReadOnly);
+            if (stream.qualifiedName() == "username")
+            {
+                if (stream.readElementText() == username)
+                {
+                    file.close();
+                    return true;
+                }
+            }
+            stream.readNext();
+        }
+        file.close();
+    4) 使用QDomDocument访问并修改节点值
+        QFile file("config.xml");
+        QDomDocument doc;
+        doc.setContent(&file);
+        QDomElement root = doc.documentElement();
+        QDomNode node = root.firstChild();
+
+        while (!node.isNull())
+        {
+                QDomElement UserNameNode = node.toElement();
+                if (UserNameNode.text() == mUserName) //找到这个用户名
+                {
+                    node = node.nextSibling(); // 下一个节点是旧密码
+                    QDomNode oldPwdNode = node.firstChild(); // 拿到旧密码的文本节点
+                    node.firstChild().setNodeValue(NewPwdEdit->text());//文本节点更新文字
+                    QDomNode newPwdNode = node.firstChild();// 取出新密码节点
+                    //qDebug()<<newPwdNode.toText().data(); // 可以打印出新密码的文本节点的文本
+                    node.replaceChild(newPwdNode,oldPwdNode); // 替换2个元素节点,因为是替换孩子,所以父节点必须是node(元素节点)
+                    // 只更改文本节点,属性id的值没有改变
+                }
+                node = node.nextSibling();
+        }
+        QString xml = doc.toString(4);
+        QTextStream stream(&file);
+        file.close(); // setContent已经打开了所以要先关闭
+        file.open(QIODevice::Truncate|QIODevice::WriteOnly|QIODevice::Text);// 覆盖
+        stream<<xml;
+        file.close();
+
 23. 进度条对话框的使用方法
 mTcpSocket->connectToHost(ip,port);
 QProgressDialog * dlg = new QProgressDialog(tr("正在尝试连接"),tr("取消连接"),0,400000);
@@ -564,7 +659,24 @@ if (file.open(QFile::ReadOnly)) {
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
         painter.drawPixmap(rect,pix);
         painter.end();
+
+        // or简化
+        QPainter p;
+        p.begin(this);
+        p.setOpacity(0.5);
+        p.setRenderHint(QPainter::SmoothPixmapTransform);
+        QPixmap pix(":/images/login_back.jpg");
+        p.drawPixmap(QPoint(0,0),pix);
+        p.end();
+        Q_UNUSED(e);
     }
+    另外2种方法设置背景图片
+        1) setStylSheet{"QDialog{background-image:url()"}}
+
+        2) QPalette pal = dlg->palette();
+            pal.setBrush(QPalette::Background,QBrush(QPixmap("")));
+            dlg->setPalette(pal);
+
     5.4 showEvent():窗口显示时触发的事件
     5.5 mouseMoveEvent():鼠标移动事件
     void Window::mouseMoveEvent(QMouseEvent * e)
