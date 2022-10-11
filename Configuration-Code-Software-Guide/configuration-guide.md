@@ -1227,6 +1227,43 @@ net stop mysql80
 
 ![sql_start_command.jpg](sql_start_command.jpg)
 
+## 安装DataGrip
+
+下载地址：[Thank you for downloading DataGrip! (jetbrains.com)](https://www.jetbrains.com/datagrip/download/download-thanks.html?platform=windows)。
+
+注册账户，然后开始，新建1个工程，并点击左上角的"+"配置。
+
+![datagrip_createproject.jpg](datagrip_createproject.jpg)
+
+数据源选择mysql，然后需要输入安装mysql时的用户和密码，点击下载必要的文件。
+
+![datagrip_datasource.png](datagrip_datasource.png)
+
+点击测试连接，成功的话应用设置即可。
+
+![datagrip_connect.jpg](datagrip_connect.jpg)
+
+然后在左上角的localhost这里，选择所有架构。
+
+![datagrip_schedule.jpg](datagrip_schedule.jpg)
+
+新建一个架构文件，其实就是新建一个数据库，但是没有任何表。
+
+![datagrip_test.jpg](datagrip_test.jpg)
+
+创建表。
+
+![datagrip_table.jpg](datagrip_table.jpg)
+
+也可以新建控制台输入命令来查询。
+
+![datagrip_console.jpg](datagrip_console.jpg)
+
+如果想要激活软件，可以参见下方zip文件的说明，自行下载跟随教程激活即可。
+
+链接：https://pan.baidu.com/s/1bLYgRoAI5IFwnuosVzoXyQ 
+提取码：47cw
+
 ## VSCode配置
 
 下载地址：[Visual Studio Code - Code Editing. Redefined](https://code.visualstudio.com/)

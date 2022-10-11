@@ -26,9 +26,7 @@ DQL，数据查询语言，查询数据库表中的记录
 
 DCL，数据控制语言，用来创建数据库用户、控制数据库访问权限
 
-
-
-DDL：
+### 数据定义语言DDL
 
 ```mysql
 SHOW DATABASES; # 查询所有数据库
@@ -71,6 +69,18 @@ alter table emp add nickname varchar(20) comment '昵称';
 alter table emp change nickname username varchar(10) comment '昵称';
 alter table emp rename to employee; 
 ```
+
+
+
+### 数据操作语言DML
+
+
+
+### 数据查询语言DQL
+
+
+
+### 数据控制语言DCL
 
 
 
