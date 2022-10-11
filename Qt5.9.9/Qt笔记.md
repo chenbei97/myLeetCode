@@ -25754,7 +25754,202 @@ void writeTextElement(const QString &namespaceUri, const QString &name, const QS
 void writeTextElement(const QString &qualifiedName, const QString &text);
 ```
 
+#### 案例
 
+```c++
+// xml文档检测用户名是否存在的代码
+bool Login::usernameIsExist()
+{
+      QDir currentDir = QDir::current();
+      currentDir.cdUp();
+      QFile file(currentDir.path()+"/config.xml");
+      //qDebug()<<QFileInfo("config.xml").absoluteFilePath();
+      QXmlStreamReader stream(&file);
+      file.open(QIODevice::ReadOnly);
+      while (!stream.atEnd())
+      {
+          if (!file.isOpen()) file.open(QIODevice::ReadOnly);
+          if (stream.qualifiedName() == "username")
+          {
+              if (stream.readElementText() == mUserName)
+              {
+                  file.close();
+                  return true;
+              }
+          }
+          stream.readNext();
+      }
+      file.close();
+      return false;
+}
+// xml文档找到用户名对应的密码，检测是否正确
+bool Login::passwordIsCorrect()
+{
+      QDir currentDir = QDir::current();
+      currentDir.cdUp();
+      QFile file(currentDir.path()+"/config.xml");
+      QXmlStreamReader stream(&file);
+      file.open(QIODevice::ReadOnly);
+      while (!stream.atEnd())
+      {
+          if (stream.qualifiedName() == "username")
+          {
+              QString username = stream.readElementText();
+              if (username == mUserName) // 用户名正确
+              {
+                  stream.readNext(); // 下一行不是密码,而是换行符
+                  stream.readNext();// 再下一行就是密码了
+                  QString pwd = stream.readElementText();
+                  if (pwd == mPassWord) // 且密码正确
+                  {
+                          file.close();
+                          return true;
+                  }
+              }
+          }
+          stream.readNext();
+      }
+      file.close();
+      return false;
+}
+// 注册用户，给xml文档写入信息
+void CreateAccount::createAccount()
+{
+      QString username = UserNameEdit->text().trimmed();
+      QString pwd = PassWordEdit->text().trimmed();
+      if (username.isEmpty() || pwd.isEmpty())
+      {
+          QMessageBox::critical(this,tr("错误"),tr("用户名或密码不允许为空!"));
+          return;
+      }
+
+      if (usernameIsExist(username))
+      {
+          QMessageBox::warning(this,tr("警告"),tr("用户名已存在!"));
+          UserNameEdit->clear();
+          PassWordEdit->clear();
+          return;
+      }
+
+      QDir currentDir = QDir::current();
+      currentDir.cdUp();
+      QFile file(currentDir.path()+"/config.xml");
+
+      // 有2种类可以用于写xml文档,这里分别展示,如果比较复杂的需要使用QDomDocument
+      if (!file.exists()) // 如果是首次写入需要写入版本信息
+      {
+          QXmlStreamWriter wstream(&file);
+          wstream.setAutoFormatting(true);
+          wstream.setCodec("UTF-8");
+          file.open(QIODevice::WriteOnly|QIODevice::Text);
+          wstream.writeStartDocument("1.0"); // 文档的开始
+          wstream.writeStartElement("user"); // 根元素的开始
+
+          wstream.writeStartElement("username"); // 用户名元素
+          wstream.writeAttribute("id", "1");//元素属性
+          wstream.writeCharacters(username);
+          wstream.writeEndElement();
+
+          wstream.writeStartElement("password"); // 密码元素
+          wstream.writeAttribute("id", "1");//元素属性
+          wstream.writeCharacters(pwd);
+          wstream.writeEndElement();
+
+          //wstream.writeTextElement("username",username);
+          //wstream.writeTextElement("password",pwd);
+          wstream.writeEndElement(); // 根元素的结束
+          wstream.writeEndDocument(); // 文档的结束
+          file.close();
+      }
+      else{
+                QDir currentDir = QDir::current();
+                currentDir.cdUp();
+                QDomDocument doc("config");
+                doc.setContent(&file); // 获取了文件的内容
+                QDomElement root = doc.documentElement(); // root.tagName()==user 根元素
+                if(root.isNull()) // 有可能文件已存在但是为空,为了那么必须事先创建声明和根元素
+                {
+                    QDomProcessingInstruction p = doc.createProcessingInstruction
+                        ("xml version=\"1.0\"","encoding=\"UTF-8\"");
+                    QDomElement r =  doc.createElement("user");
+                    doc.appendChild(p);
+                    doc.appendChild(r);
+                    root = doc.documentElement(); // 重新获取根元素
+                }
+
+                QDomNode node = root.firstChild();
+                int n = 0; // 遍历获取子节点的个数=用户名+密码: 为了得到用户数n/2
+                while (!node.isNull())
+                {
+                      node = node.nextSibling();
+                      ++n;
+                }
+
+                QDomElement usernElemnode = doc.createElement("username"); // 新的用户名节点
+                usernElemnode.setAttribute("id",n/2+1); // 用户数+1
+                QDomText usernTextnode = doc.createTextNode(username); //新用户名的文本
+                usernElemnode.appendChild(usernTextnode);
+
+                QDomElement pwdElemnode = doc.createElement("password");// 新的密码节点
+                pwdElemnode.setAttribute("id",n/2+1);
+                QDomText pwdTextnode = doc.createTextNode(pwd); // 新密码的文本
+                pwdElemnode.appendChild(pwdTextnode);
+
+                root.appendChild(usernElemnode); // user根依次添加username和password节点
+                root.appendChild(pwdElemnode);
+
+                QString xml = doc.toString(4); // 缩进4字符, qDebug()<<"xml = "<<xml;
+                QTextStream stream(&file);
+                file.close(); // setContent已经打开了所以要先关闭
+                while (!file.isOpen())
+                   file.open(QIODevice::Truncate|QIODevice::WriteOnly|QIODevice::Text);
+                stream<<xml;
+                file.close();
+      }
+
+      accept();
+}
+// 重置密码，需要找到用户名和密码，然后修改节点
+connect(OkBtn,&QPushButton::clicked,this,[=]{
+     if (NewPwdEdit->text().isEmpty())
+     {
+         QMessageBox::warning(this,tr("警告"),tr("新密码不允许为空!"));
+         return;
+     }
+
+     QDir currentDir = QDir::current();
+     currentDir.cdUp();
+     QFile file(currentDir.path()+"/config.xml");
+     QDomDocument doc;
+     doc.setContent(&file);
+     QDomElement root = doc.documentElement();
+     QDomNode node = root.firstChild();
+
+     while (!node.isNull())
+     {
+         QDomElement UserNameNode = node.toElement();
+         if (UserNameNode.text() == mUserName) //找到这个用户名
+         {
+             node = node.nextSibling(); // 下一个节点是旧密码
+             QDomNode oldPwdNode = node.firstChild(); // 拿到旧密码的文本节点(firstChild)
+             node.firstChild().setNodeValue(NewPwdEdit->text());//文本节点更新文字
+             QDomNode newPwdNode = node.firstChild();// 还要取出新密码节点
+             // qDebug()<<newPwdNode.toText().data(); // 可以打印出新密码的文本节点的文本
+             // 替换2个元素节点,因为是替换孩子,所以父节点必须是node(元素节点)
+             node.replaceChild(newPwdNode,oldPwdNode); 
+         }
+         node = node.nextSibling();
+     }
+     QString xml = doc.toString(4);
+     QTextStream stream(&file);
+     file.close(); // setContent已经打开了所以要先关闭
+     file.open(QIODevice::Truncate|QIODevice::WriteOnly|QIODevice::Text);// 覆盖
+     stream<<xml;
+     file.close();
+
+     accept();
+});
+```
 
 ### 16.14 插件
 
