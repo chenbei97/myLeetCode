@@ -378,6 +378,572 @@ grant  all on dd.* to 'root'@'localhost'; # root有权操作dd的所有表
 revoke all on dd.* from 'root'@'localhost'; # 撤销
 ```
 
+### 函数
+
+**字符串函数：**
+
+```mysql
+concat(s1,s2,..,sn); # 字符串拼接
+lower(str); # 转小写
+upper(str); # 转大写
+lpad(str,n,pad); # 左填充,字符串pad对str的左边进行填充达到n个字符串长度
+rpad(str,n,pad); # 右填充
+trim(str); # 去除首尾的空格
+substring(str,start,len); # 返回从start开始的len长度子串
+```
+
+例子：
+
+```mysql
+select concat('hello','mysql');
+select lower('HELLO');
+select upper('hello');
+select lpad('B',5,'CA');
+select substring('hello',1,2); # he,索引从1开始
+# 工号统一为5位数,不足的补0
+update user set id lpad(id,5,'0'); # 修改表的字段使用update
+```
+
+**数值函数：**
+
+```mysql
+ceil(x); # 向上取整
+floor(x);# 向下取整
+mod(x,y); # 返回模
+rand(); # 返回0-1随机数
+round(x,y); # 四舍五入保留y位小数
+```
+
+例子：
+
+```mysql
+select ceil(1.1);
+select floor(1.9);
+select mod(7,4);
+select rand();
+select round(2.345,2);
+# 生成6位数随机验证码
+select lpad(round(rand()*1000000,0),6,'0');#生成的可能是5位数,不足的话补0
+```
+
+**日期函数：**
+
+```mysql
+curdate();# 返回当前日期
+curtime(); # 当前时间
+now(); # 当前时间日期
+year(date); # 获取指定日期的年份
+month(date); # 获取月份
+day(date); # 获取天数
+date_add(date,INTERVAL expr type); # 返回一个日期/时间值加上1个时间间隔expr后的时间
+datediff(date1,date2); # 返回起始时间date1和date2之间的天数
+```
+
+例子：
+
+```mysql
+select curdate();
+select month('2022-10-12');
+select day('2022/11/12');
+select year('2021.9.12');
+select date_add(now(),INTERVAL 70 day);
+select datediff(now(),'2015-9-1');
+# 查询所有员工入职天数，并根据天数倒序
+select name, datediff(curdate(),workdate) as 'workdays' from user order by desc;
+```
+
+**流程函数：**
+
+常用于条件筛选。
+
+```mysql
+if(value,t,f); # 如果value=true,返回t否则返回f
+ifnull(v1,v2); # 如果v1不为空返回v1,否则返回v2
+case when [v1] then [r1] ... else [def] end; # 如果v1为true,返回r1,否则返回def
+case [expr] when [v1] then [r1] ... else [def] end; # 如expr=v1,返回r1,否则def
+```
+
+例子：
+
+```mysql
+select if(false,'ok','err');
+select ifnull(null,'def');
+# 如果是北京上海返回一线城市否则二线城市
+select name,
+	(case workaddress when '北京' then '一线城市' when '上海' then '一线城市'
+	else '二线城市' end) as '城市级别'; 
+	from user;
+# 分数>=85优秀,>=60及格,否则不及格
+select id,name,
+	   (case when cn >= 85 then '优秀' when cn >= 60 '及格' else '不及格' end),
+	   (case when ma >= 85 then '优秀' when ma >= 60 '及格' else '不及格' end),
+	   (case when en >= 85 then '优秀' when en >= 60 '及格' else '不及格' end),
+	   from score;
+```
+
+### 约束
+
+概念：约束是作用于表中字段上的规则，用于限制存储在表中的数据。在创建表和修改表时添加约束。
+
+目的：保证数据库中数据的正确、有效性和完整性。
+
+分类：
+
+| 约束     | 描述                                        | 关键字      |
+| -------- | ------------------------------------------- | ----------- |
+| 非空约束 | 限制数据不能为null                          | not null    |
+| 唯一约束 | 数据是唯一的不重复                          | unique      |
+| 主键约束 | 主键是一行数据的唯一标识，非空且唯一        | primary key |
+| 默认约束 | 保存数据未指定字段值则使用默认值            | default     |
+| 检查约束 | 保证字段值满足某一个条件                    | check       |
+| 外键约束 | 用来让2张表建立连接，保证数据一致性和完整性 | foreign key |
+
+例子：现在要求创建下方的表格，要求如下。
+
+| 字段名 | 字段含义   | 字段类型    | 约束条件              | 约束关键字                |
+| ------ | ---------- | ----------- | --------------------- | ------------------------- |
+| id     | ID唯一标识 | int         | 主键并自动增长        | primarykey,auto_increment |
+| name   | 姓名       | varchar(10) | 不为空且唯一          | unique, not null          |
+| age    | 年龄       | int         | 大于0且小于等于120    | check                     |
+| status | 状态       | char(1)     | 如果没有指定该值默认1 | default                   |
+| gender | 性别       | char(1)     | 无                    |                           |
+
+代码如下。
+
+```mysql
+create table info(
+	id int primary key auto_increment comment '主键自动增长',
+    name varchar(10) not null unique comment '姓名不为空且唯一',
+    age int check(age > 0 and age <= 120) comment '年龄在(0,120]',
+    status char(1) default '1' comment '状态默认1',
+    gender char(1) comment '性别'
+) comment '用户信息';
+insert into info
+	(name,age,status,gender) values
+	('cb',25,'1','男'),
+	('chenbei',30,'0','男'),
+	('guxiaoting',25,'1','女');
+```
+
+**外键约束：**
+
+例如存在2个表，第一个表是员工信息，倒数第二列表示上级属于的部门编号，最后1列表示属于的部门编号，第2个表则是部门编号对应的部门。
+
+| id   | name | age  | job      | salary | entrydate  | manager_id | depart_id |
+| ---- | ---- | ---- | -------- | ------ | ---------- | ---------- | --------- |
+| 1    | A    | 66   | 总裁     | 2.5    | 2000-01-01 | null       | 5         |
+| 2    | B    | 28   | 项目经理 | 1.8    | 2005-12-29 | 1          | 1         |
+| 3    | C    | 33   | 开发     | 1.3    | 2008-06-05 | 2          | 1         |
+| 4    | D    | 45   | 开发     | 1.2    | 2009-03-16 | 2          | 1         |
+| 5    | E    | 24   | 开发     | 1.1    | 2022-10-21 | 3          | 1         |
+
+| id   | name   |
+| ---- | ------ |
+| 1    | 研发部 |
+| 2    | 市场部 |
+| 3    | 财务部 |
+| 4    | 销售部 |
+| 5    | 总经办 |
+
+代码如下。
+
+```mysql
+create table dept(
+	id int auto_increment comment 'ID' primary key,
+    name varchar(50) not null comment '部门名称'
+) comment '部门表';
+insert into dept (name) values
+	('研发部'),('市场部'),('财务部'),('销售部'),('总经办');
+
+create table emp(
+    id int auto_increment comment 'ID' primary key,
+    name varchar(50) not null comment '姓名',
+    age int comment '年龄',
+    job varchar(20) comment  '职位',
+    salary float comment '薪资',
+    entrydate date comment '入职时间',
+    manager_id int comment '直属领导部门',
+    depart_id int comment '所属部门'
+) comment '员工表';
+
+insert into emp(name,age,job,salary,entrydate,manager_id,depart_id) values
+	('A',66,'总裁',2.5,'2000-01-01',null,5),
+	('B',28,'项目经理',1.8,'2005-12-29',1,1),
+	('C',33,'开发',1.3,'2008-06-05',2,1),
+	('D',45,'开发',1.2,'2009-03-16',2,1),
+	('E',24,'开发',1.1,'2022-10-21',3,1);
+```
+
+现在希望让2张表建立关联，添加外键的语法如下。
+
+```mysql
+create table 表名(
+	字段名 数据类型,
+    ...
+    [constraint] [外键名称] foreign key(外键字段名) references 主表(外表列名)
+);
+alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 外表(外表列名);
+```
+
+```mysql
+# 给员工表(主表)添加外键,此时dept表不能随便删除字段值,因为关联了emp表,保证安全
+alter table emp add constraint emp_depart foreign key (depart_id) references dept(id); 
+alter table emp drop foreign key emp_depart; # 删除外键
+```
+
+**外键约束的删除/更新行为：**
+
+| 行为        | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| no_action   | 父表删除/更新记录时,首先检查该记录是否有外键,有的话不允许删除/更新 |
+| restrict    | 父表删除/更新记录时,首先检查该记录是否有外键,有的话不允许删除/更新 |
+| cascade     | 父表删除/更新记录时,首先检查该记录是否有外键,有的子表也删除/更新 |
+| set null    | 父表删除/更新记录时,首先检查该记录是否有外键,有的话子表设置外键值为null |
+| set default | 父表有变更时,子表外键设置成默认值                            |
+
+语法。
+
+```mysql
+alter table 表名 add constraint 外键名称 foreign key (外键字段) references 外表名(外表字段名) on update cascade on delete cascade;
+```
+
+例子：
+
+```mysql
+alter table emp add constraint emp_dept foreign key (depart_id) references dept(id) on update cascade on delete cascade;
+```
+
+### 多表查询
+
+#### 多表关系
+
+多表关系：表和表之间的关系有一对多或多对一、多对多以及一对一。
+
+**一对多（多对一）的关系：**
+
+例如部门和员工的关系：一个部门多个员工，一个员工对应一个部门。因为员工数量是比部门数量多的，要在多的一方建立外键，映射到部另一方的主键。
+
+**多对多的关系：**
+
+一个学生可以选择多门课程，一门课程也可以被多个学生选择。这种情况下一般是建立第三张表，中间表至少包含2个外键，关联两方的主键。
+
+学生表：
+
+| id   | name |
+| ---- | ---- |
+| 1    | A    |
+| 2    | B    |
+
+课程表：
+
+| id   | class  |
+| ---- | ------ |
+| 1    | matlab |
+| 2    | sql    |
+| 3    | python |
+| 4    | c++    |
+| 5    | java   |
+
+中间表：含义是学生A选了matlab、sql和python课程，学生B选了c++和java。
+
+| id   | student | class |
+| ---- | ------- | ----- |
+| 1    | 1       | 1     |
+| 2    | 1       | 2     |
+| 3    | 1       | 3     |
+| 4    | 2       | 4     |
+| 5    | 2       | 5     |
+
+代码如下。
+
+```mysql
+create table student(
+    id int auto_increment primary key comment 'ID',
+    name varchar(20) comment '姓名'
+)comment '学生表';
+insert into student values (null,'A'),(null,'B');
+
+create table department(
+	id int auto_increment primary key comment 'ID',
+    name varchar(10) comment '姓名'
+)comment '课程表';
+insert into department values (null,'matlab'),(null,'sql'),(null,'python'),
+                              (null,'c++'),(null,'java');
+
+create table student_department(
+	id int auto_increment primary key comment 'ID',
+    studentid int not null comment '学生ID',
+    classid int not null comment '课程ID',
+    constraint fk_studentid foreign key (studentid) references student(id),
+    constraint fk_classid foreign key (classid) references department(id)
+) comment '学生课程表';
+insert into student_department values (null,1,1),(null,1,2),(null,1,3),(null,2,4),(null,2,5);
+```
+
+**一对一的关系：**
+
+一般常用于单表拆分，将一张表的基础字段放在一张表，其它详细字段放在另一张表来提升操作效率。例如基础信息可能是姓名、年龄、性别和手机号，详细信息可能是学历、小初高的学校等。
+
+然后在任意一方加入外键，关联另一方的主键即可，并且要设置外键是唯一的。
+
+```mysql
+create table user_basic(
+   id int auto_increment primary key comment 'ID',
+   name varchar(10) comment '姓名',
+   age int comment '年龄',
+   gender char(1) comment '1: 男, 2: 女',
+   phone char(11) comment '手机号'
+)comment '用户基本信息';
+insert into user_basic values (null,'A',18,'男','19801279790'),
+                           (null,'B',19,'男','19801279791'),
+                           (null,'C',82,'女','19801279792'),
+                           (null,'D',28,'女','19801279793');
+
+create table user_more(
+    id int auto_increment primary key comment 'ID',
+    degree varchar(20) comment '学历',
+    major varchar(20) comment '专业',
+    primarySchool varchar(50) comment '小学',
+    university varchar(50) comment '大学',
+    address varchar(50) comment '住址',
+    userid int unique comment '用户ID',
+    constraint fk_userid foreign key (userid) references user_basic(id) # 设置外键
+) comment '用户详细信息';
+
+insert into user_more values (null,'本科','电气','七小','北交','北京',1),
+                             (null,'博士','电气','六小','上交','上海',2),
+                             (null,'大专','电气','八小','西交','西安',3),
+                             (null,'硕士','电气','九小','西南交','成都',4);
+```
+
+#### 多表查询概述
+
+从多张表查询数据，笛卡尔积会生成重复的数据，所以我们的任务在于消除不必要的重复项。
+
+```mysql
+select * from user , dept; # 无效的笛卡尔积
+select * from user ,dept where emp.id = dept.id ; # 加上条件可以消除一些重复项
+```
+
+多表查询分为以下几类：
+
+内连接：相当于查询A、B的交集数据
+
+外连接：左外连接，查询左表所有数据，以及两张表的交集；右外连接同理
+
+自连接：当前表与自身的连接查询，**自连接必须使用表别名**
+
+子查询：SQL语句嵌套SELECT语句，嵌套查询
+
+**内连接：**
+
+内连接分为隐式内连接和显式内连接，语法如下。
+
+```mysql
+select 字段列表 from 表1,表2 where 条件;
+select 字段列表 from 表1 [inner] join 表2 on 连接条件;
+```
+
+例子：
+
+```mysql
+# 查询每一个员工的姓名以及关联的部门名称
+select emp.name,dept.name  from emp, dept where emp.id = dept.id;# 隐式法
+select e.name, d.name from emp e. depy d where e.id = d.id; # 使用别名也可以
+
+select e.name, d.name from emp e inner join dept d on e.id = d.id; # 显示法
+```
+
+**外连接：**
+
+```mysql
+select 字段列表 from 表1 left [outer] join 表2 on 条件;
+select 字段列表 from 表1 right [outer] join 表2 on 条件;
+```
+
+例子：
+
+```mysql
+# 查询员工表所有信息且包含对应的部门信息(左连接)
+select e.*,d.name from emp e left outer join dept d on e.id = d.id;
+# 查询所有部门的信息且包含对应的员工信息(右连接)
+select e.*,d.* from emp e right outer join dept d on e.id = d.id;
+```
+
+**自连接：**
+
+可以是内连接查询也可以是外连接查询。
+
+```mysql
+select 字段列表 from 表A 别名A join 表A 别名 B on 条件;
+```
+
+例子：
+
+```mysql
+# 查询员工及其所属领导的名字
+select * from emp a, emp b where a.managerid = b.id;# 内连接
+# 假设有2张表,一般来说a表的mangerid作为外键关联b表的id,那么b表对应id的名字就是领导信息
+# 但是现在是一张表，每个员工有个id也有个managerid，而且这些id是独一无二的,那么就可以自查询
+# 例如id=10的员工，它的领导id=8，故managerid也是8,所以使用别名当成2个表更好理解
+select a.name, b.name from emp a, emp b where a.managerid = b.id;
+
+# 查询所有员工及其领导的名字，如果员工没有领导，也要查询出来(左外连接)
+select a.name '员工' , b.name '领导' from emp a left join emp b on a.managerid = b.id; # 如果员工没有领导,不用左外连接就会丢失没有领导的员工信息
+```
+
+**联合查询：**
+
+对于union查询，就是多次查询的结果合并起来形成新的查询结果集。要求多张表的列数必须保持一致，字段类型也要保持一致。union all会将所有数据直接合并，如果没有all则会多一步去重处理。
+
+```mysql
+select 字段列表 from 表A...
+union [all]
+select 字段列表 form 表B ...;
+```
+
+例子：
+
+```mysql
+# 查询薪资低于5000且年龄大于50的员工信息
+select * from emp where salary < 5000
+union all
+select * from emp where age > 50;
+```
+
+**子查询：**
+
+子查询外部的语句可以是insert/update/delete/select的任何一个。
+
+子查询结果的不同，分为：标量子查询（查询结果单个值）、列子查询（查询结果1列）行子查询（查询结果1行）、表子查询（查询结果多行多列）
+
+根据子查询位置，分为：where之后、from之后和select之后。
+
+**标量子查询例子：**
+
+常用>,<,>=,<=,=等操作符。
+
+```mysql
+# 查询销售部的所有员工信息
+# 第一步查询销售部ID select id from dept where name = '销售部';
+# 第二步根据销售部ID，查询员工信息 select * from emp where deptid = ?;
+# 合起来就是
+select * from emp where deptid = (select id from dept where name = '销售部');
+
+# 查询在A入职时间之后入职的员工信息
+# 第一步查询A的入职时间
+select entrydate from emp where name ='A';
+# 第二步查询该事件之后入职的员工 select * from where entrydate > ?;
+# 合起来是
+select * from where entrydate > (select entrydate from emp where name ='A');
+```
+
+**列子查询例子：**
+
+常用in、not in、any、some和all操作符。in表示在范围内即可，any和some相同子查询结果有满足的即可，all则要求返回的必须全部满足。
+
+```mysql
+# 查询销售部和市场部所有员工信息
+# 1.查询2个部门的id select id from dept where name = '销售部' or name = '市场部';
+# 2.根据id查询员工 select * from emp where deptid in (?,?);
+select * from emp where deptid in (id select id from dept where name = '销售部' or name = '市场部');
+
+# 查询比财务部所有人工资都高的员工信息
+# 1.查询财务部所有人工资
+# select id from dept where name = '财务部'; # 拿到财务部id
+# select salary from emp where deptid = ?; # 拿到财务部工资
+# select salary from emp where deptid = (select id from dept where name = '财务部');
+# 2. 比这些人都高的员工信息 select * from emp where salary > all (?);
+select * from emp where salary > all(select salary from emp where deptid = (select id from dept where name = '财务部'));
+
+# 查询比研发部任意一人工资高的员工信息
+# 1.找到研发部id和根据id拿到工资
+# select salary from emp where deptid = (select id from dept where name = '研发部');
+# 2. 有比这些工资高的就可以
+select * from emp where salary > any(select salary from emp where deptid = (select id from dept where name = '研发部'));
+```
+
+**行子查询：**
+
+常用操作符=、<>、in、not in。
+
+```mysql
+# 查询与A的薪资且直属领导相同的员工信息
+# 1. 拿到A的薪资和领导 select salary,managerid from emp where name = 'A';
+# 2. 拿到和这个薪资和领导相同的员工信息 select * from emp where salary = ? and managerid = ?;
+select * from emp where (salary,managerid)=(select salary,managerid from emp where name = 'A');
+```
+
+**表子查询：**
+
+常用操作符in。
+
+```mysql
+# 查询和A或B职位和薪资均相同的员工信息
+# 1. 查询A ,B的职位和薪资select job,salary from emp where name ='A' or name = 'B';
+# 2. 查询信息
+select * from emp where (job,salary) in (select job,salary from emp where name ='A' or name = 'B');
+
+# 查询入职日期是2006-01-01之后的员工信息，及其部门信息
+# 1.找这个日期之后的员工
+select * from emp where entrydate > '2006-01-01';
+# 2. 这部分员工对应的部门
+select * from (select * from emp where entrydate > '2006-01-01') workers left join dept d on workers.dept_id = dept.id;
+# 因为要拿到员工也要拿到部门所以是左外连接,而且去除无效的笛卡尔积要求员工的部门id是部门表的id
+```
+
+**案例：**
+
+```mysql
+create table salgrade(
+	grade int ,
+    low int ,
+    high int
+); # 薪资等级表
+insert into salgrade values (1,0,3000),(2,3001,5000),(3,5001,8000),(5,8001,10000),(6,15001,20000),(7,20001,25000),(8,25001,30000);
+
+# 查询员工姓名、年龄、职位和部门信息（隐式内连接）
+select e.name,e.age,e.job,d.name from emp e, dept d where e.deptid = d.id; 
+
+# 查询年龄小于30的员工姓名、年龄、职位、部门信息 （显式内连接）
+select e.name,e.age,e.job ,d.name from emp e inner join dept d on e.deptid = d.id where d.age < 30;
+
+# 查询拥有员工的部门id和名称（内连接）distinct去重
+select distinct d.id,d.name from emp e, dept d where e.deptid = d.id;
+
+# 查询所有年龄大于40的员工，以及归属的部门名称，如果员工没有领导也展示出来 （外连接）
+select e.*,d.name from emp e left join dept d on e.deptid = d.id where e.age > 40;
+
+# 查询所有员工的工资等级 emp.salary >= salgrade.low and emp.salary <= salgrade.high
+select e.*, s.grade, s.low, s.high from emp e, salgrade s where e.salary >=s.low and e.salary <= s.high; # between s.low and s.high
+
+# 查询研发部所有员工信息和工资等级
+# 连接条件,工资在low和high之间，且员工deptid等于部门表id
+# 查询条件是 dept.name = '研发部'
+select e.*,s.grade from emp e. dept d ,salgrade s where e.deptid = d.id and (e.salary between s.low and s.high) and d.name = '研发部';
+
+# 查询研发部员工平均工资
+select avg(e.salary) from emp e, dept d where e.deptid = d.id and d.name = '研发部';
+
+# 查询工资比A高的员工信息 （标量子查询）
+select * from emp where salary (select salary from emp where name = 'A');
+
+# 查询比平均工资高的员工
+select * from emp where salary > (select avg(salary) from emp);
+
+# 查询低于本部门平均工资的员工信息
+select * from emp e2 where salary < (select avg(e1.salary) from emp e1 where e1.deptid = e2.dept_id);
+
+# 查询所有部门信息并统计部门员工人数
+select d.id, d.name, (select count(*) from emp e where e.deptid = d.id) as '人数' from dept d; # 从dept查询id、name和部门人数,部门人数本身是一个统计取别名'人数'
+
+# 查询所有学生选课情况、展示学生名称、学号、课程名称
+# 连接条件是 stu.id = stu_class.stuid, classid = stu_clsss.classid
+select s.name, s.num, c.name from student s, student_claaa sc, class c where sc.stuid = s.id and sc.classid = c.id;
+```
+
+### 事务
+
 
 
 ## 数据类型
