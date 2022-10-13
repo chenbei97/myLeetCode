@@ -26,9 +26,9 @@ C:\Program Files\MySQL\MySQL Server 8.0\bin
 mysql -u root -p 
 ```
 
+## 基础篇
 
-
-## 基本语法
+### 基本语法
 
 SQL分类：
 
@@ -40,7 +40,7 @@ DQL，数据查询语言，查询数据库表中的记录
 
 DCL，数据控制语言，用来创建数据库用户、控制数据库访问权限
 
-### 数据定义语言DDL
+#### 数据定义语言DDL
 
 ```mysql
 SHOW DATABASES; # 查询所有数据库
@@ -84,7 +84,7 @@ alter table emp change nickname username varchar(10) comment '昵称';
 alter table emp rename to employee; 
 ```
 
-### 数据操作语言DML
+#### 数据操作语言DML
 
 添加数据：INSERT
 
@@ -142,7 +142,7 @@ DELETE FROM 表名 [where 条件];
 DELETE from user where id <= 2;
 ```
 
-### 数据查询语言DQL
+#### 数据查询语言DQL
 
 关键字如下所示。
 
@@ -307,7 +307,7 @@ select name,age from user where age>15 order by age asc;
 select u.name uname,u.age uage from user u where u.age>15 order by uage asc; # limit后可以使用select定义的别名uage，而select则可以使用from定义的别名u
 ```
 
-### 数据控制语言DCL
+#### 数据控制语言DCL
 
 **用户管理：**
 
@@ -722,7 +722,7 @@ insert into user_more values (null,'本科','电气','七小','北交','北京',
 
 ```mysql
 select * from user , dept; # 无效的笛卡尔积
-select * from user ,dept where emp.id = dept.id ; # 加上条件可以消除一些重复项
+select * from user ,dept where emp.deptid = dept.id ; # 加上条件可以消除一些重复项
 ```
 
 多表查询分为以下几类：
@@ -748,10 +748,10 @@ select 字段列表 from 表1 [inner] join 表2 on 连接条件;
 
 ```mysql
 # 查询每一个员工的姓名以及关联的部门名称
-select emp.name,dept.name  from emp, dept where emp.id = dept.id;# 隐式法
-select e.name, d.name from emp e. depy d where e.id = d.id; # 使用别名也可以
+select emp.name,dept.name  from emp, dept where emp.deptid = dept.id;# 隐式法
+select e.name, d.name from emp e. depy d where e.deptid = d.id; # 使用别名也可以
 
-select e.name, d.name from emp e inner join dept d on e.id = d.id; # 显示法
+select e.name, d.name from emp e inner join dept d on e.deptid = d.id; # 显示法
 ```
 
 **外连接：**
@@ -765,9 +765,9 @@ select 字段列表 from 表1 right [outer] join 表2 on 条件;
 
 ```mysql
 # 查询员工表所有信息且包含对应的部门信息(左连接)
-select e.*,d.name from emp e left outer join dept d on e.id = d.id;
+select e.*,d.name from emp e left outer join dept d on e.deptid = d.id;
 # 查询所有部门的信息且包含对应的员工信息(右连接)
-select e.*,d.* from emp e right outer join dept d on e.id = d.id;
+select e.*,d.* from emp e right outer join dept d on e.deptid = d.id;
 ```
 
 **自连接：**
@@ -944,9 +944,88 @@ select s.name, s.num, c.name from student s, student_claaa sc, class c where sc.
 
 ### 事务
 
+事务是一组操作的集合，它是一个不可分割的工作单位，事务会把所有操作一起提交给系统，或者同时撤销，所以这些工作要么同时成功，要么同时失败。如果有异常就回滚事务，成功的话就提交事务。默认MySQL的事务是自动提交的，也就是执行一条DML语句就会隐式的提交事务。
 
+```mysql
+## 事务
+create table account(
+    id int auto_increment primary key comment '主键ID',
+    name varchar(10) comment '姓名',
+    money int comment  '余额'
+) comment '账户表';
 
-## 数据类型
+insert into account(id,name,money) values (null,'张三',2000),(null,'李四',2000);
+
+## 恢复数据
+update account set money = 2000 where name ='张三' or name = '李四';
+
+## 转账操作 张三给李四转账1000
+# 1. 查询张三余额
+select money from account where name = '张三';
+# 2. 张三余额-1000
+update account set money = money - 1000 where name = '张三';
+# 这里如果发生异常，那么张三的钱-1000，但是李四的钱没有增加
+# 3. 李四+1000
+update account set money = money + 1000 where name = '李四';
+```
+
+**事务操作：**
+
+```mysql
+# 查看/设置事务提交方式
+select @@autocommit;
+set @@autocommit = 0; # 手动
+
+# 开启事务
+start transaction ;
+begin;
+
+# 提交事务
+commit;
+
+# 回滚事务
+rollback;
+```
+
+**事务四大特性：**
+
+原子性：事务是不可分割的最小操作单元，要么都成功要么都失败；
+
+一致性：事务完成时必须使所有数据都保持一致状态；
+
+隔离性：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行；
+
+持久性：事务一旦提交或回滚，它对数据库中的数据的改变是永久的。
+
+**并发事务问题：**
+
+脏读：一个事务读到另外一个事务还没有提交的数据，也就是说2个cmd同时开启事务，A事务查询1次后，B事务做了一些操作，但是没提交，A事务再次查询就会读到没提交的改变，这种情况发生在Read uncommitted级别。如果是Read committed不会出现，B必须提交以后A查询才会更新。
+
+不可重复读：一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读；这种情况是，B没提交事务之前A的查询和B提交事务后A的查询是不一样的，这虽然解决了脏读问题，但是一个独立事务也不应当连续两次查询出现不同的结果，这种情况发生在Read committed级别，但是Repeated Read级别不会出现，2次查询都是一样的，只有A也提交事务之后才会更新结果。
+
+幻读：一个事务按照条件查询数据时，没有对应的数据行，但是插入数据时又发现这行数据已存在。2个事务都开启后，A事务先查询id=3是否存在，显示不存在，然后B事务插入了一行数据有了id=3，此时A事务再次插入id=3的数据就会提示已被占用。这种出现在Repeated Read级别，如果希望不出现幻读，只能选择串行化serializable。
+
+**事务隔离级别：**
+
+下表展示了不同级别会出现的并发事务问题。事务隔离级别越高，数据越安全，但是性能越低。
+
+| 隔离级别            | 脏读 | 不可重复读 | 幻读 |
+| ------------------- | ---- | ---------- | ---- |
+| Read uncommitted    | √    | √          | √    |
+| Read committed      | ×    | √          | √    |
+| Repeated Read(默认) | ×    | ×          | √    |
+| Serializable        | ×    | ×          | ×    |
+
+```mysql
+# 查看事务隔离级别
+select @@transaction_isolation;
+# 设置事务隔离级别 session是当前会话,或者全局
+set [session|global] transaction isolation {read uncommitted| read committed | repeatable read | serializable };
+
+set session transaction isolation level read committed ;
+```
+
+### 数据类型
 
 数值类型：
 
@@ -996,6 +1075,34 @@ score DOUBLE(4,1);#表示四位长度和1位标度
 **注意：**char(n) 和 varchar(n) 中括号中 n 代表字符的个数，并不代表字节个数，比如 CHAR(30) 就可以存储 30 个字符。CHAR 和 VARCHAR 类型类似，但它们保存和检索的方式不同，一般CHAR的性能更好。BINARY 和 VARBINARY 类似于 CHAR 和 VARCHAR，不同的是它们包含二进制字符串而不要非二进制字符串。BLOB 是一个二进制大对象，可以容纳可变数量的数据。有 4 种 BLOB 类型：TINYBLOB、BLOB、MEDIUMBLOB 和 LONGBLOB。它们区别在于可容纳存储范围不同。有 4 种 TEXT 类型：TINYTEXT、TEXT、MEDIUMTEXT 和 LONGTEXT。对应的这 4 种 BLOB 类型，可存储的最大长度不同，可根据实际情况选择。
 
 
+
+## 进阶篇
+
+### 存储引擎
+
+
+
+### 索引
+
+
+
+### SQL优化
+
+
+
+### 视图/存储过程/触发器
+
+
+
+### 锁
+
+
+
+### InnoDB引擎
+
+
+
+### MySQL管理
 
 
 
