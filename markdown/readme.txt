@@ -53,3 +53,11 @@
 25. scikit-learn机器学习
 
 26. Python Opencv从入门到实践
+
+27. Qt5开发及实例
+
+28. 亲密关系
+
+29. C++并发实战
+
+30. Python并行编程
