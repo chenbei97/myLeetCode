@@ -1025,6 +1025,8 @@ set [session|global] transaction isolation {read uncommitted| read committed | r
 set session transaction isolation level read committed ;
 ```
 
+
+
 ### 数据类型
 
 数值类型：
@@ -1144,37 +1146,95 @@ INNODB逻辑存储结构：
 | 聚集索引 | 数据存储和索引放在一起，索引结构叶子节点保存行数据         | 必须有，且只有一个 |
 | 二级索引 | 数据存储和索引分开存储，索引结构叶子节点关联的是对应的主键 | 可以多个           |
 
+**索引的有关操作：**
 
+```mysql
+create [unique | fulltext] index 索引名称 on 表名(索引列名,...); # 创建索引
+show index from 表名; # 查看索引
+drop index 索引名 on 表名;
+```
+
+例子：
+
+```mysql
+# name字段为姓名字段,字段值可能重复,为该字段创建索引
+create index idx_user_name on tb_user(name);
+show index from tb_user; # 查看
+# phone手机号字段的值非空且唯一，为该字段创建唯一索引
+create unique index idx_user_phone on tb_user(phone);
+# 为profession、age和status创建联合索引
+create index idx_user_pro_age_sta on tb_user(profession,age,status);
+# 为Email建立合适的索引提高查询效率
+create index idx_user_email on tb_user(email);
+drop index idx_user_email on tb_user; # 删除
+```
+
+**SQL性能分析：**
+
+```mysql
+show [session|global] status; # 查看服务器状态信息,insert/update/delete/select的访问频次
+show global status like 'com_'; 
+```
+
+**慢查询日志**记录了所有执行时间超过指定参数(long_query_time，默认10s)的所有日志记录，默认没有开启，需要在mysql的配置文件my.cnf进行配置。
+
+```mysql
+show variable like 'show_query_log'; # 查询慢查询日志的状态
+```
+
+show_query_log = 1：开启慢日志查询开关
+
+show_query_log = 2：设置慢日志时间为2s，sql语句执行时间超过2s，就会视为慢查询并记录。
+
+**profile操作：**
+
+```mysql
+show profiles; # sql优化时展示时间耗费处 
+select @@have_profiling; # 查看是否支持profile
+set profiling = 1;
+show profile for query query_id; # 查看query_id的sql语句各个阶段耗时情况
+show profile cpu for query query_id; # 查看指定query_id的sql语句cpu使用情况
+```
+
+**explain执行计划:**
+
+```mysql
+explain select * from department where name = 'c++';
+```
 
 ### SQL优化
 
+**insert优化：**
 
+```mysql
+# 批量插入
+insert into user values(1,'a'),(2,'b'),(3,'c');
+
+# 手动提交事务
+start transaction;
+insert into user values(1,'a'),(2,'b'),(3,'c');
+commit;
+
+# 主键顺序插入
+```
+
+使用load来一次性插入大批量数据。
+
+```mysql
+# 客户端连接服务端时加上参数 --local_infile
+mysql --local-infile -u root -p;
+# 设置全局参数local_infile为1,开启从本地加载文件导入数据的开关
+set global local_infile = 1;
+# 执行load指令将准备好的数据加载到表结构
+load data local infile '/root/sql.log' into table 'tb_user' fields terminated by ',' lines terminated by '\n';
+```
+
+后边的内容弃了，应该以后不需要用到~~ 2022/10/14/ 15:16
 
 ### 视图/存储过程/触发器
 
-
-
 ### 锁
-
-
 
 ### InnoDB引擎
 
-
-
 ### MySQL管理
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
