@@ -1264,6 +1264,10 @@ net stop mysql80
 链接：https://pan.baidu.com/s/1bLYgRoAI5IFwnuosVzoXyQ 
 提取码：47cw
 
+## 安装向日葵
+
+下载地址：[向日葵远程控制app官方下载 - 贝锐向日葵官网 (oray.com)](https://sunlogin.oray.com/download?categ=personal)
+
 ## VSCode配置
 
 下载地址：[Visual Studio Code - Code Editing. Redefined](https://code.visualstudio.com/)
