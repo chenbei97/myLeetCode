@@ -19958,6 +19958,7 @@ QString readSetting()
  在UI中可以控制切换语言，例如两个动作，它们的代码如下。
 
 ```c++
+extern QTranslator * trans;
 //中文界面
 void TestTRTranslation::on_actLang_CN_triggered()
 {
@@ -20031,13 +20032,13 @@ settings.setValue("editor/wrapMargin", 68);
 如果已经存在具有相同键的设置，则现有值将被新值覆盖。为了提高效率，更改可能不会立即保存到永久存储中。 （您可以随时调用 sync() 来提交您的更改。）您可以使用 value() 取回设置的值：
 
 ```c++
-int margin = settings.value(&quot;editor/wrapMargin&quot;).toInt();
+int margin = settings.value("editor/wrapMargin").toInt();
 ```
 
 如果没有指定名称的设置，QSettings 返回一个空的 QVariant（可以转换为整数 0）。您可以通过将第二个参数传递给 value() 来指定另一个默认值：
 
 ```c++
-int margin = settings.value(&quot;editor/wrapMargin&quot;, 80).toInt();
+int margin = settings.value("editor/wrapMargin", 80).toInt();
 ```
 
 要测试给定键是否存在，请调用 contains()。要删除与键关联的设置，请调用 remove()。要获取所有键的列表，请调用 allKeys()。要删除所有键，请调用 clear()。
@@ -20118,47 +20119,114 @@ enum QSettings::Status{
 ##### 成员函数
 
 ```c++
+//构造一个QSettings对象，用于从称为organization的组织和父级访问名为application的应用程序的设置
 QSettings(const QString &organization, const QString &application = QString(), QObject *parent = Q_NULLPTR);
+//构造一个QSettings对象，用于从称为organization的组织和父级访问名为application的应用程序的设置
 QSettings(Scope scope, const QString &organization, const QString &application = QString(), QObject *parent = Q_NULLPTR);
+// 构造一个QSettings对象，用于从称为organization的组织和父级访问名为application的应用程序的设置
 QSettings(Format format, Scope scope, const QString &organization, const QString &application = QString(), QObject *parent = Q_NULLPTR);
+// 构造一个QSettings对象，用于访问存储名为fileName文件中的设置，以及父级。如果文件不存在，则创建该文件
 QSettings(const QString &fileName, Format format, QObject *parent = Q_NULLPTR);
+// 构造一个QSettings对象，用于通过调用QCoreApplication:：setOrganizationName()、QCoreApplication:：setOrganizationDomain()和QCoreApplication::setApplicationName()访问以前设置的应用程序和组织的设置
 QSettings(QObject *parent = Q_NULLPTR);
-QStringList allKeys() const;
-QString applicationName() const;
-void beginGroup(const QString &prefix);
-int beginReadArray(const QString &prefix);
+
+QStringList allKeys() const; //返回可以使用QSettings对象读取的所有键（包括子键）的列表
+QStringList childGroups() const;//返回包含可使用QSettings对象读取的密钥的所有密钥顶级组的列表
+QStringList childKeys() const;//返回可以使用QSettings对象读取的所有顶级键的列表
+/*
+  QSettings settings;
+  settings.setValue("fridge/color", QColor(Qt::white));
+  settings.setValue("fridge/size", QSize(32, 96));
+  settings.setValue("sofa", true);
+  settings.setValue("tv", false);
+
+  QStringList keys = settings.allKeys();//["fridge/color", "fridge/size", "sofa", "tv"]
+  settings.beginGroup("fridge");
+  keys = settings.allKeys();// ["color", "size"]
+*/
+
+QString applicationName() const;//返回用于存储设置的应用程序名称
+QString organizationName() const;//返回用于存储设置的组织名称
+void clear(); // 删除主位置中与此QSettings对象关联的所有条目
+void remove(const QString &key); // 删除设置键和键的任何子设置
+void sync();// 将任何未保存的更改写入永久存储，并重新加载同时被其他应用程序更改的所有设置
+QString fileName() const; // 返回存储使用此QSettings对象写入的设置的路径
+bool isWritable() const;//如果可以使用此QSettings对象写入设置，则返回true；否则返回false
+Scope scope() const; // 返回用于存储设置的范围
+Format format() const;//返回用于存储设置的格式
+Status status() const;//返回一个状态代码，指示遇到的第一个错误，默认返回QSettings:：NoError
+void beginGroup(const QString &prefix);// 将前缀附加到当前组,例如man/a,man/b,man是前缀
+void endGroup();// 结束组
+QString group() const;//返回当前组
+bool contains(const QString &key) const;//如果存在名为key的设置，则返回true；否则返回false
+/*
+  settings.beginGroup("mainwindow");
+  settings.setValue("size", win->size());
+  settings.setValue("fullScreen", win->isFullScreen());
+  settings.endGroup();
+
+  settings.beginGroup("outputpanel");
+  settings.setValue("visible", panel->isVisible());
+  settings.endGroup();
+*/
+
+int beginReadArray(const QString &prefix);//将前缀添加到当前组并开始从数组读取。返回数组的大小
 void beginWriteArray(const QString &prefix, int size = -1);
-QStringList childGroups() const;
-QStringList childKeys() const;
-void clear();
-bool contains(const QString &key) const;
 void endArray();
-void endGroup();
-bool fallbacksEnabled() const;
-QString fileName() const;
-Format format() const;
-QString group() const;
-QTextCodec *iniCodec() const;
-bool isWritable() const;
-QString organizationName() const;
-void remove(const QString &key);
-Scope scope() const;
-void setArrayIndex(int i);
+void setArrayIndex(int i); // settings切换到数组的指定位置
+/*
+struct Login {
+      QString userName;
+      QString password;
+  };
+  QList<Login> logins;
+  ...
+
+  QSettings settings;
+  int size = settings.beginReadArray("logins");
+  for (int i = 0; i < size; ++i) {
+      settings.setArrayIndex(i);
+      Login login;
+      login.userName = settings.value("userName").toString();
+      login.password = settings.value("password").toString();
+      logins.append(login);
+  }
+  settings.endArray();
+生成的键:
+logins/size
+logins/1/userName
+logins/1/password
+logins/2/userName
+logins/2/password
+logins/3/userName
+logins/3/password
+*/
+
 void setFallbacksEnabled(bool b);
-void setIniCodec(QTextCodec *codec);
+bool fallbacksEnabled() const;//如果启用了回退，则返回true；否则返回false
+
+void setIniCodec(QTextCodec *codec);//默认不使用编解码器，使用标准INI转义序列对非ASCII字符进行编码
 void setIniCodec(const char *codecName);
+QTextCodec *iniCodec() const;//返回用于访问INI文件的编解码器。默认不使用编解码器，返回空指针
+
+// 将设置键的值设置为value。如果键已经存在，则会覆盖以前的值
 void setValue(const QString &key, const QVariant &value);
-Status status() const;
-void sync();
 QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
 ```
 
 ##### 静态成员函数
 
 ```c++
-Format defaultFormat();
+// 返回用于存储QSettings（QObject*）构造函数设置的默认文件格式。如果未设置默认格式，则使用QSettings:：NativeFormat
+static Format defaultFormat();
+
+// 注册自定义存储格式。成功时，返回一个特殊的Format值，然后可以将该值传递给QSettings构造函数。失败时，返回InvalidFormat
 Format registerFormat(const QString &extension, ReadFunc readFunc, WriteFunc writeFunc, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
+
+// 将默认文件格式设置为给定格式，用于存储QSettings（QObject*）构造函数的设置
 void setDefaultFormat(Format format);
+
+// 将用于存储给定格式和范围的设置的路径设置为path。格式可以是自定义格式
 void setPath(Format format, Scope scope, const QString &path);
 ```
 
