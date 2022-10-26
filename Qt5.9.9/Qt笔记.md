@@ -4183,8 +4183,6 @@ slot void setHexMode();
 slot void setOctMode();
 ```
 
-
-
 ### 3.5 常见表格文字类
 
 #### 3.5.1 QListWidget
@@ -4192,46 +4190,59 @@ slot void setOctMode();
 QListWidget 是一个方便的类，它提供类似于 QListView 提供的列表视图，但具有用于添加和删除项目的经典基于项目的界面。 QListWidget 使用内部模型来管理列表中的每个 QListWidgetItem。
 要获得更灵活的列表视图小部件，请将 QListView 类与标准模型一起使用。
 
-需要知道的属性值有3个。
-
 ```c++
-count : const int // 此属性表示列表中的项目数，包括任何隐藏项目。
-currentRow : int // 此属性表示当前项目的所在行。根据当前的选择模式，也可以选择行。
-sortingEnabled : bool // 该属性表示是否启用排序。如果该属性为true，则为列表启用排序；如果该属性为 false，则不启用排序。默认值为假。
+QListWidget *listWidget = new QListWidget(this);
+new QListWidgetItem(tr("Oak"), listWidget);
+new QListWidgetItem(tr("Fir"), listWidget);
+new QListWidgetItem(tr("Pine"), listWidget);
 ```
 
-常见的公共成员函数如下，也就是对项的处理函数。
+如果您需要在列表的特定位置插入一个新项，那么应该在没有父控件的情况下构建它。然后应该使用insertItem()函数将其放置在列表中。列表小部件将获得项目的所有权。
 
 ```c++
+QListWidgetItem *newItem = new QListWidgetItem;
+newItem->setText(itemText);
+listWidget->insertItem(row, newItem);
+```
+
+对于多个项目，可以使用insertItems()。使用count()函数可以找到列表中的项数。要从列表中删除项目，请使用takeItem()。列表中的当前项可以用currentItem()找到，也可以用setCurrentItem()。用户还可以通过使用键盘导航或单击其他项目来更改当前项目。当当前项更改时，currentItemChanged()信号将与新的当前项和先前为当前的项一起发出。
+
+公共成员函数。
+
+```c++
+int count() const;
+void setCurrentRow(int row);
+void setCurrentRow(int row, QItemSelectionModel::SelectionFlags command);
+int currentRow() const;
+int row(const QListWidgetItem *item) const;
+
+void editItem(QListWidgetItem *item);
+void sortItems(Qt::SortOrder order = Qt::AscendingOrder);
 void addItem(const QString &label);
 void addItem(QListWidgetItem *item);
 void addItems(const QStringList &labels);
-int count() const;
-QListWidgetItem *currentItem() const;
-int currentRow() const;
-void editItem(QListWidgetItem *item);
-QList<QListWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags) const;
 void insertItem(int row, QListWidgetItem *item);
 void insertItem(int row, const QString &label);
 void insertItems(int row, const QStringList &labels);
-bool isSortingEnabled() const;
+void setCurrentItem(QListWidgetItem *item);
+void setCurrentItem(QListWidgetItem *item,QItemSelectionModel::SelectionFlags command);
+QListWidgetItem *currentItem() const;
 QListWidgetItem *item(int row) const;
 QListWidgetItem *itemAt(const QPoint &p) const;
 QListWidgetItem *itemAt(int x, int y) const;
-QWidget *itemWidget(QListWidgetItem *item) const;
-void openPersistentEditor(QListWidgetItem *item);
-void removeItemWidget(QListWidgetItem *item);
-int row(const QListWidgetItem *item) const;
-QList<QListWidgetItem *> selectedItems() const;
-void setCurrentItem(QListWidgetItem *item);
-void setCurrentItem(QListWidgetItem *item,
-                    QItemSelectionModel::SelectionFlags command);
-void setCurrentRow(int row);
-void setCurrentRow(int row, QItemSelectionModel::SelectionFlags command);
-void setItemWidget(QListWidgetItem *item, QWidget *widget);
-void setSortingEnabled(bool enable);
-void sortItems(Qt::SortOrder order = Qt::AscendingOrder);
 QListWidgetItem *takeItem(int row);
+QList<QListWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags) const;
+QList<QListWidgetItem *> selectedItems() const;
+
+void setSortingEnabled(bool enable);//如果此属性为true，则为列表启用排序
+bool isSortingEnabled() const;
+
+void setItemWidget(QListWidgetItem *item, QWidget *widget);
+void removeItemWidget(QListWidgetItem *item);
+QWidget *itemWidget(QListWidgetItem *item) const;
+
+void openPersistentEditor(QListWidgetItem *item);
+void closePersistentEditor(QListWidgetItem *item);
 QRect visualItemRect(const QListWidgetItem *item) const;
 ```
 
@@ -4257,15 +4268,75 @@ void itemPressed(QListWidgetItem *item);
 void itemSelectionChanged();// 常用
 ```
 
-示例代码。
+#### 3.5.2 QListWidgetItem
+
+QListWidgetItem类提供了一个与QLlistWidget项视图类一起使用的项。
+QListWidgetItem表示QListWicket中的单个项。每个项目可以容纳多条信息，并将适当地显示它们。
+项目视图便利类使用经典的基于项目的接口，而不是纯粹的模型/视图方法。对于更灵活的列表视图小部件，请考虑将QListView类与标准模型一起使用。
+通过指定列表小部件，可以在构建列表项时将其自动插入到列表中：
 
 ```c++
-QListWidgetItem *newItem = new QListWidgetItem;
-newItem->setText(itemText);
-listWidget->insertItem(row, newItem);
+new QListWidgetItem(tr("Hazel"), listWidget);
 ```
 
-#### 3.5.2 QTreeWidget
+或者，也可以在没有父控件的情况下创建列表项，然后使用QListWidget:：insertItem()将其插入到列表中。
+列表项通常用于显示文本text()和icon()。这些是用setText()和setIcon()函数设置的。文本的外观可以使用setFont()、setForeground()和setBackground()。可以使用setTextAlignment()函数对齐列表项中的文本。工具提示、状态提示和“这是什么？”可以使用setToolTip()、setStatusTip()和setWhatsThis()将帮助添加到列表项中。
+默认情况下，项目是启用的、可选择的、可选中的，并且可以作为拖放操作的源。可以通过使用适当的值调用setFlags()来更改每个项的标志（请参阅Qt:：ItemFlags）。可以使用setCheckState()函数检查、取消检查和部分检查可检查项。相应的checkState()函数指示项目的当前检查状态。isHidden()函数可用于确定项目是否被隐藏。要隐藏项目，请使用setHidden()。
+
+枚举值。
+
+```c++
+enum QListWidgetItem::ItemType{
+    QListWidgetItem::Type
+    QListWidgetItem::UserType
+}
+```
+
+成员函数。
+
+```c++
+QListWidgetItem(QListWidget *parent = Q_NULLPTR, int type = Type);
+QListWidgetItem(const QString &text, QListWidget *parent = Q_NULLPTR, int type = Type);
+QListWidgetItem(const QIcon &icon, const QString &text, QListWidget *parent = Q_NULLPTR, int type = Type);
+
+QListWidget *listWidget() const;
+int type() const;
+
+virtual QListWidgetItem *clone() const;
+
+void setBackground(const QBrush &brush);
+QBrush background() const;
+void setCheckState(Qt::CheckState state);
+Qt::CheckState checkState() const;
+virtual void setData(int role, const QVariant &value);
+virtual QVariant data(int role) const;
+void setFlags(Qt::ItemFlags flags);
+Qt::ItemFlags flags() const;
+void setFont(const QFont &font);
+QFont font() const;
+void setForeground(const QBrush &brush);
+QBrush foreground() const;
+void setHidden(bool hide);
+bool isHidden() const;
+void setIcon(const QIcon &icon);
+QIcon icon() const;
+void setSelected(bool select);
+bool isSelected() const;
+void setSizeHint(const QSize &size);
+QSize sizeHint() const;
+void setStatusTip(const QString &statusTip);
+QString statusTip() const;
+void setText(const QString &text);
+QString text() const;
+void setTextAlignment(int alignment);
+int textAlignment() const;
+void setToolTip(const QString &toolTip);
+QString toolTip() const;
+void setWhatsThis(const QString &whatsThis);
+QString whatsThis() const;
+```
+
+#### 3.5.3 QTreeWidget
 
 QTreeWidget 类是一个方便的类，它提供了一个标准的树小部件，它具有类似于 Qt 3 中 QListView 类所使用的基于项目的经典界面。这个类基于 Qt 的模型/视图架构，并使用默认模型来保存项目，每一个都是一个QTreeWidgetItem。不需要模型/视图框架的灵活性的开发人员可以使用这个类非常容易地创建简单的分层列表。一种更灵活的方法是将 QTreeView 与标准项目模型结合起来。这允许数据的存储与其表示分离。
 
@@ -4280,53 +4351,58 @@ for (int i = 0; i < 10; ++i)
 treeWidget->insertTopLevelItems(0, items);
 ```
 
-2个主要性质。
-
-```c++
-columnCount : int // 此属性保存树小部件中显示的列数,默认情况下，此属性的值为1
-topLevelItemCount : const int // 此属性保存顶级项目的数量,默认情况下，此属性的值为0
-```
-
 常见的成员函数如下。
 
 ```c++
-void addTopLevelItem(QTreeWidgetItem *item);
-void addTopLevelItems(const QList<QTreeWidgetItem *> &items);
-void closePersistentEditor(QTreeWidgetItem *item, int column = 0);
 int columnCount() const;
 int currentColumn() const;
-QTreeWidgetItem *currentItem() const;
-void editItem(QTreeWidgetItem *item, int column = 0);
-QList<QTreeWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags, int column = 0) const;
-QTreeWidgetItem *headerItem() const;
-int indexOfTopLevelItem(QTreeWidgetItem *item) const;
-void insertTopLevelItem(int index, QTreeWidgetItem *item);
-void insertTopLevelItems(int index, const QList<QTreeWidgetItem *> &items);
-QTreeWidgetItem *invisibleRootItem() const;
-bool isFirstItemColumnSpanned(const QTreeWidgetItem *item) const;
-QTreeWidgetItem *itemAbove(const QTreeWidgetItem *item) const;
-QTreeWidgetItem *itemAt(const QPoint &p) const;
-QTreeWidgetItem *itemAt(int x, int y) const;
-QTreeWidgetItem *itemBelow(const QTreeWidgetItem *item) const;
-QWidget *itemWidget(QTreeWidgetItem *item, int column) const;
-void openPersistentEditor(QTreeWidgetItem *item, int column = 0);
-void removeItemWidget(QTreeWidgetItem *item, int column);
-QList<QTreeWidgetItem *> selectedItems() const;
 void setColumnCount(int columns);
+
 void setCurrentItem(QTreeWidgetItem *item);
 void setCurrentItem(QTreeWidgetItem *item, int column);
 void setCurrentItem(QTreeWidgetItem *item, int column, QItemSelectionModel::SelectionFlags command);
-void setFirstItemColumnSpanned(const QTreeWidgetItem *item, bool span;)
-void setHeaderItem(QTreeWidgetItem *item);
-void setHeaderLabel(const QString &label);
-void setHeaderLabels(const QStringList &labels);
-void setItemWidget(QTreeWidgetItem *item, int column, QWidget *widget);
-int sortColumn() const;
-void sortItems(int column, Qt::SortOrder order);
-QTreeWidgetItem *takeTopLevelItem(int index);
-QTreeWidgetItem *topLevelItem(int index) const;
-int topLevelItemCount() const;
-QRect visualItemRect(const QTreeWidgetItem *item) const;
+QTreeWidgetItem *currentItem() const;
+
+QTreeWidgetItem *invisibleRootItem() const;//返回树小部件的不可见根项
+void editItem(QTreeWidgetItem *item, int column = 0);//开始编辑给定列中可编辑的项目
+QList<QTreeWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags, int column = 0) const;//在给定列中使用给定标志返回与给定文本匹配的项列表
+QList<QTreeWidgetItem *> selectedItems() const;
+
+void addTopLevelItem(QTreeWidgetItem *item);
+void addTopLevelItems(const QList<QTreeWidgetItem *> &items);
+void insertTopLevelItem(int index, QTreeWidgetItem *item);
+void insertTopLevelItems(int index, const QList<QTreeWidgetItem *> &items);
+QTreeWidgetItem *takeTopLevelItem(int index);//移除树中给定索引处的顶级项并返回，否则返回0
+QTreeWidgetItem *topLevelItem(int index) const;//返回给定索引处的顶级项，如果该项不存在，则返回0
+int indexOfTopLevelItem(QTreeWidgetItem *item) const;//返回给定顶级项的索引，如果找不到则返回-1
+int topLevelItemCount() const;//此属性保存顶级项的数量,默认0
+
+QTreeWidgetItem *itemAbove(const QTreeWidgetItem *item) const;//返回给定项上方的项
+QTreeWidgetItem *itemAt(const QPoint &p) const;
+QTreeWidgetItem *itemAt(int x, int y) const;
+QTreeWidgetItem *itemBelow(const QTreeWidgetItem *item) const;//返回给定项下方的可视项
+
+QWidget *itemWidget(QTreeWidgetItem *item, int column) const;
+void setItemWidget(QTreeWidgetItem *item, int column, QWidget *widget);//设置要在给定项和列指定的单元格中显示的给定小部件
+void removeItemWidget(QTreeWidgetItem *item, int column);
+
+//如果span为true，则将给定项设置为仅显示所有列的一个部分；否则，该项将显示每列一节
+void setFirstItemColumnSpanned(const QTreeWidgetItem *item, bool span);
+bool isFirstItemColumnSpanned(const QTreeWidgetItem *item) const;
+
+void closePersistentEditor(QTreeWidgetItem *item, int column = 0);
+void openPersistentEditor(QTreeWidgetItem *item, int column = 0);//为给定列的项打开持久编辑器
+
+void setHeaderItem(QTreeWidgetItem *item);//设置树小部件的标题项
+QTreeWidgetItem *headerItem() const;
+
+void setHeaderLabel(const QString &label);//与setHeaderLabels(QStringList(label))相同
+void setHeaderLabels(const QStringList &labels);//为标签列表中的每个项目添加一列，并设置标签
+
+int sortColumn() const;//返回用于对小部件内容进行排序的列
+void sortItems(int column, Qt::SortOrder order);//根据给定列中的值按顺序对小部件中的项进行排序
+
+QRect visualItemRect(const QTreeWidgetItem *item) const;//返回项目所在的视口上的矩形
 ```
 
 主要的槽函数。
@@ -4353,90 +4429,305 @@ void itemPressed(QTreeWidgetItem *item, int column);
 void itemSelectionChanged();// 常用
 ```
 
-#### 3.5.3 QTableWidget
+#### 3.5.4 QTreeWidgetItem
+
+QTreeWidgetItem类提供了一个与QTreeWidget便利类一起使用的项。树小部件项用于保存树小部件的信息行。**行通常包含几列数据，每列数据可以包含一个文本标签和一个图标。**
+QTreeWidgetItem类是一个方便类，它取代了Qt3中的QListViewItem类。它提供了一个与QTreeWidget类一起使用的项。项通常由父项构成，父项是QTreeWidget（用于顶级项）或QTreeWidgetItem（用于树的较低级别项）。例如，下面的代码构造一个顶级项来表示世界上的城市，并将奥斯陆的条目作为子项添加
+
+```c++
+QTreeWidgetItem *cities = new QTreeWidgetItem(treeWidget);
+cities->setText(0, tr("Cities"));
+QTreeWidgetItem *osloItem = new QTreeWidgetItem(cities);
+osloItem->setText(0, tr("Oslo"));
+osloItem->setText(1, tr("Yes"));
+/*
+cities
+	oslo
+	yes
+*/
+```
+
+可以通过指定构建项目时遵循的项目，以特定顺序添加项目：
+
+```c++
+QTreeWidgetItem *planets = new QTreeWidgetItem(treeWidget, cities);
+planets->setText(0, tr("Planets"));
+```
+
+项目中的每一列都可以有自己的背景画笔，该画笔是用setBackground()函数设置的。可以使用background()找到当前背景画笔。每个列的文本标签可以用其自己的字体和笔刷呈现。这些是用setFont()和setForeground()函数指定的，并用font()和foreground()函数读取。
+顶级项与树的较低级别项之间的主要区别是顶级项没有parent()。此信息可用于区分项目之间的差异，并且在从树中插入和删除项目时知道这些信息非常有用。可以使用takeChild()移除项的子项，并使用insertChild函数在子项列表中的给定索引处插入。
+默认情况下，项目是启用的、可选择的、可选中的，并且可以作为拖放操作的源。可以通过使用适当的值调用setFlags()来更改每个项的标志（请参阅Qt:：ItemFlags）。可以使用setCheckState()函数检查和取消检查可检查项。相应的checkState()函数指示当前是否选中该项。
+
+枚举类型。
+
+```c++
+enum QTreeWidgetItem::ChildIndicatorPolicy{
+    QTreeWidgetItem::ShowIndicator//即使没有子项，也会显示此项的展开和折叠控件
+    QTreeWidgetItem::DontShowIndicator//即使有子控件，也不会显示展开和折叠控件。如果节点被强制打开，用户将无法展开或折叠项目
+    QTreeWidgetItem::DontShowIndicatorWhenChildless//如果项包含子项，则将显示用于展开和折叠的控件
+}
+enum QTreeWidgetItem::ItemType{
+    QTreeWidgetItem::Type// 默认
+    QTreeWidgetItem::UserType//自定义类型的最小值。UserType以下的值由Qt保留
+}
+```
+
+成员函数。
+
+```c++
+QTreeWidgetItem(int type = Type);
+QTreeWidgetItem(const QStringList &strings, int type = Type);
+QTreeWidgetItem(QTreeWidget *parent, int type = Type);
+QTreeWidgetItem(QTreeWidget *parent, const QStringList &strings, int type = Type);
+QTreeWidgetItem(QTreeWidget *parent, QTreeWidgetItem *preceding, int type = Type);
+QTreeWidgetItem(QTreeWidgetItem *parent, int type = Type);
+QTreeWidgetItem(QTreeWidgetItem *parent, const QStringList &strings, int type = Type);
+QTreeWidgetItem(QTreeWidgetItem *parent, QTreeWidgetItem *preceding, int type = Type);
+int type() const;
+int childCount() const;
+int columnCount() const;
+virtual QTreeWidgetItem *clone() const;
+QTreeWidget *treeWidget() const;
+QTreeWidgetItem *parent() const;
+
+int indexOfChild(QTreeWidgetItem *child) const;
+void addChild(QTreeWidgetItem *child);
+void addChildren(const QList<QTreeWidgetItem *> &children);
+void insertChild(int index, QTreeWidgetItem *child);
+void insertChildren(int index, const QList<QTreeWidgetItem *> &children);
+void sortChildren(int column, Qt::SortOrder order);//根据给定列中的值，使用给定顺序对子项进行排序
+void removeChild(QTreeWidgetItem *child);
+QTreeWidgetItem *takeChild(int index);
+QTreeWidgetItem *child(int index) const;
+QList<QTreeWidgetItem *> takeChildren();
+
+void setFirstColumnSpanned(bool span);//如果为true则将第一节设置为跨越所有列；否则显示所有项目部分
+bool isFirstColumnSpanned() const;
+void setChildIndicatorPolicy(QTreeWidgetItem::ChildIndicatorPolicy policy);//设置项目指示器策略。此策略决定何时显示树枝展开/折叠指示器。默认值为ShowForChildren
+QTreeWidgetItem::ChildIndicatorPolicy childIndicatorPolicy() const;
+void setDisabled(bool disabled);//如果禁用为true，则禁用该项；否则启用该项
+bool isDisabled() const;
+void setExpanded(bool expand);//如果expand为true，则展开项，否则折叠项
+bool isExpanded() const;
+void setBackground(int column, const QBrush &brush);
+QBrush background(int column) const;
+virtual void setData(int column, int role, const QVariant &value);
+virtual QVariant data(int column, int role) const;
+void setHidden(bool hide);
+bool isHidden() const;
+void setFlags(Qt::ItemFlags flags);
+Qt::ItemFlags flags() const;
+void setFont(int column, const QFont &font);
+QFont font(int column) const;
+void setForeground(int column, const QBrush &brush);
+QBrush foreground(int column) const;
+void setIcon(int column, const QIcon &icon);
+QIcon icon(int column) const;
+void setSelected(bool select);
+bool isSelected() const;
+void setCheckState(int column, Qt::CheckState state);
+Qt::CheckState checkState(int column) const;
+void setSizeHint(int column, const QSize &size);
+QSize sizeHint(int column) const;
+void setStatusTip(int column, const QString &statusTip);
+QString statusTip(int column) const;
+void setText(int column, const QString &text);
+QString text(int column) const;
+void setTextAlignment(int column, int alignment);
+int textAlignment(int column) const;
+void setToolTip(int column, const QString &toolTip);
+QString toolTip(int column) const;
+void setWhatsThis(int column, const QString &whatsThis);
+QString whatsThis(int column) const;
+```
+
+#### 3.5.5 QTableWidget
 
 表格小部件为应用程序提供标准表格显示设施。 QTableWidget 中的项目由 QTableWidgetItem 提供。
 如果你想要一个使用你自己的数据模型的表，你应该使用 QTableView 而不是这个类。
 可以使用所需的行数和列数构建表格小部件。
 
 ```c++
+// 创建表的2种方式
 tableWidget = new QTableWidget(12, 3, this);
 
 tableWidget = new QTableWidget(this);
 tableWidget->setRowCount(10);
 tableWidget->setColumnCount(5);
 
+// 设置指定位置的单元格的项
 QTableWidgetItem *newItem = new QTableWidgetItem(tr("%1").arg(
     (row+1)*(column+1)));
 tableWidget->setItem(row, column, newItem);
 
+// 项可以指定对齐方式、文本和文本对齐方式
 QTableWidgetItem *cubesHeaderItem = new QTableWidgetItem(tr("Cubes"));
 cubesHeaderItem->setIcon(QIcon(QPixmap(":/Images/cubed.png")));
 cubesHeaderItem->setTextAlignment(Qt::AlignVCenter);
 ```
 
-2个性质。
-
-```c++
-columnCount : int
-rowCount : int
-```
-
 常见的成员函数。
 
 ```c++
+QTableWidget(int rows, int columns, QWidget *parent = Q_NULLPTR);
+
 int column(const QTableWidgetItem *item) const;
 int columnCount() const;
+void setColumnCount(int columns);
 int currentColumn() const;
-QTableWidgetItem *currentItem() cons
-int currentRow() const;
-void editItem(QTableWidgetItem *item);
-QList<QTableWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags) const;
-QTableWidgetItem *item(int row, int column) const;
-QTableWidgetItem *itemAt(const QPoint &point) const;
-QTableWidgetItem *itemAt(int ax, int ay) const;
 int row(const QTableWidgetItem *item) const;
 int rowCount() const;
-void setColumnCount(int columns);
-void setCurrentItem(QTableWidgetItem *item);
-void setItem(int row, int column, QTableWidgetItem *item);
 void setRowCount(int rows);
-void sortItems(int column, Qt::SortOrder order = Qt::AscendingOrder);
-QTableWidgetItem *takeItem(int row, int column);
+int currentRow() const;
+
+void editItem(QTableWidgetItem *item);//开始编辑可编辑的项目
+void setItem(int row, int column, QTableWidgetItem *item);//将给定行和列的项设置为item
+void sortItems(int column, Qt::SortOrder order = Qt::AscendingOrder);//根据列和顺序对表小部件中的所有行进行排序
+QTableWidgetItem *takeItem(int row, int column);//从表中删除行和列处的项，而不删除它
+// 使用给定标志查找与文本匹配的项
+QList<QTableWidgetItem *> findItems(const QString &text, Qt::MatchFlags flags) const;
+QList<QTableWidgetItem *> selectedItems() const;//返回所有选定项的列表
+
+QTableWidgetItem *item(int row, int column) const;//返回给定行和列的项指针
+QTableWidgetItem *itemAt(const QPoint &point) const;//返回指向给定点的项的指针
+QTableWidgetItem *itemAt(int ax, int ay) const;//返回表小部件坐标系中与(ax，ay)相等的位置处的项
+
+void setHorizontalHeaderItem(int column, QTableWidgetItem *item);//将列的水平标题项设置为item
+void setHorizontalHeaderLabels(const QStringList &labels);//使用labels设置水平标题标签
+QTableWidgetItem *takeHorizontalHeaderItem(int column);//从标题中删除列处的水平标题项而不删除它
+QTableWidgetItem *horizontalHeaderItem(int column) const;//返回列的水平标题项
+void setVerticalHeaderItem(int row, QTableWidgetItem *item);//将行的垂直标题项设置为item
+void setVerticalHeaderLabels(const QStringList &labels);//使用labels设置垂直标题标签
+QTableWidgetItem *takeVerticalHeaderItem(int row);//从标题中删除row处的垂直标题项，而不删除它
+QTableWidgetItem *verticalHeaderItem(int row) const;//返回row的垂直标题项
+
+void setCurrentItem(QTableWidgetItem *item);//使用给定command将当前项设置为item
+void setCurrentItem(QTableWidgetItem *item, QItemSelectionModel::SelectionFlags command);
+QTableWidgetItem *currentItem() const;
+void setCurrentCell(int row, int column);//使用给定命令将当前单元格设置为位置（行、列）处的单元格
+void setCurrentCell(int row, int column, QItemSelectionModel::SelectionFlags command);
+
+void setItemPrototype(const QTableWidgetItem *item);//将表的项原型设置为指定项
+const QTableWidgetItem *itemPrototype() const;
+
+void openPersistentEditor(QTableWidgetItem *item);
+void closePersistentEditor(QTableWidgetItem *item);//关闭项的持久编辑器
+
+QWidget *cellWidget(int row, int column) const;
+void setCellWidget(int row, int column, QWidget *widget);//设置要在给定行和列的单元格中显示的给定小部件，将小部件的所有权传递给表,setCellWidget(row, column, new QLineEdit);
+void removeCellWidget(int row, int column);//移除由行和列指示的单元格上的小部件集
+
+void setRangeSelected(const QTableWidgetSelectionRange &range, bool select);//根据select选择或取消选择范围
+QList<QTableWidgetSelectionRange> selectedRanges() const;
+
+QRect visualItemRect(const QTableWidgetItem *item) const;//返回项目所在的视口上的矩形
+int visualColumn(int logicalColumn) const;//返回给定logicalColumn的可视列
+int visualRow(int logicalRow) const;//返回给定logicalRow的可视行
 ```
 
 常见的槽函数。
 
 ```c++
-void clear();
-void clearContents();
+void clear();//删除视图中的所有项。这也将删除所有选择和标题。如果不想删除标题，请使用QTableWidget::clearContents()表格尺寸保持不变
+void clearContents();//从视图中删除不在标题中的所有项。这也将删除所有选择。表格尺寸保持不变
 void insertColumn(int column);
 void insertRow(int row);
 void removeColumn(int column);
 void removeRow(int row);
-void scrollToItem(const QTableWidgetItem *item, QAbstractItemView::ScrollHint hint = EnsureVisible);
+void scrollToItem(const QTableWidgetItem *item, QAbstractItemView::ScrollHint hint = EnsureVisible);//如有必要，滚动视图以确保项目可见。hint参数更精确地指定了操作后项应位于的位置。
 ```
 
 常见的信号。
 
 ```c++
-
-void cellActivated(int row, int column); // 常用
-void cellChanged(int row, int column); // 常用 
-void cellClicked(int row, int column); // 常用
-void cellDoubleClicked(int row, int column); // 常用
-void cellEntered(int row, int column);
-void cellPressed(int row, int column);
-void currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn); // 常用
-void currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);// 常用
-void itemActivated(QTableWidgetItem *item);// 常用
-void itemChanged(QTableWidgetItem *item);// 常用
-void itemClicked(QTableWidgetItem *item);// 常用
-void itemDoubleClicked(QTableWidgetItem *item);// 常用
-void itemEntered(QTableWidgetItem *item);
-void itemPressed(QTableWidgetItem *item);
-void itemSelectionChanged();// 常用
+void cellActivated(int row, int column); // 当行和列指定的单元格被激活时，发出此信号
+void cellChanged(int row, int column); // 当行和列指定的单元格中的项的数据发生更改时发出此信号
+void cellClicked(int row, int column); // 每当单击表格中的单元格时，都会发出此信号
+void cellDoubleClicked(int row, int column); // 每当双击表格中的单元格时，就会发出此信号
+void cellEntered(int row, int column);//当鼠标光标进入单元格时，会发出此信号
+void cellPressed(int row, int column);//每当按下表格中的单元格时，就会发出此信号
+void currentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn); // 每当当前单元格发生变化时，就会发出此信号。previousRow和previousColumn指定的单元格是先前具有焦点的单元格，currentRow和currentColumn所指定的单元格则是新的当前单元格
+void currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);
+void itemActivated(QTableWidgetItem *item);// 当指定项目被激活时发出此信号
+void itemChanged(QTableWidgetItem *item);// 每当项目数据发生变化时，就会发出此信号
+void itemClicked(QTableWidgetItem *item);// 每当单击表中的项目时，都会发出此信号
+void itemDoubleClicked(QTableWidgetItem *item);// 每当双击表中的项目时，就会发出此信号
+void itemEntered(QTableWidgetItem *item);//当鼠标光标输入项目时，会发出此信号
+void itemPressed(QTableWidgetItem *item);//每当按下表格中的项目时，就会发出此信号
+void itemSelectionChanged();// 每当选择发生变化时，就会发出此信号
 ```
+
+#### 3.5.6 QTableWidgetItem
+
+QTableWidgetItem类提供了一个与QTableWidget类一起使用的项。表项用于保存表小部件的信息。项目通常包含文本、图标或复选框QTableWidgetItem类是一个方便类，它取代了Qt3中的QTableItem类。
+顶层项是在没有父项的情况下构造的，然后插入到由一对行号和列号指定的位置：
+
+```c++
+QTableWidgetItem *newItem = new QTableWidgetItem(tr("%1").arg(pow(row, column+1)));
+tableWidget->setItem(row, column, newItem);
+```
+
+每个项目都可以有自己的背景画笔，这是用setBackground()函数设置的。可以使用background()找到当前背景画笔。每个项目的文本标签可以用自己的字体和笔刷呈现。这些是用setFont()和setForeground()函数指定的，并用font()和foreground()函数读取。
+默认情况下，**项是启用的、可编辑的、可选择的、可选中的，并且可以用作拖放操作的源和拖放目标。**可以通过使用适当的值调用setFlags()来更改每个项的标志（请参阅Qt:：ItemFlags）。可以使用setCheckState()函数检查和取消检查可检查项。相应的checkState()函数指示当前是否选中该项。
+
+枚举类型。
+
+```c++
+enum QTableWidgetItem::ItemType{
+    QTableWidgetItem::Type//表小部件项的默认类型
+    QTableWidgetItem::UserType//自定义类型的最小值。UserType以下的值由Qt保留
+}
+```
+
+成员函数。
+
+```c++
+QTableWidgetItem(int type = Type);
+QTableWidgetItem(const QString &text, int type = Type);
+QTableWidgetItem(const QIcon &icon, const QString &text, int type = Type);
+int row() const;
+int column() const;
+int type() const;
+QTableWidget *tableWidget() const;//返回包含该项的表
+
+void setBackground(const QBrush &brush);
+QBrush background() const;
+void setForeground(const QBrush &brush);
+QBrush foreground() const;
+void setIcon(const QIcon &icon);
+QIcon icon() const;
+void setFont(const QFont &font);
+QFont font() const;
+void setStatusTip(const QString &statusTip);
+QString statusTip() const;
+void setToolTip(const QString &toolTip);
+QString toolTip() const;
+void setWhatsThis(const QString &whatsThis);
+QString whatsThis() const;
+void setText(const QString &text);
+QString text() const;
+void setTextAlignment(int alignment);
+int textAlignment() const;
+
+void setCheckState(Qt::CheckState state);//将表项的检查状态设置为state
+Qt::CheckState checkState() const;
+
+void setSizeHint(const QSize &size);//返回为表项设置的大小提示
+QSize sizeHint() const;
+
+void setSelected(bool select);
+bool isSelected() const;//如果选择了项，则返回true，否则返回false
+
+void setFlags(Qt::ItemFlags flags);//将项的标志设置为给定标志。这些决定了是否可以选择或修改项目
+Qt::ItemFlags flags() const;
+
+virtual QTableWidgetItem *clone() const;//克隆当前项
+
+virtual void setData(int role, const QVariant &value);//将给定角色的项数据设置为指定值
+virtual QVariant data(int role) const;
+```
+
+
 
 ### 3.6 常见按钮类
 
@@ -24690,6 +24981,20 @@ enum Qt::KeyboardModifier{
     Qt::GroupSwitchModifier // only win11
 }
 ```
+
+#### 16.10.12 Qt::CheckState
+
+此枚举描述可检查项、控件和小部件的状态。
+
+```c++
+enum Qt::CheckState{  
+    Qt::Unchecked
+    Qt::PartiallyChecked//如果选中了层次模型中的某些项，但不是全部子项，则可能会部分选中这些项
+    Qt::Checked
+}
+```
+
+
 
 ### 16.11 屏幕
 
