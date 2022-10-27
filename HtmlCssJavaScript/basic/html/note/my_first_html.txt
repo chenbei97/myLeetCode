@@ -1,0 +1,6 @@
+<html></html> 根标签
+<head></head> 文档的头部
+<title></title> 网页标题
+<body></body> 文档的主体
+
+<meta charset="UTF-8"> meta可以提供有关界面的元信息，位于文档的头部不包含任何内容

@@ -1,0 +1,14 @@
+<!DOCTYPE html> 文档类型声明，作用是告诉浏览器使用哪种html版本显示网页
+默认情况是使用html-5版本显示网页
+注意，这个声明要写在最前面，处于<html>标签之前
+<!DOCTYPE>本身不是一个html标签，而是一个文档类型声明标签
+
+en定义为英语，zh-CN是中文，在html的标签内的lang属性定义
+
+meta有多个属性
+1) charset 规定字符编码，常见的取值GB2312、BIG5、GBK和UTF-8
+2) content 定义与http-equiv或name属性相关的元信息
+3) http-equiv 将content属性关联到http头部
+    常见的展示信息有content-security-policy、content-type、default-style、refresh
+4) name 将content属性关联到一个名称
+    常见的展示信息有application-name、author、description、generator、keywords、viewport

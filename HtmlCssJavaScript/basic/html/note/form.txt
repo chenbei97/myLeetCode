@@ -1,0 +1,43 @@
+表单主要是为了收集用户信息
+
+表单的组成：
+    表单域
+        <form action="url" method="get" name="info">定义
+        常见属性：
+            action：属性值是url地址，指定接收和处理表单数据的服务器程序的url地址
+            method：get/post，用于设置提交表单数据的方式
+            name：指定表单的名称，区分同一界面的多个表单域
+    表单控件
+        input 输入表单元素 单标签
+            <input type="属性值" name="123"/>
+                type的取值有：
+                    button 按钮
+                    checkbox 复选框
+                    file 文件上传
+                    hidden 定义隐藏的输入字段
+                    image 图像形式的提交按钮，常用于上传头像
+                    password 密码字段
+                    radio 单选按钮 事先互斥需要让name相同
+                    reset 重置
+                    submit 提交
+                    text 单行的输入字段
+            常用属性：
+                type：定义输入类型
+                name：定义input元素名称 互斥需要name相同，复选框的话也一般要求相同，为了区分不同的输入控件也要设置名字
+                value：定义input元素值,可以用于text显示提示信息
+                checked：规定此input元素首次加载时应当被选中(复选框/单选框可用)
+                maxlength：正整数，规定输入字段中的字符的最大长度，默认20 text/password可用
+
+            <label>标签可以绑定一个表单元素，点击label标签内文本时光标/焦点就会转到对应的表单元素增加用户体验
+                label的for属性应当和相关联元素的id属性相同，2个例子：
+                    <label for="sex">用户名: </label>   定义label
+                    <input type="text" value="请输入用户名" id="username">
+
+                    <input type="radio" id="nan"> <label for="nan">男</label>
+                    <input type="radio" id="nv"> <label for="nan">女</label>
+        select 下拉表单元素
+            然后使用<option selected="selected">定义选项,可以定义默认选定的项
+        textarea 文本域元素 定义多行文本输入的空间，常见于留言板
+            属性有rows,cols定义可输入行列数
+
+    提示信息
