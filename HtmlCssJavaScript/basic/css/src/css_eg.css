@@ -1,0 +1,44 @@
+body {
+    font: 16px/28px "Microsoft YaHei"
+}
+
+h1 {
+    font-weight: normal; /*标题不加粗*/
+    text-align: center;
+}
+
+.gray {
+    color: #888888;
+    font-size: 12px;
+    text-align: center;
+}
+
+a{
+   text-decoration: none; /*去掉链接的下划线*/
+}
+
+.search{
+    color: #666;
+    width: 170px;
+}
+.btn{
+    font-weight: bold;
+}
+
+p{
+    /*首行缩进2字符*/
+    text-indent: 2em;
+}
+.img{
+    /*对于图片类型的段落居中即可*/
+    text-align: center;
+}
+
+h4{
+    text-indent: 2em;
+}
+.end{
+    color: #888888;
+    font-size: 12px;
+    text-align: right;
+}

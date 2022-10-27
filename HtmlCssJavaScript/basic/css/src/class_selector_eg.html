@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>类选择器的案例</title>
+      <style>
+        .red{
+          width: 100px;
+          height: 100px;
+          background-color: red;
+        }
+        .green{
+          width: 100px;
+          height: 100px;
+          background-color: green;
+        }
+        .height200{
+            height: 200px;
+        }
+        #西巴{
+            color: pink;
+            font-size: 20px;
+        }
+        * {
+            margin: 20px;
+            padding: 10px;
+        }
+      </style>
+  </head>
+  <body>
+    <div class="red"></div>
+    <div class="green height200"></div> <!--可以有多个类名,如果有相同的属性后者覆盖前者-->
+    <div class="red"></div>
+
+    <div id="西巴">西巴</div>
+    <!--<div id="西巴">八嘎</div>-->  <!--id不允许相同-->
+
+    <div>C++</div>
+    <span>Html</span> &nbsp;<span>Css</span> &nbsp;<span>JavaScript</span> <br>
+    <ul>
+        <li>python</li>
+        <li>xml</li>
+        <li>matlab</li>
+    </ul>
+  </body>
+</html>
