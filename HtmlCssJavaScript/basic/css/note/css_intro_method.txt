@@ -1,0 +1,17 @@
+
+分为行内样式表、内部样式表和外部样式表
+
+即行内式、嵌入式和链接式
+
+行内式：
+    借助属性style来写，适合简单样式，且优先级最高
+    <div style="color: green;font-size: 20px;">5645465</div>
+嵌入式：
+    都写在style内部，style一般放在head标签内
+    但是没有实现结构和样式完全分离，一般是练习使用的方式
+    <style></style>
+链接式：
+    实际开发常用,css文件引入
+    新建.css文件，把所有css代码放入此文件
+    然后在html使用link标签引入,rel要指定引入的是样式表
+    <linc=k rel="stylesheet" href="url">

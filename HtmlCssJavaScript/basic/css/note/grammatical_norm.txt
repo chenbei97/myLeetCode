@@ -1,0 +1,27 @@
+语法规范:
+    由选择器和一条或多条声明构成,每条声明使用分号分开,是一个键值对
+    h1 {color:red; font-size:25px;}
+    在<style></style>内部设定
+
+1）样式格式书写
+    ① 紧凑格式
+    h3 {color: deeppink; font-size: 20px;}
+    ② 展开格式 √
+    h3 {
+        color: deeppink;
+        font-size: 20px;
+    }
+2）样式大小写风格
+    最好使用小写
+    h3 { √
+        color: pink;
+    }
+    H3 {
+        COLOR: PINK;
+    }
+3）样式空格风格
+    ① 属性值前面,冒号后边有个空格
+    ② 选择器和花括号之间存在空格
+    h3 {
+        color: pink;
+    }

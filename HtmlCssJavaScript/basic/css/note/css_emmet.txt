@@ -1,0 +1,22 @@
+
+
+emmet语法前身是zen coding，它使用缩写提高html/css的编写速度
+
+html快速语法
+1）直接输入标签名，输入tab即可自动生成成对的标签
+2）多个标签 输入div*3+tab即可快速生成
+3）父子关系的，可以用>， 例如ul>li + tab 注意ul和li之间没空格
+4）兄弟关系，使用+ ，div+p+tab
+5）带class/id属性的，直接写div.demo + tab=> <div class="demo"></div>
+    或者 div#two +tab => <div id="two"></div>
+6）如果生成的div类名有顺序，可以使用自增符号$ div{item$}*5
+7）如果想要在生成的标签内部些内容可以使用{}
+
+css快速语法其实代码补全也可以了
+
+格式化代码: webstorm 使用快捷键ctrl+alt+l 如果是vscode可以shift+alt+f或右键选择
+
+vscode可以在设置搜索emmet.include，然后添加语句：
+editor.formatOnType true
+editor.formatOnSave true
+就可以自动化格式代码了

@@ -1,0 +1,26 @@
+
+font-family: Arial,宋体
+
+字体之间使用英文逗号隔开,尽量使用系统默认字体
+
+有多个字体时按优先级来,如果没有Arial字体就用宋体
+
+font-size 定义字体大小，谷歌默认16px
+
+font-wight 文本粗细 700=bold 400=normal 在100-900范围内 数字不跟单位
+        和<h> <strong>标签一起使用
+font-style 文本正常或斜体 和<em>斜体标签使用
+
+font有复合属性可以简写，必须按照风格、加粗、字体大小和字体来写
+font: italic 700 16px "Times New Roman";
+风格、加粗可以不要，会取默认值，但是字体大小和字体必须有，否则font不起作用
+
+文本属性：文本颜色、对齐文本、装饰文本、文本缩进和行间距等
+color: red | #ff0000 | rgb(255,0,0)
+text-align: center | left | right 设置水平对齐方式
+text-decoration: none | underline | overline | line-through  添加下划线、删除线和上划线等
+            a {text-decoration: none;} 可以取消链接的下划线
+text-indent: 20px | 2em 指定首行缩进,em是当前元素1个文字的大小是个相对单位,表示缩进2个字
+line-height: normal 行间距 = 上间距+文本高度+下间距 一般是 5+5+16=26
+
+
