@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>表格的操作</title>
+    </head>
+    <body>
+        <table border="1" width="500" height="249" align="center">
+            <tr>
+                <td>1.1</td>
+                <td colspan="2">1.2</td>
+                <!--<td></td>--> <!--colspan创建了横跨2个单元格的大格子,所以要删除多余的单元格-->
+            </tr>
+
+            <tr>
+                <td rowspan="2"><br>2.1</td> <!--借助br能够产生跨行的视觉效果-->
+                <td>2.2</td>
+                <td>2.3</td>
+            </tr>
+
+            <tr>
+                <td rowspan="2" colspan="2"><br>3</td><!--借助br能够产生跨行的视觉效果-->
+            </tr>
+
+            <tr>
+                <td>4</td>
+            </tr>
+        </table>
+    </body>
+</html>

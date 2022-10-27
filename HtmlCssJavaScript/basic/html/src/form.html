@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>表单</title>
+    </head>
+
+    <body>
+        <form action="info.php" method="post" name="info">
+            按钮: <input type="button" value="获取短信" /> <br/>
+            复选框: 吃饭 <input type="checkbox" checked="checked" name="习惯"/>
+                   睡觉 <input type="checkbox" name="习惯"/> <br/>
+            选择文件: <input type="file" /> <br/>
+            隐藏文字: <input type="hidden" /> <br/>
+            图像: <input type="image" /> <br/>
+            密码: <input type="password" /> <br/>
+            男 <input type="radio" name="sex" checked="checked" id="sex"/>女 <input type="radio" name="sex" /><br/>
+            重置: <input type="reset" /> <br/>
+            提交: <input type="submit" /> <br/>
+            文本: 用户名 <input type="text" maxlength="5" value="请输入用户名"/> <br/><br/>
+
+            <label for="username">用户名: </label>
+            <input type="text" value="请输入用户名" id="username"> <br/>
+
+            <input type="radio" id="nan"> <label for="nan">男</label>
+            <input type="radio" id="nv"> <label for="nv">女</label> <br/> <br/>
+
+            城市下拉菜单： <select>
+                    <option>北京</option><option selected="selected">上海</option><option>南京</option></select><br/><br/>
+            留言文本域：<textarea rows="20" cols="30">请输入您的留言</textarea>
+
+        </form>
+    </body>
+</html>

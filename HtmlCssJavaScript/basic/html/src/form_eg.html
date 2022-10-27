@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>表格列表和表单的综合案例</title>
+    </head>
+    <body>
+        <h4>青春</h4>
+        <table width="500" border="1">
+            <!--第一行-->
+            <tr>
+                <td>性别: </td>
+                <td>
+                    <input type="radio" name="sex" id="man" checked="checked">
+                        <label for="man">
+                            <img src="../img/man.png" width="16" height="16"> 男
+                        </label>
+                    <input type="radio" name="sex" id="woman">
+                        <label for="woman">
+                            <img src="../img/woman.png" width="16" height="16"> 女
+                        </label>
+                </td>
+            </tr>
+            <!--第二行-->
+            <tr>
+                <td>生日:</td>
+                <td>
+                    <select> <!--年份-->
+                        <option>--请选择年份--</option>
+                        <option>1996</option>
+                        <option>1997</option>
+                        <option>1998</option>
+                        <option>1999</option>
+                    </select> &nbsp;
+                    <select> <!--月份-->
+                        <option>--请选择月份--</option>
+                        <option>9</option>
+                        <option>10</option>
+                        <option>11</option>
+                        <option>12</option>
+                    </select> &nbsp;
+                    <select> <!--日期-->
+                        <option>--请选择日期--</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                    </select>
+                </td>
+            </tr>
+            <!--第三行-->
+            <tr>
+                <td>所在地区:</td>
+                <td><input type="text" value="请输入所在地区"></td>
+            </tr>
+            <!--第四行-->
+            <tr>
+                <td>婚姻状况:</td>
+                <td>
+                    <input type="radio" name="marry" checked="checked"> 未婚
+                    <input type="radio" name="marry"> 已婚
+                    <input type="radio" name="marry"> 离婚
+                </td>
+            </tr>
+            <!--第五行-->
+            <tr>
+                <td>学历:</td>
+                <td>
+                    <select>
+                        <option>硕士</option>
+                        <option>本科</option>
+                        <option>大专</option>
+                        <option>中专</option>
+                        <option>小学</option>
+                    </select>
+                </td>
+            </tr>
+            <!--第六行-->
+            <tr>
+                <td>喜欢的类型:</td>
+                <td>
+                    <input type="checkbox" name="type"> 有钱
+                    <input type="checkbox" name="type"> 180
+                    <input type="checkbox" name="type"> 180
+                    <input type="checkbox" name="type" checked="checked"> 都喜欢
+                </td>
+            </tr>
+            <!--第七行-->
+            <tr>
+                <td>个人介绍</td>
+                <td>
+                    <textarea width="600" height="100">个人简介</textarea>
+                </td>
+            </tr>
+            <!--第八行-->
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" value="免费注册">
+                </td>
+            </tr>
+            <!--第九行-->
+            <tr>
+                <td></td>
+                <td>
+                    <input type="checkbox" checked="checked"> 我同意注册条款和会员加入标准
+                </td>
+            </tr>
+            <!--第十行-->
+            <tr>
+                <td></td>
+                <td>
+                    <a href="#">我是会员,立即登录</a>
+                </td>
+            </tr>
+            <!--第十一行-->
+            <tr>
+                <td></td>
+                <td>
+                    <h5>我承诺</h5>
+                    <ul>
+                        <li>已年满18岁</li>
+                        <li>真诚寻找另一半</li>
+                        <li>无违法犯罪记录</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>
