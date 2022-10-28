@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>css_three_attributes</title>
+  <style>
+      div{
+        color: red;
+      }
+      div{ /*就近原则，层叠性，覆盖*/
+          color: pink !important; /*最高优先级*/
+          font-family: "Times New Roman",serif ;
+          font-size: 12px;
+      }
+      body{
+          font: 12px/1.5 "Microsoft YaHei";
+      }
+
+      #demo{
+          color: red;
+      }
+      .test{
+          color: blue;
+      }
+
+      ul li { /*权重是ul的+li的=0,0,0,1+0,0,0,1=0,0,0,2*/
+          color: green;
+      }
+      li{ /*权重是0,0,0,1，所以执行上边的*/
+          color: blue;
+      }
+  </style>
+</head>
+<body>
+  <div>
+      sdfsfshfjksdfh
+      <p>464654654654654</p> /*继承性,p继承了div*/
+
+      这里可以看到!important大于style的优先级大于id大于class
+      <div class="test" id="demo" style="color: purple">是多久啊合适的借口</div>
+
+      <ul>
+          <li>123</li>
+          <li>123</li>
+          <li>123</li>
+      </ul>
+  </div>
+</body>
+</html>

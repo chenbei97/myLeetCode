@@ -3,8 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <title>复合选择器</title>
-</head>
-<body>
+    <style>
+        /*把ol的li改成pink*/
+        ol li{
+            color: deeppink;
+        }
+        ul li{
+            color: green;
+        }
+        #ol2{  /*后代还可以是id名*/
+            color: red;
+        }
+        ol li a{ /*只要是后代即可*/
+            text-decoration: none;
+        }
+        .ul2 li a{  /*后代还可以是类名*/
+            text-decoration: none;
+            color: aqua;
+        }
 
-</body>
+        .nav a{ /*如果使用这种方式,div的儿子和孙子a都会变成蓝色*/
+            color: blue;
+        }
+        .nav > a{ /*但是只是希望第一个儿子是紫色,需要使用子元素选择器*/
+            color: blueviolet;
+        }
+
+        .baidu-aoyou ul li>a{
+            color: red;
+        }
+
+        .class > a{
+            color: violet;
+        }
+
+        div,
+        p{
+            color: pink;
+        }
+
+        div,
+        p,
+        .pig li{
+            color:blue;
+        }
+
+        /*链接伪类选择器*/
+        a:link{ /*未访问的链接*/
+            color: gray;
+        }
+        a:visited{ /*已访问的链接*/
+            color: orange;
+        }
+        a:hover{ /*悬浮链接*/
+            color: blue;
+        }
+        a:active{ /*鼠标点击未弹起*/
+            color: green;
+        }
+
+        input:focus{ /*focus伪类选择器*/
+            background-color: yellow;
+        }
+    </style>
+</head>
+    <body>
+        <ol>
+            <li id="ol1">我是ol的孩子1</li>
+            <li id="ol2">我是ol的孩子2</li>
+            <li><a href="#">我是链接</a></li>
+        </ol>
+        <ul>
+            <li>我是ul的孩子1</li>
+            <li>我是ul的孩子2</li>
+            <li><a href="#">我是链接</a></li>
+        </ul>
+        <ul class="ul2">
+            <li>我是ul的孩子1</li>
+            <li>我是ul的孩子2</li>
+            <li><a href="#">我是链接</a></li>
+        </ul>
+
+        <div class="nav">
+            <a href="#">我是儿子</a>
+            <p><a href="#">我是孙子</a></p>
+        </div>
+
+        <div class="baidu-aoyou"> <!--把下面链接文字修改为红色 后代选择器-->
+            <ul>
+                <li><a href="#">百度</a></li>
+                <li><a href="#">遨游</a></li>
+            </ul>
+        </div>
+
+        <div class="class">
+            <a href="#">肘子</a> <!--把肘子改成紫色 子代选择器-->
+            <ul>
+                <li><a href="#">猪头</a></li>
+                <li><a href="#">猪尾巴</a></li>
+            </ul>
+        </div>
+
+        <div>胸大</div> <!--把胸大和熊二改为粉色 并集选择器-->
+        <p>熊二</p>
+        <span>光头强</span>
+        <ui class="pig"> <!--把胸大和熊二改为红色，小猪一家改为蓝色-->
+            <li>小猪佩奇</li>
+            <li>猪爸爸</li>
+            <li>猪妈妈</li>
+        </ui>
+
+
+        <a href="#">网易邮箱</a> <br> <!--链接伪类选择器-->
+
+        <input type="button" value="激活"> <!--focus伪类选择器-->
+        <input type="checkbox" checked="checked" value="复兴">
+        <input type="text" value="4234324">
+    </body>
 </html>

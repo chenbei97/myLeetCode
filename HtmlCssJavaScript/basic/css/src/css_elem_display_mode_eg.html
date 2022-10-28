@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>简洁版小米侧边栏</title>
+      <style>
+          a {
+            display: block;
+            width: 220px;
+            height: 40px;
+            background-color: rgb(83,87,88);
+            font-size: 16px;
+            color: #fff;
+            text-decoration: none;
+            text-indent: 2em;
+            line-height: 40px; /*可以让文字看起来垂直居中,行高=高*/
+              /*行高=上间隙+文字本身高度+下间隙，这样可以让行高的上下间隙把文字挤到中间
+              如果行高小于盒子高度，文字偏上，否则文字偏下*/
+          }
+          a:hover{
+            background-color: orange;
+          }
+      </style>
+  </head>
+  <body>
+<!--      把链接转为块级元素，独占一行可以设置高度和宽度
+      鼠标经过链接借助链接伪状态选择器的hover设置背景颜色-->
+
+      <a href="#">手机 电话卡</a>
+      <a href="#">电视 盒子</a>
+      <a href="#">笔记本 平板</a>
+      <a href="#">出行 穿戴</a>
+      <a href="#">智能 路由器</a>
+      <a href="#">健康 儿童</a>
+      <a href="#">耳机 音响</a>
+  </body>
+</html>

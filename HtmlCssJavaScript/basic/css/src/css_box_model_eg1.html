@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>css_box_model_eg1</title>
+      <style>
+          * {
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            background-color: #f5f5f5;
+          }
+          .box {
+            width: 298px;
+            height: 485px;
+            background-color: #fff;
+            margin: 100px auto;
+          }
+          .box img{
+              width: 100%; /*img和box的宽度相同*/
+              height: 265px;
+          }
+          .box p{
+              height: 70px;
+              font-size: 16px;
+              /*因为段落没有width属性 padding不会影响盒子的宽度*/
+              padding: 0 28px;
+              margin-top: 30px;
+          }
+          .box .appraise {
+              font-size: 12px;
+              color: gray;
+              padding: 0 28px;
+              margin-top: 20px;
+          }
+          .box .info h4 {
+                display: inline-block; /*这样可以和span在一行*/
+                font-weight: 400;
+          }
+          .box .info {
+              font-size: 14px;
+              margin-top: 15px;
+              padding: 0 28px;
+          }
+          .box .info em {
+              font-style: normal;
+              color: #ebe4e0;
+              margin: 0 6px 0 15px;
+          }
+          .box .info span {
+              color: orange;
+          }
+          .box .info h4 a {
+              text-decoration: none;
+          }
+      </style>
+  </head>
+  <body>
+     <div class="box">
+         <img src="../img/box.jpg" alt=""缺省>
+         <p class="review">真牛逼，确实牛了个逼。嘎巴嘎巴的，西八岁</p>
+         <div class="appraise">来自于日本鬼子的评价</div>
+         <div class="info">
+             <h4><a href="#">撒旦士大夫石帆胜丰我问</a></h4>
+             <em>|</em>
+             <span> 99.9元</span>
+         </div>
+     </div>
+  </body>
+</html>

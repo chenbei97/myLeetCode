@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>盒子模型</title>
+    </head>
+    <style>
+        * { /*自定义风格要清除内外边距*/
+            padding: 0;
+            margin: 0;
+        }
+        div{
+            width: 300px;
+            height: 200px;
+            border-width: 5px;
+            border-color: blueviolet;
+            border-style: groove;
+            /*简写： border: 1px solid red; 没有顺序*/
+
+            padding-left: 20px;
+            padding-top: 30px;
+
+            /*margin:20px;*/
+            margin-left: auto; /*可以实现居中效果*/
+            margin-right: auto;
+
+            text-align: center;
+        }
+        table{
+            width: 500px;
+            height: 249px;
+            text-align: center;
+        }
+        th{
+            height: 35px;
+        }
+        table,
+        td,
+        th{
+            border: 1px solid red;
+            border-collapse: collapse;
+            font-size: 20px;
+        }
+    </style>
+    <body>
+        <div>边框士大夫但是</div>
+        <div>边框士大夫但是</div>
+        <table border="1">
+            <thead>
+            <tr>
+                <th>排名</th>
+                <th>关键词</th>
+                <th>趋势</th>
+                <th>搜索</th>
+                <th>相关链接</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>123</td>
+                    <td>123</td>
+                    <td>213</td>
+                    <td>324</td>
+                    <td>214</td>
+                </tr>
+                <tr>
+                    <td>123</td>
+                    <td>123</td>
+                    <td>213</td>
+                    <td>324</td>
+                    <td>214</td>
+                </tr>
+                <tr>
+                    <td>123</td>
+                    <td>123</td>
+                    <td>213</td>
+                    <td>324</td>
+                    <td>214</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

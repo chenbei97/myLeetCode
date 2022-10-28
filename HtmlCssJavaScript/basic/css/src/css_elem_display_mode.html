@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>css的元素显示模式</title>
+        <style>
+            div{
+                width: 400px;
+                height: 50px;
+                background-color: pink;
+                display: inline;
+            }
+            span{
+                background-color: hotpink;
+                width: 100px; /*无效设置*/
+                height: 100px; /*无效设置*/
+                display: inline-block;
+            }
+            div img{
+                width: 800px;
+                height: 600px;
+                background-color: gray;
+            }
+
+            .jinxing{
+                display: block;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            独占一行的div元素
+            <div>可以继续放置块级元素</div>
+            <img src="../img/css_eg_1.jpg" alt="缺省">
+            <strong>譬如的衣服</strong>
+            <s>这是s</s>
+            <a href="#">放置行内元素也可以</a>
+        </div>
+
+        <a href="#" class="jinxing">金星阿姨</a> <!--行内元素转为块元素-->
+    </body>
+</html>
