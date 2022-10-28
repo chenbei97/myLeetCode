@@ -36,4 +36,40 @@
         介绍emmet的基本语法
 
 ## compound_selector
-        复合选择器的说明
+        说明复合选择器的说明
+
+## css_elem_display_mode
+        说明css的元素显示模式（分类和转换）
+
+## css_elem_display_mode_eg
+        一个小米侧边栏的例子
+    
+## css_background
+        css的背景属性
+
+## css_background_eg
+        关于背景的案例
+
+## css_three_attributes
+        css的三大特性
+
+## css_box_model
+        盒子模型
+        盒子模型的4个组成部分
+        边框复合写法给元素添加边框
+        计算盒子的实际大小
+        利用盒子模型布局模块
+        给盒子设置圆角边框、阴影
+        给文字添加阴影
+
+## css_box_model_eg1 
+        盒子模型的案例1
+
+## css_box_model_eg2
+        盒子模型的案例2
+
+## css_border_radius
+        圆角边框
+
+## css_box_text_shadow
+        盒子和文字阴影

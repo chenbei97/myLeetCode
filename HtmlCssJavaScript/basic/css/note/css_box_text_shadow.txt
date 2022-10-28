@@ -1,0 +1,12 @@
+
+使用box-shadow添加盒子阴影
+
+box-shadow: h-shadow v-shadow bluer spread color inset;
+分别设置水平、垂直阴影位置，可以负值且必须
+然后就是模糊距离、阴影尺寸、阴影颜色和是否将外部阴影outset改为内部阴影
+
+盒子阴影不占用控件，不会影响其他盒子派略
+默认是外阴影，但是不可以写这个单词，否则导致阴影无效
+
+文字阴影是text-shadow
+类似的有h-shadow v-shadow blur 和color

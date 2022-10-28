@@ -1,0 +1,17 @@
+
+
+背景属性可以设置背景颜色、背景图片、背景平铺、背景图片位置和背景图像固定等
+
+background-color : color | transparent;
+background-image : none | url("../img/css_eg_1.jpg");
+background-repeat: repeat | repeat-x | repeat-y | no-repeat; 平铺
+background-position: center | left | right | top | bottom ;  (x y)指定水平和垂直2个方向
+                    如果只指定1个，第2个默认center
+                    或者 20px 50px 距离左边和上边的边距
+background-attachment: fixed | scroll; 图片是否固定或可以滑动
+
+背景也有复合写法，不过这个没有顺序要求，一般的顺序是
+背景颜色-图片地址-背景平铺-是否滚动-背景位置
+
+背景颜色半透明的设置：
+    background-color: rgba(0,0,0,0.2);

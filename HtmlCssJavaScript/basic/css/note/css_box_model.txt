@@ -1,0 +1,63 @@
+
+盒子模型+浮动+定位
+
+网页布局的本质：
+1. 准备好相关的网页元素，网页元素都是盒子
+2. 使用css设置好盒子样式，然后摆放到相应位置（核心css摆盒子）
+3. 盒子里面装内容
+
+盒子 = 外边距 + 边框 + 内边距 + 实际内容
+    = margin + border + padding + content
+
+外边距：两个盒子之间的距离
+    margin: px;
+    简写的含义和padding意义相同
+
+    可以实现块盒子水平居中：但盒子必须制定了宽度，同时盒子左右的外边距设为auto
+    margin-left: auto; margin-right:auto ;
+    margin:auto; 全部auto
+    margin: 0 auto; 上下0,左右auto
+
+    如果是行内元素或者行内块元素水平居中，设置text-align:center即可
+
+    垂直外边距定义时可能会出现外边距的合并，例如2个上下块元素
+    上边的块有margin-bottom=10px，下边的块有margin-top=20px
+    那么2个块之间的距离不是30px，而是取较大者，所以一般尽可能是只给一个盒子添加margin值
+
+    还有个问题，如果是嵌套关系的块元素，也就是盒子里有个盒子
+    外边的盒子有上边距，同时里边盒子也有上边距（到外部盒子的距离）
+    那么这个时候外边的盒子会塌陷较大的外边距
+    解决方案：①可以为父元素定义上边框②为父元素定义上内边距③为父元素添加overflow:hidden
+
+边框：border : border-width || border-style || border-color
+    边框粗细 + 边框样式 + 边框颜色
+    style: none|hidden|groove|dotted|dashed|double|solid|ridge|inset|outset
+    简写： border: 1px solid red; 没有顺序
+
+    特别的针对表格的细线边框：border-collapse 控制相邻单元格的边框
+    border-collapse: collapse; 可以让相邻单元格有共同的边框
+
+    边框会影响盒子的实际大小，所以测量盒子大小时不量边框
+    如果测量的时候包含边框，则需要width/height减去边框宽度
+
+内边距：边框和内容之间的距离
+       padding: px
+       简写的时候，数字个数不同，含义不同，按照顺时针也就是上、右、下、左
+       padding:5px;全部5像素
+       padding:5px 10px;上下5 左右10
+       padding:5px 10px 20px;上5 左右10 下20
+       padding:5px 10px 20px 30px;上5 右10 下20 左30
+
+       padding也影响盒子大小，如果width和height已经固定，改变padding会影响实际大小
+
+实际内容：
+       文字有实际的大小
+
+
+清除内外边距：网页元素很多带有默认的内外边距，不同浏览器默认的也不一致
+所以先清除网页元素的内外边距很重要
+* {
+    padding: 0;
+    margin: 0;
+}
+行内元素尽量只设置左右内外边距，不要设置上下内外边距，如果是块级和行内块元素可以设置上下
