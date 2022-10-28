@@ -1264,6 +1264,30 @@ net stop mysql80
 链接：https://pan.baidu.com/s/1bLYgRoAI5IFwnuosVzoXyQ 
 提取码：47cw
 
+## 安装WebStorm
+
+下载地址：[WebStorm: The Smartest JavaScript IDE, by JetBrains](https://www.jetbrains.com/webstorm/)
+
+激活软件同[安装DataGrip](#安装DataGrip)。
+
+## 安装Clion
+
+下载地址：[CLion: A Cross-Platform IDE for C and C++ by JetBrains](https://www.jetbrains.com/clion/)
+
+激活软件同[安装DataGrip](#安装DataGrip)。
+
+## 安装snipaste
+
+下载地址：[Snipaste](https://www.snipaste.com/)
+
+无需安装，主要的使用方式：
+
+fn+f1：截图
+
+fn+f3：截图文件粘在屏幕上，或者ctrl+t，取决于电脑的注册快捷键是否被占用
+
+esc：停止显示图片
+
 ## 安装向日葵
 
 下载地址：[向日葵远程控制app官方下载 - 贝锐向日葵官网 (oray.com)](https://sunlogin.oray.com/download?categ=personal)
