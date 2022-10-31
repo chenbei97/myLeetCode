@@ -1276,6 +1276,46 @@ net stop mysql80
 
 激活软件同[安装DataGrip](#安装DataGrip)。
 
+Clion配置Qt的第一步是，选择好前缀。
+
+![clion-qt-cmake-prefix.jpg](clion-qt-cmake-prefix.jpg)
+
+第二步，设置里配置工具栏和cmake。
+
+![clion-qt-toolchain.jpg](clion-qt-toolchain.jpg)
+
+注意，工具集是Qt安装目录Tools下，然后C和C++的编译器是Qt带的，而不是自己可能自带的mingw编译器。
+
+至于cmake可以使用clion捆绑的也可以使用自己下载的。
+
+![clion-cmake.jpg](clion-cmake.jpg)
+
+之后就是配置外部工具的事。
+
+![clion-externel-designer.jpg](clion-externel-designer.jpg)
+
+```powershell
+E:\Qt5.9.9\5.9.9\mingw53_32\bin\designer.exe
+$FileName$
+$FileDir$ 
+```
+
+![clion-externel-uic.jpg](clion-externel-uic.jpg)
+
+```powershell
+E:\Qt5.9.9\5.9.9\mingw53_32\bin\uic.exe
+$FileName$ -o ui_$FileNameWithoutExtension$.h
+$FileDir$
+```
+
+最后一步，记得把下方的路径添加到环境变量，否则编译成功但是运行不成功。
+
+```powershell
+E:\Qt5.9.9\5.9.9\mingw53_32\bin
+```
+
+参考配置链接：[CLion2021.2配置qt环境](https://blog.csdn.net/Dusk_Clouds/article/details/120791223)
+
 ## 安装snipaste
 
 下载地址：[Snipaste](https://www.snipaste.com/)
