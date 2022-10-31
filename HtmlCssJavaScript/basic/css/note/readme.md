@@ -73,3 +73,12 @@
 
 ## css_box_text_shadow
         盒子和文字阴影
+
+## css_float
+        浮动特性
+
+## css_float_eg1-css_float_eg4
+        浮动特性的案例
+
+## css_clear_float
+        清除浮动

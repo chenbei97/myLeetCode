@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>清除浮动</title>
+    <style>
+
+        .clearfix :before,
+        .clearfix:after {
+            content: "";
+            display: table;
+        }
+
+        .clearfix:after{
+            clear: both;
+        }
+
+        .clearfix {
+            *zoom:1;
+        }
+        /*方法3*/
+        /*.clearfix:after{*/
+        /*    content: "";*/
+        /*    display: block;*/
+        /*    height: 0;*/
+        /*    clear: both;*/
+        /*    visibility: hidden;*/
+        /*}*/
+
+        /*.clearfix {*/
+        /*    !*IE6、7专有*!*/
+        /*    *zoom: 1;*/
+        /*}*/
+
+        .box {
+            /*overflow: hidden;*/ /*方法2：父级元素添加overflow属性清除浮动*/
+            width: 800px;
+            border: 1px solid blue;
+            margin: 0 auto;
+        }
+
+        .damao {
+            float: left;
+            width: 300px;
+            height: 200px;
+            background-color: purple;
+        }
+
+        .ermao {
+            float: left;
+            width: 200px;
+            height: 200px;
+            background-color: pink;
+        }
+        .footer {
+            height: 200px;
+            background-color: black;
+        }
+
+        .clear {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="box clearfix"> <!--方法3-->
+    <!--<div class="box">-->
+        <div class="damao">大毛</div>
+        <div class="ermao">二毛</div>
+        <div class="ermao">二毛</div>
+        <div class="ermao">二毛</div>
+        <div class="ermao">二毛</div>
+        <!--<div class="clear"></div>--> <!--方法1：添加新的空标签用于清除浮动-->
+    </div>
+    <div class="footer"></div>
+</body>
+</html>

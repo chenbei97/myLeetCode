@@ -1,0 +1,39 @@
+清除浮动：
+
+1. 额外标签法（隔墙法），是W3C推荐的做法
+    在浮动元素末尾添加一个空的标签，例如<div style=" clear:both"></div>
+    或者其他标签<br />等
+    通俗易懂，但是添加许多无意义的标签，结构化比较差
+    要求这个新的空标签必须是块级元素
+
+2. 父级添加overflow属性
+    将属性值设为hidden、auto或scroll，注意是给父元素
+    优点很简洁，但是无法显示溢出的部分
+3. 父级添加after伪元素
+    .clearfix:after{
+        content: "";
+        display: block;
+        height: 0;
+        clear: both;
+        visibility: hidden;
+    }
+
+    .clearfix {
+        /*IE6、7专有*/
+        *zoom: 1;
+    }
+4. 父级添加双伪元素
+    照顾低版本的浏览器
+    .clearfix :before,
+    .clearfix:after {
+        content: "";
+        display: table;
+    }
+
+    .clearfix:after{
+        clear: both;
+    }
+
+    .clearfix {
+        *zoom:1;
+    }
