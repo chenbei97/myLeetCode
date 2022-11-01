@@ -1,0 +1,348 @@
+. {
+    margin: 0;
+    padding: 0;
+}
+
+.w {
+    width: 1600px;
+    margin: auto;
+}
+
+li { /*列表类型的都去掉项目符号*/
+    list-style: none;
+}
+
+a { /*链接都去除下划线*/
+    text-decoration: none;
+}
+
+.clearfix:before, /*万能清除浮动的代码*/
+.clearfix:after {
+    content: "";
+    display: table;
+}
+.clearfix:after {
+    clear: both;
+}
+.clearfix {
+    *zoom:1;
+}
+
+.body { /*整个背景颜色*/
+    background-color: #f3f5f7;
+    /*height: 8000px;*/
+}
+
+/*（1）第一部分：头部的制作*/
+.header {
+    height: 54px; /*logo图片的高度*/
+    margin: 32px auto; /*上下32px左右自动,注意如果左右给了会覆盖掉w*/
+}
+
+.logo { /*logo图片的大小*/
+    float: left; /*这里要给浮动,否则只有nav给浮动不会影响图片的标准流,所以图片给了浮动才能成为一行*/
+    width: 227px; /*不加浮动的图片是独占一行的标准流*/
+    height: 54px;
+}
+
+.nav {
+    /*导航栏可以不给宽度，将来可以继续添加其余文字*/
+    float: left; /*块级元素想在同一行需要float*/
+    margin-left: 100px; /*导航栏到图片的距离测量是100px*/
+}
+
+/*现在导航栏的3行文字怎么放在一行，让li浮动还是让链接a浮动？*/
+/*答案是要给li加浮动，因为li是块级元素，需要1行独占显示，加了浮动就可以同时成为一行*/
+/*而a是包含于li的，跟随父元素*/
+.nav ul li {
+    float: left;
+    margin: 0 20px; /*li之间上下是0,左右间距20px*/
+}
+
+.nav ul li a {
+    display: block; /*转为块级元素使高度有意义*/
+    height: 30px; /*文字高度30，但是a是行内元素给高度没有用，所以需要把a转为块级元素*/
+    padding: 0 10px; /*上下0左右10px 因为导航栏文字不一样多，所以给链接a左右padding撑开盒子而不是指定宽度*/
+    text-decoration: none; /*去除下划线*/
+    line-height: 30px; /*和height相同让文字垂直居中*/
+    font-size: 20px;
+    color: #050505;
+}
+
+.nav ul li a:hover { /*经过导航栏的文字有下划线的效果*/
+    border-bottom: 2px solid #00a4ff;
+    color: #00a4ff; /*链接文字颜色也是#00a4ff*/
+}
+
+.search {
+    float: left;
+    width: 460px; /*测量的输入框实际宽度*/
+    height: 54px; /*和logo图片高度保持一致*/
+    margin-left: 100px;
+    margin-right: 150px;
+}
+
+.search input { /*input、单元格等属于行内块元素*/
+    float: left;
+    width: 380px;
+    height: 52px; /*高度减去边框像素*/
+    border: 1px solid #00a4ff;
+    background-color: #ffffff;
+    border-right: 0;
+    color: #bfbfbf;
+    font-size: 14px;
+    padding-left: 15px; /*让文字到输入框左侧有些距离*/
+}
+
+.search button { /*button也是行内块元素*/
+    float: left;/*2个行内块元素之间会有间隙，所以整个search放不下，设为浮动就没有间隙可以挨在一起了*/
+    width: 62px; /*62px是能够装下input和button的最大button宽度*/
+    height: 100px;
+    border: 0; /*去除button自带的边框*/
+    background: url("../img/xuecheng-button.png") no-repeat;
+}
+
+.search .user {
+    float: right;
+    height: 54px;
+    line-height: 54px;
+    margin-right: 100px;
+    margin-left: 100px;
+    font-size: 18px;
+    color: #666666;
+    text-align: center;
+}
+
+/*（2）第二部分：banner的制作*/
+.banner {
+    height: 550px; /*banner的高度*/
+    background-color: #1c036c;
+}
+
+.banner .w { /*版心*/
+    height: 550px;
+    background: url("../img/css_banner_back.jpg") no-repeat top center; /*靠上对齐水平居中*/
+}
+
+.subnav { /*侧边栏*/
+    float: left; /*侧边栏左对齐*/
+    width: 380px;
+    height: 550px;
+    background: rgba(0,0,0,0.3); /*透明黑色效果*/
+}
+.subnav ul li { /*侧边栏文字之间的距离由li控制*/
+    height: 66px;
+    line-height: 66px;
+    padding: 0 20px; /*到侧边栏左侧距离20px*/
+}
+.subnav ul li a { /*侧边栏导航的文字效果*/
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.subnav ul li a:hover{ /*文字链接的浮动效果*/
+    color: #00a4ff;
+}
+
+.subnav ul li a span {
+    float: right; /*让>可以侧边栏右对齐*/
+}
+
+.course {
+    float: right; /*课程栏右对齐*/
+    width: 300px;
+    height: 450px;
+    background-color: pink;
+    /*浮动的盒子不会有外边距合并的问题,标准流会*/
+    margin-top: 80px;
+}
+
+.course h2 { /*课程栏的标题*/
+    height: 50px;
+    background-color: #9bceea;
+    text-align: center;
+    line-height: 50px;
+    font-size: 18px;
+    color: #050505;
+}
+
+.course .bd { /*课程栏的文字间距*/
+    padding: 0px 5px;
+}
+
+.bd ul li {
+    padding: 5px 0; /*课程栏文字之间的间距*/
+    border-bottom: 1px solid #ccc; /*文字下方的下划线*/
+}
+
+.bd ul li h4 { /*大行文字*/
+    color: #4e4e4e;
+    font-size: 16px;
+}
+
+.bd ul li p { /*小行文字*/
+    font-size: 12px;
+    color: #a5a5a5;
+}
+
+.bd .allClasses { /*全部课程的链接*/
+    display: block; /*链接是行内元素没有高度必须转为块元素*/
+    height: 35px;
+    border: 1px solid deepskyblue; /*文字有边框*/
+    text-align: center;
+    line-height: 35px;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/*（3）第三部分：精品推荐小模块的制作*/
+.recommend {
+    height: 60px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 3px 3px rgba(0,0,0,0.3); /*水平0垂直4px*/
+    margin-top: 10px;
+    line-height: 60px; /*这里行高会被h3、ul和mod继承*/
+}
+
+.recommend h3 {
+    float: left;
+    margin-left: 30px; /*"精品推荐"到左边缘的距离*/
+    font-size: 16px;
+    color: #00a4ff;
+}
+
+.recommend ul {
+    float: left;
+    margin-left: 30px;
+}
+
+.recommend ul li {
+    float: left;
+}
+
+.recommend ul li a { /*让几个英文单词之间的距离30px*/
+    padding: 0 30px;
+    font-size: 16px;
+    color: #050505;
+    border-left: 1px solid #cccccc; /*英文单词的左边框*/
+}
+
+.recommend .mod {
+    float: right;
+    margin-right: 30px; /*"修改兴趣"到右侧的距离*/
+    font-size: 14px;
+    color: #00a4ff;
+}
+
+/*（4）第四部分：精品推大模块的制作*/
+.box {
+    float: left;
+    margin-top: 10px;
+    margin-left: -620px;
+}
+
+.box-hd { /*上部分的高度*/
+    height: 100px;
+}
+
+.box-hd h3 { /*上部分的左部分*/
+    float: left;
+    font-size: 20px;
+    color: #494949;
+}
+
+.box-hd a { /*上部分的右部分*/
+    float: right;
+    font-size: 16px;
+    color: #a5a5a5;
+    margin-top: 5px;
+    margin-right: 30px;
+}
+
+.box-bd ul {
+    width: 1575px; /*(300+15)*5=1575 每个li的宽度300，间隙15，需要的总宽度1575，故ul宽度修改1575*/
+}
+
+.box-bd ul li { /*调整每个精品推荐项的高度宽度和之间的距离*/
+    float: left;
+    width: 300px;
+    height: 270px;
+    background-color: #fff;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+.box-bd ul li img {
+    width: 100%; /*让图片跟随父亲的宽度而不是多出来*/
+}
+
+.box-bd ul li h4 { /*think PHP 5.0 博客系统实战项目演练*/
+    margin: 0 20px 0 25px; /*上0 右20px 下0 左25px*/
+    font-size: 14px;
+    color: #050505;
+    font-weight: 400;
+}
+
+.box-bd .info { /*高级 • 1125人正在学习*/
+    margin: 10px 20px 0 25px;
+    font-size: 12px;
+    color: #999;
+}
+
+.box-bd .info span {
+    color: #ff7c2d;
+}
+
+/*（5）第五部分：底部的制作*/
+.footer { /*这里要注意因为第四部分的li没有给高度会浮动，所以这里的footer位置不在下方，那么在li的父亲也就是ul清除浮动即可*/
+    margin-top: 720px; /*不过没有清除成功只好使用这个手段人为向下移动*/
+    height: 415px; /*清除浮动的代码是clearfix,这个属性加在html结构 box-hd下方的ul作为其class名*/
+    background-color: pink;
+}
+
+.footer .w {
+    padding-top: 35px;
+}
+
+.copyright { /*版权部分*/
+    float: left;
+}
+
+.copyright p {
+    font-size: 16px;
+    color: #666666;
+    margin: 20px 0 15px 0;
+}
+
+.copyright .load-app { /*下载APP*/
+    display: block; /*必须改为块元素高度才起作用*/
+    width: 200px;
+    height: 50px;
+    border: 2px solid skyblue;
+    color: deepskyblue;
+    margin-top: 30px;
+    text-align: center;
+    font-size: 40px;
+}
+
+.links { /*链接组部分*/
+    float: right;
+}
+
+.links dl { /*几个自定义列表之间的浮动和间距设置*/
+    float: left;
+    margin-right: 100px;
+}
+
+.links dl dt { /*自定义列表的链接组*/
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.links dl dd {
+    font-size: 20px;
+    color: #333;
+    margin-left: -3px;
+}
