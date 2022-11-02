@@ -20,6 +20,8 @@
     vs配置qt
     qtcreator
     pycharm配置qt
+    qt调用python内置库
+    qt调用python第三方库
 安装Visio
 安装Matlab
 安装setup-factory
