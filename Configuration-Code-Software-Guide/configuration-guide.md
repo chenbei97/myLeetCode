@@ -1047,6 +1047,223 @@ if __name__ == '__main__':
 
 [2.pycharm+QT5+python3安装与环境配置](https://www.cnblogs.com/cthon/p/9379883.html)
 
+### qt调用python内置库
+
+新建好工程之后，添加外部库。注意一般python的路径是在用户的appdata/local/programs/python下。选择静态库，为debug版本添加d作为后缀，所以必须要在python的libs下复制一份静态库然后添加尾缀d。
+
+第一步：复制静态库
+
+![qt_python_copylibs.jpg](qt_python_copylibs.jpg)
+
+第二步：把外部库添加进来
+
+![qt_python_lib.jpg](qt_python_lib.jpg)
+
+第三步，自动生成的代码会添加进pro文件。
+
+![qt_python_lib_code.jpg](qt_python_lib_code.jpg)
+
+```cmake
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../AppData/Local/Programs/Python/Python37-32/libs/ -lpython3
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../AppData/Local/Programs/Python/Python37-32/libs/ -lpython3d
+
+INCLUDEPATH += $$PWD/../../AppData/Local/Programs/Python/Python37-32/libs
+DEPENDPATH += $$PWD/../../AppData/Local/Programs/Python/Python37-32/libs
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../AppData/Local/Programs/Python/Python37-32/libs/libpython3.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../AppData/Local/Programs/Python/Python37-32/libs/libpython3d.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../AppData/Local/Programs/Python/Python37-32/libs/python3.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../AppData/Local/Programs/Python/Python37-32/libs/python3d.lib
+```
+
+这只是把libs文件夹添加进去，还有手动再添加2行代码，把python的include文件夹添加进去。
+
+```cmake
+INCLUDEPATH += $$PWD/../../AppData/Local/Programs/Python/Python37-32/include
+DEPENDPATH += $$PWD/../../AppData/Local/Programs/Python/Python37-32/include
+```
+
+第四步，创建一个python文件，在main.cpp的同级目录下，名称为test_python.py，代码如下。
+
+```python
+def show():
+    print("hello!")
+
+def sum(a,b):
+    ret = a + b
+    print("sum(1,2)=",ret)
+    return ret
+
+def main():
+    show()
+    print("main: ",sum(1,2))
+
+if __name__ == '__main__':
+    main()
+```
+
+第五步：在main.cpp添加一个测试函数，无关的代码先注释掉，要包含Python.h文件，然后编译。
+
+```c++
+#include <Python.h>
+/*
+ * 要在object.h中添加2行代码,因为python定义的slots和qt定义的slots重合了
+typedef struct{
+    const char* name;
+    int basicsize;
+    int itemsize;
+    unsigned int flags;
+    #undef slots 添加
+    PyType_Slot *slots;
+    #define slots Q_SLOTS 添加
+} PyType_Spec;
+**/
+
+int test_python()
+{
+    Py_Initialize();
+    if(!Py_IsInitialized())
+    {
+        qDebug()<<"Python init fail!"; // python初始化失败
+        return -1;
+    }
+    // PyRun_SimpleString("import os,sys,numpy");
+    PyRun_SimpleString("import os,sys");
+    // PyRun_SimpleString("import numpy as np");
+	// PyRun_SimpleString("print(np.linspace(0,10,11))");
+    PyRun_SimpleString("sys.argv = ['python.py']");
+    PyRun_SimpleString("sys.path.append('../pytest')"); // 如果用./,python脚本要放在debug目录下,如果用../，那么脚本可以放在main.cpp同级 这里放在同级的文件夹下
+    PyRun_SimpleString("print(os.getcwd())"); // 测试当前路径 C:\Users\Lenovo\Desktop\30kW-SourceLoad-abridged\build-30kW-SourceLoad-Debug
+    PyObject* pModule = PyImport_ImportModule("test_python");//自定义的py文件名称
+    if (!pModule)
+     {
+         qDebug()<<"Cant open python file!\n"; // 找不到自定义的python脚本
+         return -1;
+     }
+
+    PyObject* pFunshow= PyObject_GetAttrString(pModule,"show"); // 调用脚本的show函数
+    if(!pFunshow){
+        qDebug()<<"Get show function hello failed";
+        return -1;
+    }
+    PyObject_CallFunction(pFunshow,Q_NULLPTR);
+    qDebug()<<"pFunshow is called";
+    PyObject* pFunsum= PyObject_GetAttrString(pModule,"sum"); // 调用脚本的show函数
+    if(!pFunsum){
+        qDebug()<<"Get sum function hello failed";
+        return -1;
+    }
+    PyObject_CallFunction(pFunsum,"ii",1,2); // 传参的规则可见 https://blog.csdn.net/Windgs_YF/article/details/91431282
+    qDebug()<<"pFunsum is called";
+
+    //结束，释放python
+    Py_Finalize();
+
+    return 0;
+}
+int main(int argc, char *argv[])
+{
+    return test_python();
+    // 其他代码先注释掉
+}
+```
+
+这里要说明的是"PyObject_CallFunction"，这个的用法可参考"Py_BuildValue"设定规则。每种数据类型的含义可见[Parsing arguments and building values — Python 3.7.15 documentation](https://docs.python.org/release/3.7.15/c-api/arg.html?highlight=py_buildvalue#c.Py_BuildValue)。
+
+![Py_BuildValue](Py_BuildValue.png)
+
+第六步，编译提示error: error: expected unqualified-id before ';' token，这是在说和python的object.h文件中的slots冲突，因为qt已经定义了slots作为关键字，所以存在冲突。
+
+解决方法是在obejct.h的以下代码添加2行新代码。
+
+```c
+typedef struct{
+    const char* name;
+    int basicsize;
+    int itemsize;
+    unsigned int flags;
+    #undef slots // 添加第一行
+    PyType_Slot *slots;
+    #define slots Q_SLOTS //添加第二行
+} PyType_Spec;
+```
+
+然后运行就可以出现结果，这说明实现了调用python脚本。
+
+```powershell
+pFunshow is called
+pFunsum is called
+hello!
+sum(1,2)= 3
+```
+
+参考链接：
+
+[（1）QT调用Python脚本（无参，有参，返回值）（很重要）](https://blog.csdn.net/weixin_48306625/article/details/114096230)
+
+[（2）PyObject_CallObject, PyObject_Call, PyObject_CallFunction使用（查看含义）](https://blog.csdn.net/Windgs_YF/article/details/91431282)
+
+[（3）c++调用python的代码、函数、类(普通重要)](https://blog.csdn.net/sihai12345/article/details/82745350)
+
+[（4）解析python的列表给C++](https://www.coder.work/article/358631)
+
+[（5）c++解析python返回的字典值，设置元组和字典参数](https://blog.csdn.net/weixin_39787628/article/details/111447295)
+
+[（6）C调用Python（传递数字、字符串、list数组（一维、二维），结构体）](https://blog.csdn.net/qq_31342997/article/details/88368420)
+
+### qt调用python第三方库
+
+C++测试函数如下。
+
+```c++
+int test_plot()
+{
+    //Py_SetPythonHome((wchar_t *)(L"C:\\Users\\Lenovo\\AppData\\Local\\Programs\\Python\\Python37-32")); // 注释掉好像也没事
+    Py_Initialize();
+    wchar_t * str = Py_GetPythonHome();
+    qDebug()<<QString::fromWCharArray(str);
+    if ( !Py_IsInitialized() )
+    {
+        printf("Cant Py_IsInitialized !\n");return -1 ;
+    }
+    PyRun_SimpleString("import os,sys");
+    PyRun_SimpleString("sys.path.append('../pytest')");
+    PyRun_SimpleString("print(os.getcwd())");
+
+    PyObject* pModule = PyImport_ImportModule("test_plot");
+    if (!pModule)
+     {
+         qDebug()<<"Cant open python file!\n";
+         return -1;
+     }
+    PyObject* pFunshow= PyObject_GetAttrString(pModule,"main"); // 调用函数
+    if(!pFunshow){
+        qDebug()<<"Get main function hello failed";
+        return -1;
+    }
+    PyObject_CallFunction(pFunshow,Q_NULLPTR);
+    Py_Finalize();
+    return 0;
+}
+```
+
+Python脚本测试函数。
+
+```python
+# This Python file uses the following encoding: utf-8
+import numpy as np
+import matplotlib.pyplot as plt
+
+def main():
+    x = np.linspace(-np.pi,np.pi,1000)
+    y = np.cos(x)
+    plt.plot(x,y,'b-*')
+    plt.show()
+
+if __name__ == '__main__':
+    main()
+```
+
 ## 安装Visio
 
 下载地址：[Visio 2021中文版32/64位下载](http://www.zhanshaoyi.com/17197.html)。
