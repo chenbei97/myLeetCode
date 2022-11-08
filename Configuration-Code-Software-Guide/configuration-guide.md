@@ -1172,6 +1172,96 @@ int main(int argc, char *argv[])
 
 ![Py_BuildValue](Py_BuildValue.png)
 
+C++的各种类型转换成Python的类型，对照表如下。
+
+```
+(1) 整型
+i (int) [int]
+将C-int转换为Python整数对象
+I (int) [unsigned int]
+将C-unsigned int转换为Python整数对象
+
+b (int) [char]
+将C-char转换为Python整数对象
+B (int) [unsigned char]
+将C-unsigned char转换为Python整数对象
+
+h (int) [short]
+将C-short int转换为Python整数对象
+H (int) [unsigned short]
+将C-unsigned short int转换为Python整数对象
+
+l (int) [long]
+将C-long int转换为Python整数对象
+L (int) [long long]
+将C-long long转换为Python整数对象
+
+k (int) [unsigned long]
+将C-unsigned long转换为Python整数对象
+K (int) [unsigned long long]
+将C-unsigned long long转换为Python整数对象
+
+n (int) [Py_ssize_t]
+将C Py_ssize_t转换为Python-int
+
+(2)浮点类型
+d (float) [double]
+将C-double转换为Python浮点数
+
+f (float) [float]
+将C-float转换为Python浮点数
+
+D (complex) [Py_complex *]
+将C Py_complex结构转换为Python复数
+
+(3)字符、字符串类型
+c (bytes of length 1) [char]
+将表示字节的C-char转换为长度为1的Python字节对象
+C (str of length 1) [int]
+将表示字符的C-int转换为长度为1的Python str对象
+
+s (str or None) [const char *]、
+z (str or None) [const char *]、
+U (str or None) [const char *]
+使用“utf-8”编码将以空结尾的C字符串转换为Python str对象。如果C字符串指针为NULL，则使用None
+s# (str or None) [const char *, int or Py_ssize_t]、
+z# (str or None) [const char *, int or Py_ssize_t]、
+U# (str or None) [const char *, int or Py_ssize_t]
+使用“utf-8”编码将C字符串及其长度转换为Python str对象。如果C字符串指针为NULL，则忽略长度并返回None
+
+y (bytes) [const char *]
+这将C字符串转换为Python字节对象。如果C字符串指针为NULL，则返回None
+y# (bytes) [const char *, int or Py_ssize_t]
+这将C字符串及其长度转换为Python对象。如果C字符串指针为NULL，则返回None
+
+u (str) [const wchar_t *]
+将Unicode（UTF-16或UCS-4）数据的以空结尾的wchar_t缓冲区转换为Python Unicode对象。如果Unicode缓冲区指针为NULL，则返回None
+u# (str) [const wchar_t *, int or Py_ssize_t]
+将Unicode（UTF-16或UCS-4）数据缓冲区及其长度转换为Python Unicode对象。如果Unicode缓冲区指针为NULL，则忽略长度并返回None
+
+(4)元组、列表和字典需要分别使用()、[]和{}括起来表示
+(items) (tuple) [matching-items]
+将C值序列转换为具有相同项数的Python元组
+
+[items] (list) [matching-items]
+将C值序列转换为具有相同项数的Python列表
+
+{items} (dict) [matching-items]
+将C值序列转换为Python字典。每对连续的C值都会向字典中添加一项，分别用作键和值。
+如果格式字符串中有错误，将设置SystemError异常并返回NULL。
+
+(5) 其它类型
+O (object) [PyObject *]、
+S (object) [PyObject *]
+传递一个Python对象，该对象保持不变但引用计数递增1。如果传入的对象是NULL指针，则假定这是因为产生参数的调用发现错误并设置了异常。因此，Py_BuildValue()将返回NULL，但不会引发异常。如果尚未引发异常，则设置SystemError。
+
+N (object) [PyObject *]
+与O相同，只是它不会增加对象的引用计数。当通过调用参数列表中的对象构造函数创建对象时非常有用
+
+O& (object) [converter, anything]
+通过转换器函数将任何内容转换为Python对象。该函数以任何内容（应与void*兼容）作为参数调用，并应返回新Python对象，如果发生错误，则返回NULL。
+```
+
 第六步，编译提示error: error: expected unqualified-id before ';' token，这是在说和python的object.h文件中的slots冲突，因为qt已经定义了slots作为关键字，所以存在冲突。
 
 解决方法是在obejct.h的以下代码添加2行新代码。
@@ -1197,6 +1287,10 @@ hello!
 sum(1,2)= 3
 ```
 
+C的数据结构字面量的对应关系如下。
+
+![c++python_type.jpg](c++python_type.jpg)
+
 参考链接：
 
 [（1）QT调用Python脚本（无参，有参，返回值）（很重要）](https://blog.csdn.net/weixin_48306625/article/details/114096230)
@@ -1210,6 +1304,8 @@ sum(1,2)= 3
 [（5）c++解析python返回的字典值，设置元组和字典参数](https://blog.csdn.net/weixin_39787628/article/details/111447295)
 
 [（6）C调用Python（传递数字、字符串、list数组（一维、二维），结构体）](https://blog.csdn.net/qq_31342997/article/details/88368420)
+
+[（7）Python C API 使用详解](https://cloud.tencent.com/developer/article/1568754)
 
 ### qt调用python第三方库
 
