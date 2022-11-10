@@ -1172,7 +1172,29 @@ int main(int argc, char *argv[])
 
 ![Py_BuildValue](Py_BuildValue.png)
 
-C++的各种类型转换成Python的类型，对照表如下。
+上述图片的文字版本如下所示，可见[1. 使用 C 或 C++ 扩展 Python — Python 3.7.13 文档](https://docs.python.org/zh-cn/3.7/extending/extending.html#a-simple-example)提供的例子。
+
+```c++
+Py_BuildValue("")                        None
+Py_BuildValue("i", 123)                  123
+Py_BuildValue("iii", 123, 456, 789)      (123, 456, 789)
+Py_BuildValue("s", "hello")              'hello'
+Py_BuildValue("y", "hello")              b'hello'
+Py_BuildValue("ss", "hello", "world")    ('hello', 'world')
+Py_BuildValue("s#", "hello", 4)          'hell'
+Py_BuildValue("y#", "hello", 4)          b'hell'
+Py_BuildValue("()")                      ()
+Py_BuildValue("(i)", 123)                (123,)
+Py_BuildValue("(ii)", 123, 456)          (123, 456)
+Py_BuildValue("(i,i)", 123, 456)         (123, 456)
+Py_BuildValue("[i,i]", 123, 456)         [123, 456]
+Py_BuildValue("{s:i,s:i}",
+              "abc", 123, "def", 456)    {'abc': 123, 'def': 456}
+Py_BuildValue("((ii)(ii)) (ii)",
+              1, 2, 3, 4, 5, 6)          (((1, 2), (3, 4)), (5, 6))
+```
+
+除了上述涉及的格式化参数，所有C/C++的各种类型转换成Python的类型，对照表如下。
 
 ```
 (1) 整型
@@ -1260,6 +1282,109 @@ N (object) [PyObject *]
 
 O& (object) [converter, anything]
 通过转换器函数将任何内容转换为Python对象。该函数以任何内容（应与void*兼容）作为参数调用，并应返回新Python对象，如果发生错误，则返回NULL。
+```
+
+除了C/C++转换为Python类型，Python到C/C++也要进行解析。解析的全部规则如下，基本上和C/C++到Python使用的字母含义相同。主要涉及的3个函数是**PyArg_ParseTuple(),PyArg_ParseTupleAndKeywords()以及 PyArg_Parse()**，参见https://docs.python.org/zh-cn/3.7/c-api/arg.html#c.PyArg_ParseTuple。
+
+```
+ 数字类型：
+ b (int) [unsigned char] 非负Python整型
+ B (int) [unsigned char] Python整型
+ h (int) [short] Python整型
+ H (int) [unsigned short] Python整型
+ i (int) [int] Python整型
+ I (int) [unsigned int] Python整型
+ l (int) [long] Python整型
+ L (int) [long long] Python整型
+ k (int) [unsigned long] Python整型
+ K (int) [unsigned long long] Python整型
+ n (int) [Py_ssize_t] Python整型转化成一个C Py_ssize_t Python元大小类型
+ c (bytes 或者 bytearray 长度为1) [char] Python字节类型(一个长度为1的 bytes 或者 bytearray 对象)
+ C (str 长度为1) [int] Python字符(一个长度为1的 str 字符串对象)
+ f (float) [float] Python浮点数
+ d (float) [double] Python浮点数
+ D (complex) [Py_complex] Python复数类型转化成一个C Py_complex Python复数类型
+ p (bool) [int] 测试传入的值是否为真(一个布尔判断)并且将结果转化为相对应的C true/false整型值
+ (items) (tuple) [matching-items] 对象必须是Python序列,它的长度是items中格式单元的数量,C参数必须对应items中每一个独立的格式单元
+
+字符串类型：
+s (str) [const char *]   将一个Unicode对象转换成一个指向字符串的C指针
+s* (str or bytes-like object) [Py_buffer] 接受Unicode对象也接受类字节类型对象，转换为调用者提供的 Py_buffer 结构
+s# (str, 只读 bytes-like object) [const char *, int or Py_ssize_t] 存储在两个C 变量中，第一个是指向C字符串的指针，第二个是它的长度
+S (bytes) [PyBytesObject *] 要求Python对象是一个 bytes 类型对象
+
+z (str or None) [const char *] 和s相同,区别是如果Python传入None,则C返回NULL
+z* (str, bytes-like object or None) [Py_buffer]
+z# (str, 只读 bytes-like object 或 None) [const char *, int or Py_ssize_t]
+
+y (read-only bytes-like object) [const char *] 区别是不接受Unicode对象
+y* (bytes-like object) [Py_buffer]
+y# (只读 bytes-like object) [const char *, int or Py_ssize_t]
+Y (bytearray) [PyByteArrayObject *] 要求Python对象是一个 bytearray 类型对象
+
+u (str) [const Py_UNICODE *] 将Unicode对象转化成指向一个以空终止的Unicode字符缓冲区的指针，必须传入 Py_UNICODE 指针变量地址
+u# (str) [const Py_UNICODE *, int 或 Py_ssize_t] 存储两个C变量，第一个指针指向一个Unicode数据缓存区，第二个是它的长度
+U (str) [PyObject *] 要求Python对象是一个Unicode对象 (不常用)
+
+Z (str 或 None) [const Py_UNICODE *] 和u类似,区别是Python对象可能为 None，此时Py_UNICODE 指针设置为 NULL
+Z# (str 或 None) [const Py_UNICODE *, int 或 Py_ssize_t]  (不常用)
+
+w* (可读写 bytes-like object) [Py_buffer] (非常不常用)
+es (str) [const char *encoding, char **buffer] (非常不常用)
+et (str, bytes or bytearray) [const char *encoding, char **buffer] (非常不常用)
+es# (str) [const char *encoding, char **buffer, int 或 Py_ssize_t *buffer_length] (非常不常用)
+et# (str, bytes 或 bytearray) [const char *encoding, char **buffer, int 或 Py_ssize_t *buffer_length] (非常不常用)
+
+其它类型:
+O (object) [PyObject *] 将 Python 对象（不进行任何转换）存储在 C 对象指针中
+O! (object) [typeobject, PyObject *] 将一个Python对象存入一个C指针。和 O 类似但需两个C参数：Python类型对象的地址和存储对象指针的C变量( PyObject* 变量)的地址
+O& (object) [converter, anything] 通过converter 函数将Python对象转换成一个C变量。需两个参数：一个函数和一个C变量的地址(任意类型的)，转化为 void * 类型
+例子: status = converter(object, address);
+object*是待转化的Python对象并且 *address 是传入 PyArg_Parse*() 函数的 void* 类型参数。返回的 status 是1代表转换成功，0代表转换失败
+             
+特殊字符:格式化字符串中还有一些其他的字符具有特殊的涵义
+'|' : 表明Python参数列表中剩下的参数都是可选的。C变量对应的可选参数需要初始化为默认值,当一个可选参数没有指定时, PyArg_ParseTuple() 不能访问相应的C变量(变量集)的内容
+'$': 仅用于PyArg_ParseTupleAndKeywords(),表明Python参数列表中剩下的参数都是强制关键字参数。当前，所有强制关键字参数都必须也是可选参数，所以格式化字符串中 | 必须一直在 $ 前面
+':' :格式单元的列表结束标志,冒号后的字符串被用来作为错误消息中的函数名(PyArg_ParseTuple() 函数引发的“关联值”异常)
+';': 格式单元的列表结束标志,分号后的字符串被用来作为错误消息取代默认的错误消息,分号和冒号相互排斥
+
+解析API函数说明：
+int PyArg_ParseTuple(PyObject *args, const char *format, ...); 
+解析一个函数的参数,表达式中的参数按参数位置顺序存入局部变量中,成功返回true
+ok = PyArg_ParseTuple(args,"ddd",&d1,&d2,&d3);
+
+int PyArg_ParseTupleAndKeywords(PyObject *args, PyObject *kw, const char *format, char *keywords[], ...);
+将位置参数和关键字参数同时转换为局部变量的函数的参数. keywords 参数是关键字参数名称的 NULL 终止数组. 空名称表示 positional-only parameters,成功时返回 true
+
+int PyArg_Parse(PyObject *args, const char *format, ...);
+函数被用来解析旧类型函数的参数列表,不被推荐用于新代码的参数解析,只是兼容以前的代码
+```
+
+例子如下。
+
+```c
+int ok;
+int i, j;
+long k, l;
+char *s;
+int size;
+ok = PyArg_ParseTuple(args, ""); /* No arguments f() */
+ok = PyArg_ParseTuple(args, "s", &s); /* A string f('whoops!')  */
+ok = PyArg_ParseTuple(args, "lls", &k, &l, &s); /* Two longs + str f(1, 2, 'three') */
+ok = PyArg_ParseTuple(args, "(ii)s#", &i, &j, &s, &size);/*tuple+str，f((1, 2), 'three')*/
+
+char *file;
+char *mode = "r";
+int bufsize = 0;
+ok = PyArg_ParseTuple(args, "s|si", &file, &mode, &bufsize);
+/* 一个字符串，可选另一个字符串和一个整数 f('spam'),f('spam', 'w'),f('spam', 'wb', 100000)*/
+
+int left, top, right, bottom, h, v;
+ok = PyArg_ParseTuple(args, "((ii)(ii))(ii)",&left, &top, &right, &bottom, &h, &v);
+/* 一个矩形和一个点 f(((0, 0), (400, 300)), (10, 10))*/
+
+Py_complex c;
+ok = PyArg_ParseTuple(args, "D:myfunction", &c);/* 复数，也为错误提供函数名 f(1+2j)*/
 ```
 
 第六步，编译提示error: error: expected unqualified-id before ';' token，这是在说和python的object.h文件中的slots冲突，因为qt已经定义了slots作为关键字，所以存在冲突。
