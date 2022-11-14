@@ -5855,13 +5855,23 @@ QFileDialog 类使用户能够遍历文件系统以选择一个或多个文件�
 ```c++
 fileName = QFileDialog::getOpenFileName(this,
       tr("Open Image"), "/home/jana", tr("Image Files (*.png *.jpg *.bmp)"));
-
 QString curPath=QDir::currentPath();//获取系统当前目录
-//  QString  curPath=QCoreApplication::applicationDirPath(); //获取应用程序的路径
 QString dlgTitle="选择一个文件"; //对话框标题
 QString filter="文本文件(*.txt);;图片文件(*.jpg *.gif *.png);;所有文件(*.*)"; //文件过滤器
 
 QString aFileName=QFileDialog::getOpenFileName(this,dlgTitle,curPath,filter);
+
+void CSVExport::writeTable(const QString & text) // 私有函数,给文本流写入数据
+{
+    QString fileName = QFileDialog::getSaveFileName(Q_NULLPTR, tr("CSV文件"), mWorkDir,tr("(*.csv)"));
+    if (fileName.isEmpty()) return;
+    QFile outFile(fileName);
+    outFile.open(QIODevice::Truncate | QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
+    QTextStream ts(&outFile);
+    ts.setAutoDetectUnicode(true);
+    ts << text;
+    outFile.close();
+}
 ```
 
 在上面的示例中，模态 QFileDialog 是使用静态函数创建的。**该对话框最初显示"/home/jana"目录的内容**，并显示与字符串"Image Files (*.png *.jpg *.bmp)"中给出的模式匹配的文件。文件对话框的父级设置为此，窗口标题设置为"打开图像"。
@@ -5902,8 +5912,6 @@ if (dialog.exec())
 
 在上面的示例中，创建并显示了一个模态文件对话框。如果用户单击确定，他们选择的文件将放入 fileName。可以使用 setDirectory() 设置对话框的工作目录。可以使用 selectFile() 函数选择当前目录中的每个文件。标准对话框示例展示了如何使用 QFileDialog 以及其他内置 Qt 对话框。默认情况下，如果平台有一个平台原生文件对话框，则将使用它。在这种情况下，用于构造对话框的小部件将不会被实例化，因此相关的访问器（例如 layout() 和 itemDelegate() 将返回 null。您可以设置 DontUseNativeDialog 选项以确保将使用基于小部件的实现而不是本机对话框。
 
-##### 枚举类型
-
 常见的枚举类型如下。
 
 ```c++
@@ -5929,7 +5937,7 @@ enum QFileDialog::DialogLabel = {
 enum QFileDialog::FileMode = {  
     QFileDialog::AnyFile,//文件的名称，无论它是否存在
     QFileDialog::ExistingFile,//单个现有文件的名称
-    QFileDialog::Directory,//目录的名称。显示文件和目录。但是，本机 Windows 文件对话框不支持在目录选择器中显示文件
+    QFileDialog::Directory,//目录的名称。显示文件和目录
     QFileDialog::ExistingFiles,//零个或多个现有文件的名称
 	QFileDialog::DirectoryOnly//改用 Directory 和 setOption(ShowDirsOnly, true)
 }
@@ -5939,14 +5947,14 @@ enum QFileDialog::FileMode = {
 
 ```c++
 enum QFileDialog::Option = {   
-    QFileDialog::ShowDirsOnly,//仅在文件对话框中显示目录。默认情况下，文件和目录都会显示。（仅在目录文件模式下有效）
+    QFileDialog::ShowDirsOnly,//仅在文件对话框中显示目录。默认情况下，文件和目录都会显示
     QFileDialog::DontResolveSymlinks,//不要在文件对话框中解析符号链接。默认情况下，符号链接已解析
     QFileDialog::DontConfirmOverwrite,//如果选择了现有文件，请不要要求确认。默认情况下要求确认
-    QFileDialog::DontUseNativeDialog,//不要使用本机文件对话框。默认情况下，使用本地文件对话框，除非您使用包含 Q_OBJECT 宏的 QFileDialog 的子类，或者平台没有您需要的类型的本地对话框。
+    QFileDialog::DontUseNativeDialog,//不要使用本机文件对话框。默认情况下，使用本地文件对话框
     QFileDialog::ReadOnly,//表示模型是只读的
     QFileDialog::HideNameFilterDetails,//指示文件名过滤器详细信息是否隐藏。
-    QFileDialog::DontUseSheet,//在以前的 Qt 版本中，如果静态函数被赋予父级，则静态函数将默认创建一个工作表。这在 Qt 4.5 中不再受支持并且不执行任何操作，静态函数将始终是应用程序模式对话框。如果要使用工作表，请改用 QFileDialog::open() 
-    QFileDialog::DontUseCustomDirectoryIcons//始终使用默认目录图标。一些平台允许用户设置不同的图标。自定义图标查找会对网络或可移动驱动器造成很大的性能影响。设置此项将启用
+    QFileDialog::DontUseSheet,//如果要使用工作表，请改用 QFileDialog::open() 
+    QFileDialog::DontUseCustomDirectoryIcons//始终使用默认目录图标
 }
 ```
 
@@ -5958,8 +5966,6 @@ enum QFileDialog::ViewMode = {
     QFileDialog::List//仅显示目录中每个项目的图标和名称
 }
 ```
-
-##### 子类函数
 
 常见的成员函数。
 
@@ -5977,8 +5983,6 @@ QString defaultSuffix() const;
 QDir directory() const;
 ```
 
-##### 信号函数
-
 信号函数。
 
 ```c++
@@ -5992,8 +5996,6 @@ void filterSelected(const QString &filter);
 void urlSelected(const QUrl &url);
 void urlsSelected(const QList<QUrl> &urls);
 ```
-
-##### 静态函数
 
 静态成员函数。
 

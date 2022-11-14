@@ -562,6 +562,18 @@ for (int i=0; i<cnt; i++) //扫描所有 block
     str=textLine.text(); //转换为文本,末尾无\n
     aStream<<str<<"\n";
 }
+// 示例3
+void CSVExport::writeTable(const QString & text) // 私有函数,给文本流写入数据
+{
+    QString fileName = QFileDialog::getSaveFileName(Q_NULLPTR, tr("CSV文件"), mWorkDir,tr("(*.csv)"));
+    if (fileName.isEmpty()) return;
+    QFile outFile(fileName);
+    outFile.open(QIODevice::Truncate | QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
+    QTextStream ts(&outFile);
+    ts.setAutoDetectUnicode(true);
+    ts << text;
+    outFile.close();
+}
 
 5. 标准的文本文件读取内容的代码
 5.1 流的方式：（QFile+QTextStream+QFileInfo）
