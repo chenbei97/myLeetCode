@@ -5044,8 +5044,6 @@ void swap(QPersistentModelIndex &other); // 交换2个索引
 
 **用于监控鼠标是否指向表格项或者改变指向。**
 
-##### 枚举类型
-
 1个枚举类型需要知道，这个枚举描述了**选择模型的更新方式**。
 
 ```c++
@@ -5063,8 +5061,6 @@ enum QItemSelectionModel::SelectionFlag = {
     QItemSelectionModel::ClearAndSelect// 为方便起见，结合了清除和选择
 }
 ```
-
-##### 子类函数
 
 主要的成员函数如下，其它继承自QObject。
 
@@ -5102,8 +5098,6 @@ QModelIndexList selectedRows(int column = 0) const;
 QModelIndexList selectedIndexes() const;
 ```
 
-##### 槽函数
-
 具备的槽函数如下。
 
 ```c++
@@ -5123,8 +5117,6 @@ virtual void select(const QItemSelection &selection, QItemSelectionModel::Select
 virtual void setCurrentIndex(const QModelIndex &index, QItemSelectionModel::SelectionFlags command);
 ```
 
-##### 信号函数
-
 具备的信号函数如下。
 
 ```c++
@@ -5140,7 +5132,7 @@ void modelChanged(QAbstractItemModel *model);
 void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 ```
 
-##### QItemSelection
+QItemSelection是子类。
 
 QItemSelection 类管理QItemSelectionModel模型中**选定项目的信息**。
 下面的示例可以选择一个区域以包含选择的项，从 topLeft 开始，到 bottomRight 结束。
@@ -5157,14 +5149,12 @@ const QItemSelection selection() const; //与QItemSelectionModel关联的函数
 成员函数主要有5个，其他全部继承自QList。
 
 ```c++
-QItemSelection::QItemSelection(const QModelIndex &topLeft, const QModelIndex &bottomRight);//构造一个从左上角模型项（由 topLeft 索引指定）延伸到右下角项（由 bottomRight 指定）的项选择
+QItemSelection::QItemSelection(const QModelIndex &topLeft, const QModelIndex &bottomRight);//构造一个从左上角模型项topLeft延伸到右下角项bottomRight的项选择
 bool contains(const QModelIndex &index) const;//是否包含指定索引
 QModelIndexList indexes() const;//返回区域包含的所有项索引
 void merge(const QItemSelection &other, QItemSelectionModel::SelectionFlags command);//使用给定的命令将其他选择与此 QItemSelection 合并，此方法保证没有范围重叠
 void select(const QModelIndex &topLeft, const QModelIndex &bottomRight);//将范围内的项目添加到列表中，该范围从由 topLeft 索引指定的左上角模型项到由 bottomRight 指定的右下角项
 ```
-
-
 
 ### 4.2 Model类
 
@@ -5260,8 +5250,6 @@ tree->setModel(model); // 树状展示
 tree->setRootIndex(model->index(QDir::currentPath()));// 用返回的给定路径和列的模型项索引去设置树结构的根目录索引
 ```
 
-##### 枚举类型
-
 此类需要了解的枚举值类型如下。
 
 ```c++
@@ -5276,12 +5264,10 @@ enum Roles {
 主要具备3个属性。
 
 ```c++
-nameFilterDisables : bool // 此属性用于保存是否隐藏或禁用未通过名称筛选器的文件,默认情况下，此属性为true
-readOnly : bool // 此属性保存目录模型是否允许写入文件系统,如果此属性设置为false，则目录模型将允许重命名、复制和删除文件和目录。默认情况下，此属性为true
-resolveSymlinks : bool // 此属性保存目录模型是否应解析符号链接,这仅与Windows相关,默认情况下，此属性为true
+nameFilterDisables : bool // 是否隐藏或禁用未通过名称筛选器的文件,默认为true
+readOnly : bool // 目录模型是否允许写入文件系统,默认为true
+resolveSymlinks : bool // 此属性保存目录模型是否应解析符号链接,这仅与Windows相关,默认为true
 ```
-
-##### 子类函数
 
 常见的公共成员函数如下。
 
@@ -5328,8 +5314,6 @@ QString type(const QModelIndex &index) const;// 返回文件索引的类型，�
 QModelIndex setRootPath(const QString &newPath);
 ```
 
-##### 信号函数
-
 信号函数。
 
 ```c++
@@ -5343,7 +5327,61 @@ static void QFileSystemModel::fileRenamed(const QString &path,
 void rootPathChanged(const QString &newPath);
 ```
 
-#### 4.2.3 QStandardItemModel
+#### 4.2.3 QDirModel
+
+这个模型和QFileSystemModel功能类似，也可以获取目录和文件。区别在于，这个类不是单线程进行获取，可能会阻碍主线程，所以一般情况更推荐使用QFileSystemModel。
+QDirModel保存一个包含文件信息的缓存。需要使用refresh()更新缓存。
+QDirModel可以使用QAbstractItemModel提供的标准接口访问，但它也提供了一些特定于目录模型的便利函数。fileInfo()和isDir()函数提供与模型中的项相关的底层文件和目录的信息。
+可以使用mkdir()、rmdir()创建和删除目录，模型将自动更新以考虑更改。
+注意：QDirModel需要QApplication的实例。
+
+```c++
+enum QDirModel::Roles{
+    QDirModel::FileIconRole:Qt::DecorationRole
+    QDirModel::FilePathRole:Qt::UserRole + 1
+    QDirModel::FileNameRole:?
+}
+```
+
+```c++
+//用给定的父级构造一个新的目录模型。模型中仅包含与名称filters和过滤器匹配的文件。排序顺序由排序标志给出。
+QDirModel(const QStringList &nameFilters, QDir::Filters filters, QDir::SortFlags sort, QObject *parent = Q_NULLPTR);
+void setNameFilters(const QStringList &filters);//设置目录模型的名称过滤器
+QStringList nameFilters() const;
+void setFilter(QDir::Filters filters);//将目录模型的筛选器设置为筛选器指定的筛选器,请注意，过滤器应始终包含QDir:：AllDirs枚举值，否则QDirModel将无法读取目录结构
+QDir::Filters filter() const;
+void setSorting(QDir::SortFlags sort);//将目录模型的排序顺序设置为sort指定的排序顺序
+QDir::SortFlags sorting() const;
+
+// 给出文件的相关信息
+QIcon fileIcon(const QModelIndex &index) const;
+QFileInfo fileInfo(const QModelIndex &index) const;
+QString fileName(const QModelIndex &index) const;
+QString filePath(const QModelIndex &index) const;
+
+void setIconProvider(QFileIconProvider *provider);//设置目录模型的文件图标提供程序
+QFileIconProvider *iconProvider() const;
+
+void setReadOnly(bool enable);//目录模型是否允许写入文件系统,默认true
+bool isReadOnly() const;
+
+void setLazyChildCount(bool enable);//目录模型是否优化hasChildren函数以仅检查该项是否为目录
+bool lazyChildCount() const;
+
+void setResolveSymlinks(bool enable);//目录模型是否应解析符号链接
+bool resolveSymlinks() const;
+
+bool isDir(const QModelIndex &index) const;//如果模型项索引表示目录，则返回true
+QModelIndex index(const QString &path, int column = 0) const;//返回给定路径的模型项索引
+bool remove(const QModelIndex &index);//从目录模型中删除模型项索引，并从文件系统中删除相应的文件，如果成功，则返回true
+bool rmdir(const QModelIndex &index);//删除目录模型中与模型项索引相对应的目录，并从文件系统中删除相应的目录，如果成功，则返回true
+QModelIndex mkdir(const QModelIndex &parent, const QString &name);//使用父模型项中名称创建目录
+
+//QDirModel缓存文件信息。此函数用于更新缓存。父参数是更新模型的目录；默认值将从文件系统的根目录（整个模型）更新模型
+slot void refresh(const QModelIndex &parent = QModelIndex());
+```
+
+#### 4.2.4 QStandardItemModel
 
 标准的基于项数据的数据模型类，每个项可以是任何数据类型。
 
@@ -5372,7 +5410,7 @@ for (int i = 0; i < 4; ++i) {
 }
 ```
 
-##### 子类函数
+成员函数。
 
 ```c++
 // 单元格的属性设置操作
@@ -5422,7 +5460,7 @@ void itemChanged(QStandardItem *item);
 
 其它继承的函数不再赘述。
 
-#### 4.2.4 QStringListModel
+#### 4.2.5 QStringListModel
 
 用于处理字符串列表数据的数据模型类，它可以作为**QListView的数据模型**，在界面上显示和编辑字符串列表。它关联的数据结构是[3.1.8 QStringList](#3.1.8 QStringList)。
 
@@ -5467,19 +5505,19 @@ virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
 virtual QModelIndex index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const;
 ```
 
-#### 4.2.5 QSortFilterProxyModel
+#### 4.2.6 QSortFilterProxyModel
 
 与其他数据模型结合，提供排序和过滤功能的数据模型类。
 
-#### 4.2.6 QSqlQuieryModel
+#### 4.2.7 QSqlQuieryModel
 
 用于数据库SQL查询结果的数据模型类。
 
-#### 4.2.7 QSqlTableModel
+#### 4.2.8 QSqlTableModel
 
 用于数据库的一个数据表的数据模型类。
 
-#### 4.2.8 QSqlRelationalTableModel
+#### 4.2.9 QSqlRelationalTableModel
 
 用于关系型数据表的数据模型类。
 
