@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>定位</title>
+    <style>
+        .box1 {
+            position: relative; /*相对定位*/
+            top:100px;
+            left: 100px;
+            width: 200px;
+            height: 200px;
+            background-color: pink;
+        }
+        .box2 {
+            position: static; /*静态定位*/
+            width: 200px;
+            height: 200px;
+            background-color: deeppink;
+        }
+        .box3 {
+            position: absolute; /*绝对定位*/
+            top: 100px;
+            right: 200px;
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+        .father1 { /*父元素有绝对定位*/
+            position: absolute;
+            top: 400px;
+            right: 200px;
+            width: 500px;
+            height: 500px;
+            background-color: greenyellow;
+
+        }
+        .son11 {
+            position: absolute; /*父亲的400px产生影响,son是绝对定位*/
+            top: 0px;
+            right: 0px; /*这里相对父亲右边界的距离0,所以在右边*/
+            width: 200px;
+            height: 200px;
+            background-color: red;
+        }
+        .son12 {
+            position: relative; /*父亲的400px产生影响,son是相对定位*/
+            top: 0px;
+            right: 0px; /*这里相对父元素向右移动0,所以在左边*/
+            width: 200px;
+            height: 200px;
+            background-color: skyblue;
+        }
+        .son13 {
+            position: fixed; /*son永远以浏览器为准固定定位,父亲的400px没有影响*/
+            top: 0px;
+            right: 0px;
+            width: 200px;
+            height: 200px;
+            background-color: violet;
+        }
+
+        .father2 { /*父元素有相对定位*/
+            position: relative;
+            top: 0px;
+            right: 0px; /*相对于左边界右移动0,不是到有边界0*/
+            width: 500px;
+            height: 500px;
+            background-color: greenyellow;
+        }
+        .son21 {
+            position: absolute; /*儿子绝对定位,被父亲相对影响,这种形式也是子绝父相布局*/
+            top: 0px;
+            right: 0px; /*到父亲的右边界距离0*/
+            width: 200px;
+            height: 200px;
+            background-color: darkolivegreen;
+        }
+        .son22 {
+            position: relative; /*儿子相对定位,被父亲相对影响*/
+            top: 0px;
+            right: 0px; /*到父亲的右边界距离0*/
+            width: 200px;
+            height: 200px;
+            background-color: darkviolet;
+        }
+        .son23 {
+            position: fixed; /*儿子固定定位,不被父亲相对影响*/
+            top: 200px; /*适当向下移动防止遮挡son13*/
+            right: 0px;
+            width: 200px;
+            height: 200px;
+            background-color: cadetblue;
+        }
+
+        .father3 { /*父元素有固定定位*/
+            position: fixed;
+            top: 1000px; /*适当向下移动,防止遮挡其他元素的显示*/
+            right: 0px; /*到右边界0*/
+            width: 500px;
+            height: 500px;
+            background-color: black;
+        }
+        .son31 {
+            position: absolute; /*儿子绝对定位,被父亲相对影响*/
+            top: 0px;
+            right: 0px; /*到父亲的右边界距离0*/
+            width: 200px;
+            height: 200px;
+            background-color: yellow;
+        }
+        .son32 {
+            position: relative; /*儿子相对定位,被父亲相对影响*/
+            top: 0px;
+            right: 0px; /*到父亲的右边界距离0*/
+            width: 200px;
+            height: 200px;
+            background-color: darkviolet;
+        }
+        .son33 {
+            position: fixed; /*儿子固定定位,不被父亲相对影响*/
+            top: 400px; /*适当向下移动防止遮挡son13,son23*/
+            right: 0px;
+            width: 200px;
+            height: 200px;
+            background-color: cyan;
+        }
+
+        /*总结:父亲无论是绝对,相对还是固定: 儿子是固定则按浏览器为准;儿子是相对就以父元素为准;*/
+        /*    儿子是绝对,仍然以浏览器为准,但是会被父亲的边偏移影响,导致对浏览器的偏移是父亲的加上自己的*/
+        /*父亲自身相对的话,就是相对原来的位置且不能占据其它盒子腾出来的位置*/
+        /*父亲绝对,则以浏览器为准,但是会受祖先定位的影响,同时和父亲同级别的盒子会占据原有位置可能会导致布局错乱*/
+        /*父亲固定.则以浏览器为准,但不会受祖先定位的影响,但是不够灵活*/
+
+        /*固定版心盒子到右侧*/
+        .fixed {
+            position: fixed;
+            top: 200px;
+            left: 50%; /*1.走浏览器宽度的一半*/
+            margin-left:300px; /*400px; 走版心元素的一半.w.width/2也即是400px*/
+            width: 200px;
+            height: 200px;
+            background-color: red;
+        }
+
+        .w {
+            width: 600px;
+            height: 1000px;
+            background-color: #9bceea;
+            margin: 0 auto;
+        }
+
+        /*粘性定位*/
+        .nav {
+            position: sticky;
+            top: 10px; /*导航栏到达浏览器的上层距离10时就会向下移动成为相对定位而不是固定不动*/
+            width: 400px;
+            height: 50px;
+            background-color: pink;
+            margin:  100px auto;
+        }
+
+        /*叠放次序*/
+        .zindex1 {
+            position: absolute;
+            top: 1200px;
+            left: 800px;
+            width: 200px;
+            height: 200px;
+            background-color: red;
+            z-index: 1;
+        }
+        .zindex2 {
+            position: absolute;
+            top: 1200px;
+            left: 800px;
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+            z-index: 2; /*可以看出结果是次序2在上显示蓝色覆盖了红色次序1*/
+        }
+    </style>
+</head>
+<body>
+    <div class="box1"></div>
+    <div class="box2"></div>
+    <div class="box3"></div> <!--没有祖先/父元素没有定位-->
+    <div class="father1"> <!--父元素有绝对定位-->
+        父元素:绝对定位
+        <div class="son13">子元素:固定定位</div>
+        <div class="son12">子元素:相对定位</div> <!--son12,son12谁在上就在上-->
+        <div class="son11">子元素:绝对定位</div> <!--调整son11最后1行也不会影响-->
+    </div>
+
+    <div class="father2"> <!--父元素有相对定位-->
+        子绝父相布局
+        父元素:相对定位
+        <div class="son21">子元素:绝对定位</div>
+        <div class="son22">子元素:相对定位</div>
+        <div class="son23">子元素:固定定位</div>
+    </div>
+    <div class="father3"> <!--父元素有固定定位-->
+        父元素:固定定位
+        <div class="son31">子元素:绝对定位</div>
+        <div class="son32">子元素:相对定位</div>
+        <div class="son33">子元素:固定定位</div>
+    </div>
+
+    <!--版心右对齐技巧-->
+    <div class="fixed">
+        固定盒子
+        <div class="w">版心盒子 800×1400像素</div>
+    </div>
+
+    <!--粘性定位-->
+    <div class="nav">我是导航栏</div>
+
+    <div class="zindex1">
+        叠放次序1
+    </div>
+    <div class="zindex2">
+        叠放次序2
+    </div>
+
+    <p>2148348239748932748</p> <!--这是为了体现出固定定位效果加的,这样浏览器有滚动条-->
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+    <p>2148348239748932748</p>
+
+</body>
+</html>
