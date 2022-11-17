@@ -1,0 +1,21 @@
+让一个元素在页面种隐藏或者显示出来
+display:设置元素如何显示
+    block 转为块级元素外还能显示元素
+    none 隐藏
+    inline
+    ...
+    display隐藏后不占有原来的位置
+visibility:可见性
+    inherit 继承父对象的可见性
+    visible 可见
+    collapse 用来隐藏表格的行列,隐藏的行列能够被其他内容使用,表格外使用collapse等同hidden
+    hidden 隐藏
+    visibility隐藏后占有原来的位置
+
+overflow:溢出显示隐藏
+    例如一个盒子比较小,但是文字多,那么文字就会溢出
+    这里就可以设置溢出的文字隐藏或者显示或者显示滚动条
+    visible:显示,不剪切内容也不加滚动条
+    auto: 此为body对象和textarea的默认值,需要时剪切内容添加滚动条
+    hidden: 不显示溢出的内容
+    scroll: 显示滚动条

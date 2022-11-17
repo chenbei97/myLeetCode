@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>显示隐藏</title>
+    <style>
+        .box1{
+            /*display: none;*/ /*隐藏以后位置让出来给了box2*/
+            visibility: hidden; /*隐藏后位置仍然占有*/
+            width: 200px;
+            height: 200px;
+            background-color: pink;
+        }
+        .box2{
+            /*display: none;*/
+            width: 200px;
+            height: 200px;
+            background-color: skyblue;
+        }
+        .box3{
+            overflow: scroll;
+            width: 200px;
+            height: 200px;
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+<div class="box1">123</div>
+<div class="box2">456</div>
+<div class="box3">45sfhjdkshfjkhdsjfkhdsjkfhj
+    sdjfhjkdsfjdsfkdsfjklsdfjklds
+    dsfjsdfkjdskfljdklsf
+    ehefhsffffffffffffffffffffffff
+    dddddddddddddddddddddddddddd
+    ddddddddddd6</div>
+</body>
+</html>
