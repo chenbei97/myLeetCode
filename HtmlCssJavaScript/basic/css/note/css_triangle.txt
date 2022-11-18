@@ -1,0 +1,25 @@
+三角制作：
+
+.box1 { /*使用边框制作正方三角形*/
+    width: 0;
+    height: 0; /*没有大小只有边框*/
+    line-height: 0; /*这两行代码是为了照顾兼容性*/
+    font-size: 0;
+    /*border:  10px solid skyblue;*/
+    border-top: 100px solid skyblue;
+    border-right: 100px solid red;
+    border-bottom: 100px solid greenyellow;
+    border-left: 100px solid orange;
+}
+.box2 { /*使用边框制作三角形*/
+    width: 0;
+    height: 0; /*没有大小只有边框*/
+    line-height: 0;
+    font-size: 0;
+    border:  100px solid transparent;
+    margin: 200px auto;
+    border-top-color: skyblue;
+    border-right-color: red;
+    /*border-bottom-color: greenyellow;*/
+    /*border-left-color: orange;*/
+}

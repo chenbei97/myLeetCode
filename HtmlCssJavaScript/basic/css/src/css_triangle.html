@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSS的小三角制作</title>
+    <style>
+        .box1 { /*使用边框制作正方三角形*/
+            width: 0;
+            height: 0; /*没有大小只有边框*/
+            line-height: 0; /*这两行代码是为了照顾兼容性*/
+            font-size: 0;
+            /*border:  10px solid skyblue;*/
+            border-top: 100px solid skyblue;
+            border-right: 100px solid red;
+            border-bottom: 100px solid greenyellow;
+            border-left: 100px solid orange;
+        }
+        .box2 { /*使用边框制作三角形*/
+            width: 0;
+            height: 0; /*没有大小只有边框*/
+            line-height: 0;
+            font-size: 0;
+            border:  100px solid transparent;
+            margin: 200px auto;
+            border-top-color: skyblue;
+            border-right-color: red;
+            /*border-bottom-color: greenyellow;*/
+            /*border-left-color: orange;*/
+        }
+
+        .box3 {
+            position: relative; /*子绝父相布局*/
+            width: 320px;
+            height: 249px;
+            background-color: red;
+        }
+
+        .box3 span {
+            position: absolute;/*子绝父相布局*/
+            right: 110px; /*到右侧距离110px,到顶部-100px*/
+            top: -100px; /*这样三角移到了中间,-100px是因为上边框是透明的也占了50px*/
+            width: 0;
+            height: 0;
+            line-height: 0;
+            font-size: 0;
+            border:  50px solid transparent;
+            border-bottom-color: green; /*上三角绿帽样式*/
+        }
+    </style>
+</head>
+<body>
+    <div class="box1"></div>
+    <div class="box2"></div>
+    <div class="box3">
+        <span>
+
+        </span>
+    </div>
+</body>
+</html>
