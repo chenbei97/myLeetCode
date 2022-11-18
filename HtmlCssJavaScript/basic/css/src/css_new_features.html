@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>css3新特性</title>
+    <style>
+        input[value] {
+            /*把具有value属性的元素选出来*/
+            color: red;
+        }
+        input[type="password"] {
+            /*把type为password类型的选出来*/
+            color: greenyellow;
+        }
+        div[class^="box"] {
+            /*把带有box开头的选出来*/
+            color: blue;
+        }
+        div[class$="1"] {
+            /*把结尾1的选出来*/
+            color: orange;
+        }
+        div[class*="e"] {
+            /*包含字母e的选出来*/
+            font-size: 20px;
+        }
+
+        ul li:nth-child(9) {
+            /*选择第9个孩子*/
+            color: darkviolet;
+        }
+
+        ul li:nth-child(even) {
+            /*把偶数行选出来*/
+            background-color: #CCCCCC;
+        }
+
+       section div:nth-child(1) {
+            /*所有的孩子都排列序号，首先选择了p,然后回去看前边的div不匹配就不选择*/
+            background-color: coral;
+        }
+        section div:nth-of-type(1) {
+            /*选择了B,只把指定元素进行排列序号,所以这里的1其实就是所有元素的第2个*/
+            background-color: red;
+        }
+
+        p::before {
+            content: "我最爱学习的编程语言";
+        }
+        p::after {
+            content: "python,c++,html,css,sql";
+        }
+    </style>
+</head>
+<body>
+    <!--1.利用属性选择器不借助class和id-->
+    <input type="text" value="请输入用户名">
+    <input type="text">
+    <!--2.选择具备属性等于=指定值的元素-->
+    <input type="password" value="请输入密码">
+    <!--3.选择以xx开头和结尾的元素-->
+    <div class="box1">1</div>
+    <div class="box2">2</div>
+    <div class="box3">3</div>
+    <div class="box4">4</div>
+    <div class="box5">5</div>
+    <div class="sex1">sex</div>
+    <div class="age1">age</div>
+
+    <ul>
+        <li>我是第{1}个孩子</li>
+        <li>我是第{2}个孩子</li>
+        <li>我是第{3}个孩子</li>
+        <li>我是第{4}个孩子</li>
+        <li>我是第{5}个孩子</li>
+        <li>我是第{6}个孩子</li>
+        <li>我是第{7}个孩子</li>
+        <li>我是第{8}个孩子</li>
+        <li>我是第{9}个孩子</li>
+        <li>我是第{10}个孩子</li>
+    </ul>
+
+    <!--nth-of-type(n)的含义-->
+    <section>
+        <span>A</span> <br>
+        <div>B</div>
+        <div>C</div>
+    </section>
+
+    <p class="weiyuansu">是</p>
+</body>
+</html>
