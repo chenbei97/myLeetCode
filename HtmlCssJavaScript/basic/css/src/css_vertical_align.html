@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>vertical-align</title>
+    <style>
+        .img1{
+            vertical-align: middle; /*让文字和图片居中对齐*/
+        }
+
+        textarea{
+            vertical-align: bottom;
+        }
+
+        div {
+            border:  2px solid red;
+        }
+
+        /*.img2 {*/
+        /*    display: block; !*把图片转为块级元素就没有了vertical-align属性*!*/
+        /*}*/
+    </style>
+</head>
+<body>
+    <img  class = "img1" src="../img/back-skyblue.png" alt="" style="vertical-align: middle">
+    牛逼，我娶了个老婆
+    <br>
+    <textarea></textarea> 请您留言
+
+    <div> <!--图片底部和边框存在空白距离,如果没有给img2添加vertical-align-->
+        <img class = "img2" src="../img/back-skyblue.png" alt=""> 陈北
+    </div>
+</body>
+</html>
