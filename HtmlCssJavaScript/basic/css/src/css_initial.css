@@ -1,0 +1,75 @@
+/*清除内外边距*/
+* {
+    margin: 0;
+    padding: 0;
+}
+
+em, /*不要斜体*/
+i {
+    font-style: normal;
+}
+
+li { /*去掉项目符号的小圆点*/
+    list-style: none;
+}
+
+img {
+    border: 0; /*照顾低版本浏览器,如果图片外边包含了链接会有边框问题*/
+    vertical-align: middle; /*取消图片底侧有空白缝隙的问题*/
+}
+
+button {
+    cursor: pointer; /*让鼠标经过按钮时变成小手形状*/
+}
+
+a {
+    color: #666666;
+    text-decoration: none; /*去掉链接下划线*/
+}
+
+a:hover {
+    color: #c81623;
+}
+
+button,
+input {
+    /*把中文字体的名称用相应的Unicode编码代替，避免浏览器解释css代码时出现乱码*/
+    /*例如黑体 \9ED1\4F53; 宋体 \5B8B\4F53 ; 微软雅黑 \5FAE\8F6F\96C5\9ED1*/
+    font-family: Microsoft YaHei, Heiti SC, Tahoma, Arial, Hiragino Sans GB, "\5B8B\4F53",
+    sans-serif;
+}
+
+body {
+    -webkit-font-smoothing: antialiased; /*抗锯齿，让文字显示更清晰*/
+    background-color: #ffffff; /*背景颜色白色*/
+    font: 12px/1.5 Microsoft YaHei, Heiti SC, Tahoma, Arial, Hiragino Sans GB,"\5B8B\4F53",
+    sans-serif;
+    color: #666666;
+}
+
+.hide,
+.none { /*隐藏元素*/
+    display: none;
+}
+
+.clearfix:after { /*伪元素清除浮动*/
+    visibility: hidden;
+    clear: both;
+    display: block;
+    content: ".";
+    height: 0;
+}
+
+.clearfix {
+    *zoom: 1
+}
+
+
+
+
+
+
+
+
+
+
