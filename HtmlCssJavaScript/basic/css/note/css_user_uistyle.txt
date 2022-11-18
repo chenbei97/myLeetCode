@@ -1,0 +1,9 @@
+就是更改一些用户操作样式，以便于更好提高用户体验
+
+常见的：
+    更改用户鼠标样式 cursor
+        cursor: pointer/default/move/text/not-allowed
+    去掉表单轮廓
+        outline:0 | none 去掉默认蓝色边框
+    防止表单域拖曳
+        resize: none

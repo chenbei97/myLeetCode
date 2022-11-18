@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户界面样式</title>
+    <style>
+        ul li {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            outline: none;/*去掉表单轮廓*/
+        }
+
+        textarea { /*防止表单域拖曳*/
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+<ul>
+    <li style="cursor: default">我是默认的鼠标样式</li>
+    <li style="cursor: pointer">我是pointer样式</li>
+    <li style="cursor: text">我是text样式</li>
+    <li style="cursor: move">我是move样式</li>
+    <li style="cursor: not-allowed">我是not-allowed样式</li>
+</ul>
+
+    <input type="text" style="outline: none">
+    <textarea name="" id="" cols="30" rows="10"></textarea>
+</body>
+</html>
