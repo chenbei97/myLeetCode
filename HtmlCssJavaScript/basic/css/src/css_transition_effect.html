@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>css3的过渡效果</title>
+    <style>
+        .trans {
+            width: 200px;
+            height: 100px;
+            background-color: pink;
+            transition: width 1s ease-in 1s,height .5s ease 1s;
+        }
+
+        .trans:hover {
+            width: 400px;
+            height: 200px;
+        }
+
+        .bar {
+            margin-top: 100px;
+            width: 150px;
+            height: 30px;
+            border: 1px solid blue;
+            border-radius: 7px;
+        }
+        .bar_in {
+            width: 50%;
+            height: 100%;
+            background-color: red;
+            transition: all 0.7s ;
+        }
+
+        .bar:hover .bar_in {
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="trans"></div>
+    <div class="bar"> <!--进度条示例-->
+        <div class="bar_in"></div>
+    </div>
+</body>
+</html>
