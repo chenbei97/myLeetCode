@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>溢出的文字用省略号替代</title>
+    <style>
+        .line {
+            width: 150px;
+            height: 80px;
+            background-color: skyblue;
+            margin: 100px auto;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lines {
+            width: 150px;
+            height: 100px;
+            background-color: skyblue;
+            margin: 100px auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box; /*弹性伸缩盒子模型显示*/
+            -webkit-line-clamp: 2; /*限制一个块元素显示的文本行数*/
+            -webkit-box-orient: vertical; /*设置或检索伸缩盒对象的子元素的排列方式*/
+        }
+    </style>
+</head>
+<body>
+    <div class="line">
+        单行文本，啥也不说显示一万多个字
+    </div>
+    <div class="lines">
+        多行文本，啥也不说显示一万多个字
+        34782374892374
+        阿松大汉奸堪萨斯卡斯卡迪
+        啊沙发上课件萨克来得及ask了解
+    </div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+溢出的文字用省略号替代
+
+单行文本和多行文本都可以
+
+单行：
+    white-space: nowrap; 必须先强制1行显示文本,默认normal会换行
+    overflow: hidden;  超出部分隐藏
+    text-overflow: ellipsis; 省略号替代
+
+多行：有较大兼容性问题，适合webkit浏览器或移动端
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box; /*弹性伸缩盒子模型显示*/
+    -webkit-line-clamp: 2; /*限制一个块元素显示的文本行数*/
+    -webkit-box-orient: vertical; /*设置或检索伸缩盒对象的子元素的排列方式*/
+
+最好让后台人员做此效果，因为可以设置显示多少个字，操作更简单
