@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>常见布局技巧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        ul li {
+            float: left;
+            list-style: none;
+            width: 150px;
+            height: 200px;
+            border: 1px solid red;
+            margin-left: -1px; /*如果不加这句边框重合导致变粗,但是适当错位1px就不会太明显*/
+        }
+
+        /*ul li:hover {*/
+        /*    position: relative; !*如果没有定位则加定位(保留位置)*!*/
+        /*    border: 1px solid blue;*/
+        /*}*/
+
+        ul li:hover {
+            z-index: 1; /*如果已经有定位则加z-index*/
+            border: 1px solid blue;
+        }
+
+        .box { /*文字围绕浮动*/
+            width: 300px;
+            height: 70px;
+            background-color: #449fdb;
+            margin: 0 auto;
+        }
+
+        .pic {
+            float: left;
+            width: 120px;
+            height: 60px;
+            margin-left: 10px;
+        }
+
+        .pic img {
+            width: 100%;
+        }
+
+        /*行内块的巧妙应用*/
+        .lines a {
+            margin-top: 300px;
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            text-align: center;
+            text-decoration: none;
+            background-color: red;
+            border: 1px solid greenyellow;
+            font-size: 14px;
+        }
+        .lines .prev,
+        .lines .next{
+            width: 100px;
+        }
+        .lines .current,
+        .lines .elp{
+            background-color: #fff;
+            border: none;
+        }
+        .lines input {
+            height: 36px;
+            width: 45px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+        .box button{
+            width: 60px;
+            height: 36px;
+            background-color: red;
+            border: 1px solid greenyellow;
+        }
+
+        /*三角形的强化应用*/
+
+        .trang {
+            margin-top: 300px;
+            width: 0;
+            height: 0;
+            /*上调大*/
+            border-top: 100px solid pink;
+            border-left: 50px solid skyblue;
+            /*把左下设置为0*/
+            border-bottom: 0 solid blue;
+            border-left: 0px solid green;
+        }
+    </style>
+</head>
+<body>
+<ul>
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+    <li>4</li>
+    <li>5</li>
+
+    <div class="box"> <!--文字围绕浮动-->
+        <div class="pic">
+            <img src="../img/back-yellow.png" alt="">
+        </div>
+        <p>
+            课件撒后代即可哈数据库等哈就肯定会尽快就是大家按时
+            啊是多久啊圣诞节ask多久啊是快乐的就爱看十点十分
+        </p>
+    </div>
+
+    <div class="lines">
+        <a href="#" class="prev">&lt;&lt; previous</a>
+        <a href="#" class="current">2</a>
+        <a href="#">3</a>
+        <a href="#">4</a>
+        <a href="#">5</a>
+        <a href="#">6</a>
+        <a href="#" class="elp">...</a>
+        <a href="#" class="next">&gt; &gt; next </a>
+        到第<input type="text">页
+        <button>确定</button>
+    </div>
+
+    <div class="trang">123123</div>
+</ul>
+</body>
+</html>

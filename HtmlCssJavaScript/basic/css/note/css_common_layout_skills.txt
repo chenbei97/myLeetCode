@@ -1,0 +1,12 @@
+1. margin负值应用
+    让每个盒子margin左移1px正好压住相邻盒子边框
+    鼠标经过某个盒子，提高当前盒子的层级即可，如果没有定位则加定位(保留位置)
+    如果已经有定位则加z-index
+2. 文字围绕浮动元素
+
+3. 行内块的巧妙运用
+
+4. css的三角强化
+    border-color: transparent red transparent transparent;
+    border-style: solid;
+    border-width: 100px 50px 0 0 ;
