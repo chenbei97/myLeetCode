@@ -145,6 +145,12 @@
 48. MyWeChat 关于UDP的综合示例，创建一个仿微信的应用
 
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
+25. 常见正则表达式
+    1) QRegExp("\\s+")
+    \f   匹配一个换页符  \n  匹配一个换行符  \r  匹配一个回车符  \t  匹配一个制表符 \v 匹配一个垂直制表符
+    以上都属于空白字符,\s表示匹配任何空白字符,\S则是匹配任何非空白字符
+    \s+表示匹配上述任何一种空白字符,另外正则表达式前需要转义字符\,所以合并就是\\s+
+    2) 其它见 https://blog.csdn.net/ZYC88888/article/details/98479629
 
 24. xml文档的写法
     1) 使用QXmlStreamWriter写入
@@ -520,6 +526,7 @@ void TestQSplash::paintEvent(QPaintEvent *event)
 (1) 使用QTextStream的时候设置流自动检测UniCode
 QTextStream stream(&file);
 stream.setAutoDetectUnicode(true); // 但是这种方法不是全局的
+stream.setCodec("UTF-8");
 (2) main函数使用QTextCodec设置全局启用
 int main()
 {
@@ -571,6 +578,7 @@ void CSVExport::writeTable(const QString & text) // 私有函数,给文本流写
     outFile.open(QIODevice::Truncate | QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
     QTextStream ts(&outFile);
     ts.setAutoDetectUnicode(true);
+    ts.setCodec("UTF-8");
     ts << text;
     outFile.close();
 }

@@ -5547,7 +5547,7 @@ QTreeView==>QTreeWidget
 QAbstractItemView 类为项目视图类提供了基本功能。
 QAbstractItemView 类是每个使用 QAbstractItemModel 的标准视图的基类，**是QColumnView、QHeaderView、QListView、QTableView和QTreeView的共同基类**。 QAbstractItemView 是一个抽象类，本身不能被实例化。它提供了一个标准接口，用于通过信号和槽机制与模型进行互操作，使子类能够随着模型的更改而保持最新。
 
-##### 枚举类型
+枚举类型。
 
 **描述视图可以操作的各种拖放事件**。默认情况下视图不支持拖放NoDragDrop。
 
@@ -5617,22 +5617,74 @@ QAbstractItemView::NoSelection // 无法选择项目
 }
 ```
 
-##### 子类函数
-
 给出常见的成员函数。
 
 ```c++
 QModelIndex currentIndex() const; //获取选中项的索引
-void setDragDropMode(DragDropMode behavior);//设置拖放模式
-void setEditTriggers(EditTriggers triggers);//设置启动编辑的触发模式
-virtual void setModel(QAbstractItemModel *model); // 设置模型
-void setSelectionBehavior(QAbstractItemView::
-SelectionBehavior behavior);// 设置选中单元格的行为
-void setSelectionMode(QAbstractItemView::SelectionMode mode);//设置选中模式
-virtual void setSelectionModel(QItemSelectionModel *selectionModel);// 将当前选择模型设置为给定的 selectionModel
-```
+QModelIndex rootIndex() const;//返回模型根项的模型索引。根项是视图顶层项的父项。根目录可能无效
 
-##### 槽函数
+void setDragEnabled(bool enable);// 是否可以拖放
+bool dragEnabled() const;
+
+void setDragDropMode(DragDropMode behavior);//设置拖放模式
+DragDropMode dragDropMode() const;
+
+void setDragDropOverwriteMode(bool overwrite);//此属性保持视图的拖放行为。如果其值为true，则在拖放时，所选数据将覆盖现有项数据，而移动数据将清除该项。如果其值为false，则在删除数据时，所选数据将作为新项插入。移动数据时，该项也会被删除
+bool dragDropOverwriteMode() const;
+
+bool showDropIndicator() const;//此属性保存在拖放项目时是否显示放置指示符
+void setDropIndicatorShown(bool enable);
+
+Qt::DropAction defaultDropAction() const;//默认将在QAbstractItemView::drag()中使用的放置操作。如果未设置该属性，则当支持的操作支持CopyAction时，放置操作为CopyAction
+void setDefaultDropAction(Qt::DropAction dropAction);
+
+void setEditTriggers(EditTriggers triggers);//设置启动编辑的触发模式
+EditTriggers editTriggers() const;
+
+virtual void setModel(QAbstractItemModel *model); // 设置模型
+QAbstractItemModel *model() const;
+
+void setSelectionBehavior(QAbstractItemView::SelectionBehavior behavior);//设置单元格行为
+QAbstractItemView::SelectionBehavior selectionBehavior() const;
+
+void setSelectionMode(QAbstractItemView::SelectionMode mode);//设置选中模式
+QAbstractItemView::SelectionMode selectionMode() const;
+
+virtual void setSelectionModel(QItemSelectionModel *selectionModel);// 设置选择模型
+QItemSelectionModel *selectionModel() const;
+
+void setIconSize(const QSize &size);//项目图标的大小在视图可见时设置此属性将导致项目重新布局
+QSize iconSize() const;
+
+void openPersistentEditor(const QModelIndex &index);//在给定索引处打开项目的持久编辑器。如果不存在编辑器，代理将创建一个新的编辑器
+void closePersistentEditor(const QModelIndex &index);
+
+void setAlternatingRowColors(bool enable);//是否使用交替颜色绘制背景。如果为true，则将使用QPalette::Base和QPalette::AlternateBase绘制项目背景；否则将使用QPalette::base绘制。默认false
+bool alternatingRowColors() const;
+
+void setAutoScroll(bool enable);//此属性保持是否在拖动移动事件中启用自动滚动。如果此属性设置为true（默认值），则如果用户在视口边缘的16个像素内拖动，QAbstractItemView将自动滚动视图的内容。如果当前项目发生更改，则视图将自动滚动以确保当前项目完全可见
+bool hasAutoScroll() const;
+
+void setAutoScrollMargin(int margin);//当触发自动滚动时，此属性保持区域的大小。此属性控制触发自动滚动的视口边缘区域的尺寸。默认值为16像素
+int autoScrollMargin() const;
+
+void resetHorizontalScrollMode();
+void setHorizontalScrollMode(ScrollMode mode);
+ScrollMode horizontalScrollMode() const;//视图如何在水平方向上滚动其内容
+
+void resetVerticalScrollMode();
+void setVerticalScrollMode(ScrollMode mode);
+ScrollMode verticalScrollMode() const;//视图如何在垂直方向上滚动其内容
+
+void setIndexWidget(const QModelIndex &index, QWidget *widget);
+QWidget *indexWidget(const QModelIndex &index) const;
+
+void setTabKeyNavigation(bool enable);//此属性保存是否启用了带有tab和backtab的项目导航
+bool tabKeyNavigation() const;
+
+void setTextElideMode(Qt::TextElideMode mode);//默认值为Qt:：ElideRight
+Qt::TextElideMode textElideMode() const;
+```
 
 给出常见槽函数。
 
@@ -5647,26 +5699,35 @@ void setCurrentIndex(const QModelIndex &index);//将当前项目设置为索引�
 virtual void setRootIndex(const QModelIndex &index);//将根项设置为给定索引处的项
 void update(const QModelIndex &index);//更新给定索引占用的区域
 
-// 继承的槽函数
-// 当新项目成为当前项目时，将调用此插槽。上一个当前项由上一个索引指定，新项由当前索引指定
+// 保护的不可继承槽函数
+// 当前单元格变化时将调用此插槽
 virtual void currentChanged(const QModelIndex &current, const QModelIndex &previous);
-//插入行时调用此插槽。新行是从头到尾包含在给定父级下的行。基类实现在模型上调用 fetchMore() 以检查更多数据
+//插入行时调用此插槽
 virtual void rowsInserted(const QModelIndex &parent, int start, int end);
-// 更改选择时调用此插槽。先前的选择（可能为空）由取消选择指定，新选择由选择指定
+// 更改选择时调用此插槽
 virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected;
 ```
 
-##### 信号函数
+信号函数
 
 ```c++
-void activated(const QModelIndex &index);//当用户激活 index 指定的项目时，会发出此信号。如何激活取决于平台,例通过单击或双击项目，或在项目为当前时按 Return 或 Enter 键。
-void clicked(const QModelIndex &index);//当鼠标左键单击时发出此信号。鼠标点击的项目由索引指定。该信号仅在索引有效时发出
-void doubleClicked(const QModelIndex &index);//双击鼠标按钮时会发出此信号。鼠标双击的项目由索引指定。仅在索引有效时发出信号
-void entered(const QModelIndex &index);//当鼠标光标进入 index 指定的项目时发出此信号。需要启用鼠标跟踪才能使用此功能
-void iconSizeChanged(const QSize &size);//此属性保存项目图标的大小,当视图可见时设置此属性将导致项目重新布局
-void pressed(const QModelIndex &index);//按下鼠标按钮时会发出此信号。鼠标按下的项目由索引指定。仅在索引有效时发出信号
+void activated(const QModelIndex &index);//当用户激活 index 指定的项目时会发出此信号
+void clicked(const QModelIndex &index);//当鼠标左键单击时发出此信号。该信号仅在索引有效时发出
+void doubleClicked(const QModelIndex &index);//双击鼠标按钮时会发出此信号
+void entered(const QModelIndex &index);//当鼠标光标进入index指定的项目时发出此信号，需要启用鼠标跟踪才能使用此功能
+void iconSizeChanged(const QSize &size);//此属性保存项目图标的大小
+void pressed(const QModelIndex &index);//按下鼠标按钮时会发出此信号
 void viewportEntered();//当鼠标光标进入视口时发出此信号。需要启用鼠标跟踪才能使用此功能
 ```
+
+一些有用的保护函数。
+
+```c++
+virtual QModelIndexList selectedIndexes() const;//返回选择所有单元格的索引
+virtual void setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags flags) = 0;
+```
+
+
 
 #### 4.3.2 QListView
 
