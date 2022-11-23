@@ -5040,7 +5040,125 @@ QModelIndex sibling(int row, int column) const;// 如果此位置没有相邻位
 void swap(QPersistentModelIndex &other); // 交换2个索引
 ```
 
-#### 4.1.3 QItemSelectionModel 
+#### 4.1.3 QStandardItem
+
+QStandardItem类提供用于QStandardItemModel类的项。
+项目通常包含文本、图标或复选框。
+每个项目都可以有自己的背景笔刷，通过setBackground()函数设置。当前背景笔刷可以使用background()找到。每个项目的文本标签可以用自己的字体和画笔呈现。它们是用setFont()和setForeground()函数指定的，并用font()和foreground()函数读取。
+默认情况下，项目是启用的、可编辑的、可选择的、可检查的，并且可以用作拖放操作的源和拖放目标。通过调用setFlags()可以更改每个项的标志。可以使用setCheckState()函数检查和取消检查可检查项。相应的checkState()函数指示该项当前是否已检查。
+您可以通过调用setData()将特定于应用程序的数据存储在项中。
+每个项目可以有一个二维子项目表。这使得构建项的层次结构成为可能。典型的层次结构是树，在这种情况下，子表是具有单个列(列表)的表。
+可以使用setRowCount()和setColumnCount()设置子表的维度。可以使用setChild()在子表中定位项。使用child()获取指向子项的指针。子级的新行和列也可以使用insertRow()和insertColumn()插入，或使用appendRow()和appendColumn()。当使用append和insert函数时，子表的维度将根据需要增长。
+可以使用removeRow()或takeRow()删除现有的子行；相应地，可以使用removeColumn()或takeColumn()删除列。
+可以通过调用sortChildren()对项的子项进行排序。
+
+当子类化QStandardItem以提供自定义项时，可以为其定义新类型，以便将其与基类区分开来。应重新实现type()函数，以返回等于或大于UserType的新类型值。
+如果要执行数据查询的自定义处理和/或控制项数据的表示方式，请重新实现data()和setData()。
+如果您希望QStandardItemModel能够按需创建自定义项类的实例，请重新实现clone()(请参见QStandardItemsModel:：setItemPrototype())。
+如果要控制项如何以序列化形式表示，请重新实现read()和write()。
+如果要控制项比较的语义，请使用重实现运算符<()。运算符<()确定使用sortChildren()或QStandardItemModel::sort()排序项目时的排序顺序。
+
+枚举类型。此枚举描述用于描述标准项的类型。
+
+```c++
+enum ItemType { Type, UserType };
+```
+
+成员函数。
+
+```c++
+QStandardItem();
+QStandardItem(const QString &text);
+QStandardItem(const QIcon &icon, const QString &text);
+QStandardItem(int rows, int columns = 1);
+QStandardItemModel *model() const;//返回此项所属的QStandardItemModel
+QStandardItem *parent() const;//返回项的父项，如果项没有父项，则返回0
+QString text() const;//返回项的文本。这是在视图中显示给用户的文本
+QModelIndex index() const;//返回与此项关联的QModelIndex
+virtual int type() const;//返回此项的类型。该类型用于区分自定义项和基类。在子类化QStandardItem时，应重新实现此函数并返回一个大于或等于UserType的新值
+virtual QStandardItem *clone() const;//返回此项的副本。不会复制项目的子项
+
+void appendColumn(const QList<QStandardItem *> &items);
+void appendRow(const QList<QStandardItem *> &items);
+void appendRow(QStandardItem *item);
+void appendRows(const QList<QStandardItem *> &items);
+void insertColumn(int column, const QList<QStandardItem *> &items);
+void insertColumns(int column, int count);
+void insertRow(int row, const QList<QStandardItem *> &items);
+void insertRow(int row, QStandardItem *item);
+void insertRows(int row, const QList<QStandardItem *> &items);
+void insertRows(int row, int count);
+void removeColumn(int column);
+void removeColumns(int column, int count);
+void removeRow(int row);
+void removeRows(int row, int count);
+void setColumnCount(int columns);
+void setRowCount(int rows);
+int column() const;
+int columnCount() const;
+int row() const;
+int rowCount() const;
+QList<QStandardItem *> takeColumn(int column);
+QList<QStandardItem *> takeRow(int row);
+
+void setBackground(const QBrush &brush);
+QBrush background() const;
+void setFont(const QFont &font);
+QFont font() const;
+void setForeground(const QBrush &brush);
+QBrush foreground() const;
+void setIcon(const QIcon &icon);
+QIcon icon() const;
+void setFlags(Qt::ItemFlags flags);
+Qt::ItemFlags flags() const;
+void setCheckable(bool checkable);
+bool isCheckable() const;
+void setDragEnabled(bool dragEnabled);
+bool isDragEnabled() const;
+void setDropEnabled(bool dropEnabled);
+bool isDropEnabled() const;
+void setEditable(bool editable);
+bool isEditable() const;
+void setEnabled(bool enabled);
+bool isEnabled() const;
+void setSelectable(bool selectable);
+bool isSelectable() const;
+void setAutoTristate(bool tristate);//确定该项为三态，如果三态为真，则由QTreeWidget控制。这可以自动管理QTreeWidget中父项的状态（如果选中了所有子项，则选中该项，如果未选中所有子项则取消选中该项；如果仅选中了某些子项，那么部分选中该项）
+bool isAutoTristate() const;
+void setUserTristate(bool tristate);//设置项目是否为三态并由用户控制。如果三态为真，用户可以循环通过三个不同的状态；否则，该项可通过两种状态进行检查
+bool isUserTristate() const;
+void setCheckState(Qt::CheckState state);
+Qt::CheckState checkState() const;
+void setAccessibleDescription(const QString &accessibleDescription);//将项的可访问描述设置为accessibleDescription指定的字符串
+QString accessibleDescription() const;
+void setAccessibleText(const QString &accessibleText);//将项目的可访问文本设置为accessibleText指定的字符串
+QString accessibleText() const;
+void setSizeHint(const QSize &size);
+QSize sizeHint() const;
+void setStatusTip(const QString &statusTip);
+QString statusTip() const;
+void setText(const QString &text);
+void setTextAlignment(Qt::Alignment alignment);
+Qt::Alignment textAlignment() const;
+void setToolTip(const QString &toolTip);
+QString toolTip() const;
+void setWhatsThis(const QString &whatsThis);
+QString whatsThis() const;
+
+void setChild(int row, int column, QStandardItem *item);
+void setChild(int row, QStandardItem *item);
+QStandardItem *child(int row, int column = 0) const;
+QStandardItem *takeChild(int row, int column = 0);
+void sortChildren(int column, Qt::SortOrder order = Qt::AscendingOrder);
+bool hasChildren() const;
+
+virtual void setData(const QVariant &value, int role = Qt::UserRole + 1);
+virtual QVariant data(int role = Qt::UserRole + 1) const;
+virtual void read(QDataStream &in);
+virtual void write(QDataStream &out) const;
+```
+
+#### 4.1.4 QItemSelectionModel 
 
 **用于监控鼠标是否指向表格项或者改变指向。**
 
@@ -5679,7 +5797,7 @@ ScrollMode verticalScrollMode() const;//视图如何在垂直方向上滚动其�
 void setIndexWidget(const QModelIndex &index, QWidget *widget);
 QWidget *indexWidget(const QModelIndex &index) const;
 
-void setTabKeyNavigation(bool enable);//此属性保存是否启用了带有tab和backtab的项目导航
+void setTabKeyNavigation(bool enable);//带有tab和backtab的项目导航,可以使用鼠标和tab浏览单元格
 bool tabKeyNavigation() const;
 
 void setTextElideMode(Qt::TextElideMode mode);//默认值为Qt:：ElideRight
@@ -5727,27 +5845,416 @@ virtual QModelIndexList selectedIndexes() const;//返回选择所有单元格的
 virtual void setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags flags) = 0;
 ```
 
-
-
 #### 4.3.2 QListView
 
-用于显示单列的列表数据，适用于一维数据的操作。参见Qt文档，不赘述。
+用于显示单列的列表数据，适用于一维数据的操作。
+
+QListView将存储在模型中的项目显示为一个简单的非分层列表或一组图标。该类用于提供以前由QListBox和QIconView类提供的列表和图标视图，但使用Qt的模型/视图体系结构提供的更灵活的方法。
+此视图不显示水平或垂直标题；要显示带有水平标题的项目列表，请改用QTreeView。
+列表视图中的项目可以使用两种视图模式之一显示：在ListMode中，项目以简单列表的形式显示；在IconMode中，列表视图采用图标视图的形式，其中项目用图标显示，如文件管理器中的文件。默认情况下，列表视图处于ListMode。若要更改视图模式，请使用setViewMode()函数，若要确定当前视图模式，则使用viewMode()。
+这些视图中的项目按列表视图的flow()指定的方向排列。根据视图的movement()状态，项目可以固定在适当位置，也可以移动。
+如果模型中的项目不能完全按照流的方向布置，则可以在视图小部件的边界处包装它们；这取决于isWrapping()。当项目由图标视图表示时，此属性非常有用。
+resizeMode()和layoutMode()控制项目的布局方式和时间。项目根据其spacing()进行间隔，并且可以存在于由gridSize()指定的大小的概念网格内。根据iconSize()，项目可以呈现为大图标或小图标。
+
+枚举类型。
+
+```c++
+enum Flow { LeftToRight, TopToBottom }//项目在视图中从左到右|从上到下排列
+enum LayoutMode { SinglePass, Batched }//这些项目一下子就布置好了|项目按批次大小项目进行布局
+enum Movement { Static, Free, Snap }//无法移动项目|自由移动项目|移动时项目将捕捉到指定的网格
+enum ResizeMode { Fixed, Adjust }//只在第一次显示视图时才进行布局|每次调整视图大小时，项目都会被布局
+enum ViewMode { ListMode, IconMode }//项目使用TopToBottom流程进行布局，具有小尺寸和静态移动|项目使用LeftToRight流进行布局，具有大尺寸和自由移动
+```
+
+成员函数。
+
+```c++
+void clearPropertyFlags();//清除QListView特定的属性标志。请参见视图模式
+
+void setBatchSize(int batchSize);//如果布局模式设置为Batched则保存每个批次中布置的项目数。默认100
+int batchSize() const;
+
+void setFlow(Flow flow);//此属性保存项布局应流向的方向
+Flow flow() const;
+
+void setGridSize(const QSize &size);//此属性保存布局网格的大小
+QSize gridSize() const;
+
+void setLayoutMode(LayoutMode mode);//确定项目的布局应该立即发生还是延迟
+LayoutMode layoutMode() const;
+
+void setModelColumn(int column);//此属性保存模型中可见的列
+int modelColumn() const;
+
+void setMovement(Movement movement);//用于确定项目是否可以自由移动、是否捕捉到网格或是否完全不能移动
+Movement movement() const;
+
+void setResizeMode(ResizeMode mode);//此属性保存在调整视图大小时是否重新布局项目
+ResizeMode resizeMode() const;
+
+void setRowHidden(int row, bool hide);
+bool isRowHidden(int row) const;//如果行被隐藏，则返回true
+
+void setSelectionRectVisible(bool show);//如果选择矩形应可见。如果此属性为true，则选择矩形可见
+bool isSelectionRectVisible() const;
+
+void setSpacing(int space);//此属性保留布局中项目周围的空间
+int spacing() const;
+
+void setUniformItemSizes(bool enable);//此属性保存列表视图中的所有项目是否具有相同的大小
+bool uniformItemSizes() const;
+
+void setViewMode(ViewMode mode);//此属性保存QListView的视图模式
+ViewMode viewMode() const;
+
+void setWordWrap(bool on);//此属性保存项文本换行策略
+bool wordWrap() const;
+
+void setWrapping(bool enable);//此属性保存项布局是否应换行
+bool isWrapping() const;
+```
+
+信号函数。
+
+```c++
+void indexesMoved(const QModelIndexList &indexes);//当在视图中移动指定的索引时，会发出此信号
+```
 
 #### 4.3.3 QTreeView
 
-用于显示树状结构数据，适用于树状结构数据的操作。参见Qt文档，不赘述。
+用于显示树状结构数据，适用于树状结构数据的操作。
+QTreeView实现了QAbstractItemView类定义的接口，以允许它显示从QAbstract ItemModel类派生的模型提供的数据。构建一个显示模型数据的树视图很简单。在以下示例中，目录的内容由QFileSystemModel提供，并显示为树：
+
+```c++
+QFileSystemModel *model = new QFileSystemModel;
+model->setRootPath(QDir::currentPath());
+QTreeView *tree = new QTreeView(splitter);
+tree->setModel(model);
+```
+
+模型/视图体系结构可确保在模型更改时更新树视图的内容。
+具有子项的项目可以处于展开（子项可见）或折叠（子项隐藏）状态。当该状态发生变化时，将发出collapsed()或expanded()信号，并带有相关项的模型索引。
+用于指示层次结构级别的缩进量由缩进属性控制。
+树视图中的头是使用QHeaderView类构造的，可以使用header()->hide()隐藏。请注意，每个标头的stretchLastSection属性都设置为true，以确保视图不会浪费为其标头分配的任何空间。如果此值设置为true，则此属性将覆盖在页眉最后一节上设置的调整大小模式。
+默认情况下，树视图中的所有列都可以移动，第一列除外。要禁用这些列的移动，请使用QHeaderView的setSectionsMovable()函数。
+
+成员函数。
+
+```c++
+int columnAt(int x) const;//返回树视图中标题覆盖给定x坐标的列
+int columnViewportPosition(int column) const;//返回列在视口中的水平位置
+void sortByColumn(int column, Qt::SortOrder order);//设置模型，以便根据给定列和顺序中的值进行排序
+
+QModelIndex indexAbove(const QModelIndex &index) const;//返回索引上方项的模型索引
+QModelIndex indexBelow(const QModelIndex &index) const;//返回索引下项的模型索引
+
+void setHeader(QHeaderView *header);//将树视图的标题设置为给定的标题
+QHeaderView *header() const;
+
+void setHeaderHidden(bool hide);//此属性保存是否显示标头
+bool isHeaderHidden() const;
+
+void setAllColumnsShowFocus(bool enable);//此属性保存项目是否应使用所有列显示键盘焦点
+bool allColumnsShowFocus() const;
+
+void setAnimated(bool enable);//此属性保存是否启用动画
+bool isAnimated() const;
+
+void setAutoExpandDelay(int delay);//此属性保存在拖放操作期间打开树中项目之前的延迟时间
+int autoExpandDelay() const;
+
+void setColumnHidden(int column, bool hide);//如果hide为true，则隐藏该列，否则显示该列
+bool isColumnHidden(int column) const;
+
+void setColumnWidth(int column, int width);//将给定列的宽度设置为指定的宽度
+int columnWidth(int column) const;
+
+void setExpanded(const QModelIndex &index, bool expanded);//将索引引用的项设置为折叠或展开
+bool isExpanded(const QModelIndex &index) const;
+
+void setExpandsOnDoubleClick(bool enable);//此属性保存是否可以通过双击展开项目
+bool expandsOnDoubleClick() const;
+
+//如果父级给定行的第一列中的项跨越所有列，则返回true；否则返回false
+void setFirstColumnSpanned(int row, const QModelIndex &parent, bool span);
+bool isFirstColumnSpanned(int row, const QModelIndex &parent) const;
+
+void setIndentation(int i);//树视图中项目的缩进
+int indentation() const;
+void resetIndentation();
+
+void setItemsExpandable(bool enable);//此属性保存用户是否可以展开项目
+bool itemsExpandable() const;
+
+void setRootIsDecorated(bool show);//此属性保存是否显示用于展开和折叠顶级项的控件
+bool rootIsDecorated() const;
+
+void setRowHidden(int row, const QModelIndex &parent, bool hide);//如果hide为true，则隐藏具有给定父级的行，否则显示该行
+bool isRowHidden(int row, const QModelIndex &parent) const;
+
+void setSortingEnabled(bool enable);//此属性保存是否启用排序
+bool isSortingEnabled() const;
+
+void setTreePosition(int index);
+int treePosition() const;//返回树设置的逻辑索引。如果返回值为-1，则将树放置在可视索引0上
+
+void setUniformRowHeights(bool uniform);//此属性保存树视图中的所有项目是否具有相同的高度
+bool uniformRowHeights() const;
+
+void setWordWrap(bool on);//此属性保存项文本换行策略
+bool wordWrap() const;
+```
+
+槽函数。
+
+```c++
+void collapse(const QModelIndex &index);//折叠索引指定的模型项
+void collapseAll();//折叠所有展开的项目
+void expand(const QModelIndex &index);//展开索引指定的模型项
+void expandAll();//展开所有可展开的项目
+void expandToDepth(int depth);//将所有可展开项目展开到给定深度
+void hideColumn(int column);//隐藏和显示给定的列
+void showColumn(int column);
+void resizeColumnToContents(int column);//根据内容的大小调整列的大小
+```
+
+信号函数。
+
+```c++
+void collapsed(const QModelIndex &index);//当索引指定的项折叠时，会发出此信号
+void expanded(const QModelIndex &index);//当索引指定的项展开时，会发出此信号
+```
 
 #### 4.3.4 QTableView
 
-用于显示表格状数据，适用于二维表格型数据的操作。参见Qt文档，不赘述。
+用于显示表格状数据，适用于二维表格型数据的操作，常与QStandardItemModel搭配，继承于QAbstractItemView，被QTableWidget继承。
+
+成员函数。
+
+```c++
+void clearSpans();//删除表视图中的所有行和列跨度
+int columnSpan(int row, int column) const;
+int rowSpan(int row, int column) const;
+//将表元素在(row,col)处的跨度设置为(rowSpanCount，columnSpanCount)
+void setSpan(int row, int column, int rowSpanCount, int columnSpanCount);
+
+int columnAt(int x) const;
+int rowAt(int y) const;//返回内容坐标中给定y坐标所在的行
+
+int columnViewportPosition(int column) const;//返回给定列的内容坐标中的x坐标
+int rowViewportPosition(int row) const;
+
+oid setColumnWidth(int column, int width);
+int columnWidth(int column) const;
+void setRowHeight(int row, int height);
+int rowHeight(int row) const;//返回给定行的高度
+
+void setGridStyle(Qt::PenStyle style);//网格风格
+Qt::PenStyle gridStyle() const;
+bool showGrid() const;
+
+void setHorizontalHeader(QHeaderView *header);//设置垂直水平表头
+QHeaderView *horizontalHeader() const;
+void setVerticalHeader(QHeaderView *header);
+QHeaderView *verticalHeader() const;
+
+void setColumnHidden(int column, bool hide);//设置隐藏
+bool isColumnHidden(int column) const;
+void setRowHidden(int row, bool hide);
+bool isRowHidden(int row) const;
+
+void setSortingEnabled(bool enable);//是否启用排序。如果为true，则为表启用排序
+bool isSortingEnabled() const;
+
+void setCornerButtonEnabled(bool enable);//左上角的按钮是否已启用。如果为true，单击此按钮将选择表视图中的所有单元格
+bool isCornerButtonEnabled() const;
+
+void setWordWrap(bool on);//文本换行策略。如果为true则必要时换行。默认为true
+bool wordWrap() const;
+
+void sortByColumn(int column, Qt::SortOrder order);//按给定顺序按给定列中的值对模型进行排序
+
+virtual QModelIndex indexAt(const QPoint &pos) const;//返回与目录坐标中位置pos处的表项相对应的模型项的索引位置
+virtual void setModel(QAbstractItemModel *model);//QAbstractItemView:：setModel()
+virtual void setRootIndex(const QModelIndex &index);//QAbstractItemView:：setRootIndex()
+virtual void setSelectionModel(QItemSelectionModel *selectionModel);//QAbstractItemView:：setSelectionModel()
+```
+
+槽函数。
+
+```c++
+void hideColumn(int column);//隐藏和显示给定的行列
+void showColumn(int column);
+void hideRow(int row);
+void showRow(int row);
+
+void setShowGrid(bool show);// 显示网格
+
+void resizeColumnToContents(int column);//根据用于呈现列中每个项的委托的大小提示调整给定列的大小
+void resizeRowToContents(int row);
+
+void resizeRowsToContents();
+void resizeColumnsToContents();//根据用于呈现列中每个项的代理的大小提示调整所有列的大小
+
+void selectColumn(int column);
+void selectRow(int row);//如果当前SelectionMode和SelectionBehavior允许选择行则选择给定行
+```
 
 #### 4.3.5 QColumnView
 
-用多个QListView显示树状层次结构，树状结构的一层用一个QListView显示。参见Qt文档，不赘述。
+用多个QListView显示树状层次结构，树状结构的一层用一个QListView显示。
+
+成员函数。
+
+```c++
+//将列宽设置为列表中给定的值。创建列时将保留并使用列表中的额外值。若列表包含的值太少则只修改其余列的宽度
+QList<int> columnWidths() const;
+void setColumnWidths(const QList<int> &list);
+
+//设置预览小部件。小部件成为列视图的子部件，当删除列区域或设置新的小部件时将被销毁
+QWidget *previewWidget() const;
+void setPreviewWidget(QWidget *widget);
+
+//此属性用于指定列表视图是否获得调整夹点。默认情况下，visible设置为true
+void setResizeGripsVisible(bool visible);
+bool resizeGripsVisible() const;
+
+//当应该更新预览小部件以提供有关索引的丰富信息时，会发出此信号
+signal void updatePreviewWidget(const QModelIndex &index);
+```
 
 #### 4.3.6 QHeaderView
 
-提供行表头或列表头的视图组件，如QTable的行表头和列表头。参见Qt文档，不赘述。
+提供行表头或列表头的视图组件，如QTable的行表头和列表头。
+
+枚举类型。
+
+调整大小模式指定标题部分的行为。可以使用setSectionResizeMode()在整个页眉视图或单个节上设置该值
+
+```c++
+enum QHeaderView::ResizeMode{
+    QHeaderView::Interactive//用户可以调整节的大小。也可以使用resizeSection()以编程方式调整节的大小。默认为defaultSectionSize
+    QHeaderView::Fixed//用户无法调整节的大小。只能使用resizeSection()以编程方式调整节的大小。默认为defaultSectionSize
+    QHeaderView::Stretch//将自动调整节的大小以填充可用空间。大小不能由用户或以编程方式更改
+    QHeaderView::ResizeToContents//将根据整个列或行的内容自动将节调整为最佳大小。大小不能由用户或以编程方式更改
+}
+```
+
+成员函数。
+
+```c++
+QHeaderView(Qt::Orientation orientation, QWidget *parent = Q_NULLPTR);
+Qt::Orientation orientation() const;//返回标头的方向
+
+int count() const;//返回标头中的节数
+int length() const;//返回沿标头方向的长度
+int hiddenSectionCount() const;//返回页眉中已隐藏的节数
+int stretchSectionCount() const;//返回设置为调整模式拉伸大小的节数。在视图中，这可用于查看当视图的几何图形发生更改时，headerview是否需要调整截面的大小
+int sectionPosition(int logicalIndex) const;//返回给定logicalIndex的节位置，如果隐藏，则返回-1
+int sectionSize(int logicalIndex) const;//返回给定logicalIndex的宽度（或垂直标头的高度）
+int sectionSizeHint(int logicalIndex) const;//为logicalIndex指定的节返回合适的大小提示
+int sectionViewportPosition(int logicalIndex) const;//返回给定logicalIndex的分区视口位置
+int sortIndicatorSection() const;//返回具有排序指示符的节的逻辑索引。默认情况下，这是第0节
+void swapSections(int first, int second);//将第一个视觉索引处的节与第二个视觉索引的节互换
+void hideSection(int logicalIndex);//隐藏和显示logicalIndex指定的节
+void showSection(int logicalIndex);
+
+void setOffset(int offset);//将标头的偏移设置为offset
+int offset() const;//返回标题的偏移量：这是标题的最左侧（或垂直标题的最顶部）可见像素
+
+int logicalIndex(int visualIndex) const;//返回给定visualIndex位置的节的logicalIndex，如果visualIndex＜0或visualIndex＞=QHeaderView:：count（），则返回-1
+int logicalIndexAt(int position) const;//返回覆盖视口中给定位置的部分
+int logicalIndexAt(int x, int y) const;
+int logicalIndexAt(const QPoint &pos) const;
+
+//此属性保留标头节的最大和最小大小
+void setMaximumSectionSize(int size);
+void setMinimumSectionSize(int size);
+int maximumSectionSize() const;
+int minimumSectionSize() const;
+
+void moveSection(int from, int to);//将视觉索引处的节从移动到占据视觉索引的位置
+bool sectionsMovable() const;
+
+void setSectionsMovable(bool movable);//如果用户可以移动标头，则返回true
+bool sectionsMoved() const;
+
+bool sectionsHidden() const;//如果标题中的节已隐藏，则返回true
+void setSectionHidden(int logicalIndex, bool hide);
+bool isSectionHidden(int logicalIndex) const;//如果指定的节对用户显式隐藏，则返回true
+
+void resizeSection(int logicalIndex, int size);//将logicalIndex指定的部分调整为以像素为单位的大小。size参数必须是大于或等于零的值。但是，不建议大小等于零。在这种情况下，应改用hideSection
+void resizeSections(QHeaderView::ResizeMode mode);//根据给定模式调整节的大小
+
+//此属性保留每个标题部分中文本的默认对齐方式
+void setDefaultAlignment(Qt::Alignment alignment);
+Qt::Alignment defaultAlignment() const;
+
+//此属性在调整大小之前保留标题部分的默认大小
+void setDefaultSectionSize(int size);
+int defaultSectionSize() const;
+void resetDefaultSectionSize();
+
+//此属性保存是否突出显示包含选定项的节
+void setHighlightSections(bool highlight);
+bool highlightSections() const;
+
+//此属性保存标头中最后一个可见部分是否占用所有可用空间。默认值为false
+void setStretchLastSection(bool stretch);
+bool stretchLastSection() const;
+
+void setSectionResizeMode(ResizeMode mode);
+void setSectionResizeMode(int logicalIndex, ResizeMode mode);
+ResizeMode sectionResizeMode(int logicalIndex) const;//返回应用于指定的节的大小调整模式
+
+void setSectionsClickable(bool clickable);
+bool sectionsClickable() const;//如果标题可单击，则返回true
+
+void setResizeContentsPrecision(int precision);//返回QHeaderView对ResizeToContents的计算精度
+int resizeContentsPrecision() const;
+
+//此属性保持是否显示排序指示符。默认情况下，此属性为false
+void setSortIndicator(int logicalIndex, Qt::SortOrder order);
+Qt::SortOrder sortIndicatorOrder() const;
+
+bool isSortIndicatorShown() const;
+void setSortIndicatorShown(bool show);
+
+//用户调整大小达到其最小大小后是否将级联到以下节。此属性仅影响“交互式”调整大小模式的节。默认false
+void setCascadingSectionResizes(bool enable);
+bool cascadingSectionResizes() const;
+
+bool restoreState(const QByteArray &state);//恢复此标头视图的状态。如果已恢复，则此函数返回true
+QByteArray saveState() const;//保存此标题视图的当前状态
+
+int visualIndex(int logicalIndex) const;//返回给定logicalIndex指定的节的可视索引位置，否则返回-1
+int visualIndexAt(int position) const;//返回覆盖视口中给定位置的部分的视觉索引
+```
+
+槽函数。
+
+```c++
+void headerDataChanged(Qt::Orientation orientation, int logicalFirst, int logicalLast);
+void setOffset(int offset);//将标头的偏移设置为offset
+void setOffsetToLastSection();//设置偏移以使最后一个截面可见
+void setOffsetToSectionPosition(int visualSectionNumber);//将偏移设置为给定处的节起点
+```
+
+信号函数。
+
+```c++
+void sectionClicked(int logicalIndex);//单击某个部分时会发出此信号
+void sectionDoubleClicked(int logicalIndex);// 双击
+void sectionEntered(int logicalIndex);//当光标移动到截面上并按下鼠标左键时，会发出此信号
+void sectionPressed(int logicalIndex);// 按压
+void sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);//当部分移动时
+void sectionResized(int logicalIndex, int oldSize, int newSize);//调整节的大小时会发出此信号
+
+void sectionCountChanged(int oldCount, int newCount);//当区段数量改变时，即当区段被添加或删除时，发出该信号。原始计数由oldCount指定，新计数由newCount指定
+void sortIndicatorChanged(int logicalIndex, Qt::SortOrder order);//当包含排序指示符的部分或指示的顺序改变时，发出该信号。该节的逻辑索引由logicalIndex指定，排序顺序由order指定
+void sectionHandleDoubleClicked(int logicalIndex);//双击某个部分时会发出此信号
+void geometriesChanged();//当收割台的几何结构发生变化时，会发出此信号
+```
 
 ### 4.4 Delegate类
 
@@ -5877,7 +6384,7 @@ void WidgetDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option
 要提供自定义编辑，可以使用两种方法。第一种方法是创建一个编辑器小部件并将其直接显示在项目的顶部。为此，您必须重新实现 createEditor() 以提供编辑器小部件， setEditorData() 以使用模型中的数据填充编辑器，以及 setModelData() 以便委托可以使用来自编辑器的数据更新模型。
 第二种方法是通过重新实现 editorEvent() 直接处理用户事件。
 
-##### 枚举类型
+枚举类型。
 
 这个枚举描述了委托可以给模型和视图组件的不同提示，以使在模型中编辑数据对用户来说是一种舒适的体验。请注意，自定义视图可能会以不同的方式解释下一个和上一个的概念。以下提示在使用缓存数据的模型时最有用，例如那些在本地操作数据以提高性能或节省网络带宽的模型。尽管模型和视图应该以适当的方式响应这些提示，但如果它们不相关，自定义组件可能会忽略它们中的任何一个或全部。
 
@@ -5891,7 +6398,7 @@ enum QAbstractItemDelegate::EndEditHint = {
 }
 ```
 
-##### 子类函数
+成员函数。
 
 ```c++
 QAbstractItemDelegate(QObject *parent = Q_NULLPTR);
@@ -5908,7 +6415,7 @@ virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QMod
 virtual void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 ```
 
-##### 信号函数
+信号函数。
 
 ```c++
 void closeEditor(QWidget *editor, QAbstractItemDelegate::EndEditHint hint = NoHint);
