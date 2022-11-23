@@ -14,6 +14,18 @@
         能够写出背景图片的设置方式
         能够计算css的权重
 
+        浏览器私有前缀：
+            -moz-：Firefox的私有属性
+            -ms-：ie的私有属性
+            -webkit-：safari、chrome的私有属性
+            -o-：opera私有属性
+            提倡的写法：
+            -moz-border-radius:10px;
+            -webkit-radius:10px;
+            -o-border-radius:10px;
+            border-radius:10px;
+
+
 ## grammatical_nor
         基本的语法规范
 
@@ -121,3 +133,9 @@
 
 ## css_transition_effect
         css3的过渡效果
+
+## css_transform_2D
+        2D转换，实现元素的位移、旋转和缩放
+
+## css_transform_3D
+        animation动画效果
