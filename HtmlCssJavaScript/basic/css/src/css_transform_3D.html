@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>动画效果</title>
+    <style>
+        body {
+            perspective: 500px; /*透视效果，写在被观察元素的父盒子上*/
+        }
+        @keyframes move {
+            0% {
+                transform: translateX(0px);
+            }
+            25% {
+                transform: translateX(500px);;
+            }
+            50% {
+                transform: translate(500px,500px);
+            }
+            75% {
+                transform: translate(0px,500px);
+            }
+            100% {
+                transform: translate(0px,0px);
+            }
+        }
+        div {
+            width: 200px;
+            height: 200px;
+            background-color: pink;
+            animation-name: move;
+            animation-duration: 1s;/*持续时间*/
+            animation-delay: 1s;
+            animation-direction: normal;
+            animation-iteration-count: infinite;
+            animation-play-state: running;
+            animation-timing-function:ease-in;
+            animation-fill-mode:forwards;
+        }
+        div:hover {
+            animation-play-state:paused;/* 悬停时就暂停*/
+        }
+
+        p {
+            transform: translate3d(400px,200px,100px) rotateX(180deg)
+                rotate3d(1,1,0,45deg);
+
+        }
+    </style>
+</head>
+<body>
+<div></div>
+<p>234234234</p>
+</body>
+</html>
