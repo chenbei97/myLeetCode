@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2D转换</title>
+    <style>
+        .translate {
+            width: 200px;
+            height: 200px;
+            background-color: greenyellow;
+            transform: translate(50%,100px);
+            /*transform: translateX(200px);*/
+            transform: rotate(30deg);
+        }
+        img {
+            width: 150px;
+            border-radius: 50%;
+            transform: translate(300px,200px);
+            border: 5px solid blue;
+            transition: all 1s;
+            transform-origin: left bottom;
+        }
+        img:hover {
+            transform: rotate(360deg);
+            transform: scale(1.5);
+        }
+
+        .scale {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+            margin: 500px auto;
+        }
+        .scale:hover {
+            transform: scale(2,0.5);
+        }
+
+        li {
+            float: left;
+            width: 30px;
+            height: 30px;
+            border: 1px solid pink;
+            text-align: center;
+            line-height: 30px;
+            list-style: none;
+            border-radius: 50%;
+            margin: 10px;
+            cursor: pointer; /*鼠标经过变样子*/
+            transition: all 0.1s;
+        }
+        li :hover {
+            transform: scale(2);
+        }
+    </style>
+</head>
+<body>
+<div class="translate"></div>
+<img src="../img/wacool.png" alt="">
+<div class="scale"></div>
+<ul>
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+    <li>4</li>
+    <li>5</li>
+    <li>6</li>
+    <li>7</li>
+    <li>8</li>
+</ul>
+</body>
+</html>

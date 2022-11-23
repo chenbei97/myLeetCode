@@ -1,0 +1,26 @@
+2D转换，实现元素的位移、旋转和缩放
+
+位移：translate
+transform: translate(x,y)
+transform: translateX(n)
+transform: translateY(n)
+不会影响其他元素的位置，百分比单位是相对于自身元素的translate(50%,50%)
+对行内标签没有效果
+
+旋转：rotate
+transform: rotate(30deg)
+角度为正是顺时针，默认旋转中心是元素中心点
+
+transform-origin: x y; 可以设置元素转换中心点
+默认就是(50%,50%)，除了设置像素px也可以设置方位词 top|bottom|left|right|center
+
+缩放：scale
+transform: scale(x,y);
+(1,1) 宽和高都放大一倍,相对于没有放大
+(2,2) 都放大2倍
+(2)   都放大2倍
+(0.5,0.5) 缩小1/2
+可以设置转换中心点缩放，默认以中心缩放，不影响其他盒子
+
+注意：如果同时使用多个转换，顺序会影响转换效果，因为旋转会改变坐标轴方向
+当我们同时有位移和其他属性时，要将位移放到最前
