@@ -297,8 +297,25 @@ dlg->deleteLater();
         connect(button, SIGNAL(clicked()), signalMapper, SLOT(map())); // 关联到map()
         signalMapper->setMapping(button, texts[i]); // 绑定的文本映射关系
     }
-	// 映射器的信号 => 信号或槽函数
-    connect(signalMapper, SIGNAL(mapped(QString)),this, SIGNAL(clicked(QString))); //这里clicked信号可以关联某个槽函数进行执行
+	// 映射器的信号 => 信号或槽函数,这里clicked信号可以继续关联某个槽函数进行执行,或者直接使用匿名槽函数
+    connect(signalMapper, SIGNAL(mapped(QString)),this, SIGNAL(clicked(QString))); 
+
+    例子:
+    QList<QAction*> actList;
+    actList <<ActAppendRow <<ActAppendCol << ActInsertRow << ActInsertCol
+                <<ActRemoveRow <<ActRemoveCol << ActSetAlignLeft << ActSetAlignCenter
+               << ActSetAlignRight << ActSetBold << ActSetItalic << ActClearTable << ActResetTable
+               << ActImportTxt<< ActExportTxt << ActImportCsv<<ActExportCsv;
+    QAction * act;
+    QSignalMapper * signalMapper = new QSignalMapper(this);
+    foreach(act,actList) {
+            connect(act, SIGNAL(hovered()), signalMapper, SLOT(map()));
+            signalMapper->setMapping(act,act->text()); // 绑定的文本映射关系
+    }
+    connect(signalMapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),this, [=](const QString& text){
+            QString t = tr("工具提示: %1").arg(text);
+            mToolTip->setText(t);
+    });
 
 21. 菜单动作分组
 // 各对齐方式功能项加入同一个菜单项组，这样程序运行的任一时刻用户能且只能选中其中一项
