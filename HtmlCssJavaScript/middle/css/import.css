@@ -1,0 +1,4 @@
+@import url("link_2.css");
+p {
+    text-indent:3em; /*首行缩进3字符*/
+}
