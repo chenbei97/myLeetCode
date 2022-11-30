@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>继承在层叠起的作用</title>
+    <style>
+        span {
+            color: blue;
+        }
+        #next {
+            color: red;
+        }
+        .page {
+            color: #0FFFF0; /*青色*/
+        }
+    </style>
+</head>
+<body>
+    <div class="inherit" id="next">
+       <span>
+           style的css样式如下: <br>
+            span {
+                color: blue;
+            }
+            #next {
+                color: red;
+            }<br>
+           无论父元素的优先级有多大,例如这里的父元素div的id选择器next优先级100 <br>
+           子元素span的优先级是1,但是span在div内部不会继承父元素的优先级<br>
+           所以对于span内部的内容依然是span{color:blue;}说了算 <br>
+       </span>
+        <p class="page" style="color: greenyellow">
+            依然显示greenyellow,而非style内部规定的青色 <br>
+            这是因为靠近元素的样式具有最大优先权
+        </p>
+    </div>
+</body>
+</html>
