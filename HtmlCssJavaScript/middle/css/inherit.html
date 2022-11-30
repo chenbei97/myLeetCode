@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>继承性的应用</title>
+    <style>
+        * { /*加权值0*/
+            font-size: 14px; /*通配符定义字体大小*/
+        }
+        div { /*加权值1*/
+            text-align: center;	/* 块元素 IE浏览器下居中 */
+            margin: 0 auto;	/* 火狐浏览器下居中 */
+        }
+        li { /*加权值1*/
+            line-height: 25px; /* 列表项设置行高*/
+        }
+        span { /*加权值1*/
+            padding-left: 10px;	/* 行内span 设置左间距 */
+            font-size: 12px;	/* 重置字体大小 */
+        }
+        .head { /*加权值10*/
+            width: 600px;	/* 整个div定义宽度 */
+            background-color: #99CCFF;	/* 类别选择器设置背景色 */
+            text-align: left;	/* 文本左对齐 */
+        }
+        .head h3 { /*加权值11*/
+            font-weight: bold;	/*对div内的标题字体加粗 */
+            background-color: #FF9999;	/* 类别选择器和标记选择器一起设置背景色 */
+        }
+        .head h3 a { /*加权值12*/
+            float: right;	/* More>>设置右浮动,这月新闻动态在左侧,More>>在右侧 */
+        }
+        .head li { /*加权值11*/
+            background-color: #999999;	/* 类对一级div的li设置背景色 */
+            width: 400px;	/* 设置宽度 */
+            margin-bottom: 5px;	/* 设置下边距 */
+            text-align:left; /*列表项可以左对齐不然是居中*/
+        }
+        .list li { /*加权值11*/
+            background-color: #9999CC;/* 覆盖了.head li */
+        }
+        .head .list ul li span { /*加权值23*/
+            background-color: #99CC00;	/* 覆盖了.list li*/
+        }
+        #AT li span { /*加权值102*/
+            background-color: #33CCFF;	/*覆盖了.head .list ul li span */
+        }
+    </style>
+</head>
+<body>
+    <div class="head" id="AT">
+        <h3><a href="#">More>></a><span>新闻动态</span></h3>
+        <div class="list">
+            <ul id="S2">
+                <li><a href="#">微信“阅读数”是怎么算的？<span>[07-27]</span></a></li>
+                <li><a href="#">重振人工智能雄心壮志的时刻已经到了<span>[07-25] </span></a></li>
+                <li><a href="#">Google再次“登月” Baseline工程把基因大数据化<span>[07-26] </span></a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
