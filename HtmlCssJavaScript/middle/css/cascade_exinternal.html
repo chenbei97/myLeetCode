@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="cascade_exinternal.css" type="text/css" rel="stylesheet" />
+    <style>
+        #header {
+            color: greenyellow; /*内部样式规定使用绿色*/
+        }
+        p {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+      外部样式使用了id选择器规定使用红色，内部样式使用id选择器规定绿色，最终显示绿色 <br>
+      也就是如果内外都用id规定颜色，那么内部决定
+    </div>
+    <p id="next">
+        如果外部样式使用id规定红色，内部样式不使用id而是使用tag规定为蓝色 <br>
+        虽然内部样式优先级高于外部样式，但是外部的id还是比内部的tag优先级高，最终显示红色
+    </p>
+</body>
+</html>
