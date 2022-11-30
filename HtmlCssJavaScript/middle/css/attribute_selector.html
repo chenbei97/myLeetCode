@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>属性选择器的应用</title>
+    <style>
+        .pic_box { /*给图片的父元素div加个边框,左浮动且是相对定位*/
+            border:solid 6px #bbb;
+            position:relative;
+            float:left;
+        }
+        .pic_box img { /*让图片本身边框变粗且限制宽度,原宽度很大*/
+            width:500px;
+            border:solid 1px #fff;
+        }
+        /*导航框样式*/
+        .nav {
+            background:#999;
+            border: 1px solid #ccc;
+            padding: 4px 12px;
+            /*float:left;*/ /*a的父元素nav可以不设置,因为nav并没有并排元素*/
+            opacity:0.6;
+            position:absolute;
+            bottom:6px;
+            right:12px;
+        }
+        /*导航按钮样式*/
+        .nav a {
+            float: left;/*浮动很重要,这样内部的a才能排成一排*/
+            display: block;
+            height: 20px;
+            line-height: 20px;
+            width: 20px;
+            -moz-border-radius: 10px; /*让不同浏览器正常显示为圆圈*/
+            -webkit-border-radius: 10px;
+            border-radius: 10px;
+            text-align: center;
+            background: #f36;
+            color: green;
+            margin-right: 5px;
+            text-decoration: none; /*去掉链接下划线*/
+        }
+        .nav a:hover { /*悬停效果*/
+            background: green;
+            color: #fff;
+        }
+
+        /*1.E[attr]的应用*/
+        /*具有id属性的a拿出来,无需指定属性值*/
+        .nav a[id] {background: blue; color:yellow;font-weight:bold;}
+        /*同时具有href,title属性,无需指定属性值*/
+        .nav a[href][title] {background: yellow; color:green;}
+
+        /*2.E[attr="val"]的应用*/
+        .nav a[id="first"] {background: blue; color:yellow;font-weight:bold;}
+        .nav a[href="#1"][title] {background: yellow; color:green;}
+
+        /*3.E[attr~="val"]的应用*/
+        /*title属性包含website词的是2,6,7,8*/
+        .nav a[title~="website"]{background:orange;color:green;}
+
+        /*4.E[attr^="val"]的应用*/
+        /*值开头http://被选中*/
+        .nav a[title^="http://"]{background:orange;color:green;}
+
+        /*5.E[attr$="val"]的应用*/
+        /*值结尾png被选中*/
+        .nav a[href$="png"] {background: orange; color: greenyellow;}
+
+        /*6.E[attr*="val"]的应用*/
+        /*包含site值的title有2,6,7,8*/
+        .nav a[title*="site"]{background:black;color:white;}
+
+        /*7.E[attr!="val"]的应用*/
+        /*值为zh或者包含zh-的被选中,2,3,4,6*/
+        .nav a[lang|="zh"]{background:gray;color:yellow;}
+    </style>
+</head>
+<body>
+    <div class="pic_box">
+        <img src="images/bg1.jpg">
+        <div class="nav">
+            <a href="#1" class="links item first" title="w3cplus" target="_blank" id="first" >1</a>
+            <a href="#2" class="links active item" title="test website" target="_blank" lang="zh">2</a>
+            <a href="#3" class="links item" title="this is a link" lang="zh-cn">3</a>
+            <a href="#4" class="links item" target="_balnk" lang="zh-tw">4</a>
+            <a href="#5" class="links item" title="zh-cn">5</a>
+            <a href="#6" class="links item" title="website link" lang="zh">6</a>
+            <a href="#7" class="links item" title="open the website" lang="cn">7</a>
+            <a href="#8" class="links item" title="close the website" lang="en-zh">8</a>
+            <a href="#9" class="links item" title="http://www.baidu.com">9</a>
+            <a href="#10" class="links item before last" id="beforelast">10</a>
+            <a href="#11png" class="links item last" id="last">11</a>
+        </div>
+    </div>
+</body>
+</html>
