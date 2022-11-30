@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>状态伪类选择器</title>
+    <style>
+        form {
+            padding:1em 2em 0 2em;
+            font-size:12px;
+        }
+        label {
+            display:block;
+            font-weight:bold;
+            color:#080;
+        }
+        /*属性选择器设置文本框、密码框、提交控件的基本样式*/
+        input[type="text"],
+        input[type="password"] {
+            border:1px solid #0f0;
+            width:160px;
+            height:22px;
+            padding-left:20px;
+            margin:6px 0;
+            line-height:20px;
+        }
+        input[type="submit"] {
+            display:block;
+        }
+        /*属性选择器对文本和密码框的背景、禁用状态单独设置样式*/
+        input[type="text"] { background:url(images/name.gif) no-repeat 2px 2px; }
+        input[type="text"]:disabled {
+            background:#ddd url(images/name1.gif) no-repeat 2px 2px;
+            border:1px solid #bbb;
+        }
+
+        input[type="password"] { background:url(images/password.gif) no-repeat 2px 2px; }
+        input[type="password"]:disabled {
+            background:#ddd url(images/password1.gif) no-repeat 2px 2px;
+            border:1px solid #bbb;
+        }
+
+    </style>
+</head>
+<body>
+    <form action="#">
+        <label for="username">用户名</label>
+        <input type="text" name="username" id="username">
+        <input type="text" name="username1" disabled="disabled" value="不可用">
+
+        <label for="password">密 码</label>
+        <input type="password" name="password" id="password">
+        <input type="password" name="password1" disabled="disabled" value="不可用">
+
+        <input type="submit" value="提 交">
+    </form>
+</body>
+</html>
