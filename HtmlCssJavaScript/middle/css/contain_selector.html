@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>包含选择器</title> <!--是组合选择器中的一种-->
+    <style>
+        #header p { font-size:14px;} /*使用空格标识符隔开*/
+        #main p {font-size:12px;}
+
+        #header1 > p { font-size:14px;} /*对于简单结构可以使用子选择器,标识符使用>隔开*/
+        #main1 > p {font-size:12px;}
+    </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="header">
+      <p>头部区域第1段文本</p>
+      <p>头部区域第2段文本</p>
+      <p>头部区域第3段文本</p>
+    </div>
+    <div id="main">
+      <p>主体区域第1段文本</p>
+      <p>主体区域第2段文本</p>
+      <p>主体区域第3段文本</p>
+    </div>
+  </div>
+
+  <div id="wrap1">
+    <div id="header1">
+      <p>头部区域第1段文本</p>
+      <p>头部区域第2段文本</p>
+      <p>头部区域第3段文本</p>
+    </div>
+    <div id="main1">
+      <p>主体区域第1段文本</p>
+      <p>主体区域第2段文本</p>
+      <p>主体区域第3段文本</p>
+    </div>
+  </div>
+</body>
+</html>
