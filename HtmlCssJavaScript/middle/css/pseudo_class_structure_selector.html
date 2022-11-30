@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>结构伪类选择器</title>
+    <style>
+        /*浏览器背景图片*/
+        body {
+        background: url(images/bg2.jpg) no-repeat;
+        height: 2617px;
+        width: 980px;
+        }
+        /*把div挪到右边*/
+        #wrap {
+        position: absolute;
+        width: 249px;
+        height: 249px;
+        z-index: 1;
+        left: 712px;
+        top: 201px;
+        }
+        /*无序列表去掉项目符号、左对齐以及适当调整大小*/
+        #wrap ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        font-size: 12px;
+        color: #777;
+        }
+        /*列表项添加开头图片*/
+        #wrap li {
+        background: url(images/top10-bullet.png) no-repeat 2px 10px;
+        padding: 1px 0 0 28px;
+        line-height: 30px;
+        }
+        /*链接去掉下划线和设置悬浮效果*/
+        #wrap li a {
+          text-decoration: none;
+          color: #777;
+        }
+        #wrap li a:hover { color: #F63; }
+
+        /*结构选择器的应用*/
+        #wrap li:first-child {background-position:2px 10px;font-weight:bold;}
+        #wrap li:nth-child(2) {background-position:2px -31px;}
+        #wrap li:nth-child(3) {background-position:2px -72px;}
+        #wrap li:nth-child(4) {background-position:2px -113px;}
+        #wrap li:nth-child(5) {background-position:2px -154px;}
+        #wrap li:nth-child(6) {background-position:2px -195px;}
+        #wrap li:nth-child(7) {background-position:2px -236px;}
+        #wrap li:last-child {background-position:2px -277px;}
+        #wrap li:nth-child(3n+1) {background-color:yellow;}/*隔三个设置背景颜色黄色*/
+        #wrap li:nth-child(even) {background-color:greenyellow;}
+
+        div#wrap p:nth-of-type(odd) {color: red;} /*div下子元素的第1个孩子,p1和p3*/
+        .post p {background-color: #0FFFF0;} /*p1,p2,p3都设置背景青色*/
+        .post p:only-child {background-color: #95071b;} /*p3是唯一的孩子没有兄弟设置为棕色*/
+        .post span:only-of-type {color: green;} /*设置post下span的唯一元素文字颜色,如果设置p是找不到的因为不唯一*/
+        .post p:empty {background-color: blue; display: none;} /*空段落不显示*/
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <ul id="container">
+            <li><a href="#">送君千里 终须一别</a></li>
+            <li><a href="#">旅行的意义</a></li>
+            <li><a href="#">南师虽去，精神永存</a></li>
+            <li><a href="#">榴莲糯米糍</a></li>
+            <li><a href="#">阿尔及利亚 天命之年</a></li>
+            <li><a href="#">白菜鸡肉粉丝包</a></li>
+            <li><a href="#">《展望塔上的杀人》</a></li>
+            <li><a href="#">我们，只会在路上相遇</a></li>
+            <div class="post">
+                <p>这是第1个p类型的元素,有兄弟</p>
+                <p>这是第2个p类型的元素,有兄弟</p>
+            </div>
+            <div class="post">
+                <p>这是第3个p类型的元素,没有兄弟</p>
+            </div>
+            <div class="post">
+                <span>我是div下span类型的唯一元素</span><br>
+                <p></p>
+            </div>
+        </ul>
+    </div>
+</body>
+</html>
