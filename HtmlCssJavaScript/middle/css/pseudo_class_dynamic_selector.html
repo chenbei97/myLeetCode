@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>动态伪类选择器</title>
+    <style>
+
+        /*【1】兼容浏览器的声明
+           * 1. 使用em单位设置正文字体大小时，在IE6/7中纠正文本大小异常
+           * 2. 在非IE中强制垂直滚动条
+           * 3. 防止在设备方向更改时调整iOS文本大小，而不禁用用户缩放：h5bp.com/g
+           * 4. 删除选定内容突出显示中的文本阴影
+           * 5. 这些选择声明必须是单独的,还有hot pink！(或自定义背景颜色以匹配您的设计)
+        */
+        html {
+            font-size: 100%;
+            overflow-y: scroll;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        body {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.231;
+        }
+        body, button, input, select, textarea {
+            font-family: sans-serif;
+            color: #222;
+        }
+        ::-moz-selection {
+            background: #fe57a1; /*hot pink颜色*/
+            color: #fff;
+            text-shadow: none;
+        }
+        ::selection {
+            background: #fe57a1; /*hot pink颜色*/
+            color: #fff;
+            text-shadow: none;
+        }
+
+        /*【2】预定义样式的声明,包括body,a,ul和li*/
+        body { background: #f7f7f7; }
+        a { color: #00e; }
+        a:visited { color: #551a8b; }
+        a:hover { color: #06e; }
+        a:focus { outline: thin dotted; }
+        a:hover, a:active { outline: 0; }/*在所有浏览器中聚焦和悬停时提高可读性*/
+        ul { list-style: none; }
+        #container { /*id选择器的通用样式声明,这里可以让1行按钮变成每5个换行*/
+            width: 530px;
+            margin: 60px auto;
+            list-style: none;
+            padding: 0 77px;
+        }
+        #container ul { width: 400px; }
+        #container li { display: inline; }
+
+        /*按钮类样式,使用包含button词的类属性选择器,或者使用a.button或者.button均可*/
+        /*1.设置通用样式*/
+        a[class~="button"] {
+            display: block;
+            float: left;
+            position: relative;
+            height: 25px;
+            line-height: 25px;
+            width: 80px;
+            margin: 0 10px 18px 0;
+            text-decoration: none;
+            text-align: center;
+            font: 12px "Helvetica Neue", Helvetica,Arial,sans-serif;
+            font-weight: bold;
+            -webkit-border-radius: 3px; /*这里是为了彰显按钮的金属特质定义圆角效果*/
+            -moz-border-radius: 3px; /*这里是为了彰显按钮的金属特质定义圆角效果*/
+            border-radius: 3px; /*这里是为了彰显按钮的金属特质定义圆角效果*/
+        }
+        /*2.设置伪元素，before和after在元素前后可以添加元素,这里目的是实现底部的双边框立体效果*/
+        a.button:before,
+        a.button:after {
+            content: '';
+            position: absolute;
+            left: -1px;
+            height: 25px;
+            width: 80px;
+            bottom: -1px;
+            -webkit-border-radius: 3px; /*定义边框阴影效果*/
+            -moz-border-radius: 3px; /*定义边框阴影效果*/
+            border-radius: 3px; /*定义边框阴影效果*/
+        }
+        a.button:before {
+            height: 23px;
+            bottom: -4px;
+            border-top: 0;
+            -webkit-border-radius: 0 0 3px 3px;
+            -moz-border-radius: 0 0 3px 3px;
+            border-radius: 0 0 3px 3px;
+            -webkit-box-shadow: 0 1px 1px 0 #bfbfbf;
+            -moz-box-shadow: 0 1px 1px 0 #bfbfbf;
+            box-shadow: 0 1px 1px 0 #bfbfbf;
+        }
+        /*3.设置button的行为伪类，active点击按钮配合before、after盒子阴影边框的消失实现按压效果*/
+        a.button:active {
+            border: none;
+            bottom: -4px;
+            margin-bottom: 22px;
+            -webkit-box-shadow: 0 1px 1px #fff;
+            -moz-box-shadow: 0 1px 1px #fff;
+            box-shadow: 1px 1px 0 #fff, inset 0 1px 1px rgba(0, 0, 0, 0.3);
+        }
+        a.button:active:before, a.button:active:after {
+            border: none;
+            -webkit-box-shadow: none;
+            -moz-box-shadow: none;
+            box-shadow: none;
+        }
+
+
+        /*按钮有10个颜色，从gray到darkblue
+        1) 定义不同的行为样式，也就是hover,visted等
+        2) 需要注意的是按照link-visited-hover-active的顺序声明样式,否则不起作用
+        3) 在按钮前后增加边框,使用before和after实现
+        */
+        /*1.gray按钮效果*/
+        a.gray, a.gray:visited ,a.gray:hover { /*这里a.gray:hover实际上没起作用因为和visited并列声明*/
+            color: #555;
+            border-bottom: 4px solid #b2b1b1;
+            background: #eee;
+            background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#e2e2e2));
+            background: -moz-linear-gradient(top, #eee, #e2e2e2);
+            box-shadow: inset 1px 1px 0 #f5f5f5; /*盒子阴影和背景渐变效果*/
+            text-shadow: 0 1px 0 #fafafa;
+        }
+        a.gray:hover { /*hover要在visited之后声明才起作用*/
+            background: #e2e2e2;
+            background: -webkit-gradient(linear, left top, left bottom, from(#e2e2e2), to(#eee));
+            background: -moz-linear-gradient(top, #e2e2e2, #eee);
+        }
+        .gray:before, .gray:after { /*增加边框样式*/
+            border: 1px solid #cbcbcb;
+            border-bottom: 1px solid #a5a5a5;
+        }
+        /*2.pink按钮效果*/
+        a.pink, a.pink:visited {
+            color: #913944;
+            border-bottom: 4px solid #cb5462;
+            text-shadow: 0 1px 0 #f9a0ad;
+            background: #f56778;
+            background: -webkit-gradient(linear, left top, left bottom, from(#f997b0), to(#f56778));
+            background: -moz-linear-gradient(top, #f997b0, #f56778);
+            box-shadow: inset 1px 1px 0 #fbc1d0;
+        }
+        a.pink:hover {
+            background: #f56778;
+            background: -webkit-gradient(linear, left top, left bottom, from(#f56778), to(#f997b0));
+            background: -moz-linear-gradient(top, #f56778, #f997b0);
+        }
+        .pink:before, .pink:after {
+            border: 1px solid #ee8090;
+            border-bottom: 1px solid #b84d5a;
+        }
+        /*3.blue按钮效果*/
+        a.blue, a.blue:visited {
+            color: #42788e;
+            border-bottom: 4px solid #589cb6;
+            background: #abe4f8;
+            text-shadow: 0 1px 0 #bee9fa;
+            background: -webkit-gradient(linear, left top, left bottom, from(#abe4f8), to(#74d0f4));
+            background: -moz-linear-gradient(top, #abe4f8, #74d0f4);
+            box-shadow: inset 1px 1px 0 #b2e6f8;
+        }
+        a.blue:hover {
+            background: #74d0f4;
+            background: -webkit-gradient(linear, left top, left bottom, from(#74d0f4), to(#abe4f8));
+            background: -moz-linear-gradient(top, #74d0f4, #abe4f8);
+        }
+        .blue:before, .blue:after {
+            border: 1px solid #8cc5d9;
+            border-bottom: 1px solid #4e8aa1;
+        }
+        /*4.green按钮效果*/
+        a.green, a.green:visited {
+            color: #5d7731;
+            border-bottom: 4px solid #799545;
+            text-shadow: 0 1px 0 #d5e8aa;
+            background: #cae285;
+            background: -webkit-gradient(linear, left top, left bottom, from(#cae285), to(#a3cd5a));
+            background: -moz-linear-gradient(top, #cae285, #a3cd5a);
+            box-shadow: inset 1px 1px 0 #cce3a1;
+        }
+        a.green:hover {
+            background: #a3cd5a;
+            background: -webkit-gradient(linear, left top, left bottom, from(#a3cd5a), to(#cae285));
+            background: -moz-linear-gradient(top, #a3cd5a, #cae285);
+        }
+        .green:before, .green:after {
+            border: 1px solid #98b85b;
+            border-bottom: 1px solid #6d883b;
+        }
+        /*5.turquoise按钮效果*/
+        a.turquoise, a.turquoise:visited {
+            color: #437b7d;
+            border-bottom: 4px solid #4fa7aa;
+            text-shadow: 0 1px 0 #9fd5d7;
+            background: #81e8eb;
+            background: -webkit-gradient(linear, left top, left bottom, from(#b7f2f4), to(#81e8eb));
+            background: -moz-linear-gradient(top, #b7f2f4, #81e8eb);
+            box-shadow: inset 1px 1px 0 #d4f8f8;
+        }
+        a.turquoise:hover {
+            background: #81e8eb;
+            background: -webkit-gradient(linear, left top, left bottom, from(#81e8eb), to(#b7f2f4));
+            background: -moz-linear-gradient(top, #81e8eb, #b7f2f4);
+        }
+        .turquoise:before, .turquoise:after {
+            border: 1px solid #87d3d5;
+            border-bottom: 1px solid #47989b;
+        }
+        /*6.black按钮效果*/
+        a.black, a.black:visited {
+            color: #fff;
+            border-bottom: 4px solid #414141;
+            text-shadow: 0 1px 0 #2f2f2f;
+            background: #656565;
+            background: -webkit-gradient(linear, left top, left bottom, from(#656565), to(#444));
+            background: -moz-linear-gradient(top, #656565, #444);
+            box-shadow: inset 1px 1px 0 #939393;
+        }
+        a.black:hover {
+            background: #444;
+            background: -webkit-gradient(linear, left top, left bottom, from(#444), to(#656565));
+            background: -moz-linear-gradient(top, #444, #656565);
+        }
+        .black:before, .black:after {
+            border: 1px solid #535353;
+            border-bottom: 1px solid #343434;
+        }
+        .black:after { /*额外的边框声明是黑色不太明显,对后边的线改变黑的强度提升能对比更清楚*/
+            border: 1px solid #5a5a5a;
+        }
+        /*7.darkgray按钮效果*/
+        a.darkgray, a.darkgray:visited {
+            color: #555;
+            border-bottom: 4px solid #878787;
+            text-shadow: 0 1px 0 #d6d6d6;
+            background: #d1d1d1;
+            background: -webkit-gradient(linear, left top, left bottom, from(#d1d1d1), to(#afafaf));
+            background: -moz-linear-gradient(top, #d1d1d1, #afafaf);
+            box-shadow: inset 1px 1px 0 #e3e3e3;
+        }
+        a.darkgray:hover {
+            background: #afafaf;
+            background: -webkit-gradient(linear, left top, left bottom, from(#afafaf), to(#d1d1d1));
+            background: -moz-linear-gradient(top, #afafaf, #d1d1d1);
+        }
+        .darkgray:before, .darkgray:after {
+            border: 1px solid #b4b4b4;
+            border-bottom: 1px solid #7b7b7b;
+        }
+        /*8.yellow按钮效果*/
+        a.yellow, a.yellow:visited {
+            color: #996633;
+            border-bottom: 4px solid #b98a37;
+            text-shadow: 0 1px 0 #fedd9b;
+            background: #feda71;
+            background: -webkit-gradient(linear, left top, left bottom, from(#feda71), to(#febe4d));
+            background: -moz-linear-gradient(top, #feda71, #febe4d);
+            box-shadow: inset 1px 1px 0 #fee9aa;
+        }
+        a.yellow:hover {
+            background: #febe4d;
+            background: -webkit-gradient(linear, left top, left bottom, from(#febe4d), to(#feda71));
+            background: -moz-linear-gradient(top, #febe4d, #feda71);
+        }
+        .yellow:before, .yellow:after {
+            border: 1px solid #eab551;
+            border-bottom: 1px solid #9f7630;
+        }
+        /*9.purple按钮效果*/
+        a.purple, a.purple:visited {
+            color: #7b5777;
+            border-bottom: 4px solid #946890;
+            text-shadow: 0 1px 0 #eacae6;
+            background: #e8c4e4;
+            background: -webkit-gradient(linear, left top, left bottom, from(#e8c4e4), to(#d698d0));
+            background: -moz-linear-gradient(top, #e8c4e4, #d698d0);
+            box-shadow: inset 1px 1px 0 #f2dcef;
+        }
+        a.purple:hover {
+            background: #d698d0;
+            background: -webkit-gradient(linear, left top, left bottom, from(#d698d0), to(#e8c4e4));
+            background: -moz-linear-gradient(top, #d698d0, #e8c4e4);
+        }
+        .purple:before, .purple:after {
+            border: 1px solid #da9fd4;
+            border-bottom: 1px solid #865d82;
+        }
+        /*10.darkblue按钮效果*/
+        a.darkblue, a.darkblue:visited {
+            color: #515f6a;
+            border-bottom: 4px solid #62727e;
+            text-shadow: 0 1px 0 #c4d0da;
+            background: #becbd6;
+            background: -webkit-gradient(linear, left top, left bottom, from(#becbd6), to(#8da5b7));
+            background: -moz-linear-gradient(top, #becbd6, #8da5b7);
+            box-shadow: inset 1px 1px 0 #d8e0e6;
+        }
+        a.darkblue:hover {
+            background: #8da5b7;
+            background: -webkit-gradient(linear, left top, left bottom, from(#8da5b7), to(#becbd6));
+            background: -moz-linear-gradient(top, #8da5b7, #becbd6);
+        }
+        .darkblue:before, .darkblue:after {
+            border: 1px solid #a1aeb7;
+            border-bottom: 1px solid #5d6b75;
+        }
+    </style>
+</head>
+<body>
+    <ul id="container">
+        <li><a href="#" class="button gray">Download</a></li>
+        <li><a href="#" class="button pink">Download</a></li>
+        <li><a href="#" class="button blue">Download</a></li>
+        <li><a href="#" class="button green">Download</a></li>
+        <li><a href="#" class="button turquoise">Download</a></li>
+        <li><a href="#" class="button black">Download</a></li>
+        <li><a href="#" class="button darkgray">Download</a></li>
+        <li><a href="#" class="button yellow">Download</a></li>
+        <li><a href="#" class="button purple">Download</a></li>
+        <li><a href="#" class="button darkblue">Download</a></li>
+    </ul>
+</body>
+</html>
