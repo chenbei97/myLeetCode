@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>分组选择器</title>
+    <style>
+        h1, h2, h3, h4, h5, h5, h6 { /*分组选择器用逗号隔开*/
+            background-color: #99CC33;
+            margin: 0;
+            margin-bottom: 10px;
+        }
+        h1+h2, h2+h3, h4+h5 { color: #0099FF; } /*兄弟选择器*/
+        body>h6, h1>span, h4>span { font-size: 20px;} /*子选择器*/
+        h2 span, h3 span { padding: 0 20px;} /*相邻选择器*/
+        h5 span[class], h6 span[class] { background-color: #CC0033;} /*属性选择器*/
+    </style>
+</head>
+<body>
+  <h1>h1元素: 分组选择器设置背景绿色起作用<br>
+      <span>h1>span子选择器设置span元素字号20起作用</span>
+  </h1>
+  <h2>h2元素: 分组选择器设置背景绿色起作用 <br>
+      兄弟选择器h1+h2设置文字颜色蓝色起作用<br>
+      <span>相邻选择器设置h2-span元素的间距起作用</span>
+  </h2>
+  <h3>h3元素: 分组选择器设置背景绿色起作用<br>
+      兄弟选择器h2+h3设置文字颜色蓝色起作用<br>
+      <span>相邻选择器设置h3-span元素的间距起作用</span>
+  </h3>
+  <h4>h4元素: 分组选择器设置背景绿色起作用<br>
+      <span>h4>span子选择器设置span元素字号20起作用</span>
+  </h4>
+  <h5>h5元素: 分组选择器设置背景绿色起作用<br>
+      兄弟选择器h4+h5设置文字颜色蓝色起作用<br>
+      <span class="S1">属性选择器设置h5-span元素颜色起作用</span><br>
+      <span>属性选择器设置h5-span元素颜色不起作用</span>
+  </h5>
+  <h6>h6元素: 分组选择器设置背景绿色起作用<br>
+      h1>h6子选择器设置h6元素字号20起作用<br>
+      <span class="S2">属性选择器设置h6-span元素颜色起作用</span><br>
+      <span>属性选择器设置h6-span元素颜色不起作用</span>
+  </h6>
+</body>
+</html>
