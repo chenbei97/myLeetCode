@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>相邻选择器</title>
+    <style>
+        h2, p, h3 {
+          margin: 0;	/* 清除默认边距 */
+          padding: 0;	/* 清除默认间距 */
+          height: 30px;	/* 初始化设置高度为30像素 */
+        }
+        p+h3 { background-color: #0099FF;	/* 设置背景色 */ }
+
+        .invalid {
+          background-color: red;
+        }
+
+        /*p~h3 { background-color: #0099FF;	!* 设置背景色 *! }*/ /*如果是兄弟选择器那么invalid这里的颜色就会变成蓝色起作用了*/
+        /*兄弟选择器和相邻选择器不同在于，相邻只能选择前置元素后相邻的一个匹配元素，而兄弟可以指定其后同级的所有匹配元素*/
+    </style>
+</head>
+<body>
+  <div class="header">
+    <h2>情况一：</h2>
+    <p>这是一个p标签</p>
+    <h3>这是一个h3标签，p在前，h3在后，前后都没有其他元素</h3>
+    <h2>情况二：</h2>
+    <div>这是div标签，后边紧跟着p和h3标签</div>
+    <p>这是一个p标签，前边有一层div元素</p>
+    <h3>这是一个h3标签，紧跟着p标签</h3>
+    <h2>情况三：</h2>
+    <h3 class="invalid">这是一个h3标签，和上述2种情况不同，这里h3在前，p在后</h3>
+    <p>这是一个p标签，这是4种情况唯一不起作用的，因为不满足兄弟关系</p>
+    <div>
+      <h2>情况四：</h2>
+      <p>这是一个p标签，情况四套在了div元素内，但是兄弟关系没变</p>
+      <h3>这是一个h3标签，跟随p之后，也套在div元素内</h3>
+    </div>
+  </div>
+</body>
+</html>
