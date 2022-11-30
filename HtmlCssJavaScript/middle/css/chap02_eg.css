@@ -1,0 +1,140 @@
+@charset "utf-8";
+/* 公共属性
+------------------------------------ */
+html { min-width: 776px; }
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #000;
+    font-size: 14px;
+    line-height: 160%;
+    text-align: center;
+    background: #6D89DD;
+    font-family: '宋体', '新宋体', arial, verdana, sans-serif;
+}
+
+a {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    text-decoration: none;
+}
+
+a:link { color: #E66133; }
+
+a:visited { color: #E66133; }
+
+a:hover {
+    color: #637DBC;
+    text-decoration: underline;
+}
+
+pre { /*代码的文本*/
+    text-indent: 0;
+    background: #DDDDDD;
+    padding: 0;
+    margin: 0;
+    color: blue;
+}
+/* 顶部
+------------------------------------ */
+#top {
+    width: 776px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0px;
+    height: 12px;
+    background: url(images/bg_top1.gif) #fff repeat-x left top;
+    overflow: hidden;
+}
+#top1 {
+    width: 776px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0px;
+    height: 121px;
+}
+/*  主体 
+------------------------------------ */
+#main {
+    width: 776px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 1.2em 0px;
+    background: url(images/bg_dot1.gif) #fff repeat left top;
+    text-align: left;
+}
+#content {
+    width: 710px;
+    margin-right: auto;
+    margin-left: auto;
+    background: #fff;
+}
+#title { /*<div id="title"> Hello World -- 第一个CSS3+DIV页面 </div>*/
+    font-weight: bold;
+    margin: 0px 0px 0.5em 0px;
+    padding: 0.5em 0px 0.5em 1em;
+    font-size: 24px;
+    color: #00A06B;
+    text-align: left;
+    border-bottom: solid #9EA3C1 2px;
+}
+.sub { /*<div class="sub">实例</div>*/
+    color: #00A06B;
+    font-weight: bold;
+    font-size: 13px;
+    text-align: left;
+    padding: 1em 2em 0;
+    background: url(images/0.gif) #fff no-repeat 1em 74%;
+}
+.content { /*<div id="content">*/
+    text-indent: 2em;
+    font-size: 13px;
+    margin-left: 2em;
+    padding: 1em 6px;
+}
+#gotop {  /*<div id="gotop"><a title="跳到页首" href="#top">返回顶部</a></div>*/
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    height: 2em;
+    font-size: 12px;
+    text-align: right;
+}
+/* 底部
+------------------------------------ */
+#footer {
+    clear: both;
+    width: 776px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0;
+    background: url(images/bg_bottom.gif) #fff repeat left top;
+    text-align: center;
+    height: 39px;
+    color: #ddd;
+}
+#copyright {
+    width: 776px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 5px 0 0 0;
+    background: #fff;
+    text-align: center;
+    height: 60px;
+    line-height: 13px;
+    font-size: 12px;
+    color: #9EA0BB;
+}
+#copyright a { color: #667EBE; }
+/* 圆角
+------------------------------------ */
+.box { background: url(images/nt.gif) repeat; }
+.tl { background: url(images/tl.gif) no-repeat top left; }
+.tr { background: url(images/tr.gif) no-repeat top right; }
+.bl { background: url(images/bl.gif) no-repeat bottom left; }
+.br { background: url(images/br.gif) no-repeat bottom right; }
+body,td,th { font-family: "宋体", "新宋体", arial, verdana, sans-serif; }
