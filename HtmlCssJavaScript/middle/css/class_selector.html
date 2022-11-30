@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>类选择器的用法</title>
+    <style>
+        p {/* 段落默认样式 */
+            font-size:12px;                       	/* 字体大小为12像素 */
+            color:red;                            	/* 字体颜色为红色 */
+        }
+        .font18px {/* 字体大小类  */
+            font-size:18px;                         	/* 字体大小为18像素 */
+        }
+        .underline {/* 下划线类 */
+            text-decoration:underline;                	/* 字体修饰为下划线 */
+        }
+        .italic {/* 斜体类 */
+            font-style:italic;                        	/* 字体样式为斜体 */
+        }
+
+        .font24px {/*这里会指定div和p */
+            font-size:24px;
+        }
+        p.font24px {/*而这里限定了p的*/
+            font-size:24px;
+            background-color: #0FFFF0;
+        }
+    </style>
+</head>
+<body>
+    <!--class选择器可以多个标签-->
+    <p class="underline">问君能有几多愁，恰似一江春水向东流。</p>
+    <p class="font18px italic underline">剪不断，理还乱，是离愁。别是一般滋味在心头。</p>
+    <p class="italic">独自莫凭栏，无限江山，别时容易见时难。流水落花春去也，天上人间。</p>
+
+    <!--类选择器可以一样,但是css可以先指定标签再指定class进行限定-->
+    <div class="font24px">问君能有几多愁，恰似一江春水向东流。</div>
+    <p class="font24px">剪不断，理还乱，是离愁。别是一般滋味在心头。</p>
+    <p>独自莫凭栏，无限江山，别时容易见时难。流水落花春去也，天上人间。</p>
+</body>
+</html>
