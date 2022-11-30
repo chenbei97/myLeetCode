@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>否定伪类选择器</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            font-size: 75%;
+            line-height: 1.4;
+            border: solid 2px #CCCCCC;
+            width: 100%;
+        }
+        th,
+        td {
+            padding: .3em .5em;
+            cursor: pointer;
+        }
+        th {
+            font-weight: normal;
+            text-align: left;
+            padding-left: 15px;
+        }
+
+        td:only-of-type { /*找到普通单元格具有唯一类型的,那就是colspan=3的单元格*/
+            font-weight: bold;
+            color: #444444;
+        }
+
+        tbody th:not(.end) { /*表格内容不是结束行的th单元格有背景图片*/
+            background: url("images/dots.gif") 15px 56% no-repeat;
+            padding-left: 26px; /*适当左移th加粗单元格显示图片*/
+        }
+
+        tbody th.end { /*带有end的th单元格*/
+            background: url("images/dots2.gif");
+            padding-left: 26px;
+        }
+
+        thead th { /*设置表头的th单元格*/
+            background: #c6ceda;
+            border-color: #FFFFFF #FFFFFF #888888 #FFFFFF;
+            border-style: solid;
+            border-width: 1px 1px 2px 1px;
+            padding-left: .5em;
+        }
+
+        tbody tr:nth-child(2n) { /*偶数行背景*/
+            background-color: #FEF68F;
+        }
+
+        tbody tr:hover { /*悬停效果*/
+            background: #fbf8e9;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead> <!--表头-->
+            <th>编号</th>  <th>伪类表达式</th>  <th>说明</th> <!--表头的单元格一般加粗使用th-->
+        </thead>
+
+        <tbody>
+            <!--第1行标题下有7行内容-->
+            <tr><td colspan="3">结构伪类元素</td></tr> <!--独占3列的第1行标题-->
+            <tr> <!--第1行-->
+                <th>1</th>
+                <td>:first-child</td>
+                <td>选择某个元素的第一个子元素</td>
+            </tr>
+            <tr> <!--第2行-->
+                <th>2</th>
+                <td>:last-child</td>
+                <td>选择某个元素的最后一个子元素</td>
+            </tr>
+            <tr> <!--第3行-->
+                <th>3</th>
+                <td>:first-of-type</td>
+                <td>选择一个上级元素的第一个同类的子元素</td>
+            </tr>
+            <tr> <!--第4行-->
+                <th>4</th>
+                <td>:last-of-type</td>
+                <td>选择一个上级元素的最后一个同类的子元素</td>
+            </tr>
+            <tr> <!--第5行-->
+                <th>5</th>
+                <td>:only-child</td>
+                <td>选择的元素要求是它是父元素的唯一子元素</td>
+            </tr>
+            <tr> <!--第6行-->
+                <th>6</th>
+                <td>:only-of-type</td>
+                <td>选择的元素要求是它是父元素唯一类型的子元素</td>
+            </tr>
+            <tr> <!--第7行-->
+                <th class="end">7</th>
+                <td>:empty</td>
+                <td>选择的元素里面没有任何内容(空格也没有)即空元素</td>
+            </tr>
+
+            <!--第2行标题下有4行内容-->
+            <tr><td colspan="3">结构伪类函数</td></tr> <!--独占3列的第2行标题-->
+            <tr> <!--第8行-->
+                <th>8</th>
+                <td>:nth-child()</td>
+                <td>从前选择某个元素的第n个子元素或者具备某种规律如等差、奇偶性的所有子元素，n从0计算</td>
+            </tr>
+            <tr> <!--第9行-->
+                <th>9</th>
+                <td>:nth-last-child()</td>
+                <td>从后选择某个元素的第n个子元素或者具备某种规律如等差、奇偶性的所有子元素</td>
+            </tr>
+            <tr> <!--第10行-->
+                <th>10</th>
+                <td>:nth-of-type()</td>
+                <td>从前选择指定的同类元素</td>
+            </tr>
+            <tr> <!--第11行-->
+                <th class="end">11</th>
+                <td>:nth-last-of-type()</td>
+                <td>从后选择指定的同类元素</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
