@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>data-*自定义数据</title>
+</head>
+<body>
+  <ul>
+    <li data-animal-type="bird">猫头鹰</li>
+    <li data-animal-type="fish">鲤鱼</li>
+    <li data-animal-type="spider">蜘蛛</li>
+  </ul>
+
+  <script>
+    var lis = document.getElementsByTagName("li");
+    for (var i = 0; i < lis.length; ++i)
+    {
+        console.log(lis[i].dataset.animalType); // animalType不是dataset的固有类型,是自定义的
+    }
+  </script>
+</body>
+</html>
