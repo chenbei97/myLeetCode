@@ -1,0 +1,51 @@
+/*
+    标签选择器：加权值 1
+    伪元素或伪对象选择器: 加权值 1
+    类选择器: 加权值10
+    属性选择器: 加权值10
+    ID选择器: 加权值100
+    通配选择器: 0
+    继承值: 0
+    !important: 最高优先级
+ */
+
+div { /*优先级加权值1分*/
+    margin: 0 auto; /*火狐浏览器居中*/
+    text-align: center; /*ie浏览器居中*/
+}
+
+.chen { /*优先级加权值10分*/
+    width: 400px;
+    border: 1px dashed #CC0099; /*设置div宽度为400,居中能看见效果*/
+    padding:10px 15px; /*设置div的间距*/
+    font-size: 14px; /*设置字体大小14号*/
+}
+
+#bei { /*优先级加权值100分*/
+    border: 1px dashed blue; /*所以id选择器设置的边框颜色显示为blue覆盖了.chen的#CC0099*/
+}
+
+.chen p { /*优先级加权值11分*/
+    font-size: 16px; /*类别和标记选择器一起设置就是11分,所以段落按照16号加粗显示*/
+    font-weight: bold;
+}
+
+.chen .duan { /*优先级加权值20分*/
+    font-weight: normal; /*20分让段落1恢复正常不加粗1.5倍行距左对齐,段落2没有变化*/
+    line-height: 1.5em;
+    text-align: left;
+}
+
+.chen .duan span { /*优先级加权值21分*/
+    color: green;/*颜色优先级高于.chen .duan默认的黑色*/
+}
+
+#bei span { /*优先级加权值101分*/
+    color: red; /*所以颜色不仅高于黑色也高于绿色,红色优先级最高*/
+    font-weight: bold;
+    font-size: 22px;
+}
+
+span {
+    font-size: 30px !important;/*变成了最高优先级,字体继续变成30号*/
+}
