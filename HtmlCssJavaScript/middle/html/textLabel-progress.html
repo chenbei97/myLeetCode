@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>进度文本</title>
+</head>
+<body>
+  <section>
+    <p>
+        百分比进度:
+        <progress id="progress" max="100">
+            <span>0</span>% <!--显示进度百分比,默认0,这个span内的值在script内更改-->
+        </progress>
+    </p>
+    <input type="button" onclick="click()"  value="显示进度"/>
+  </section>
+
+  <!--刻度信息-->
+  <meter value="3" min="0" max="10">十分之三</meter>
+  <meter value="0.6">60%</meter>
+
+  <script>
+    function click(){
+      var progress = document.getElementById('progress');
+      progress.getElementsByTagName('span')[0].textContent ="0"; /*赋值操作从让span内的数字从0%开始*/
+      for(var i=0;i<=1000;i++)
+        updateProgress(i);
+    }
+    function updateProgress(newValue){
+      var progress = document.getElementById('progress');
+      progress.value = newValue;
+      progress.getElementsByTagName('span')[0].textContent = newValue;/*赋值操作更新span内的数字*/
+    }
+  </script>
+</body>
+</html>
