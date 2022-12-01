@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>时间文本</title>
+</head>
+<body>
+  <time datetime="2017-11-13">2017年11月13日</time><br>
+  <time datetime="2017-11-13">11月13日</time><br>
+  <time datetime="2017-11-13">我的生日</time><br>
+  <time datetime="2017-11-13T20:00">我生日的晚上8点</time><br>
+  <time datetime="2017-11-13T20:00Z">我生日的晚上8点</time><br>
+  <time datetime="2017-11-13T20:00+09:00">我生日的晚上8点的美国时间</time><br>
+
+  <article>
+    <header>
+      <h1>科技公司都变成了数据公司：但你真的了解什么是“数据工程师”吗？</h1>
+      <p>发布日期
+        <time datetime="2016-12-30" pubdate>2016-12-30 09:19</time>
+      </p>
+    </header>
+
+    <p>
+      在和国内外顶尖公司交流的过程中，我发现他们多数都很骄傲有一支极其专业的数据团队。这些公司花了大量的时间和精力把数据工程这件事情做到了极致，有不小规模的工程师团队，开源了大量数据技术。Linkedin 有 kafka、samza, Facebook 有 hive、presto，Airbnb有airflow、superset，我所熟悉的 Yelp 也有 mrjob…… 这些公司在数据领域的精益求精，为后来的大步前进奠定了基石。
+    </p>
+
+    <footer>
+      <p>https://www.huxiu.com/article/176524.html</p>
+    </footer>
+  </article>
+
+  <ul> <!--bdi是隔离文本-->
+    <li>用户<bdi>admin</bdi>: 70 分</li>
+    <li>用户<bdi>lisi</bdi>: 80 分</li>
+    <li>用户<bdi>zhangsan</bdi> : 90 分</li>
+  </ul>
+
+  <!--换行断点：本站旧地址为：https: //www.old_site.com/，新地址为：https: //www.new_site.com/。-->
+  <p>本站旧地址为：https:
+    <wbr>//<wbr> <!--如果一定要换行，浏览器会在//这里来换行，如果在ww这换行就可能导致不好看-->
+    www.old_site.com/，新地址为：https:
+    <wbr>//<wbr>
+    www.new_site.com/。
+  </p>
+
+<!--  文本注释:需要和rt和rp标签结合，且作为2个标签的父元素。
+  rt定义字符(中文注音或字符)的解释和发音
+  rp定义浏览器不支持ruby元素时显示的内容-->
+  <ruby>
+    少<rt>shào</rt>
+    小<rt>xiǎo</rt>
+    离<rt>lí</rt>
+    家<rt>jiā</rt>
+    老<rt>lǎo</rt>
+    大<rt>dà</rt>
+    回<rt>huí</rt>
+  </ruby>，
+  <ruby>
+    乡<rt>xiāng</rt>
+    音<rt>yīn</rt>
+    无<rt>wú</rt>
+    改<rt>gǎi</rt>
+    鬓<rt>bìn</rt>
+    毛<rt>máo</rt>
+    衰<rt>shuāi</rt>
+  </ruby>。
+</body>
+</html>
