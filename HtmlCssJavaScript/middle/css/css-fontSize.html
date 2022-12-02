@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文本字体</title>
+  <style>
+    body {font-size:12px;}/* 以像素为单位设置字体大小 */
+    .fontem {
+        font-size:0.75em;
+        text-decoration: underline;/* 以父辈字体大小为参考设置大小 */
+    }
+    div {
+        font:9pt Arial, Helvetica, sans-serif;/* 以点为单位设置字体大小*/
+    }
+    div .percent {
+      font-size: 150%;
+      font-weight: 700;
+      text-decoration: line-through; /*贯穿线*/
+    }
+    div .larger {
+      color: #0FFFF0;
+      font-size: 150%;
+      text-decoration: blink;
+      font-variant: small-caps; /*小型的大写字母字体*/
+    }
+    div .transform {
+      text-transform: uppercase;
+      line-height: 100px;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 25px;
+      letter-spacing: 1em; /*字距*/
+      word-spacing: normal; /*词距，对中文一般不起作用*/
+    }
+    .wangguowei {
+        text-indent:-2em; /*首行缩进*/
+        font-size: 18px;
+        padding-left: 2em; /*左侧补白放置负值缩进导致首行文本伸到段落边界外边*/
+    }
+  </style>
+</head>
+<body>
+  <p class="fontem">p的格式是font-size:0.75em;</p>
+  <div>div的格式是font:9pt Arial, Helvetica, sans-serif;</div>
+   <div>
+      <p class="percent">使用百分比来指定字体大小</p>
+      <p class="larger">使用larger来指定字体大小</p>
+      <p class="transform">字母大小写，这里hello-world全部转为大写字母</p>
+   </div>
+
+  <div class="gushi">
+      <h1>人生三境界</h1>
+      <h2>出自王国维《人间词话》</h2>
+      <p class="wangguowei">古今之成大事业、大学问者，必经过三种之境界：
+          "昨夜西风凋碧树。独上高楼，望断天涯路。"此第一境也。
+          "衣带渐宽终不悔，为伊消得人憔悴。"此第二境也。
+          "众里寻他千百度，蓦然回首，那人却在灯火阑珊处。"此第三境也。
+          此等语皆非大词人不能道。然遽以此意解释诸词，恐为晏欧诸公所不许也。</p>
+      <p class="wangguowei">笔者认为，凡人都可以从容地做到第二境界，但要想逾越它却不是那么简单。
+          成功人士果敢坚忍，不屈不挠，造就了他们不同于凡人的成功。他们逾越的不仅仅是人生的境界，更是他们自我的极限。
+          成功后回望来路的人，才会明白另解这三重境界的话：
+          看山是山，看水是水；看山不是山，看水不是水；看山还是山，看水还是水。</p>
+
+  </div>
+</body>
+</html>

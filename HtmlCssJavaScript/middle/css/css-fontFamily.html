@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>字体类型</title>
+    <style>
+        .timenewroman {
+          font-family: "Times New Roman", serif;
+        }
+        .arial {
+          font-family: Arial, monospace;
+        }
+        .fangsong {
+          font-family: 仿宋, sans-serif;
+        }
+        .kaiti_songti {
+          font-family: 楷体, 宋体, cursive;
+        }
+        .emoji {
+          font-family: Segoe UI Emoji,sans-serif;
+        }
+        .font {
+            font: italic small-caps condensed 25px normal 黑体;
+        }
+    </style>
+</head>
+<body>
+    <p class="timenewroman">我是新罗马字体,备选字体是serif衬线字体</p>
+    <p class="arial">我是Arial字体,备选字体是monospace等宽字体</p>
+    <p class="fangsong">我是仿宋字体,备选字体是sans-serif无衬线字体</p>
+    <p class="kaiti_songti">我是优先楷体然后宋体,备选字体是cursive草体</p>
+    <p class="emoji">我是笑脸表情符号字体,但是浏览器不支持所以使用备用的sans-serif字体</p>
+
+    <p class="font">还可以使用font属性设置，font-style | font-variant | font-weight | font-size | line-height | font-family</p>
+    <p class="font">依次定义是否加粗/斜体/倾斜，字体大小写，字体粗细，字号，字体行高和字体家族，要求font至少设置font-size和font-family，且必须放在后面否则无效</p>
+</body>
+</html>
