@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文字隐藏和截取</title>
+    <style>
+        .header1 {
+            width:250px;
+            height:80px;
+            overflow:hidden;
+            text-indent: -9999px; /* 利用首行缩进把标题文字隐藏*/
+            line-height:9999px; /* 或者利用行高也可 */
+            background:url(images/logo.jpg) no-repeat 0 0;
+        }
+        .header2 {
+            width:250px;
+            height:80px;
+            background:url(images/logo.jpg) no-repeat 0 0;
+        }
+        .header2 span {
+            visibility:hidden; /* 还可以设置span内的文字不可见,需要把文字放在span内 */
+        }
+        .usehidden {
+            width:300px;
+            height:54px;
+            overflow:hidden; /* 隐藏超出段落p标签容器的内容 */
+            background-color:#EEEEEE;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="header1">乐淘正品鞋城1</h1></body>
+    <h1 class="header2"><span>乐淘正品鞋城2</span></h1></body>
+    <p class="usehidden">
+        迎涛神，此说出自东汉
+        <span>《曹娥碑》</span>。
+        曹娥是东汉上虞人，父亲溺于江中，数日不见尸体，
+        当时孝女曹娥年仅十四岁，昼夜沿江号哭。
+        过了十七天，在五月五日也投江，五日后抱出父尸。
+    </p>
+</body>
+</html>
