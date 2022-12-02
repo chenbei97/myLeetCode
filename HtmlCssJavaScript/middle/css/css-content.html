@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加动态内容</title>
+    <style>
+
+      div { /*给div动态添加图片*/
+        padding: 50px;
+        border: solid 1px red;
+        content: url(images/girl.jpg); /*在div元素内添加图片*/
+      }
+
+      ol { list-style:none;} /*清除默认列表样式*/
+
+      /*第一级的项添加递增序号*/
+      li{counter-increment:a 1;}  /*设计递增函数a，递增起始值为1 */
+      li:before{content:counter(a)". ";}   /*把递增值添加到列表项前面,这样每个项前边有序号标记1.,2.,...,6.*/
+
+      /*第二级的项添加递增序号*/
+      li li{counter-increment:b 1;} /*设计递增函数b，递增起始值为1 */
+      li li:before{content:counter(a)"."counter(b)". ";}  /*把递增值添加到二级列表项前面*/
+
+      /*第三级的项添加递增序号*/
+      li li li{counter-increment:c 1;}  /*设计递增函数c，递增起始值为1 */
+      li li li:before{content:counter(a)"."counter(b)"."counter(c)". ";}  /*把递增值添加到三级列表项前面*/
+
+      li:before {
+          color:#f00; font-family:"Times New Roman",sans-serif;/*设计层级目录序号的字体样式*/
+      }
+    </style>
+</head>
+<body>
+  <div></div>
+
+  <ol>
+    <li>一级列表项目1
+      <ol>
+        <li>二级列表项目1</li>
+        <li>二级列表项目2
+          <ol>
+            <li>三级列表项目1</li>
+            <li>三级列表项目2</li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+    <li>一级列表项目2</li>
+  </ol>
+</body>
+</html>
