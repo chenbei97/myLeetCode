@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HSL构建颜色表</title>
+    <style>
+        table{
+          border:solid 1px red;
+          background:#eee;
+          padding:6px;
+        }
+        th{ /*第1列*/
+          color:red;
+          font-size:12px;
+          font-weight:normal;
+        }
+        td{ /*普通列*/
+          width:80px;
+          height:30px;
+        }
+
+        /*第1行*/ /*这里的第1行是正文开始第1行,前边3行是标题 HSL依次代表色相值、饱和度和亮度*/
+        tr:nth-child(4) td:nth-of-type(1){background:hsl(0,100%,100%);}/*第1列*/
+        tr:nth-child(4) td:nth-of-type(2){background:hsl(0,75%,100%);}/*第2列*/
+        tr:nth-child(4) td:nth-of-type(3){background:hsl(0,50%,100%);}/*第3列*/
+        tr:nth-child(4) td:nth-of-type(4){background:hsl(0,25%,100%);}/*第4列*/
+        tr:nth-child(4) td:nth-of-type(5){background:hsl(0,0%,100%);}/*第5列*/
+        /*第2行*/
+        tr:nth-child(5) td:nth-of-type(1){background:hsl(0,100%,88%);}/*第1列*/
+        tr:nth-child(5) td:nth-of-type(2){background:hsl(0,75%,88%);}/*第2列*/
+        tr:nth-child(5) td:nth-of-type(3){background:hsl(0,50%,88%);}/*第3列*/
+        tr:nth-child(5) td:nth-of-type(4){background:hsl(0,25%,88%);}/*第4列*/
+        tr:nth-child(5) td:nth-of-type(5){background:hsl(0,0%,88%);}/*第5列*/
+        /*第3行*/
+        tr:nth-child(6) td:nth-of-type(1){background:hsl(0,100%,75%);}/*第1列*/
+        tr:nth-child(6) td:nth-of-type(2){background:hsl(0,75%,75%);}/*第2列*/
+        tr:nth-child(6) td:nth-of-type(3){background:hsl(0,50%,75%);}/*第3列*/
+        tr:nth-child(6) td:nth-of-type(4){background:hsl(0,25%,75%);}/*第4列*/
+        tr:nth-child(6) td:nth-of-type(5){background:hsl(0,0%,75%);}/*第5列*/
+        /*第4行*/
+        tr:nth-child(7) td:nth-of-type(1){background:hsl(0,100%,63%);}/*第1列*/
+        tr:nth-child(7) td:nth-of-type(2){background:hsl(0,75%,63%);}/*第2列*/
+        tr:nth-child(7) td:nth-of-type(3){background:hsl(0,50%,63%);}/*第3列*/
+        tr:nth-child(7) td:nth-of-type(4){background:hsl(0,25%,63%);}/*第4列*/
+        tr:nth-child(7) td:nth-of-type(5){background:hsl(0,0%,63%);}/*第5列*/
+        /*第5行*/
+        tr:nth-child(8) td:nth-of-type(1){background:hsl(0,100%,50%);}/*第1列*/
+        tr:nth-child(8) td:nth-of-type(2){background:hsl(0,75%,50%);}/*第2列*/
+        tr:nth-child(8) td:nth-of-type(3){background:hsl(0,50%,50%);}/*第3列*/
+        tr:nth-child(8) td:nth-of-type(4){background:hsl(0,25%,50%);}/*第4列*/
+        tr:nth-child(8) td:nth-of-type(5){background:hsl(0,0%,50%);}/*第5列*/
+        /*第6行*/
+        tr:nth-child(9) td:nth-of-type(1){background:hsl(0,100%,38%);}/*第1列*/
+        tr:nth-child(9) td:nth-of-type(2){background:hsl(0,75%,38%);}/*第2列*/
+        tr:nth-child(9) td:nth-of-type(3){background:hsl(0,50%,38%);}/*第3列*/
+        tr:nth-child(9) td:nth-of-type(4){background:hsl(0,25%,38%);}/*第4列*/
+        tr:nth-child(9) td:nth-of-type(5){background:hsl(0,0%,38%);}/*第5列*/
+        /*第7行*/
+        tr:nth-child(10) td:nth-of-type(1){background:hsl(0,100%,25%);}/*第1列*/
+        tr:nth-child(10) td:nth-of-type(2){background:hsl(0,75%,25%);}/*第2列*/
+        tr:nth-child(10) td:nth-of-type(3){background:hsl(0,50%,25%);}/*第3列*/
+        tr:nth-child(10) td:nth-of-type(4){background:hsl(0,25%,25%);}/*第4列*/
+        tr:nth-child(10) td:nth-of-type(5){background:hsl(0,0%,25%);}/*第5列*/
+        /*第8行*/
+        tr:nth-child(11) td:nth-of-type(1){background:hsl(0,100%,13%);}/*第1列*/
+        tr:nth-child(11) td:nth-of-type(2){background:hsl(0,75%,13%);}/*第2列*/
+        tr:nth-child(11) td:nth-of-type(3){background:hsl(0,50%,13%);}/*第3列*/
+        tr:nth-child(11) td:nth-of-type(4){background:hsl(0,25%,13%);}/*第4列*/
+        tr:nth-child(11) td:nth-of-type(5){background:hsl(0,0%,13%);}/*第5列*/
+        /*第9行*/
+        tr:nth-child(12) td:nth-of-type(1){background:hsl(0,100%,0%);}/*第1列*/
+        tr:nth-child(12) td:nth-of-type(2){background:hsl(0,75%,0%);}/*第2列*/
+        tr:nth-child(12) td:nth-of-type(3){background:hsl(0,50%,0%);}/*第3列*/
+        tr:nth-child(12) td:nth-of-type(4){background:hsl(0,25%,0%);}/*第4列*/
+        tr:nth-child(12) td:nth-of-type(5){background:hsl(0,0%,0%);}/*第5列*/
+    </style>
+</head>
+<body>
+  <table>
+    <tbody> <!--标题行-->
+      <tr> <!--第1行-->
+        <th>&nbsp;</th> <th colspan="5">色相：H=0 Red </th>
+      </tr>
+      <tr> <!--第2行-->
+        <th>&nbsp;</th> <th colspan="5">饱和度 (&rarr;)</th>
+      </tr>
+      <tr> <!--第3行-->
+        <th>亮度 (&darr;)</th> <th>100% </th> <th>75% </th> <th>50% </th> <th>25% </th> <th>0% </th>
+      </tr>
+    <tr> <!--第4行-->
+      <th>100 </th><td>&nbsp;</td> <td>&nbsp;</td> <td>&nbsp;</td> <td>&nbsp;</td> <td>&nbsp;</td>
+    </tr>
+    <tr> <!--第5行-->
+      <th>88 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr> <!--第6行-->
+      <th>75 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr><!--第7行-->
+      <th>63 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr><!--第8行-->
+      <th>50 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr><!--第9行-->
+      <th>38 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr><!--第10行-->
+      <th>25 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr><!--第11行-->
+      <th>13 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    <tr><!--第12行-->
+      <th>0 </th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+    </tbody>
+  </table>
+</body>
+</html>
