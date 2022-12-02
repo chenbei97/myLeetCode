@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>网页居中</title>
+    <style>
+      body { text-align: center; } /*这是文本居中不是div居中*/
+      .webcenter {
+        margin-left: auto; /*必须加上左右边距auto否则不能实现居中 或者使用margin: 0 auto也可*/
+        margin-right: auto;
+        border: solid 1px red;
+        width: 60%;
+      }
+      .vertical {
+          vertical-align: center;
+          display: table-cell; /*不起作用*/
+          width: 12em;
+          height: 6em;
+          line-height: 6em; /*居中对齐让line-height=height可以实现*/
+          border: solid 1px red;
+      }
+      .cell {
+          vertical-align: center; /*除非元素在单元格内或者图像元素可以起作用*/
+          height: 60px;
+          border: solid 1px red;
+      }
+    </style>
+</head>
+<body>
+  <div class="webcenter"><img src="images/email.png" /></div>
+  <div class="vertical">文本垂直对齐</div>
+  <table>
+      <tr>
+          <td class="cell">文本垂直对齐</td>
+      </tr>
+  </table>
+</body>
+</html>
