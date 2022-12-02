@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>特效首页的制作</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0 ;
+        background: black;
+        color: #666;
+      }
+
+      #text-shadow-box { /*整个div的设置*/
+        position: relative;
+        width: 598px;
+        height: 406px;
+        background: #666;
+        overflow: hidden;
+        border: #333 1px solid;
+      }
+
+      #text-shadow-box div.wall {/*div内第一层div的设置*/
+        position: absolute;
+        width: 100%;
+        top: 175px;
+        left: 0
+      }
+      div.wall div {/*div内第一层div内的div设置*/
+        position: absolute;
+        width: 100%;
+        height: 300px;
+        top: 42px;
+        left: 0;
+        background: #999;
+      }
+      #text { /*div内第一层div内的p设置*/
+        text-align: center;
+        line-height: 0.5em;
+        margin: 0;
+        font-family: helvetica, arial, sans-serif;
+        height: 1px;
+        color: #999;
+        font-size: 80px;
+        font-weight: bold;
+        text-shadow: 5px -5px 16px #000;
+      }
+
+      #spotlight { /*div内第二层div的设置*/
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: url(images/spotlight.png) center -300px;
+        font-size: 12px;
+      }
+      #spotlight a { /*对第二层div内的链接设置*/
+        color: #ccc;
+        text-decoration: none;
+        position: absolute;
+        left: 45%;
+        top: 58%;
+        float: left;
+        text-shadow: 1px 1px #999, -1px -1px #333;
+      }
+
+      #cat { /*div内第三层div的设置*/
+        position: absolute;
+        top: 130px;
+        left: 260px;
+        z-index: 1000;
+        opacity: 0.5;
+      }
+      #cat img { width: 80px; }
+
+    </style>
+</head>
+<body>
+  <div id="text-shadow-box">
+
+    <div class="wall">
+      <p id="text">黑客帝国</p>
+      <div></div>
+    </div>
+
+    <div id="spotlight"><a href="index.htm">Hacker Home</a></div>
+
+    <div id="cat"><img src="images/cat.png"></div>
+
+  </div>
+</body>
+</html>
