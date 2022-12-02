@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>恢复默认样式</title>
+    <style>
+      p {
+        color: blue;
+        font-family: 宋体, sans-serif;
+      }
+      p#text02 { /*可以让第2行文本恢复初始样式不再有p设置的样式*/
+        color: initial;
+      }
+    </style>
+</head>
+<body>
+    <p id="text01">ABC</p>
+    <p id="text02">123</p>
+    <p id="text03">abc</p>
+</body>
+</html>
