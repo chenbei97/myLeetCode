@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>配置网页字体大小</title>
+    <style>
+      body { font-size:0.75em; } /*body这里使用0.75em和75%是相同的*/
+      /*body { font-size:75%; }*/
+      #header h1 { font-size:1.333em; } /*注意都是相对body来说的，由于继承导致正文就是0.75em=12px，h1希望是16px就是16/12*1em=1.333em*/
+      #main h2 { font-size:1.167em; } /*14/12*1em*/
+      #nav li{ font-size:1.08em; }/*13/12*1em*/
+      #footer p { font-size:0.917em; } /*11/12*1em*/
+
+      #left {
+        font-size: 0.875em;      	/* 字体大小为14像素 */
+        width: 12em;           	/* 定义元素的宽度为12个字体长度 */
+        /*width:32%; !*这里12em和32%是不同的,12em是以内部包含字体的大小为基础进行计算,多少个字就多少宽度,但是百分比是以父元素这里是浏览器的宽度为准*!*/
+        border: solid 1px red;    		/* 定义一个边框，以方便观察显示效果 */
+        height: 1em;           		/* 定义高度为1个字体大小 */
+      }
+    </style>
+</head>
+<body>
+<div id="left">字体大小与网页布局关联</div>
+
+  <div id="wrap">
+    <div id="header">
+      <h1>网站标题（<span style="font-size:16px;">网站标题-16px</span>）</h1>
+    </div>
+    <ul id="nav">
+      <li>菜单（<span style="font-size:13px;">菜单-13px</span>）</li>
+    </ul>
+    <div id="main">
+      <h2>栏目标题（<span style="font-size:14px;">栏目标题-14px</span>）</h2>
+      <p>网页正文（<span style="font-size:12px;">网页正文-12px</span>）</p>
+    </div>
+    <div id="footer">
+      <p>版权信息（<span style="font-size:11px;">版权信息-11px</span>）</p>
+    </div>
+  </div>
+</body>
+</html>
