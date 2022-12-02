@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>自定义字体</title>
+    <style>
+      /* 引入外部字体文件 */
+      @font-face {
+        /* 选择默认的字体类型 */
+        font-family: "lexograph";
+        /* 兼容IE */
+        src: url(images/lexograph.eot);/*http://randsco.com//fonts/lexograph.eot*/
+        /* 兼容非IE */
+        src: local("Lexographer"), url(images/lexograph.ttf) format("truetype"); /*http://randsco.com/fonts/lexograph.ttf*/
+      }
+      h1 {
+        /* 设置引入字体文件中的lexograph字体类型 */
+        font-family: lexograph, verdana, sans-serif;
+        font-size:4em;
+      }
+    </style>
+</head>
+<body>
+  <h1>http://www.baidu.com/</h1>
+</body>
+</html>
