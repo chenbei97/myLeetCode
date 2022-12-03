@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>花边框的制作</title>
+    <style>
+      .demo {
+        width: 400px;
+        border: 20px solid rgba(104, 104, 142,0.5);
+        border-radius: 10px;
+        padding: 30px 30px;
+        color: #f36;
+        font-size: 80px;
+        font-family:"隶书",sans-serif;
+        line-height: 1.5;
+        text-align: center;
+      }
+      .multipleBg {
+        background: url("images/bg-tl.png") no-repeat left top,
+            url("images/bg-tr.png") no-repeat right top,
+            url("images/bg-bl.png") no-repeat left bottom,
+            url("images/bg-br.png") no-repeat right bottom,
+            url("images/bg-repeat.png") repeat left top;
+        /*改变背景图片的position起始点，四朵花都是border边缘处起，而平铺背景是在paddin内边缘起*/
+        -webkit-background-origin: border-box, border-box, border-box, border-box, padding-box;
+        -moz-background-origin: border-box, border-box, border-box, border-box, padding-box;
+        -o-background-origin: border-box, border-box, border-box, border-box, padding-box;
+        background-origin: border-box, border-box, border-box, border-box, padding-box;
+        /*控制背景图片的显示区域，所有背景图片超边border外边缘都将被剪切掉*/
+        -moz-background-clip: border-box;
+        -webkit-background-clip: border-box;
+        -o-background-clip: border-box;
+        background-clip: border-box;
+      }
+  </style>
+</head>
+<body>
+<div class="demo multipleBg">恭喜发财</div>
+</body>
+</html>
