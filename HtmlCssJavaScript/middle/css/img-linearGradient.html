@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>背景图像的线性渐变</title>
+    <style>
+        div {
+            color: #d9eef7;
+            height: 100px;
+            width: 400px;
+            margin: 0 auto;
+            line-height: 100px;
+            text-align: center;
+            border: solid red 1px;
+            border-radius: 0.5em;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3); /*依次设置水平垂直偏移和阴影模糊度以及颜色*/
+
+            background: #0095cd;
+            background: linear-gradient(to left bottom, #00adee, #0078a5); /*45deg,to left bottom, #00adee, #0078a5这样不允许*/
+            /* 渐变轴为45度，从蓝色渐变到红色 linear-gradient(45deg, blue, red); */
+            /* 从右下到左上、从蓝色渐变到红色 linear-gradient(to left top, blue, red); */
+            /* 从下到上，从蓝色开始渐变、到高度 40% 位置是绿色渐变开始、最后以红色结束 linear-gradient(0deg, blue, green 40%, red);*/
+        }
+    </style>
+</head>
+<body>
+  <div>设计线性渐变图像</div>
+</body>
+</html>
