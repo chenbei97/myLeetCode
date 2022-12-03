@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>背景图片的位置</title>
+    <style>
+        body {
+            background:#DFDFDF;
+            text-align:center;
+            color:#454545;
+        }
+        p, h3 {
+            margin:0;
+            padding:0;
+        }
+        #explanation { /*控制整个div盒子的背景*/
+            background-color:#ffffff;
+            background-repeat:repeat-y; /*垂直平铺的图片*/
+            background-image:url(images/img_explanation.jpg);
+            background-position:left bottom; /*图片默认在左上角的位置*/
+            width:546px;
+            margin:0 auto;
+            font-size:13px;
+            line-height:1.6em;
+            text-indent:2em;
+        }
+        #explanation h3 { /*顶部的图片覆盖了h3标题文字"这是什么？"*/
+            background:url(images/title_explanation.gif) no-repeat;
+            height:39px;
+        }
+        #explanation h3 span {
+            /*display:none;*/ /*让"这是什么？"不显示,这也是为何html中把这个文字放在span内,还可以使用visibility=hidden实现*/
+            visibility: hidden;
+        }
+        #explanation p { /*段落右侧的竖条阴影图片*/
+            background:url(images/right_bg.gif) right repeat-y;
+        }
+        #explanation p span {/* p1,p2下的整体span进行设置,文字左对齐*/
+            padding:0 15px 10px 77px;/*到右侧15,底部10,左侧77的距离,文字可以整体左移不会覆盖左侧图片*/
+            display:block; /*span本身是行内元素,转为块元素可以让文字自动换行*/
+            text-align:left;
+        }
+        #explanation p .first { /*首行的第一个"对"字实现首行下沉的效果,字号变大*/
+            font-size:60px;
+            float:left; /*不左浮动的话文字会第1个字就换行*/
+            line-height:1em; /*1em高度占据3行文字左右,大了就占的多了*/
+            padding:0; /*不设为0,"对"字到左边图片距离会很远*/
+            color:#820015;
+        }
+        #explanation .p2 span { /*底部的白色图片*/
+            padding-bottom:10px; /*最后1行文字到底部的距离10px不要太多,和图片高度相近即可*/
+            background:url(images/right_bottom.gif) bottom no-repeat;
+        }
+
+        div[class^="box"] {/* 盒子的样式 */
+            background-image: url(images/grid.gif);
+            background-repeat: no-repeat;
+            width: 250px;
+            height: 250px;
+            border: solid 1px red;
+            float: left;
+        }
+        .box1 {background-position:top left;} /*top left*/
+        .box2 {background-position:100% 0;}
+        .box3 {background-position:0 100%;}
+        .box4 {background-position:100% 100%;}
+        .box5 {background-position:center center;}
+        .box6 {background-position:top center;}
+        .box7 {background-position:left center;}
+        .box8 {background-position:100% 50%;} /*right center*/
+        .box9 {background-position:50% 100%;} /*bottom center*/
+    </style>
+</head>
+<body>
+    <div id="explanation">
+        <h3><span>这是什么？</span></h3>
+        <p class="p1">
+            <span>
+                <span class="first">对</span>
+                于网页设计师来说应该好好研究
+                <acronym title="cascading style sheets">CSS</acronym>
+                。Zen Garden致力于推广和使用CSS技术，努力激发和鼓励您的灵感和参与。读者可以从浏览高手的设计作品入门。只要选择列表中的任一个样式表，就可以将它加载到这个页面中。
+                <acronym title="hypertext markup language">HTML</acronym>
+                文档结构始终不变，但是读者可以自由地修改和定义
+                <acronym title="cascading style sheets">CSS</acronym>
+                样式表。
+            </span>
+        </p>
+        <p class="p2">
+            <span>
+                <acronym title="cascading style sheets">CSS</acronym>
+                具有强大的功能，可以自由控制HTML结构。当然读者需要拥有驾驭CSS技术的能力和创意的灵感，
+                同时亲自动手，用具体的实例展示CSS的魅力，展示个人的才华。
+                截至目前为止，很多Web设计师和程序员已经介绍过许多关于CSS应用技巧和兼容技术的各种技巧和案例。
+                而平面设计师还没有足够重视CSS的潜力。读者是不是需要从现在开始呢？
+            </span>
+        </p>
+    </div>
+
+    <div class="box1">图片在左上角</div>
+    <div class="box2">图片在右上角</div>
+    <div class="box3">图片在左下角</div>
+    <div class="box4">图片在右下角</div>
+    <div class="box5">图片在中间</div>
+    <div class="box6">图片顶端居中</div>
+    <div class="box7">图片左端居中</div>
+    <div class="box8">图片右端居中</div>
+    <div class="box9">图片底端居中</div>
+</body>
+</html>
