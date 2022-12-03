@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>图像的径向渐变</title>
+    <style>
+       div[class^="id"] {
+         width: 400px;
+         height: 200px;
+         border: solid red 2px;
+         float: left;
+         /*display: inline;*/
+       }
+
+       .id1 {
+         background: radial-gradient(#e66465, #9198e5);
+       }
+       .id2 {
+         background: radial-gradient(closest-side, #3f87a6, #ebf8e1, #f69d3c);
+       }
+       .id3 {
+           background: radial-gradient(circle at 100%, #333, #333 50%, #eee 75%, #333 75%);
+       }
+       .id4 {
+           background: radial-gradient(ellipse at top, #e66465, transparent),
+           radial-gradient(ellipse at bottom, #4d9f0c, transparent);
+       }
+    </style>
+</head>
+<body>
+  <div class="id1"></div>
+  <div class="id2"></div>
+  <div class="id3"></div>
+  <div class="id4"></div>
+</body>
+</html>
