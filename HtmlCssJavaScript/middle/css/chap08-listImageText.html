@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>图文列表</title>
+    <style>
+      .pic_list { /*对整体div的设置*/
+        width: 960px; /* 设置图文列表整体的宽度 */
+        border: 1px solid #D9E5F5; /* 添加图文列表的边框 */
+        background: url(images/wrap.jpg) repeat-x 0 0; /* 添加图文列表整体的背景图片 */
+      }
+      .pic_list * {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font: normal 12px/1.5em "宋体", Verdana, Lucida, Arial, Helvetica, sans-serif;
+      } /* 重置图文列表内部所有基本样式 */
+
+      .pic_list h3 { /*对标题"爱秀"的设置*/
+        height: 34px;
+        line-height: 34px;
+        font-size: 14px;
+        text-indent: 12px;
+        font-weight: bold;
+        color: #223A6D;
+        background: url(images/h3bg.jpg) no-repeat 0 0;
+      } /* 设置图文列表的标题的高度，行高，文字样式和背景图片 */
+
+      .pic_list .content {/*对二级div的设置*/
+        width: 942px;
+        height: 150px;
+        overflow: hidden; /* 设置图文列表内容区域的宽度和高度，超过部分隐藏 */
+        padding: 22px 0 0 15px; /* 利用内补丁增加图文列表内容区域与其他元素之间的间距 */
+      }
+      .pic_list .content li { /*图像列表设置浮动一行内显示*/
+        float: left;
+        width: 142px;
+        margin-right: 15px; /* 列表li标签设置浮动后，所有列表将根据盒模型的计算方式计算列表宽度，并且并排显示 */
+        display: inline; /* 设置浮动后并且增加了左右外补丁，IE6会产生双倍间距的bug，利用该属性解决 */
+      }
+      .pic_list .content li a { /*图像链接的设置*/
+        display: block; /* 将内联元素a标签转换为块元素使其具备宽高属性 */
+        width: 142px; /* 设置转换为块元素后的a标签的宽度 */
+        text-align: center; /* 文本居中显示 */
+        text-decoration: none; /* 文本下划线 */
+        color: #333333; /* 文本的颜色 */
+      }
+      .pic_list .content li a:hover { /*链接的悬浮设置*/
+          text-decoration: underline;
+          color: #CC0000; /* 当鼠标经过图文列表时，文字有下划线并且改变颜色 */
+      }
+      .pic_list .content li a img { /*对图片的设置*/
+        display: block; /* 当图片设置为块元素时，可以解决IE6中图片底部几个空白像素的bug */
+        width: 134px;
+        height: 101px;
+        padding: 3px; /* 设置图片的宽高属性以及内补丁属性 */
+        margin-bottom: 8px; /* 将图片的底部外补丁设置8px，使其与文字之间产生一定间距 */
+        border: 1px solid #CCCCCC;
+        background-color: #FFFFFF; /* 背景颜色将通过内补丁的空间显示 */
+      }
+
+      .pic_list .content li a:hover img { background-color: #22407E; /* 当鼠标经过图文列表时，图片的背景颜色改变 */ }
+
+    </style>
+</head>
+<body>
+<div class="pic_list">
+  <h3>爱秀</h3>
+  <div class="content">
+    <ul>
+      <li><a href="#"><img src="images/chap81.jpg" alt="美女个性搞怪自拍">美女个性搞怪自拍</a></li>
+      <li><a href="#"><img src="images/chap82.jpg" alt="绝对阳光的清纯小妹">绝对阳光的清纯小妹</a></li>
+      <li><a href="#"><img src="images/chap83.jpg" alt="漂亮美女的可爱外拍">漂亮美女的可爱外拍</a></li>
+      <li><a href="#"><img src="images/chap84.jpg" alt="可爱美女的艺术照">可爱美女的艺术照</a></li>
+      <li><a href="#"><img src="images/chap85.jpg" alt="漂亮美女娇美自拍">漂亮美女娇美自拍</a></li>
+      <li><a href="#"><img src="images/chap86.jpg" alt="清纯迷人的黄毛丫头">清纯迷人的黄毛丫头</a></li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

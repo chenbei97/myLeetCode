@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>列表堆叠样式</title>
+    <style>
+      #menu {/* 定义列表基本样式 */
+        padding: 0; 									/* 清除列表的补白 */
+        margin: 0; 										/* 清除列表的边界 */
+      }
+      #menu li {/* 定义项目列表样式 */
+        list-style-type: none; 							/* 清除项目符号 */
+        width: 200px; 									/* 定义列表项目的宽度*/
+        margin: 3px 0; 									/* 增加列表项目的上下边界 */
+      }
+      #menu a, #menu a:visited {/* 定义超链接的默认样式 */
+        display: block; 								/* 块状显示 */
+        border: 1px solid #888; 						/* 定义边框线 */
+        background-color: #f8f8e8; 						/* 定义背景色 */
+        color: #000; 									/* 定义字体色（黑色） */
+        padding: 8px 12px; 								/* 增加补白 */
+        text-decoration: none; 							/* 清除超链接下划线 */
+      }
+      #menu a:hover {/* 鼠标移过时的样式 */
+        color: #fff; 									/* 字体颜色（白色） */
+        background-color: #65707b; 						/* 定义背景色 */
+        border: 1px solid #000; 						/* 定义边框线 */
+      }
+    </style>
+</head>
+<body>
+<h1>网站分类</h1>
+<ul id="menu">
+  <li><a href="#" title="">软件工程</a></li>
+  <li><a href="#" title="">编程语言</a></li>
+  <li><a href="#" title="">软件设计</a></li>
+  <li><a href="#" title="">Web前端</a></li>
+  <li><a href="#" title="">手机开发</a></li>
+  <li><a href="#" title="">所有随笔</a></li>
+</ul>
+</body>
+</html>
