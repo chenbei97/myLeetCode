@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>列表菜单项的使用</title>
+    <script> /*定义结构体和5个脚本函数被html的menuitem调用*/
+      var post = {
+        "source" : "images/liuyong.rar",
+        "demo"   : "images/liuyong.jpg",
+        "feed"   : "http://www.weibo.com/"
+      };
+      function downloadSource() {
+        window.open(post.source, '_self');
+      }
+      function viewDemo() {
+        window.open(post.demo, '_blank');
+      }
+      function getFeed() {
+        window.prompt('发送地址:', post.feed);
+      }
+      function sendEmail() {
+        var url  = document.URL;
+        var body = '分享地址: ' + url +'';
+        window.location.href = 'mailto:?subject='+ document.title +'&body='+ body +'';
+      }
+      function addNewTask() {
+        var list   = document.createElement('li');
+        list.className = 'task-item';
+        list.innerHTML = '<input type="checkbox" name="" value="done">新任务';
+        var taskList = document.getElementById('task');
+        taskList.appendChild(list);
+      }
+  </script>
+</head>
+<body>
+<section id="on-a-blog" contextmenu="download">
+  <header class="section-header">
+    <h3>雨霖铃</h3>
+  </header>
+  <p>
+    寒蝉凄切，对长亭晚，骤雨初歇。
+    都门帐饮无绪，留恋处舟催发。
+    执手相看泪眼，竟无语凝噎。
+    念去去千里烟波，暮霭沉沉楚天阔。
+    多情自古伤离别，更那堪冷落清秋节。
+    今宵酒醒何处?杨柳岸晓风残月。
+    此去经年，应是良辰好景虚设。
+    便纵有千种风情，更与何人说?
+  </p>
+</section>
+
+<menu id="download" type="context"> <!--使用上下文菜单-->
+  <menuitem onclick="downloadSource()" icon="images/liuyongicon1.png">下载文件</menuitem>
+  <menuitem onclick="viewDemo()" icon="images/liuyongicon2.png">查看源文件</menuitem>
+  <menu label="我要分享...">
+    <menuitem onclick="getFeed()" icon="images/liuyongicon3.png">反馈</menuitem>
+    <menuitem onclick="sendEmail()" icon="images/liuyongicon4.png">Email</menuitem>
+  </menu>
+</menu>
+<div>-----------------------------------------------------------------------</div>
+<section id="on-web-app" contextmenu="add_task">
+  <header>
+    <h3>任务列表</h3>
+  </header>
+  <ul id="task">
+    <li class="task-item"><input type="checkbox" name="" value="done">任务一</li>
+    <li class="task-item"><input type="checkbox" name="" value="done">任务二</li>
+    <li class="task-item"><input type="checkbox" name="" value="done">任务三</li>
+  </ul>
+</section>
+<menu id="add_task" type="context">
+  <menuitem onclick="addNewTask()" icon="images/liuyongadd.png">添加新任务</menuitem>
+</menu>
+</body>
+</html>
