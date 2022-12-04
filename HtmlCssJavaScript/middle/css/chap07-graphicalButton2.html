@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>超链接的图形化按钮</title>
+    <style>
+      body {
+        background: url(images/bg71.jpg) no-repeat;
+        padding: 0;
+        margin: 0;
+        width:952px;
+        height:508px;
+      }
+      #box {
+        position: absolute;
+        width: 94px;
+        height: 28px;
+        z-index: 1;
+        left: 609px;
+        top: 300px;
+      }
+      a.reg {/* 定义超链接正常样式：定位左侧背景图像 */
+        background: url("images/arrow72.gif") no-repeat left center;
+        padding-left:14px;
+      }
+      a.reg:hover {/* 定义鼠标经过时超链接样式：定位左侧背景图像 */
+        background: url("images/arrow71.gif") no-repeat left center;
+        padding-left:14px;
+      }
+    </style>
+</head>
+<body>
+<div id="box">
+  <a class="reg"  href="#">注册</a>
+</div>
+</body>
+</html>

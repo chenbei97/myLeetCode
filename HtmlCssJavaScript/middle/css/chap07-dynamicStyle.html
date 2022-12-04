@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>超链接的动态样式</title>
+    <style>
+      body,h1{margin:0; padding:0;}
+      #header {/* 模拟标题行样式 */
+        height:80px; 											/* 固定高度 */
+        background:#0000FF; 									/* 背景色 */
+        color:#fff; 											/* 字体颜色 */
+        line-height:80px; 										/* 行高，定义垂直居中特效 */
+        padding-left:1em; 										/* 左补白，避免标题贴边显示 */
+      }
+      a {/* 超链接的默认样式 */
+        text-decoration:none; 									/* 清除下划线效果 */
+        float:right; 											/* 向右浮动 */
+        margin-right:4px; 										/* 右边界，避免超链接贴边 */
+        background:#0FFFF0; 									/* 定义背景色 */
+        color:#00CC66; 										/* 定义前景色 */
+        width:100px; 											/* 宽度 */
+        height:40px; 											/* 高度 */
+        line-height:40px; 										/* 行高，定义垂直居中特效 */
+        text-align:center; 										/* 水平居中显示 */
+      }
+      a:hover {/* 鼠标经过时样式 */
+        height:60px; 											/* 增加高度 */
+        line-height:60px;/* 增加行高，大于高度，这样能够靠底显示 */
+        color:#0000FF; 										/* 字体颜色 */
+        font-weight:bold; 										/* 粗体显示 */
+      }
+    </style>
+</head>
+<body>
+<div id="container">
+  <div id="header">
+    <h1>LOGO</h1>
+  </div>
+  <div id="nav"> <a href="#">RSS</a> </div>
+</div>
+</body>
+</html>
