@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>菜单列表</title>
+</head>
+<body>
+  <menu type="toolbar">
+    <li>
+      <menu label="File" type="toolbar">
+        <button type="button" onclick="file_new()">新建...</button>
+        <button type="button" onclick="file_open()">打开...</button>
+        <button type="button" onclick="file_save()">保存</button>
+      </menu>
+    </li>
+    <li>
+      <menu label="Edit" type="toolbar">
+        <button type="button" onclick="edit_cut()">剪切</button>
+        <button type="button" onclick="edit_copy()">复制</button>
+        <button type="button" onclick="edit_paste()">粘贴</button>
+      </menu>
+    </li>
+  </menu>
+</body>
+</html>
