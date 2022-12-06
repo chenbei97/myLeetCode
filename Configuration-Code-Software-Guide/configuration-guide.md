@@ -3072,6 +3072,16 @@ C:\Qt\Qt5.9.9\Tools\mingw530_32\bin
 
 ## 其它
 
+### 更改WindowApps的访问权限
+
+参考链接：[微软商店的App都装在哪？](https://www.pconline.com.cn/win11/1482/14828648.html)
+
+### 加速Github
+
+第1个方法：[Watt Toolkit - 瓦特工具箱(Steam++官网) (steampp.net)](https://steampp.net/)在微软商店可下载此工具箱，选择GitHub加速，网页版Github就可以进去了，但是Vscode的Github同步还是不行。
+
+第2个方法：[dotnetcore/FastGithub](https://github.com/dotnetcore/FastGithub)下载winx64版本的应用，按照作者说明的步骤安装执行，双击运行FastGithub.UI.exe即可。
+
 ### 如何查看cpu核数以及线程数
 
 win+R输入cmd打开终端(win11可以右键直接打开终端)，输入指令：
