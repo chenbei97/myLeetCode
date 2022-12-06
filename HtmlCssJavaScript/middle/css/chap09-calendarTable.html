@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>日历表的示例</title>
+    <style>
+      table {
+        border-collapse: collapse;
+        border: 1px solid #DCDCDC;
+        font: normal 12px/1.5em Arial, Verdana, Lucida, Helvetica, sans-serif;
+        width: 100%;
+        text-align: center;
+      }
+      caption {
+        line-height:46px;
+        font-size:20px;
+        color: blue;
+      }
+      td, th {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #DCDCDC;
+      }
+      th { /*第1行表头的背景单独设置*/
+        color: #000000;
+        background-color: #EEEEEE;
+      }
+
+      td.current { /*当前日期2017/7/1的高亮显示*/
+        font-weight: bold;
+        color: #FFFFFF;
+        background-color: blue;
+      } /*上个月和下个月的日期背景也单独设置*/
+      td.last_month, td.next_month {
+        color: #DFDFDF;
+      }
+
+      tr>td+td { /*在星期一包含之后的都设为黑色*/
+        color: #333333;
+        background-color: #FFFFFF;
+      } /*在周日包含之后的设为棕色,两者叠加就可以让周末单独设置颜色了*/
+      tr>td , tr>td+td+td+td+td+td+td{ /*子类选择器和相邻选择器*/
+        color: #B3222B;
+        background-color: #F8F8F8;
+      }
+
+      col.day_off { /*兼容IE浏览器对第1列和最后1列也就是周六日单独设置*/
+        color: #B3222B;
+        background-color: #F8F8F8;
+      }
+    </style>
+</head>
+<body>
+<table>
+  <caption>2017年7月1日</caption>
+  <colgroup span="7"> <!--一个星期7天-->
+    <col span="1" class="day_off">
+    <col span="5">
+    <col span="1" class="day_off">
+  </colgroup>
+
+  <thead>
+  <tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr>
+  </thead>
+
+  <tbody>
+  <tr><td class="last_month">29</td><td class="last_month">30</td><td class="current">1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+  <tr><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+  <tr><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td></tr>
+  <tr><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td></tr>
+  <tr><td>27</td><td>28</td><td>29</td><td>30</td><td>31</td><td class="next_month">1</td><td class="next_month">2</td></tr>
+  <tr><td class="next_month">3</td><td class="next_month">4</td><td class="next_month">5</td><td class="next_month">6</td><td class="next_month">7</td><td class="next_month">8</td><td class="next_month">9</td></tr>
+  </tbody>
+</table>
+</body>
+</html>
