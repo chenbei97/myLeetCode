@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>创建账户的表单</title>
+    <style>
+      form {
+        width: 600px; 	/* 设置宽度 */
+        font-size: 14px; 	/* 字体大小 */
+        margin: 0 auto; 	/* 居中对齐 */
+      }
+      fieldset {
+        margin: 15px auto; 	/* 上下外间距15像素，左右居中 */
+        text-align: left; 	/* 文本左对齐 */
+        width: 600px; 	/* 设置宽度*/
+        -moz-border-radius: 5px; 	/* 圆角 */
+        -webkit-border-radius: 5px; 	/* 圆角*/
+      }
+      legend {
+        padding: 3px 12px; 	/* 设置内间距 */
+        border: 1px solid #1E7ACE; 	/* 字体颜色 */
+      }
+      p {
+        padding: 0; 	/* 取消默认间距*/
+        margin: 10px auto; 	/* 上下外间距10像素，左右居中*/
+        width: 500px; 	/* 设置宽度 */
+        clear: both	/* 清除浮动 */
+      }
+      p.enter { text-align: center; 	/* 文本居中 */ }
+      input {
+        margin-right: 10px; 	/* 设置右间距 */
+        width: 150px; 	/* 设置宽度 */
+        height: 20px; 	/* 设置高度 */
+        line-height: 20px; 	/* 设置行高 */
+        border: 1px solid #094e87; 	/* 设置边框 */
+      }
+      input:hover { background-color: #F30; 	/* 设置背景颜色 */ }
+      label {
+        width: 140px; 	/* 设置宽度 */
+        float: left; 	/* 设置左浮动 */
+        text-align: right; 	/* 文本右对齐 */
+        line-height: 20px; 	/* 设置行高 */
+      }
+      span {
+        color: #F00; 	/* 字体颜色 */
+        font-size: 12px; 	/* 字体大小 */
+      }
+      a {
+        color: #000; 	/* 字体颜色 */
+        font-size: 12px; 	/* 字体大小 */
+      }
+      /**特殊输入域 设置 start***/
+      select {
+        height: 25px;	/* 设置高度 */
+        width: 151px;	/* 设置宽度 */
+        color: #36F;	/* 字体颜色 */
+        border: 1px solid #094e87;	/* 设置边框 */
+      }
+      textarea {
+        height: 45px; 	/* 设置高度 */
+        width: 220px; 	/* 设置宽度 */
+        border: 1px solid #094e87; 	/* 设置边框 */
+      }
+      p.fuwu input {
+        width: auto; 	/* 宽度自适应 */
+        height: 12px; 	/* 设置高度*/
+        line-height: 12px; 	/* 设置行高*/
+        border: none; 	/* 取消边框*/
+        margin-right: 0; 	/* 设置右间距为0像素 */
+      }
+      p.fuwu input:hover { background: none; 	/* 取消背景设置*/ }
+      /**特殊输入域 设置 start***/
+      /**性别 设置 start***/
+      p.XB2 input {
+        width: auto; 	/* 宽度自适应*/
+        border: none; 	/* 取消边框 */
+        margin-right: 0; 	/* 设置右间距为0像素 */
+        position: relative; 	/* 设置相对定位*/
+        top: 3px; 	/* 设置向上偏移3像素*/
+      }
+      p.XB2 input:hover { background: none; 	/* 取消背景设置 */ }
+      p.XB2 label.Wid2 {
+        width: auto; 	/* 宽度自适应 */
+        position: relative; 	/* 设置相对定位 */
+        top: -6px; 	/* 设置向上偏移6像素 */
+      +top:-3px; 	/* 设置ie7、ie6向上偏移3像素 */
+      }
+      /**性别 设置 end***/
+      p.enter input {
+        border: 1px solid #369; 	/* 设置边框 */
+        background: #6CF; 	/* 设置背景颜色 */
+        width: 60px; 	/* 设置宽度 */
+        line-height: 25px; 	/* 设置行高*/
+        height: 25px; 	/* 设置高度*/
+        position: relative; 	/* 设置相对定位*/
+        left: -40px; 	/* 设置向左移动40像素*/
+      }
+    </style>
+</head>
+<body>
+<form action="" method="post" name="" id="Form">
+  <fieldset>
+    <legend>用户登录</legend>
+    <p>
+      <label for="xingming">用户名：</label>
+      <input type="text" name="xingming" id="xingming" value="">
+    </p>
+    <p>
+      <label for="mima">密码：</label>
+      <input type="password" name="mima" id="mima">
+    </p>
+    <p class="enter">
+      <input name="tijiao" type="submit" class="buttom" value="登 录">
+    </p>
+  </fieldset>
+  <fieldset>
+    <legend>用户注册</legend>
+    <p>
+      <label for="xingming2">用户名：</label>
+      <input type="text" name="xingming2" id="xingming2">
+      <span>*(最多30个字符)</span> </p>
+    <p>
+      <label for="mima2">密码：</label>
+      <input type="password" name="mima2" id="mima2">
+      <span>*(最多30个字符)</span> </p>
+    <p>
+      <label for="chongfumima2">重复密码：</label>
+      <input type="password" name="chongfumima2" id="chongfumima2">
+      <span>*(密码需要一致)</span> </p>
+    <p>
+      <label for="secproblem">密码保护问题：</label>
+      <select class="sel" id="secproblem" name="secproblem">
+        <option value="0">请选择密码提示问题</option>
+        <option value="您母亲的姓名是?">您母亲的姓名是?</option>
+        <option value="您父亲的姓名是?">您父亲的姓名是?</option>
+        <option value="您配偶的姓名是?">您配偶的姓名是?</option>
+        <option value="您母亲的生日是?">您母亲的生日是?</option>
+        <option value="您父亲的生日是?">您父亲的生日是?</option>
+        <option value="您配偶的生日是?">您配偶的生日是?</option>
+        <option value="您的出生地是?">您的出生地是?</option>
+        <option value="您的小学校名是?">您的小学校名是?</option>
+        <option value="您的中学校名是?">您的中学校名是?</option>
+        <option value="您的大学校名是?">您的大学校名是?</option>
+        <option value="cusproblem">您的自定义问题</option>
+      </select>
+    </p>
+    <p>
+      <label for="daan">密码保护问题答案：</label>
+      <input type="text" name="daan" id="daan">
+    </p>
+    <p class="XB2">
+      <label for="xingbie2">性别：</label>
+      <label class="Wid2">
+        <input type="radio" name="RadioGroup1" value="0" id="RadioGroup1_0">
+        男</label>
+      <label class="Wid2">
+        <input type="radio" name="RadioGroup1" value="1" id="RadioGroup1_1">
+        女</label>
+    </p>
+    <p>
+      <label for="yinxiang2">本站印象：</label>
+      <textarea id="yinxiang2" ></textarea>
+    </p>
+    <p class="fuwu">
+      <label for="AgreeToTerms">同意服务条款：</label>
+      <input type="checkbox" name="AgreeToTerms" id="AgreeToTerms" value="1">
+      <a href="#" title="您是否同意服务条款">查看服务条款？</a> </p>
+    <p class="enter">
+      <input name="tijiao" type="submit" class="buttom" value="提 交">
+    </p>
+  </fieldset>
+</form>
+</body>
+</html>

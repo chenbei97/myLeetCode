@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>反馈表单的制作</title>
+    <style>
+      /*div的设置*/
+      .feedback {
+        width: 398px;
+        padding: 1px;
+        border: 1px solid #E8E8E8;
+        background-color: #FFFFFF;
+      }
+      /*大div所有元素的通用设置*/
+      .feedback * {
+        margin: 0;
+        padding: 0;
+        font: normal 12px/1.5em "宋体", Verdana, Lucida, Arial, Helvetica, sans-serif;
+      }
+
+      /*标题h3设置*/
+      .feedback h3 {
+        height: 24px;
+        line-height: 24px;
+        font-weight: bold;
+        font-size: 13px;
+        text-indent: 12px;
+        color: #FFFFFF;
+        background-color: #999999;
+      }
+
+      /*除h3以外的整体设置*/
+      .feedback .content { padding: 0 10px; }
+
+      /*分组设置*/
+      .feedback fieldset {
+        padding-left: 12px; /* 因为前面已经将表单内部所有内补丁设置为0，所以增加12px的左内补丁使表单域标题缩进 */
+        margin-top: 10px;
+        border: 0 none;
+        border-top: 1px solid #999999;
+      }
+
+      /*分组的标题设置*/
+      .feedback legend {
+        padding: 0 5px;
+        color: #333333;
+      }
+
+      /*uploadfile和msg2个div之间的距离*/
+      .feedback .frm_cont { margin-top: 8px;}
+
+      /*所有的label标签设置*/
+      .feedback label {
+        float: left;
+        width: 80px;
+        height: 22px;
+        line-height: 24px;
+        text-align: right;
+        color: #ABABAB;
+        cursor: pointer;
+      }
+
+      /*基本信息下的输入框样式设置*/
+      .feedback .base_info input {
+        width: 100px;
+        height: 17px;
+        padding: 3px 2px 0;
+        border: 1px solid #DEDEDE;
+      }
+
+      /*email地址输入框和网址输入框宽度*/
+      .feedback .email input { width: 150px; }
+      .feedback .url input { width: 240px; }
+
+      /*提示文本利用内补丁缩进，并设置红色，突出显示*/
+      /*本系统只支持上传.jpg、.gif、.png图片-请输入留言内容*/
+      .feedback .tips {
+        padding: 5px 0 0 80px;
+        color: #FF3260;
+      }
+
+      /*文本域部分*/
+      .feedback textarea {
+        width: 240px;
+        height: 66px;
+        padding-left: 2px;
+        line-height: 22px;
+        border: 1px solid #DEDEDE;
+      }
+
+      /*设置整个div下的按钮部分样式*/
+      .feedback .btns {
+        padding: 5px 0;
+        text-align: center;
+      }
+      /*设置整个div下的按钮部分的按钮样式*/
+      .feedback .btns button {
+        height: 22px;
+        margin: 0 5px;
+        letter-spacing: 3px; /* 调整文字间距 */
+        padding-left: 3px; /* 添加左内补丁使按钮左右间距相等 */
+        cursor: pointer;
+      }
+    </style>
+</head>
+<body>
+  <div class="feedback">
+    <h3>反馈表单</h3>
+    <!--主体部分-->
+    <div class="content">
+      <form method="post" action="">
+        <!--分组-基本信息-->
+        <fieldset class="base_info">
+          <legend>用户信息</legend>
+          <div class="frm_cont userName">
+            <label for="userName">用户名：</label>
+            <input type="text" value="" id="userName">
+          </div>
+          <div class="frm_cont email">
+            <label for="email">电子邮件：</label>
+            <input type="text" value="@" id="email">
+          </div>
+          <div class="frm_cont url">
+            <label for="url">网址：</label>
+            <input type="text" value="http://" id="url">
+          </div>
+        </fieldset>
+        <!--分组-反馈信息-->
+        <fieldset class="feedback_content">
+          <legend>反馈内容</legend>
+          <div class="frm_cont up_file">
+            <label>相关图片：</label>
+            <input type="file">
+            <p class="tips">本系统只支持上传.jpg、.gif、.png图片。</p>
+          </div>
+          <div class="frm_cont msg">
+            <label for="msg">内容：</label>
+            <textarea rows="4" cols="40" id="msg"></textarea>
+            <p class="tips">请输入留言内容！</p>
+          </div>
+        </fieldset>
+        <!--按钮部分-->
+        <div class="btns">
+          <button type="submit">提交</button>
+          <button type="reset">重置</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
