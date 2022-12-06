@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>带表头单元格和标题的普通表格示例</title>
+    <style>
+        table {
+          width: 100%; /*跟随浏览器的宽度*/
+          border-collapse: collapse; /*去除重复的边框*/
+          text-align: center;
+        }
+        caption{
+          font-size: 24px;
+          margin: 12px;
+          color: blue;
+        }
+       th,td {
+         border: solid red 1px;
+       }
+       tfoot {
+         text-align: right;
+         color: #c6ceda;
+         font-style: italic;
+       }
+    </style>
+</head>
+<body>
+<table>
+  <caption>课程表</caption>
+  <thead>
+    <tr> <!--第1行表头单元格-->
+      <th>&nbsp;</th><th>星期一</th><th>星期二</th><th>星期三</th><th>星期四</th><th>星期五</th>
+    </tr>
+  </thead>
+
+  <tfoot>
+  <tr><td colspan="6">表格的页脚结构</td></tr> <!--仍然要放进tr的td内,否则页脚不会显示在表格尾部-->
+  </tfoot> <!--使用元素必须按照caption-thead-tfoot-tbody的顺序,浏览器可以收到所有数据之前呈现页脚-->
+
+  <tbody>
+    <tr> <!--第2行-第1列是本行表头-->
+      <th>第1节</th><td>语文</td><td>物理</td><td>数学</td><td>语文</td><td>美术</td>
+    </tr>
+    <tr> <!--第3行-->
+      <th>第2节</th><td>数学</td><td>语文</td><td>体育</td><td>英语</td><td>音乐</td>
+    </tr>
+    <tr><!--第4行-->
+      <th>第3节</th><td>语文</td><td>体育</td><td>数学</td><td>英语</td><td>地理</td>
+    </tr>
+    <tr><!--第5行-->
+      <th>第4节</th><td>地理</td><td>化学</td><td>语文</td><td>语文</td><td>美术</td>
+    </tr>
+  </tbody>
+
+</table>
+
+</body>
+</html>
