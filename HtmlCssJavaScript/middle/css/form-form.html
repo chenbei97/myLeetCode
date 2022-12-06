@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>form的form属性应用</title>
+</head>
+<body>
+<form action="" method="get" id="form1">
+    请输入姓名：<input type="text" name="name1" autofocus/>
+    <input type="submit"  value="提交"/>
+</form>
+
+<p>下面的输入框input在form元素之外，但因为指定的form属性，并且值为表单的id， 所以该输入框仍然是表单的一部分。</p>
+
+请输入住址：<input type="text" name="address1" form="form1" /> <!--必须指定form告知表单元素属于form1-->
+</body>
+</html>
