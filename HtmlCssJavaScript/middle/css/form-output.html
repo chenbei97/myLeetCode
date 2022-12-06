@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>输出线元素的使用</title>
+    <script type="text/javascript">
+      function mul(){
+        a=parseInt(prompt("请输入第1个数字。",0));
+        b=parseInt(prompt("请输入第2个数字。",0));
+        document.forms["form"]["result"].value=a*b;
+        /*把计算的结果放在表单名为form的名为result的控件上*/
+      }
+    </script>
+</head>
+<body>
+<body onload="mul()"> <!--加载脚本函数-->
+<form  name="form">
+  两数的乘积为:
+  <output name="result"></output>
+</form>
+</body>
+</html>
