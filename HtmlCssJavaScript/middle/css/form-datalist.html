@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>datalist和input的list属性结合</title>
+</head>
+<body>
+<h2>输入你最喜欢的城市名称</h2>
+<form autocompelete="on">
+  <input type="text" id="city" list="cityList">
+  <datalist id="cityList" style="display:none;">
+    <option value="BeiJing">BeiJing</option>
+    <option value="QingDao">QingDao</option>
+    <option value="QingZhou">QingZhou</option>
+    <option value="QingHai">QingHai</option>
+  </datalist>
+</form>
+</body>
+</html>
