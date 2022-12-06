@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>使用col和colgroup的示例</title>
+    <style>
+        table {
+            border-collapse: separate; /*separate 合并和分开*/
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border-spacing: 10px 20px; /*border-collapse=seprate有效,定义单元格边框的行、列间距*/
+            caption-side: top; /*标题位于顶部*/
+            empty-cells: show; /*单元格内容为空时是否还显示边框*/
+            table-layout: auto; /*布局根据文字的内容是保持固定还是自适应*/
+            padding: 10px; /*定义补白,设定表格外框和单元格之间的距离*/
+        }
+        caption {
+            vertical-align: middle;
+            font-size: 25px;
+            color: #c9000e;
+            caption-side: top;
+        }
+        th,td {
+          border: solid 1px red;
+          padding: 10px;/*单元格的宽度和高度增大*/
+        }
+        .col1 {
+          /*text-align: right;*/ /*不要对col或colgroup使用这2个属性,因为td/th不会继承这2个元素*/
+          /*color: red;*/
+          background-color: #d7d9f2;
+        }
+        .col2 {
+          background-color: #ffe8d4;
+        }
+        .col3 {
+          background-color: #0FFFF0;
+        }
+    </style>
+</head>
+<body>
+    <!--不可以单独使用col,只能包含在colgroup中-->
+    <table>
+        <caption>表格1</caption>
+        <colgroup>
+          <col span="1" class="col1" >
+          <col span="2" class="col2" >
+          <col span="2" class="col3" >
+        </colgroup> <!--colgroup定义在caption之后thead之前-->
+
+        <thead>
+          <tr><td id="name">姓名</td><td id="sex">性别</td><td id="age">年龄</td><td id="education">学历</td><td id="job">职业</td></tr>
+        </thead>
+        <tbody>
+          <tr><td headers="name">A</td><td headers="sex">女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+          <tr><td>B</td><td>女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+          <tr><td>C</td><td>女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+          <tr><td>D</td><td>女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+          <tr><td>E</td><td>女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+          <tr><td>F</td><td>女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+          <tr><td>G</td><td>女</td><td>18</td><td>本科</td><td>软件开发</td></tr>
+        </tbody>
+    </table>
+</body>
+</html>
