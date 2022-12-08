@@ -16586,7 +16586,7 @@ QAbstractEventDispatcher *eventDispatcher() const;
 void setEventDispatcher(QAbstactEventDispatcher *eventDispatcher);
 ```
 
-#### 12.6.2 QMutex
+#### 12.7.2 QMutex
 
 QMutex 类提供线程之间的访问序列化。
 QMutex 的目的是保护对象、数据结构或代码段，以便一次只有一个线程可以访问它（这类似于 Java 的同步关键字）。通常最好将互斥锁与 QMutexLocker 一起使用，因为这样可以轻松确保一致地执行锁定和解锁。
@@ -16680,7 +16680,7 @@ bool try_lock_until(std::chrono::time_point<Clock, Duration> timePoint);//尝试
 void unlock();//解锁互斥锁。尝试在与锁定它的线程不同的线程中解锁互斥锁会导致错误。解锁未锁定的互斥锁会导致未定义的行为
 ```
 
-#### 12.6.3 QMutexLocker
+#### 12.7.3 QMutexLocker
 
 QMutexLocker 类是简化锁定和解锁互斥锁的便利类。
 在复杂的函数和语句或异常处理代码中锁定和解锁 QMutex 容易出错且难以调试。在这种情况下可以使用 QMutexLocker 来确保互斥锁的状态始终是明确定义的。
@@ -16783,7 +16783,7 @@ void relock();//重新锁定未锁定的互斥锁
 void unlock();
 ```
 
-#### 12.6.4 QReadWriteLock
+#### 12.7.4 QReadWriteLock
 
 QReadWriteLock 类提供读写锁定。
 读写锁是一种同步工具，用于保护可读写的资源。如果您想允许多个线程同时进行只读访问，这种类型的锁很有用，但是一旦一个线程想要写入资源，所有其他线程都必须被阻塞，直到写入完成。
@@ -16831,7 +16831,7 @@ bool tryLockForWrite(int timeout);
 void unlock();
 ```
 
-#### 12.6.5 QReadLocker
+#### 12.7.5 QReadLocker
 
 类似于QMutexLocker，是一种简便的无需手动unlock的锁定器，例子如下。
 
@@ -16863,7 +16863,7 @@ void relock();
 void unlock();
 ```
 
-#### 12.6.6 QWriteLocker
+#### 12.7.6 QWriteLocker
 
 类似于QMutexLocker，是一种简便的无需手动unlock的锁定器，例子如下。
 
@@ -16893,7 +16893,7 @@ void relock();
 void unlock();
 ```
 
-#### 12.6.7 QWaitCondition
+#### 12.7.7 QWaitCondition
 
 QWaitCondition 类为同步线程提供了一个条件变量。
 QWaitCondition 允许一个线程告诉其他线程某种条件已经满足。一个或多个线程可以阻塞等待 QWaitCondition 使用 wakeOne() 或 wakeAll() 设置条件。使用 wakeOne() 随机唤醒一个线程或使用 wakeAll() 唤醒所有线程。
@@ -16969,7 +16969,7 @@ void wakeAll();
 void wakeOne();
 ```
 
-#### 12.6.8 QSemaphore
+#### 12.7.8 QSemaphore
 
 QSemaphore 类提供了一个通用的计数信号量。
 信号量是互斥体的泛化。虽然互斥锁只能锁定一次，但可以多次获取信号量。信号量通常用于保护一定数量的相同资源。信号量支持两个基本操作，acquire() 和 release()：acquire(n) 尝试获取 n 个资源。如果没有那么多可用资源，调用将阻塞，直到出现这种情况。release(n) 释放 n 个资源。
@@ -28821,4 +28821,564 @@ static void registerDataSizeCalculator(FunctionCode fc, CalcFuncPtr calculator);
 ```
 
 ### 19.2 案例
+
+## 20. QtConcurrent并行计算
+
+QtConcurrent是一个命名空间，提供了高级API，可以在不使用诸如互斥锁、读写锁、等待条件或信号量等低级线程原语的情况下编写多线程程序。使用QtConcurrent编写的程序会根据可用的处理器内核数自动调整使用的线程数。这意味着今天编写的应用程序在未来部署在多核系统上时将继续扩展。Pro文件需要添加Qt += concurrent
+QtConcurrent包括用于并行列表处理的功能编程风格API，包括用于共享内存（非分布式）系统的MapReduce和FilterReduce实现，以及用于管理GUI应用程序中异步计算的类和函数：
+
+(1) Concurrent Map and Map-Reduce
+
+QtConcurrent:：map()将一个函数应用于容器中的每个项，在适当位置修改项。
+QtConcurrent:：mapped()与map()类似，只是它返回一个带有修改的新容器。
+QtConcurrent:：mappedReduced()类似于mapped()，只是修改后的结果被缩减或折叠为单个结果。
+
+(2) Concurrent Filter and Filter-Reduce
+
+QtConcurrent:：filter()根据筛选函数的结果从容器中删除所有项。
+QtConcurrent:：filtered()与filter()类似，只是它返回一个包含过滤结果的新容器。
+QtConcurrent:：filteredReduced()与filtered()类似，只是过滤后的结果被缩减或折叠为单个结果。
+
+(3) Concurrent Run
+
+QtCurrent:：run()在另一个线程中运行函数。
+
+(4) QFuture表示异步计算的结果。
+(5) QFutureIterator允许迭代通过QFuture获得的结果。
+(6) QFutureWatcher允许使用信号和时隙监视QFuture。
+(7) QFutureSynchronizer是一个方便的类，可以自动同步多个QFuture。
+
+QtCurrent支持几种STL兼容的容器和迭代器类型，但最适合具有随机访问迭代器的Qt容器，如QList或QVector。map和filter函数同时接受容器和开始/结束迭代器。
+
+|     Iterator Type      |       Example classes       |      Support status       |
+| :--------------------: | :-------------------------: | :-----------------------: |
+|     Input Iterator     |                             |       Not Supported       |
+|    Output Iterator     |                             |       Not Supported       |
+|    Forward Iterator    |         std::slist          |         Supported         |
+| Bidirectional Iterator |   QLinkedList, std::list    |         Supported         |
+| Random Access Iterator | QList, QVector, std::vector | Supported and Recommended |
+
+在迭代大量轻量级项目的情况下，随机访问迭代器可以更快，因为它们允许跳转到容器中的任何点。此外，使用随机访问迭代器允许通过QFuture::progressValue()和QFutureWatcher::progress ValueChanged()提供进度信息。
+
+非就地修改函数(如mapped()和filtered())在调用时生成容器的副本。如果您正在使用STL容器，则此复制操作可能需要一些时间，在这种情况下，我们建议为容器指定开始迭代器和结束迭代器。
+
+### 20.1 Concurrent Filter and Filter-Reduce 
+
+并发过滤器。
+
+QtConcurrent::filter()、QtCncurrent::filtered()和QtCnccurrent::filtredReduced()函数**并行过滤序列中的项目**，如QList或QVector。QtConcurrent::filter()就地修改序列，QtCncurrent::filtered()返回包含已过滤内容的新序列，而QtCnccurrent::filtredReduced()返回单个结果。
+
+**filtered和filter函数的使用：**
+
+QtConcurrent::filtered()接受一个输入序列和一个过滤函数。然后为序列中的每个项调用此筛选函数，并返回包含筛选值的新序列。筛选器函数的格式必须为(其实就是STL中那些函数对象的格式例如less_than,great_than返回都是bool值)。T必须与序列中存储的类型匹配。如果应保留项，则函数返回true；如果应丢弃项，则返回false。
+
+
+```c++
+bool function(const T &t);
+```
+
+此示例显示如何在QStringList中保留所有小写的字符串：
+
+```c++
+bool allLowerCase(const QString &string)
+{
+    return string.lowered() == string;
+}
+
+QStringList strings = ...;
+QFuture<QString> lowerCaseStrings = QtConcurrent::filtered(strings, allLowerCase);
+```
+
+过滤器的结果通过QFuture提供。有关如何在应用程序中使用QFuture的更多信息，请参阅QFuture和QFutureWatcher文档。如果要就地修改序列，请使用QtConcurrent::filter()，注意QFuture是void类型：
+
+```c++
+QStringList strings = ...;
+QFuture<void> future = QtConcurrent::filter(strings, allLowerCase);
+```
+
+**filter-reduce函数的使用：**
+
+QtConcurrent::filteredReduced()类似于QtCncurrent::filtered()，但不是使用过滤后的结果重新生成序列，而是使用reduce函数将结果合并为单个值。
+reduce函数的形式必须如下，T是最终结果的类型，U是要过滤的项目的类型。请注意，未使用reduce函数的返回值和返回类型。
+
+```c++
+ V function(T &result, const U &intermediate);
+```
+
+一个示例如下，reduce函数返回的最终结果是QSet<QString>类型，要过滤的是项目类型QString(不是QStringList)。然后filteredReduced依次调用要过滤的项列表、过滤函数和reduce函数即可，就可将过滤后的项作为一个无重复字典返回了。
+
+```c++
+void addToDictionary(QSet<QString> &dictionary, const QString &string)
+{
+    dictionary.insert(string);
+}
+
+QStringList strings = ...;
+QFuture<QSet<QString> > dictionary = QtConcurrent::filteredReduced(strings, allLowerCase, addToDictionary);
+```
+
+对于过滤器函数保存的每个结果，将调用一次reduce函数，并将中间结果合并到结果变量中。QtConcurrent::filtedReduced()保证一次只有一个线程调用reduce，因此不需要使用互斥锁来锁定结果变量。QtConcurrent::ReduceOptions枚举提供了一种控制缩减顺序的方法。
+
+```c++
+QList<quint32> LessThanData = {2,12,9,20,33,8,16,3,15,7};
+bool lessThan10(quint32 val){   return val < 10;  }
+class Reduce {public: static void  reduce(QSet<quint32>& result_set, quint32 val){result_set.insert(val);}};
+
+QFuture<QSet<quint32>> future = QtConcurrent::filteredReduced(LessThanData.constBegin(),LessThanData.constEnd(),
+                                                       lessThan10,Reduce::reduce,ReduceOption::SequentialReduce);
+qDebug()<< "filter_reduce lessThan 10："<<future.results(); 
+// 按顺序返回(QSet(2, 3, 7, 8, 9))
+```
+
+**使用迭代器而不是直接传递序列是允许的：**
+
+```c++
+QStringList strings = ...;
+QFuture<QString> lowerCaseStrings = QtConcurrent::filtered(strings.constBegin(), strings.constEnd(), allLowerCase);
+
+// 就地过滤器仅适用于非常量迭代器
+QFuture<void> future = QtConcurrent::filter(strings.begin(), strings.end(), allLowerCase);//注意:现在filter不支持带迭代器,这个重载版本的没有了
+
+QFuture<QSet<QString> > dictionary = QtConcurrent::filteredReduced(strings.constBegin(), strings.constEnd(), allLowerCase, addToDictionary);
+```
+
+**使用成员函数也是允许的：**
+
+一定要注意，普通成员函数的第1个参数是this指针，所以不能直接传递使用，应当借助匿名函数实现，std::bind也不能用，因为this指针无法占位。
+
+```c++
+// 就地过滤
+QList<QImage> images = ...;
+QFuture<void> alphaImages = QtConcurrent::filter(images, &QImage::hasAlphaChannel);
+
+// 过滤副本
+QList<QImage> images = ...;
+QFuture<QImage> grayscaleImages = QtConcurrent::filtered(images, &QImage::isGrayscale);
+
+// filter和reduce函数都可用成员函数
+QList<QChar> characters = ...;
+QFuture<QSet<QChar> > set = QtConcurrent::filteredReduced(characters, &QChar::isPrint, &QSet<QChar>::insert);
+```
+
+```c++
+// filter是自定义函数，reduce是成员函数
+extern bool allLowerCase(const QString &string);
+QStringList strings = ...;
+QFuture<QSet<int> > averageWordLength = QtConcurrent::filteredReduced(strings, allLowerCase, QSet<QString>::insert);
+
+// filter是成员函数，reduce是自定义函数
+extern void addToCollage(QImage &collage, const QImage &grayscaleImage);
+QList<QImage> images = ...;
+QFuture<QImage> collage = QtConcurrent::filteredReduced(images, &QImage::isGrayscale, addToCollage);
+```
+
+**使用函数对象也是允许的：**
+
+```c++
+struct StartsWith
+{
+    StartsWith(const QString &string)
+        : m_string(string) { }
+
+    typedef bool result_type;
+
+    bool operator()(const QString &testString)
+    {
+        return testString.startsWith(m_string);
+    }
+
+    QString m_string;
+};
+
+QList<QString> strings = ...;
+QFuture<QString> fooString = QtConcurrent::filtered(images, StartsWith(QLatin1String("Foo")));//StartWith(QString)函数对象作为过滤函数是允许的
+```
+
+**过滤函数可以多参数：**
+
+如果要使用带多个参数的过滤器函数，可以使用lambda函数或std::bind()将其转换为带一个参数的函数。这种做法就像排序，需要函数对象具有2个参数，或者小于某个值，也需要1个列表参数和一个阈值参数。
+
+第一个例子：
+
+```c++
+QList<quint32> LessThanData = {2,12,9,20,33,8,16,3,15,7};
+bool lessThanThreshold(quint32 val, quint32 threshold) {return val < threshold;};
+auto func = std::bind(ConCurrentTest::lessThanThreshold,std::placeholders::_1,15);
+QFuture<quint32> futureLessThanThre = QtConcurrent::filtered(ConCurrentTest::LessThanData,func);//普通双参函数可以使用std::bind
+// output: (2, 12, 9, 8, 3, 7)
+
+futureLessThanThre = QtConcurrent::filtered(ConCurrentTest::LessThanData,[](quint32 val){
+    return ConCurrentTest::lessThanThreshold(val,22);});
+// output :  (2, 12, 9, 20, 8, 16, 3, 15, 7)
+```
+
+第2个例子
+
+```c++
+QStringList LowerData = {"A","b","C","d","E","f","G","h","I","j"};
+QFuture<QString> futureLower = QtConcurrent::filtered(ConCurrentTest::LowerData,
+                                                      ConCurrentTest::isLower);
+futureLower = QtConcurrent::filtered(ConCurrentTest::LowerData,[](const QString& s){
+    return s == s.toLower(); // 这里toLower就是QString的成员函数但因为有this指针也就是双参所以不能直接调用,但是可以借助匿名函数间接使用,但不能使用std::bind
+});
+```
+
+**可以使用3个阻塞型函数：**
+
+```c++
+QStringList strings = ...;
+// 每次调用都会阻塞，直到整个操作完成
+QStringList lowerCaseStrings = QtConcurrent::blockingFiltered(strings, allLowerCase);
+QtConcurrent::blockingFilter(strings, allLowerCase);
+QSet<QString> dictionary = QtConcurrent::blockingFilteredReduced(strings, allLowerCase, addToDictionary);
+```
+
+### 20.2 Concurrent Map and Map-Reduce
+
+并发映射器。
+
+QtConcurrent::map()、QtCncurrent::mapped()和QtCnccurrent::mapbedReduced()函数对序列中的项(如QList或QVector)并行运行计算。QtConcurrent::map()就地修改一个序列，QtCncurrent::mapped()返回一个包含修改内容的新序列，而QtCnccurrent::mapbedReduced()则返回一个结果。
+
+**mapped的使用：**
+
+QtConcurrent::mapped()接受一个输入序列和一个map函数。然后为序列中的每个项调用该映射函数，并返回包含映射函数返回值的新序列。
+映射函数的格式必须为：
+
+```c++
+U function(const T &t);
+```
+
+**T和U可以是任何类型（甚至可以是相同的类型）**，但**T必须与序列中存储的类型匹配**。（这也是和filter的核心区别，filter要求过滤函数必须返回bool类型，map的映射函数则可以是任何类型）该函数返回修改或映射的内容。此示例显示如何将缩放函数应用于序列中的所有项目：
+
+```c++
+QImage scaled(const QImage &image)
+{
+    return image.scaled(100, 100);
+}
+
+QList<QImage> images = ...;
+QFuture<QImage> thumbnails = QtConcurrent::mapped(images, scaled);
+```
+
+**map的使用：**
+
+如果要就地修改序列，请使用QtConcurrent::map()。映射函数的形式必须为：
+
+```c++
+ U function(T &t);
+```
+
+注意，没有使用map函数的返回值和返回类型。使用QtConcurrent::map()与使用mapped()类似：
+
+```c++
+void scale(QImage &image)
+{
+    image = image.scaled(100, 100);
+}
+
+QList<QImage> images = ...;
+QFuture<void> future = QtConcurrent::map(images, scale);
+```
+
+由于序列被修改到位，QtConcurrent::map()不会通过QFuture返回任何结果。
+
+ **使用mappedReduced：**
+
+QtConcurrent::mappedReduced()与QtCncurrent::mapped()类似，但不是返回包含新结果的序列，而是使用reduce函数将结果合并为单个值。
+reduce函数的形式必须为（这一点和filter保持一致）：
+
+```c++
+V function(T &result, const U &intermediate)
+```
+
+T是最终结果的类型，U是映射函数的返回类型。请注意，未使用reduce函数的返回值和返回类型。
+
+```c++
+void addToCollage(QImage &collage, const QImage &thumbnail)
+  {
+      QPainter p(&collage);
+      static QPoint offset = QPoint(0, 0);
+      p.drawImage(offset, thumbnail);
+      offset += ...;
+  }
+
+  QList<QImage> images = ...;
+  QFuture<QImage> collage = QtConcurrent::mappedReduced(images, scaled, addToCollage);
+```
+
+**支持使用迭代器：**
+
+```c++
+QList<QImage> images = ...;
+QFuture<QImage> thumbnails = QtConcurrent::mapped(images.constBegin(), images.constEnd(), scaled);
+
+QFuture<void> future = QtConcurrent::map(images.begin(), images.end(), scale);
+
+QFuture<QImage> collage = QtConcurrent::mappedReduced(images.constBegin(), images.constEnd(), scaled, addToCollage);
+```
+
+**支持成员函数：**
+
+```c++
+QStringList strings = ...;
+QFuture<void> squeezedStrings = QtConcurrent::map(strings, &QString::squeeze);
+
+QList<QImage> images = ...;
+QFuture<QImage> bgrImages = QtConcurrent::mapped(images, &QImage::rgbSwapped);
+
+QStringList strings = ...;
+QFuture<QSet<int> > wordLengths = QtConcurrent::mappedReduced(string, &QString::length, &QSet<int>::insert);
+```
+
+```c++
+extern void computeAverage(int &average, int length);
+QStringList strings = ...;
+QFuture<int> averageWordLength = QtConcurrent::mappedReduced(strings, &QString::length, computeAverage);
+
+extern int colorDistribution(const QImage &string);
+QList<QImage> images = ...;
+QFuture<QSet<int> > totalColorDistribution = QtConcurrent::mappedReduced(images, colorDistribution, QSet<int>::insert);
+```
+
+**支持函数对象：**
+
+```c++
+struct Scaled
+{
+    Scaled(int size)
+        : m_size(size) { }
+
+    typedef QImage result_type;
+
+    QImage operator()(const QImage &image)
+    {
+        return image.scaled(m_size, m_size);
+    }
+
+    int m_size;
+};
+
+QList<QImage> images = ...;
+QFuture<QImage> thumbnails = QtConcurrent::mapped(images, Scaled(100));
+```
+
+**支持多参数：**
+
+```c++
+QList<QImage> images = ...;
+QFuture<QImage> thumbnails = QtConcurrent::mapped(images, [](const QImage &img) {
+    return img.scaledToWidth(100, Qt::SmoothTransformation);
+});
+```
+
+**可以使用3个阻塞型函数：**
+
+```c++
+QList<QImage> images = ...;
+QList<QImage> future = QtConcurrent::blockingMapped(images, scaled);
+QtConcurrent::blockingMap(images, scale);
+QImage collage = QtConcurrent::blockingMappedReduced(images, scaled, addToCollage);
+```
+
+### 20.3 Concurrent Run 
+
+QtConcurrent::run()函数在单独的线程中运行函数。函数的返回值通过QFuture API提供。
+该函数是Qt并发框架的一部分。
+
+**在单独的线程中运行函数：**
+
+```c++
+extern void aFunction();
+QFuture<void> future = QtConcurrent::run(aFunction);
+```
+
+这将在从默认QThreadPool获得的单独线程中运行aFunction。您可以使用QFuture和QFutureWatcher类来监视函数的状态。要使用专用线程池，可以传递QThreadPool作为第一个参数：
+
+```c++
+extern void aFunction();
+QThreadPool pool;
+QFuture<void> future = QtConcurrent::run(&pool, aFunction);
+```
+
+**向函数传递参数：**
+
+通过将参数添加到函数名后面的QtConcurrent::run()调用中，可以将参数传递给函数。例如：
+
+```c++
+extern void aFunctionWithArguments(int arg1, double arg2, const QString &string);
+
+int integer = ...;
+double floatingPoint = ...;
+QString string = ...;
+
+QFuture<void> future = QtConcurrent::run(aFunctionWithArguments, integer, floatingPoint, string);
+```
+
+在调用QtConcurrent::run()时，会**复制每个参数**，当线程开始执行函数时，会将这些值传递给线程。调用QtCurrent::run()后**对参数所做的更改对线程不可见**。
+
+**从函数返回值：**
+
+函数的任何返回值都可以通过QFuture获得：
+
+```c++
+extern QString functionReturningAString();
+QFuture<QString> future = QtConcurrent::run(functionReturningAString);
+...
+QString result = future.result();
+```
+
+如上所述，传递参数的方式如下：
+
+```c++
+extern QString someFunction(const QByteArray &input);
+QByteArray bytearray = ...;
+QFuture<QString> future = QtConcurrent::run(someFunction, bytearray);
+...
+QString result = future.result();
+```
+
+请注意，**QFuture::result()函数会阻塞并等待结果可用**。当函数执行完毕且结果可用时，使用QFutureWatcher获取通知。
+
+**还支持使用成员函数：**
+
+QtConcurrent:：run()也接受指向成员函数的指针。第一个参数**必须是常量引用或指向类实例的指针**。在调用常量成员函数时，传递常量引用非常有用；指针传递对于调用修改实例的非常量成员函数非常有用。
+例如，在单独的线程中调用QByteArray::split(),(一个常量成员函数)的过程如下：
+
+```c++
+QByteArray byte = "hello world";
+QFuture<QList<QByteArray> > future = QtConcurrent::run(byte, &QByteArray::split, ',');
+...
+QList<QByteArray> result = future.result();
+```
+
+调用非常量成员函数的过程如下：
+
+```c++
+QImage image = ...;
+QFuture<void> future = QtConcurrent::run(&image, &QImage::invertPixels, QImage::InvertRgba);
+...
+future.waitForFinished();
+// 此时，image中的像素已反转
+```
+
+ 使用匿名函数也可以：
+
+```c++
+QFuture<void> future = QtConcurrent::run([=]() {
+      // Code in this block will run in another thread
+  });
+```
+
+## 21. QFuture
+
+QFuture类表示异步计算的结果。
+要开始计算，请使用QtCurrent框架中的一个API。
+QFuture允许线程根据一个或多个结果进行同步，这些结果将在稍后的时间点准备就绪。结果可以是具有默认构造函数和复制构造函数的任何类型。如果在调用result()、resultAt()或results()函数时结果不可用，QFuture将等待结果可用。您可以使用isResultReadyAt()函数来确定结果是否就绪。对于报告多个结果的QFuture对象，resultCount()函数返回连续结果的数量。这意味着从0到resultCount()迭代结果总是安全的。
+QFuture提供了一个Java风格迭代器(QFutureIterator)和一个STL风格迭代程序(QFuture::const_iterator)。使用这些迭代器是将来访问结果的另一种方式。
+QFuture还提供了与正在运行的计算交互的方法。例如，可以使用cancel()函数取消计算。要暂停计算，请使用setPaused()函数或pause()、resume()或togglePaused()便利函数之一。请注意，并非所有异步计算都可以取消或暂停。例如，不能取消QtConcurrent::run()返回的future；但QtConcurrent::mappedReduced()返回的未来可以。进度信息由progressValue()、progressMinimum()、progressMaximum()和progressText()函数提供。waitForFinished()函数导致调用线程阻塞并等待计算完成，确保所有结果都可用。
+可以使用isCanceled()、isStarted()和isFinished()函数、isRunning()或isPaused()函数查询QFuture表示的计算状态。
+QFuture是一个可按值传递的轻量级引用计数类。
+QFuture＜void＞专门用于不包含任何结果获取函数。任何QFuture＜T＞也可以分配或复制到QFuture＞void＞中。如果只需要状态或进度信息，而不需要实际结果数据，这很有用。
+要使用信号和插槽与正在运行的任务交互，请使用QFutureWatcher。
+另请参见QFutureWatcher和Qt Concurrent。
+
+```c++
+QFuture();
+const_iterator begin() const;
+const_iterator constBegin(); 
+constconst_iterator constEnd() const;
+const_iterator end() const;
+
+bool isCanceled() const;
+bool isFinished() const;
+bool isPaused() const;
+bool isResultReadyAt(int index) const;
+bool isRunning() const;
+bool isStarted() const;
+
+void pause();
+void cancel();
+void resume();
+void setPaused(bool paused);
+void togglePaused();
+void waitForFinished();
+
+int progressMaximum() const;
+int progressMinimum() const;
+int progressValue() const;
+QString progressText() const;
+
+T result() const;
+T resultAt(int index) const;
+int resultCount() const;
+QList<T> results() const;
+```
+
+## 22. QFutureWatcher
+
+QFutureWatcher类允许使用信号和时隙监视QFuture。
+QFutureWatcher提供有关QFuture的信息和通知。使用setFuture()函数开始监视特定的QFuture。future()函数使用setFuture()返回未来集。
+为了方便起见，QFutureWatcher中还提供了几个QFuture的函数：progressValue()、progressMinimum()、progressMaximum()、progressText()、isStarted()、isFinished()、isRunning()、is Canceled()，isPaused()、waitForFinished()、result()和resultAt()。**另外cancel()、setPaused()、pause()、resume()和togglePaused()函数是QFutureWatcher中的插槽**。
+状态更改通过started()、finished()和canceled()，paused()，resumed()、resultReadyAt()和resultsReadyAt（）信号报告。进度信息由progressRangeChanged()、void progressValueChanged()和progressTextChanged()信号提供。
+节流控制由setPendingResultsLimit()函数提供。当挂起的resultReadyAt()或resultsReadyAt()信号的数量超过限制时，未来表示的计算将被自动限制。一旦待处理信号的数量降至极限以下，计算将恢复。
+
+```c++
+MyClass myObject;
+QFutureWatcher<int> watcher;
+connect(&watcher, SIGNAL(finished()), &myObject, SLOT(handleFinished()));
+
+// Start the computation.
+QFuture<int> future = QtConcurrent::run(...);
+watcher.setFuture(future);
+```
+
+请注意，并非所有异步计算都可以取消或暂停。例如，不能取消QtConcurrent::run()返回的future；但QtConcurrent::mappedReduced()返回的未来可以。QFutureWatcher＜void＞专门用于不包含任何结果获取函数。任何QFuture＜T＞也可以由QFutureWatcher＜void＞监视。如果只需要状态或进度信息，这很有用；而不是实际结果数据。
+
+成员函数。
+
+```c++
+QFutureWatcher(QObject *parent = nullptr);
+~QFutureWatcher();
+QFuture<T> future() const;
+bool isCanceled() const;
+bool isFinished() const;
+bool isPaused() const;
+bool isRunning() const;
+bool isStarted() const;
+int progressMaximum() const
+int progressMinimum() const
+QString progressText() const;
+int progressValue() const;
+T result() const;
+T resultAt(int index) const;
+void setFuture(const QFuture<T> &future);
+//setPendingResultsLimit()提供节流控制。当挂起的resultReadyAt()或resultsReadyAt()信号的数量超过限制时，未来表示的计算将被自动限制。一旦待处理信号的数量降至极限以下，计算将恢复
+void setPendingResultsLimit(int limit);
+void waitForFinished();
+```
+
+槽函数。
+
+```c++
+void cancel();
+void pause();
+void resume();
+void setPaused(bool paused);
+void togglePaused();
+```
+
+信号函数。
+
+```c++
+void canceled();
+void finished();
+void paused();
+void progressRangeChanged(int minimum, int maximum);
+void progressTextChanged(const QString &progressText);
+void progressValueChanged(int progressValue);
+void resultReadyAt(int index);
+void resultsReadyAt(int beginIndex, int endIndex);
+void resumed();
+void started();
+```
 
