@@ -28862,6 +28862,53 @@ QtCurrent支持几种STL兼容的容器和迭代器类型，但最适合具有�
 
 非就地修改函数(如mapped()和filtered())在调用时生成容器的副本。如果您正在使用STL容器，则此复制操作可能需要一些时间，在这种情况下，我们建议为容器指定开始迭代器和结束迭代器。
 
+命名空间下的所有API如下。
+
+```c++
+// 阻塞型API,计算完成才能获取结果
+void blockingFilter(Sequence &sequence, FilterFunction filterFunction);//原地过滤
+Sequence blockingFiltered(const Sequence &sequence, FilterFunction filterFunction);//副本
+Sequence blockingFiltered(ConstIterator begin, ConstIterator end, FilterFunction filterFunction);//支持常量迭代器
+T blockingFilteredReduced(const Sequence &sequence, FilterFunction filterFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce); // 返回1个结果
+T blockingFilteredReduced(ConstIterator begin, ConstIterator end, FilterFunction filterFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce);// 支持常量迭代器
+void blockingMap(Sequence &sequence, MapFunction function);// 原地映射
+void blockingMap(Iterator begin, Iterator end, MapFunction function);//支持非常量迭代器
+T blockingMapped(const Sequence &sequence, MapFunction function); // 副本
+T blockingMapped(ConstIterator begin, ConstIterator end, MapFunction function);//常量迭代器
+T blockingMappedReduced(const Sequence &sequence, MapFunction mapFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce);// 返回1个结果
+T blockingMappedReduced(ConstIterator begin, ConstIterator end, MapFunction mapFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce); // 常量迭代器
+
+// 非阻塞型API,可以使用waitForFinished阻塞等待计算完成
+QFuture<void> filter(Sequence &sequence, FilterFunction filterFunction);//原地过滤
+QFuture<T> filtered(const Sequence &sequence, FilterFunction filterFunction);//副本
+QFuture<T> filtered(ConstIterator begin, ConstIterator end, FilterFunction filterFunction);
+QFuture<T> filteredReduced(const Sequence &sequence, FilterFunction filterFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce);// 返回1个结果
+QFuture<T> filteredReduced(ConstIterator begin, ConstIterator end, FilterFunction filterFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce); // 支持常量迭代器
+QFuture<void> map(Sequence &sequence, MapFunction function); // 原地映射
+QFuture<void> map(Iterator begin, Iterator end, MapFunction function);//支持非常量迭代器
+QFuture<T> mapped(const Sequence &sequence, MapFunction function);//支持常量迭代器
+QFuture<T> mapped(ConstIterator begin, ConstIterator end, MapFunction function);//副本
+QFuture<T> mappedReduced(const Sequence &sequence, MapFunction mapFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce); // 返回1个结果
+QFuture<T> mappedReduced(ConstIterator begin, ConstIterator end, MapFunction mapFunction, ReduceFunction reduceFunction, QtConcurrent::ReduceOptions reduceOptions = UnorderedReduce | SequentialReduce); // 支持迭代器
+
+// 开辟新线程执行任务函数,首参数可以是线程池的参数,...是要执行的任务函数的参数
+QFuture<T> run(Function function, ...);
+QFuture<T> run(QThreadPool *pool, Function function, ...);
+```
+
+一个枚举类型要知道，此枚举指定映射或筛选函数的结果传递给reduce函数的顺序。
+
+```c++
+enum QtConcurrent::ReduceOption {
+    QtConcurrent::UnorderedReduce//无序
+    QtConcurrent::OrderedReduce // 按原始顺序缩减
+    QtConcurrent::SequentialReduce //减少是按顺序进行的：一次只有一个线程进入减少功能。（未来版本的Qt Concurrent可能支持并行缩减。）
+
+}
+```
+
+
+
 ### 20.1 Concurrent Filter and Filter-Reduce 
 
 并发过滤器。
@@ -29319,7 +29366,7 @@ QList<T> results() const;
 QFutureWatcher类允许使用信号和时隙监视QFuture。
 QFutureWatcher提供有关QFuture的信息和通知。使用setFuture()函数开始监视特定的QFuture。future()函数使用setFuture()返回未来集。
 为了方便起见，QFutureWatcher中还提供了几个QFuture的函数：progressValue()、progressMinimum()、progressMaximum()、progressText()、isStarted()、isFinished()、isRunning()、is Canceled()，isPaused()、waitForFinished()、result()和resultAt()。**另外cancel()、setPaused()、pause()、resume()和togglePaused()函数是QFutureWatcher中的插槽**。
-状态更改通过started()、finished()和canceled()，paused()，resumed()、resultReadyAt()和resultsReadyAt（）信号报告。进度信息由progressRangeChanged()、void progressValueChanged()和progressTextChanged()信号提供。
+状态更改通过started()、finished()和canceled()，paused()，resumed()、resultReadyAt()和resultsReadyAt()信号报告。进度信息由progressRangeChanged()、void progressValueChanged()和progressTextChanged()信号提供。
 节流控制由setPendingResultsLimit()函数提供。当挂起的resultReadyAt()或resultsReadyAt()信号的数量超过限制时，未来表示的计算将被自动限制。一旦待处理信号的数量降至极限以下，计算将恢复。
 
 ```c++
@@ -29332,7 +29379,7 @@ QFuture<int> future = QtConcurrent::run(...);
 watcher.setFuture(future);
 ```
 
-请注意，并非所有异步计算都可以取消或暂停。例如，不能取消QtConcurrent::run()返回的future；但QtConcurrent::mappedReduced()返回的未来可以。QFutureWatcher＜void＞专门用于不包含任何结果获取函数。任何QFuture＜T＞也可以由QFutureWatcher＜void＞监视。如果只需要状态或进度信息，这很有用；而不是实际结果数据。
+请注意，并非所有异步计算都可以取消或暂停。例如，**不能取消QtConcurrent::run()返回的future**；但QtConcurrent::mappedReduced()返回的future可以。QFutureWatcher＜void＞专门用于不包含任何结果获取函数。任何QFuture＜T＞也可以由QFutureWatcher＜void＞监视。如果只需要状态或进度信息，这很有用；而不是实际结果数据。
 
 成员函数。
 
@@ -29380,5 +29427,47 @@ void resultReadyAt(int index);
 void resultsReadyAt(int beginIndex, int endIndex);
 void resumed();
 void started();
+```
+
+和并行计算结合使用进度对话框的例子。
+
+```c++
+const int iterations = 100;
+QVector<int> vector;
+for (int i = 0; i < iterations; ++i)
+    vector.append(i);
+//qDebug()<<"vector = "<<vector;
+
+QProgressDialog dialog;
+
+dialog.setLabelText(QString("Progressing using %1 thread(s)...").arg(QThread::idealThreadCount())); // 返回可以在系统上运行的理想线程数(16个线程)
+
+dialog.resize(500,180);
+dialog.setFont(QFont("Times New Roman",12));
+
+QFutureWatcher<void> futureWatcher;//监视器完成=>进度条的完成,如果autoClose=true(默认)就会隐藏
+QObject::connect(&futureWatcher, &QFutureWatcher<void>::finished, &dialog, &QProgressDialog::reset);
+QObject::connect(&futureWatcher,  &QFutureWatcher<void>::progressRangeChanged, &dialog, &QProgressDialog::setRange);// 监视器范围改变也会调整进度条的范围
+QObject::connect(&futureWatcher, &QFutureWatcher<void>::progressValueChanged,  &dialog, &QProgressDialog::setValue);// 更新进度条的值
+QObject::connect(&dialog, &QProgressDialog::canceled, &futureWatcher, &QFutureWatcher<void>::cancel);// 如果进度条人为点击取消那么结束任务,不过是异步的可以使用waitForFinshed同步
+
+std::function<void(int&)> spin = [](int &iteration) { // 一个匿名函数,参数int&,返回void被std::function打包成1个函数
+    const int work = 100000 * 100000 * 400; // spin作为map的映射函数,因为是原地映射,所以输入参数必须是引用且返回void
+    volatile int v = 0;//内存可见性是指当一个线程修改了某个变量的值，其它线程总是能知道这个变量变化，可以使用加锁或者volatile关键字
+    for (int j = 0; j < work; ++j) // iteration就是vector的每个值(不一定按照顺序)
+        ++v;
+
+    qDebug() << "iteration" << iteration << "in thread" << QThread::currentThreadId();
+};
+
+futureWatcher.setFuture(QtConcurrent::map(vector, spin));
+
+dialog.exec();
+
+futureWatcher.waitForFinished(); // 同步
+
+while (!futureWatcher.isFinished()) QApplication::processEvents(QEventLoop::AllEvents, 5);
+
+qDebug() << "Canceled?" << futureWatcher.future().isCanceled(); // 收到点击取消了才会true
 ```
 
