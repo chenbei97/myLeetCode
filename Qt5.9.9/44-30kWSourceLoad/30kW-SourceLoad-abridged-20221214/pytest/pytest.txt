@@ -1,0 +1,104 @@
+在一个植入了 Python 的应用程序中，Py_Initialize() 函数必须在任何其他 Python/C API 函数之前被调用
+例外的只有个别函数和 全局配置变量，在初始化Python之前，可以安全地调用以下函数：
+
+配置函数:
+PyImport_AppendInittab()
+    将单个模块添加到现有内置模块表中,这是PyImport_ExtendInittab()的一个方便包装.
+    如果表无法扩展，则返回-1
+    新模块可以通过名称导入,并使用函数initfunc作为第一次尝试导入时调用的初始化函数
+    这应该在Py_Initialize()之前调用
+PyImport_ExtendInittab()
+    将模块集合添加到内置模块表中,newtab数组必须以一个sentinel条目结尾
+    该条目包含名称字段的NULL,未能提供警戒值可能导致存储器故障
+    成功时返回0,如果分配的内存不足,则返回-1以扩展内部表
+    如果发生故障,则不会向内部表中添加任何模块,这应该在Py_Initialize()之前调用
+PyMem_SetAllocator()
+    设置指定域的内存块分配器,当请求零字节时,新的分配器必须返回一个独特的非 NULL 指针
+    对于 PYMEM_DOMAIN_RAW 域,分配器必须是线程安全的,当分配器被调用时,不持有全局解释器锁
+    如果新的分配器不是钩子(不调用之前的分配器),必须调用 PyMem_SetupDebugHooks()函数在新分配器上重新安装调试钩子
+PyMem_SetupDebugHooks()
+    设置检测 Python 内存分配器函数中错误的钩子
+PyObject_SetArenaAllocator()
+    设置 arena 分配器
+Py_SetPath()
+    设置默认模块搜索路径,如果在Py_Initialize()之前调用此函数,则Py_GetPath()不会尝试计算默认搜索路径
+    而是使用提供的路径,如果Python是由一个完全了解所有模块位置的应用程序嵌入的,这将非常有用
+    路径组件应使用依赖于平台的分隔符分隔,在Unix和Mac OS X上为":",在Windows上为";"
+    这也会导致sys.executable仅设置为原始程序名(参见Py_SetProgramName()),sys.prefix和sys.exec_prefix为空
+    调用Py_Initialize()后,如果需要,由调用方修改这些参数
+    使用Py_DecodeLocale()解码字节字符串以获得wchar_*字符串
+    路径参数在内部复制，因此调用方可以在调用完成后释放它
+Py_SetProgramName()
+    如果首次调用Py_Initialize(),则应在调用该函数之前调用该函数
+    它告诉解释器程序的main()函数的argv[0]参数的值(转换为宽字符)
+    Py_GetPath()和下面的一些其他函数使用此函数查找与解释器可执行文件相关的Python运行时库,默认值为"python"
+    参数应指向静态存储中以零结尾的宽字符串,其内容在程序执行期间不会更改,Python解释器中的任何代码都不会更改此存储的内容
+    使用Py_DecodeLocale()解码字节字符串以获得wchar_*字符串
+Py_SetPythonHome()
+    设置默认的home目录，即标准Python库的位置,有关参数字符串的含义,请参见PYTHONHOME
+    参数应指向静态存储中以零结尾的字符串,该字符串的内容在程序执行期间不会更改,Python解释器中的任何代码都不会更改此存储的内容
+    使用Py_DecodeLocale()解码字节字符串以获得wchar_*字符串
+
+    PYTHONHOME用于更改标准 Python 库的位置, 默认情况下库是在 prefix/lib/pythonversion 和 exec_prefix/lib/pythonversion 中搜索
+    其中 prefix 和 exec_prefix 是由安装位置确定的目录，默认都位于 /usr/local
+    当 PYTHONHOME 被设为单个目录时,它的值会同时替代 prefix 和 exec_prefix
+    要为两者指定不同的值,请将 PYTHONHOME 设为 prefix:exec_prefix
+Py_SetStandardStreamEncoding()
+    如果调用该函数,则应在Py_Initialize()之前调用该函数,它指定了与标准IO一起使用的编码和错误处理,其含义与str.encode()中的含义相同
+    它重写PYTHONIOENCODING值,并允许嵌入代码在环境变量不起作用时控制IO编码
+    编码和/或错误可以为NULL以使用PYTHONIOENCODING和/或默认值(取决于其他设置)
+    请注意sys.stderr始终使用"反斜杠替换"错误处理程序,而不管此(或任何其他)设置如何
+    如果调用Py_FinalizeEx(),则需要再次调用此函数,以影响对Py_Initialize()的后续调用
+    如果成功,则返回0,错误时返回非零值(例如,在解释器已初始化后调用)
+PySys_AddWarnOption()
+    将s附加到sys.warnoptions,必须在Py_Initialize()之前调用此函数才能影响警告过滤器列表
+PySys_AddXOption()
+    将s解析为一组-X选项,并将它们添加到PySys_GetXOptions()返回的当前选项映射中,此函数可以在Py_Initialize()之前调用
+PySys_ResetWarnOptions()
+    重置系统,warnoptions添加到空列表,此函数可以在Py_Initialize()之前调用
+
+信息函数:
+Py_IsInitialized()
+    当Python解释器已初始化时返回true(非零),否则返回false
+    在调用Py_FinalizeEx()之后,这将返回false,直到再次调用Py_Initialize()
+PyMem_GetAllocator()
+    获取指定域的内存块分配器
+PyObject_GetArenaAllocator()
+    获取 arena 分配器
+Py_GetBuildInfo()
+    返回有关当前Python解释器实例的序列号、构建日期和时间的信息
+    例如"#67, Aug  1 1997, 22:34:28"
+    返回的字符串指向静态存储,调用者不应修改其值,该值作为变量sys.version的一部分提供给Python代码
+Py_GetCompiler()
+    用方括号返回用于构建当前Python版本的编译器的指示,例如："[GCC 2.7.2.2]"
+    返回的字符串指向静态存储,调用者不应修改其值,该值作为变量sys.version的一部分提供给Python代码
+Py_GetCopyright()
+    返回当前Python版本的官方版权字符串
+    例如"Copyright 1991-1995 Stichting Mathematisch Centrum, Amsterdam"
+    返回的字符串指向静态存储,调用者不应修改其值,该值作为sys.copyright提供给Python代码
+Py_GetPlatform()
+    返回当前平台的平台标识符,在Unix上,这是由操作系统的官方名称形成的,转换为小写,然后是主要修订号
+    例如,对于Solaris 2.x(也称为SunOS 5.x),值为"sunos5"
+    在Mac OS X上,它是"darwin";在Windows上,这是"win"
+    返回的字符串指向静态存储,调用者不应修改其值,该值作为sys.platform提供给Python代码
+Py_GetVersion()
+    返回此Python解释器的版本,这是一个类似于"3.0a5+ (py3k:63103M, May 12 2008, 00:53:55) \n[GCC 4.2.3]"的字符串
+    第一个单词(直到第一个空格字符)是当前的Python版本
+    前三个字符是由句号分隔的大调和小调版本
+    返回的字符串指向静态存储,调用者不应修改其值,该值可作为sys.version提供给Python代码
+
+公用函数:
+wchar_t* Py_DecodeLocale(const char* arg, size_t *size)
+char* Py_EncodeLocale(const wchar_t *text, size_t *error_pos)
+    使用代理teescape错误处理程序从区域设置编码中解码字节字符串:不可编码的字节被解码为范围为U+DC80..U+DCFF的字符
+    如果字节序列可以解码为代理字符,请使用代理tee scape错误处理程序对字节进行转义,而不是对其进行解码
+    编码,最高优先级到最低优先级:
+        UTF-8在 macOS操作系统和 安卓上;
+        如果启用了Python UTF-8模式,则为UTF-8;
+        ASCII如果LC_CTYPE语言环境为"C",则nl_langinfo(CODESET)返回ASCII编码(或别名),mbstowcs()和wcstombs()函数使用ISO-8859-1编码
+        当前区域设置编码
+    返回一个指向新分配的宽字符串的指针,使用PyMem_RawFree()释放内存
+    如果size不为NULL,则将除空字符以外的宽字符数写入*size中,解码错误或内存分配错误时返回NULL
+    如果大小不为NULL,则在内存错误时将*大小设置为(size_t)-1,或在解码错误时将其设置为(size_t)-2
+    解码错误永远不会发生,除非C库中存在错误,使用Py_EncodeLocale()函数将字符串编码回字节字符串
+
