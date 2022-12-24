@@ -12019,118 +12019,6 @@ QList<QAbstractAxis *> axes(PolarOrientations polarOrientation = PolarOrientatio
 static PolarOrientation axisPolarOrientation(QAbstractAxis *axis);//极坐标图的角轴报告水平方向，径向轴报告垂直方向。该函数是一个方便的函数，用于将轴轴的方向转换为对应的极轴方向。如果轴为空或未添加到极坐标图，则返回值无意义
 ```
 
-#### 8.1.4 QEasingCurve
-
-缓动曲线的类型。
-
-QEasingCurve 类提供用于控制动画的缓动曲线。
-缓动曲线描述了一个函数，该函数控制 0 和 1 之间的插值速度应该如何。缓动曲线允许从一个值到另一个值的过渡看起来比简单的恒定速度所允许的更自然。 QEasingCurve 类通常与 QVariantAnimation 和 QPropertyAnimation 类一起使用，但也可以单独使用。它通常用于将插值从零速度加速（缓入）或减速到零速度（缓出）。缓入和缓出也可以组合在同一个缓动曲线中。
-为了计算插值的速度，缓动曲线提供了函数 valueForProgress()，其中的 progress 参数指定了插值的进度：0 是插值的开始值，1 是插值的结束值。返回值为插值的有效进度。如果返回值与所有输入值的输入值相同，则缓动曲线为线性曲线。这是默认行为。
-例如，
-
-```c++
-QEasingCurve easing(QEasingCurve::InOutQuad);
-
-for(qreal t = 0.0; t < 1.0; t+=0.1)
-    qWarning() << "Effective progress" << t << " is
-    << easing.valueForProgress(t);
-```
-
-将打印 0 到 1 之间插值的有效进度。
-当使用 QPropertyAnimation 时，关联的缓动曲线将用于控制 startValue 和 endValue 之间插值的进度：
-
-```c++
-QPropertyAnimation animation;
-animation.setStartValue(0);
-animation.setEndValue(1000);
-animation.setDuration(1000);
-animation.setEasingCurve(QEasingCurve::InOutQuad);
-```
-
-设置幅度、过冲或周期的能力取决于 QEasingCurve 类型。振幅访问可用于作为弹簧的曲线，例如弹性曲线和反弹曲线。改变幅度会改变曲线的高度。周期访问仅适用于弹性曲线，设置更高的周期会减慢反弹速度。只有具有“回旋镖”行为的曲线（例如 InBack、OutBack、InOutBack 和 OutInBack）才具有过冲设置。这些曲线将插值超出端点并返回到端点，其作用类似于回旋镖。
-Easing Curves Example 包含 QEasingCurve 类型的示例，并允许您更改曲线设置。
-
-```c++
-enum QEasingCurve::Type{ 
-    Linear,//线性 (t) 函数的缓动曲线：速度是恒定的
-    InQuad,//二次 (t^2) 函数的缓动曲线：从零速度加速
-    OutQuad,//二次 (t^2) 函数的缓动曲线：减速到零速度
-    InOutQuad,//二次 (t^2) 函数的缓动曲线：加速到一半，然后减速
-    OutInOuad,//二次 (t^2) 函数的缓动曲线：减速到一半，然后加速
-    InCubic,//三次 (t^3) 函数的缓动曲线：从零速度加速
-    OutCubic,//三次 (t^3) 函数的缓动曲线：减速到零速度
-    InOutCubic,//三次 (t^3) 函数的缓动曲线：加速到一半，然后减速
-    OutInCubic,//三次 (t^3) 函数的缓动曲线：减速到一半，然后加速
-    InQuart,//四次 (t^4) 函数的缓动曲线：从零速度加速
-    OutQuart,//四次 (t^4) 函数的缓动曲线：从零速度加速
-    InOutQuart,//四次 (t^4) 函数的缓动曲线：加速到一半，然后减速
-    OutInQuart,//四次 (t^4) 函数的缓动曲线：减速到一半，然后加速
-    InQuint,//五次 (t^5) 缓动的缓动曲线：从零速度加速
-    OutQuint,//五次 (t^5) 函数的缓动曲线：减速到零速度
-    InOutQuint,//五次 (t^5) 函数的缓动曲线：加速到一半，然后减速
-    OutInQuint,//五次 (t^5) 函数的缓动曲线：减速到一半，然后加速
-    InSine,//正弦 (sin(t)) 函数的缓动曲线：从零速度加速
-    OutSine,//正弦 (sin(t)) 函数的缓动曲线：减速到零速度
-    InOutSine,//正弦 (sin(t)) 函数的缓动曲线：加速到一半，然后减速
-    OutInSine,//正弦 (sin(t)) 函数的缓动曲线：减速到一半，然后加速
-    InExpo,//指数 (2^t) 函数的缓动曲线：从零速度加速
-    OutExpo,//指数 (2^t) 函数的缓动曲线：减速到零速度
-    InOutExpo,//指数 (2^t) 函数的缓动曲线：加速到一半，然后减速
-    OutInExpo,//指数 (2^t) 函数的缓动曲线：减速到一半，然后加速
-    InCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：从零速度加速。
-    OutCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：减速到零速度。
-    InOutCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：加速到一半，然后减速。
-    OutInCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：减速到一半，然后加速。
-    InElastic,//弹性（指数衰减正弦波）函数的缓动曲线：从零速度加速。峰值幅度可以通过幅度参数设置，衰减周期可以通过周期参数设置
-    OutElastic,//弹性（指数衰减正弦波）函数的缓动曲线：减速到零速度。峰值幅度可以通过幅度参数设置，衰减周期可以通过周期参数设置
-    InOutElastic,//弹性（指数衰减正弦波）函数的缓动曲线：加速到一半，然后减速
-    OutInElastic,//弹性（指数衰减正弦波）函数的缓动曲线：减速到一半，然后加速
-    InBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓动：从零速度加速
-    OutBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓动：减速到零速度
-    InOutBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓入/缓出：加速到中途，然后减速
-    OutInBack,//背部缓动曲线（超过三次缓动：(s+1)*t^3 - s*t^2）缓出/入：减速到一半，然后加速
-    InBounce,//反弹（指数衰减抛物线反弹）函数的缓动曲线：从零速度加速
-    OutBounce,//反弹（指数衰减抛物线反弹）函数的缓动曲线：从零速度减速
-    InOutBounce,//反弹的缓动曲线（指数衰减抛物线反弹）函数缓入/缓出：加速到一半，然后减速
-    OutInBounce,//弹跳缓动曲线（指数衰减抛物线弹跳）函数缓动/缓动：减速到一半，然后加速
-    BezierSpline,//允许使用三次贝塞尔样条定义自定义缓动曲线
-    TCBSpline,//允许使用 TCB 样条定义自定义缓动曲线
-    Custom//如果用户使用 setCustomType() 指定了自定义曲线类型，则返回此值。请注意，您不能使用此值调用 setType()，但 type() 可以返回它
-}
-```
-
-成员函数。
-
-```c++
-QEasingCurve(Type type = Linear);
-
-QVector<QPointF> toCubicSpline() const;//返回定义自定义缓动曲线的cubicBezierSpline。如果缓动曲线没有自定义贝塞尔缓动曲线，则列表为空
-qreal valueForProgress(qreal progress) const;//返回进度处缓动曲线的有效进度。虽然进度必须在 0 和 1 之间，但返回的有效进度可以超出这些范围。例如，QEasingCurve::InBack 将在函数的开头返回负值。
-
-//添加一段三次贝塞尔样条曲线以定义自定义缓动曲线。仅当 type() 为 QEasingCurve::BezierSpline 时才适用。请注意，样条曲线隐式地从 (0.0, 0.0) 开始，并且必须在 (1.0, 1.0) 结束才能成为有效的缓动曲线。 c1 和 c2 是用于绘制曲线的控制点。 endPoint 是曲线的端点。
-void addCubicBezierSegment(const QPointF &c1, const QPointF &c2, const QPointF &endPoint);
-
-//添加一段 TCB 贝塞尔样条曲线以定义自定义缓动曲线。仅当 type() 为 QEasingCurve::TCBSpline 时才适用。样条曲线必须明确地从 (0.0, 0.0) 开始，并且必须在 (1.0, 1.0) 结束才能成为有效的缓动曲线。张力 t 改变了切向量的长度。连续性 c 改变了切线之间变化的锐度。偏差 b 改变切向量的方向。 nextPoint 是样本位置。所有三个参数都在 -1 和 1 之间有效，并定义控制点的切线。如果所有三个参数都为 0，则生成的样条是 Catmull-Rom 样条。起点和终点的偏差始终为 -1 和 1，因为未定义外切线。
-void addTCBSegment(const QPointF &nextPoint, qreal t, qreal c, qreal b);
-
-void setAmplitude(qreal amplitude);//将幅度设置为幅度。这将设置反弹的幅度或弹性“弹簧”效果的幅度。数字越大，幅度越高
-qreal amplitude() const;
-
-void setCustomType(EasingFunction func);//设置用户在函数 func 中定义的自定义缓动曲线。该函数的签名是qreal myEasingFunction(qreal progress)，其中progress和返回值被认为是在0和1之间归一化的。（在某些情况下，返回值可能超出该范围）调用此函数后type()将返回 QEasingCurve::Custom。 func 不能为零。
-EasingFunction customType() const;
-
-void setOvershoot(qreal overshoot);//将过冲设置为过冲。0 不会产生过冲，默认值 1.70158 会产生 10% 的过冲
-qreal overshoot() const；
-
-void setPeriod(qreal period);//将期间设置为期间。设置较小的周期值将给出较高的曲线频率。一个大的周期会给它一个小的频率
-qreal period() const;
-
-void setType(Type type);//将缓动曲线的类型设置为 type
-Type type() const;
-```
-
-
-
 ### 8.2 基础类
 
 #### 8.2.1 QAbstactSeries
@@ -22069,10 +21957,6 @@ bool Monitor:: eventFilter(QObject* watchedObj, QEvent * event)
 }
 ```
 
-
-
-##### 枚举类型
-
 这个枚举类型定义了 Qt 中的有效事件类型。常用的事件类型和对应的类如下。
 
 ```c++
@@ -22300,8 +22184,6 @@ enum QEvent::Type{
 }
 ```
 
-##### 成员函数
-
 ```c++
 QEvent(Type type);
 void accept();//设置事件对象的接受标志，相当于调用 setAccepted(true)
@@ -22310,7 +22192,7 @@ bool isAccepted() const;//事件对象的接受标志
 void setAccepted(bool accepted);
 bool spontaneous() const;//如果事件源自应用程序外部（系统事件），则返回 true；否则返回false
 Type type() const;//返回事件类型
-static int registerEventType(int hint = -1);//注册并返回自定义事件类型。如果提供的提示可用，将使用它，否则它将返回尚未注册的 QEvent::User 和 QEvent::MaxUser 之间的值。如果它的值不在 QEvent::User 和 QEvent::MaxUser 之间，则忽略该提示
+static int registerEventType(int hint = -1);//注册并返回自定义事件类型
 ```
 
 #### 16.2.2 QEventLoop
@@ -25947,7 +25829,7 @@ QtXML下的类如下。
 | QXmlReader                | XML 阅读器（即解析器）的接口                |
 | QXmlSimpleReader          | 一个简单的 XML 解析器的实现                 |
 
-#### QDomDocument*
+#### 16.13.1 QDomDocument*
 
 **QDomDocument 类表示一个 XML 文档**。文档类包含创建这些各种节点类型所需的**工厂函数**。创建的节点对象有一个 ownerDocument() 函数，该函数将它们与在其上下文中创建它们的文档相关联。**最常使用的 DOM 类是 QDomNode、QDomDocument、QDomElement 和 QDomText**。QDomDocument 类具有多个用于创建文档数据的函数，例如 createElement()、createTextNode()、createComment()、createCDATASection()、createProcessingInstruction()、createAttribute() 和 createEntityReference()。其中一些函数具有支持命名空间的版本，即 createElementNS() 和 createAttributeNS()。 createDocumentFragment() 函数用于保存部分文档；这对于处理复杂的文档很有用。
 **文档的全部内容由 setContent() 设置**。此函数解析它作为 XML 文档传递的字符串，并创建表示该文档的 DOM 树。**根元素可使用 documentElement() 获得**。可以使用 toString() 获得文档的文本表示。
@@ -26109,7 +25991,7 @@ static void setInvalidDataPolicy(InvalidDataPolicy policy);
 
 
 
-#### QDomNode*
+#### 16.13.2 QDomNode*
 
 此类的子类有QDomAttr, QDomCharacterData, QDomDocument, QDomDocumentFragment, QDomDocumentType, QDomElement, QDomEntity, QDomEntityReference, QDomNotation, and QDomProcessingInstruction。
 
@@ -26298,7 +26180,7 @@ QDomNode setNamedItem(const QDomNode &newNode);
 QDomNode setNamedItemNS(const QDomNode &newNode);
 ```
 
-#### QDomElement*
+#### 16.13.3 QDomElement*
 
 QDomElement 类**代表 DOM 树中的一个元素**。**基类是QDomNode**。
 **元素有一个 tagName() 和零个或多个与之关联的属性**。可以使用 setTagName() 更改标签名称。
@@ -26373,7 +26255,7 @@ QString attributeNS(const QString nsURI, const QString &localName, const QString
 bool hasAttributeNS(const QString &nsURI, const QString &localName) const;
 ```
 
-#### QDomAttr*
+#### 16.13.4 QDomAttr*
 
 QDomAttr 类**表示 QDomElement 的一个属性**。**基类是QDomNode**。
 
@@ -26407,7 +26289,7 @@ bool specified() const;//用户使用setValue()设置了属性则返回true
 QString value() const;//返回属性值
 ```
 
-#### QDomCharacterData*
+#### 16.13.5 QDomCharacterData*
 
 QDomCharacterData 类表示 **DOM 中的通用字符串**。
 此类更专业的版本是 QDomText、QDomComment 和 QDomCDATASection。**其中QDomText和QDomComment是本类的子类，QDomCDATASection又是QDomText的子类**。
@@ -26467,7 +26349,7 @@ QDomNode::normalize() 函数不会合并相邻的 QDomCDATASection 节点。
 QDomNode::NodeType nodeType() const;//节点类型
 ```
 
-#### QDomEntity*
+#### 16.13.6 QDomEntity*
 
 QDomEntity 类**表示一个 XML 实体**。
 此类表示 XML 文档中的已解析或未解析实体。请注意，这对实体本身而不是实体声明进行建模。
@@ -26481,7 +26363,7 @@ QString publicId() const;//返回与此实体关联的公共标识符。如果�
 QString systemId() const;//返回与此实体关联的系统标识符。如果未指定系统标识符，则返回空字符串
 ```
 
-#### QDomEntityReference*
+#### 16.13.7 QDomEntityReference*
 
 QDomEntityReference 类**表示一个 XML 实体引用**。
 当实体引用在源文档中时，或者当用户希望插入实体引用时，可以将 QDomEntityReference 对象插入到 DOM 树中。与实体节点一样，实体引用的所有后代都是只读的。
@@ -26490,7 +26372,7 @@ QDomEntityReference 类**表示一个 XML 实体引用**。
 QDomNode::NodeType nodeType() const;
 ```
 
-#### QDomNotation*
+#### 16.13.8 QDomNotation*
 
 QDomNotation 类**表示 XML 表示法**。
 DOM 不支持编辑符号节点；因此它们是只读的。符号节点没有任何父节点。
@@ -26502,7 +26384,7 @@ QString publicId() const;
 QString systemId() const;
 ```
 
-#### QDomProcessingInstruction*
+#### 16.13.9 QDomProcessingInstruction*
 
 QDomProcessingInstruction 类表示**一个 XML 处理指令**。
 XML 中使用处理指令来将特定于处理器的信息保存在文档的文本中。
@@ -26516,7 +26398,7 @@ QDomNode::NodeType nodeType() const;
 QString target() const;//返回此处理指令的目标
 ```
 
-#### QXmlStreamReader
+#### 16.13.10 QXmlStreamReader
 
 注意，这个类属于QtCore不是QtXml下的，下节的QXmlStreamWriter也是如此。
 
@@ -26658,7 +26540,7 @@ QXmlStreamAttributes attributes() const;//返回StartElement的属性
 QString readElementText(ReadElementTextBehaviour behaviour = ErrorOnUnexpectedElement);
 ```
 
-#### QXmlStreamWriter
+#### 16.13.11 QXmlStreamWriter
 
 QXmlStreamWriter 类为 XML 编写器提供了一个简单的流 API。
 用 **writeStartDocument() 开始一个文档，用 writeEndDocument() 结束它**。这将隐式关闭所有剩余的打开标签。**元素标签使用 writeStartElement() 打开，然后是 writeAttribute() 或 writeAttributes()**，元素内容，然后是 **writeEndElement()**。更短的形式 writeEmptyElement() 可用于写入空元素，然后是 writeAttributes()。
@@ -29316,7 +29198,7 @@ QFuture<void> future = QtConcurrent::run([=]() {
   });
 ```
 
-## 21. QFuture
+### 20.4 QFuture
 
 QFuture类表示异步计算的结果。
 要开始计算，请使用QtCurrent框架中的一个API。
@@ -29361,7 +29243,7 @@ int resultCount() const;
 QList<T> results() const;
 ```
 
-## 22. QFutureWatcher
+### 20.5 QFutureWatcher
 
 QFutureWatcher类允许使用信号和时隙监视QFuture。
 QFutureWatcher提供有关QFuture的信息和通知。使用setFuture()函数开始监视特定的QFuture。future()函数使用setFuture()返回未来集。
@@ -29469,5 +29351,946 @@ futureWatcher.waitForFinished(); // 同步
 while (!futureWatcher.isFinished()) QApplication::processEvents(QEventLoop::AllEvents, 5);
 
 qDebug() << "Canceled?" << futureWatcher.future().isCanceled(); // 收到点击取消了才会true
+```
+
+## 21. Animation框架
+
+该框架的类结构如图。
+
+```mermaid
+graph TD
+QAbstractAnimation --> QVariantAnimation
+QVariantAnimation --> QPropertyAnimation
+QAbstractAnimation --> QAnimationGroup
+QAnimationGroup --> QParrellelAnimationGroup
+QAnimationGroup --> QSequentialAnimationGroup
+```
+
+**Animating Qt Properties：**
+
+QPropertyAnimation类可以在Qt属性上进行插值，通常应该将此类用于值的动画。事实上，它的超类QVariantAnimation具有updateCurrentValue()的空实现，除非我们自己在valueChanged信号上更改它，否则不会更改任何值。我们选择动画化Qt属性的一个主要原因是，它为我们提供了在QtAPI中动画化现有类的自由。值得注意的是，QWidget类（我们也可将其嵌入QGraphicsView中）具有边界、颜色等属性，一个例子如下。
+
+```c++
+QPushButton button("Animated Button");
+button.setMinimumSize(800,200);
+button.show();
+
+QPropertyAnimation animation(&button, "geometry");
+animation.setDuration(10000);
+animation.setStartValue(QRect(0, 0, 100, 30));
+animation.setEndValue(QRect(250, 250, 100, 30));
+
+animation.start();
+```
+
+此代码将在10秒内将按钮从屏幕左上角移动到位置(250,250)。上面的示例将在开始值和结束值之间进行线性插值。也可以设置位于起始值和结束值之间的值，然后插值将经过这些点。
+
+```c++
+QPushButton button("Animated Button");
+button.setMinimumSize(800,200);
+button.show();
+
+QPropertyAnimation animation(&button, "geometry");
+animation.setDuration(10000);
+
+animation.setKeyValueAt(0, QRect(0, 0, 800, 200));
+animation.setKeyValueAt(0.5, QRect(1000, 1000, 1600, 400));
+animation.setKeyValueAt(1, QRect(100, 100, 800, 200));
+
+animation.start();
+```
+
+含义是，起点从(0,0)开始，控件尺寸是(800,200)，中点要到达位置(1000,1000)，尺寸扩大一倍，之后返回位置(100,100)，尺寸变回原来大小。
+
+您还可以为未声明为**Qt属性的QObject的值设置动画**。唯一的要求是该值具有setter。然后，可以对包含该值的类进行子类化，并声明使用该setter的属性。注意，每个Qt属性都需要一个getter，因此如果没有定义，您需要自己提供getter。对类的属性进行动画播放，**例如大小这个属性就很典型可以用于动画效果**，但必须具备setter和getter函数。
+
+```c++
+ class MyGraphicsRectItem : public QObject, public QGraphicsRectItem
+  {
+      Q_OBJECT
+      Q_PROPERTY(QRectF geometry READ geometry WRITE setGeometry)
+  };
+```
+
+**Animations and the Graphics View Framework：**
+
+当您想要设置**QGraphicsItems**的动画时，还可以使用QPropertyAnimation。但是，QGraphicsItem不继承QObject。一个好的解决方案是将要设置动画的图形项进行子类化。然后，该类也将继承QObject。这样，QPropertyAnimation可以用于QGraphicsItems。下面的示例显示了如何做到这一点。另一种可能是继承QGraphicsWidget，它已经是一个QObject。
+
+```c++
+class Pixmap : public QObject, public QGraphicsPixmapItem
+  {
+      Q_OBJECT
+      Q_PROPERTY(QPointF pos READ pos WRITE setPos)
+      ...
+```
+
+**Easing Curves：**
+
+QPropertyAnimation在开始和结束属性值之间执行插值。除了向动画中添加更多关键点值之外，还可以使用缓和曲线。缓和曲线描述了一个控制0和1之间的插值速度的函数，如果希望在不更改插值路径的情况下控制动画的速度，该函数非常有用。
+
+```c++
+QPushButton button("Animated Button");
+button.show();
+
+QPropertyAnimation animation(&button, "geometry");
+animation.setDuration(3000);
+animation.setStartValue(QRect(0, 0, 100, 30));
+animation.setEndValue(QRect(250, 250, 100, 30));
+
+animation.setEasingCurve(QEasingCurve::OutBounce);
+
+animation.start();
+```
+
+Putting Animations Together：
+
+一个应用程序通常包含多个动画。例如，您可能希望同时移动多个图形项，或者依次移动它们。
+QAnimationGroup的子类（QSequentialAnimationGroup和QParallelAnimationGroup）是其他动画的容器，因此这些动画可以按顺序或并行设置动画。QAnimationGroup是一个不设置属性动画的动画示例，但它会定期收到时间更改的通知。这使其能够将这些时间更改转发到其包含的动画，从而控制何时播放其动画。
+让我们看看同时使用QSequentialAnimationGroup和QParallelAnimationGroup的代码示例。
+
+并行执行动画的例子。
+
+```c++
+QPushButton *bonnie = new QPushButton("Bonnie");
+bonnie->show();
+
+QPushButton *clyde = new QPushButton("Clyde");
+clyde->show();
+
+QPropertyAnimation *anim1 = new QPropertyAnimation(bonnie, "geometry");
+// Set up anim1
+
+QPropertyAnimation *anim2 = new QPropertyAnimation(clyde, "geometry");
+// Set up anim2
+
+QParallelAnimationGroup *group = new QParallelAnimationGroup;
+group->addAnimation(anim1);
+group->addAnimation(anim2);
+
+group->start();
+```
+
+顺序执行动画的例子。
+
+```c++
+QPushButton button("Animated Button");
+button.show();
+
+QPropertyAnimation anim1(&button, "geometry");
+anim1.setDuration(3000);
+anim1.setStartValue(QRect(0, 0, 100, 30));
+anim1.setEndValue(QRect(500, 500, 100, 30));
+
+QPropertyAnimation anim2(&button, "geometry");
+anim2.setDuration(3000);
+anim2.setStartValue(QRect(500, 500, 100, 30));
+anim2.setEndValue(QRect(1000, 500, 100, 30));
+
+QSequentialAnimationGroup group;
+
+group.addAnimation(&anim1);
+group.addAnimation(&anim2);
+
+group.start();
+```
+
+**Animations and States：**
+
+当使用状态机时，我们可以使用QSignalTransition或QEventTransition类将一个或多个动画与状态之间的转换相关联。这些类都是从QAbstractTransition派生的，QAbstract transition定义了方便函数addAnimation()，该函数允许在转换发生时附加一个或多个动画。
+我们还可以将属性与状态相关联，而不是自己设置开始值和结束值。下面是一个完整的代码示例，用于为QPushButton的几何体设置动画。有关如何将状态机框架用于动画的更全面的示例，请参阅状态示例（它位于examples/animation/status目录中）。
+
+```c++
+QPushButton *button = new QPushButton("Animated Button");
+button->resize(800,200);
+button->show();
+QStateMachine *machine = new QStateMachine;
+
+QState *state1 = new QState(machine); // 状态1 设置随geometry变化,
+state1->assignProperty(button, "geometry", QRect(100, 100, 800, 200)); // 状态1位置和大小
+machine->setInitialState(state1);
+
+QState *state2 = new QState(machine);
+state2->assignProperty(button, "geometry", QRect(500, 500, 200, 800));// 状态2位置和大小
+
+QSignalTransition *transition1 = state1->addTransition(button,SIGNAL(clicked()), state2); //状态1点击进入状态2
+transition1->addAnimation(new QPropertyAnimation(button, "geometry"));
+QSignalTransition *transition2 = state2->addTransition(button,SIGNAL(clicked()), state1);//状态2点击进入状态1
+transition2->addAnimation(new QPropertyAnimation(button, "geometry"));
+machine->start();
+```
+
+### 21.1 QAbstractAnimation
+
+QAbstractAnimation类是所有动画的基础。
+该类为所有动画共享的功能定义函数。通过继承该类，可以**创建插入到动画框架其余部分的自定义动画**。
+动画的进度由其当前时间currentLoopTime()表示，该时间以毫秒为单位从动画开始0到结束duration。该值在动画运行时自动更新。它也可以直接使用setCurrentTime()设置。
+在任何时候，动画都处于三种状态之一：正在运行、已停止或已暂停，由状态枚举定义。可以通过调用start()、stop()、pause()或resume()来更改当前状态。动画启动时将始终重置其当前时间。如果暂停，恢复时将以相同的当前时间继续。当动画停止时，它将无法恢复，但将保持其当前时间直到再次开始。QAbstractAnimation将在其状态更改时发出stateChanged()。
+通过设置loopCount属性，动画可以循环任意次数。当动画的当前时间达到其duration()时，它将重置当前时间并继续运行。循环计数为1(默认值)表示动画将运行一次。请注意，持续时间为-1表示动画将一直运行到停止；当前时间将无限期增加。当当前时间等于duration()且动画处于其最终循环时，将进入stop状态，并发出finished()信号。
+QAbstractAnimation提供了子类用来跟踪动画进度的纯虚拟函数：duration()和updateCurrentTime()。duration()函数用于报告动画的持续时间。当当前时间更改时，动画框架调用updateCurrentTime()。通过重新实现此函数，可以跟踪动画进度。请注意，没有定义调用之间的间隔或调用此函数的次数；不过，它通常是每秒60次更新。通过重新实现updateState()，可以跟踪动画的状态变化，这对于不受时间驱动的动画特别有用。
+
+3个枚举值。
+
+```c++
+enum QAbstractAnimation::DeletionPolicy{//动画停止时其指针是否销毁
+    QAbstractAnimation::KeepWhenStopped
+    QAbstractAnimation::DeleteWhenStopped
+}
+enum QAbstractAnimation::Direction{//动画方向,也就是正序还是倒序播放
+    QAbstractAnimation::Forward
+    QAbstractAnimation::Backward
+}
+enum QAbstractAnimation::State{ // 动画状态 
+    QAbstractAnimation::Stopped // stop()
+    QAbstractAnimation::Paused // resume(),pause()
+    QAbstractAnimation::Running // start()
+}
+```
+
+公共函数。
+
+```c++
+QAbstractAnimation(QObject *parent = Q_NULLPTR);
+virtual ~QAbstractAnimation();
+int currentLoop() const;//当前第几循环,如果循环3次可返回0,1,2
+int currentLoopTime() const;//返回当前循环内的当前时间。它可以从0到duration()
+
+void setCurrentTime(int msecs);//当前动画的进度
+int currentTime() const;
+
+int totalDuration() const;// 总进度=duration*loopcount
+virtual int duration() const = 0;//动画的持续时间。如果为-1，则表示未定义，此时loopCount被忽略
+
+QAnimationGroup *group() const;
+
+void setLoopCount(int loopCount);// 动画播放次数
+int loopCount() const;
+
+void setDirection(Direction direction);
+Direction direction() const;
+
+State state() const;
+
+void pause();
+void resume();
+void setPaused(bool paused);
+void start(QAbstractAnimation::DeletionPolicy policy = KeepWhenStopped);
+void stop();
+```
+
+信号函数。
+
+```c++
+void currentLoopChanged(int currentLoop);//循环次数改变时发出
+void directionChanged(QAbstractAnimation::Direction newDirection);
+void finished();
+void stateChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
+```
+
+3 个保护函数，需要定义自己的进度更新、播放顺序和状态更新方式时重载。
+
+```c++
+virtual void updateCurrentTime(int currentTime) = 0;//每次动画的currentTime更改时都会调用
+virtual void updateDirection(QAbstractAnimation::Direction direction);//更改动画方向时将调用
+virtual void updateState(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);//当动画的状态从oldState更改为newState时，QAbstractAnimation调用此虚拟函数
+```
+
+#### QPauseAnimation
+
+QPauseAnimation类为QSequentialAnimationGroup提供暂停。
+如果希望在QSequentialAnimationGroup中的动画之间引入延迟，可以插入QPauseAnimation。此类不会设置任何动画，但在启动后经过指定的毫秒数之前不会完成。您可以在构造函数中指定暂停的持续时间，也可以直接使用setDuration()设置。
+无需自己构建QPauseAnimation。QSequentialAnimationGroup提供了方便的函数addPause()和insertPause()，insertPause()可以指定插入的动画位置。
+
+```c++
+QPauseAnimation(QObject *parent = Q_NULLPTR);
+QPauseAnimation(int msecs, QObject *parent = Q_NULLPTR);
+~QPauseAnimation();
+
+void setDuration(int msecs);//设置和返回暂停时间
+virtual int duration() const;
+```
+
+### 21.2 QVariantAnimation
+
+QVariantAnimation类为动画提供了一个基类。
+此类是动画框架的一部分。它作为属性和项目动画的基类，具有共享功能的函数。
+该类在QVariants上执行插值，但将插值值留给其子类。目前，Qt提供了QPropertyAnimation，它为Qt属性设置动画。如果希望设置此类属性的动画，请参见QPropertyAnimation类描述。
+然后，可以通过调用**setStartValue()和setEndValue()来设置属性的开始值和结束值**，最后调用start()来启动动画。QVariantAnimation将插入目标对象的属性并发出valueChanged()。要对当前值的变化做出反应，必须重新实现updateCurrentValue()虚拟函数或连接到所述信号。
+也可以在起始值和结束值之间的指定步骤设置值。然后，插值将以指定的步骤接触这些点。请注意，开始值和结束值定义为0.0和1.0的关键值。
+有两种方法可以影响QVariantAnimation如何插值。您可以通过调用setEasingCurve()来设置缓和曲线，并通过调用setDuration()来配置持续时间。您可以通过创建QVariantAnimation的子类并重新实现虚拟interpolated()函数来更改QVariants的插值方式。
+
+如果您有不希望声明为Qt属性的QVariants，则可以使用子类QVariantAnimation。然而，请注意，在大多数情况下，最好将QVariant声明为属性。并非所有QVariant类型都受支持。以下是当前支持的QVariant类型列表：
+
+**Int、UInt、Double、Float、QLine、QLineF、QPoint、QPointF、QSize、QSizeF、QRect、QRectF、QColor**。
+
+如果需要插入其他变量类型，包括自定义类型，则必须自己实现这些变量类型的插入。为此，可**以为给定类型注册一个插值函数**。此函数采用3个参数：开始值、结束值和当前进度。另一个选项是重新实现interpolated()，它为要插值的值返回插值。
+
+```c++
+
+QVariant myColorInterpolator(const QColor &start, const QColor &end, qreal progress)
+{
+    ...
+    return QColor(...);
+}
+...
+qRegisterAnimationInterpolator<QColor>(myColorInterpolator);
+```
+
+2个别名，含义是<step,value>一帧。以及注册函数,返回QVariant,2个T参数和进度的模板函数
+
+```c++
+typedef QPair<qreal, QVariant> QVariantAnimation::KeyValue;
+typedef  QVector<QVariantAnimation::KeyValue> QVariantAnimation::KeyValues;
+
+void qRegisterAnimationInterpolator(QVariant(*)(constT& from, constT&to, qreal progress)func);
+```
+
+公共函数。
+
+```c++
+QVariantAnimation(QObject *parent = Q_NULLPTR);
+~QVariantAnimation();
+
+void setStartValue(const QVariant &value);
+QVariant startValue() const;
+QVariant currentValue() const;
+QVariant endValue() const;
+void setEndValue(const QVariant &value);
+
+void setEasingCurve(const QEasingCurve &easing);
+QEasingCurve easingCurve() const;
+
+void setKeyValueAt(qreal step, const QVariant &value);
+QVariant keyValueAt(qreal step) const;
+void setKeyValues(const KeyValues &keyValues);
+KeyValues keyValues() const;
+
+void setDuration(int msecs);
+```
+
+信号函数。
+
+```c++
+void valueChanged(const QVariant &value);//步进值传出
+```
+
+ 保护函数。
+
+```c++
+virtual QVariant interpolated(const QVariant &from, const QVariant &to, qreal progress) const;// 返回from到to在进度progress的线性插值,通常是0-1之间
+virtual void updateCurrentValue(const QVariant &value);
+```
+
+#### QPropertyAnimation
+
+QPropertyAnimation类为Qt属性设置动画QPropertyActivation在Qt属性上进行插值。由于属性值存储在QVariants中，该类继承QVariantAnimation，并支持与其超级类相同的元类型的动画。
+声明属性的类必须是QObject。要使属性动画化成为可能，它必须提供一个setter（以便QPropertyAnimation可以设置属性的值）。注意，这使得Qt的许多小部件可以动画化。我们来看一个示例：
+
+```c++
+QPropertyAnimation *animation = new QPropertyAnimation(myWidget, "geometry");
+animation->setDuration(10000);
+animation->setStartValue(QRect(0, 0, 100, 30));
+animation->setEndValue(QRect(250, 250, 100, 30));
+animation->start();
+```
+
+**属性名和应该为其设置动画的QObject实例将传递给构造函数**。然后可以指定属性的开始值和结束值。该过程对于您自己实现的类中的属性是相同的—**只需与QVariantAnimation检查您的QVariant类型是否受支持**。
+QVariantAnimation类描述详细说明了如何设置动画。但是，请注意，**如果未设置开始值，则属性将以创建QPropertyAnimation实例时的值开始**。
+公共函数。
+
+```c++
+QPropertyAnimation(QObject *parent = Q_NULLPTR);
+QPropertyAnimation(QObject *target, const QByteArray &propertyName, QObject *parent = Q_NULLPTR);
+~QPropertyAnimation();
+QByteArray propertyName() const;
+void setPropertyName(const QByteArray &propertyName);
+void setTargetObject(QObject *target)
+QObject *targetObject() const;
+```
+
+### 21.3 QAnimationGroup
+
+QAnimationGroup类是动画组的抽象基类。
+动画组是QAbstractAnimation的子类的容器。组通常负责管理其动画的状态，即决定何时开始、停止、恢复和暂停动画。目前，Qt提供了两个这样的组：QParallelAnimationGroup和QSequentialAnimationGroup。查看他们的类描述以了解详细信息。由于QAnimationGroup继承自QAbstractAnimation，因此可以组合组，并轻松构建复杂的动画图。可以查询QAbstractAnimation所属的组（使用group()函数）。
+要启动顶级动画组，只需使用QAbstractAnimation中的start()函数。通过顶级动画组，我们认为一个组本身不包含在另一个组中。不支持直接启动子组，这可能会导致意外行为。
+QAnimationGroup提供了添加和检索动画的方法。此外，您可以通过调用removeAnimation()删除动画，并通过调用clear()清除动画组。您可以通过收听QEvent::ChildAdded和QEvent::ChildRemoved事件来跟踪组动画中的更改。QAnimationGroup拥有其管理的动画的所有权，并确保在删除动画组时删除这些动画。
+
+公共函数。
+
+```c++
+QAnimationGroup(QObject *parent = Q_NULLPTR)
+~QAnimationGroup()
+int animationCount() const;
+void clear();
+QAbstractAnimation *animationAt(int index) const;
+int indexOfAnimation(QAbstractAnimation *animation) const;
+void addAnimation(QAbstractAnimation *animation);
+void insertAnimation(int index, QAbstractAnimation *animation);
+void removeAnimation(QAbstractAnimation *animation);
+QAbstractAnimation *takeAnimation(int index);
+```
+
+#### 21.3.1 QParllelAnimationGroup
+
+QParallelAnimationGroup类提供了一组并行动画。
+QParallelAnimationGroup（一个动画容器）在自己启动时启动所有动画，即并行运行所有动画。当持续时间最长的动画完成时，动画组结束。可以将QParallelAnimationGroup视为任何其他QAbstractAnimation，例如暂停、恢复或将其添加到其他动画组。
+
+```c++
+  QParallelAnimationGroup *group = new QParallelAnimationGroup;
+  group->addAnimation(anim1);
+  group->addAnimation(anim2);
+  group->start();
+```
+
+#### 21.3.2 QSequentialAnimationGroup
+
+QSequentialAnimationGroup类提供一组连续的动画。
+QSequentialAnimationGroup是一个QAnimationGroup，它按顺序运行其动画，也就是说，它在一个动画播放完毕后开始另一个动画。动画按照添加到组中的顺序播放(使用addAnimation()或insertAnimation())。动画组在其最后一个动画完成时结束。在每个时刻，组中最多有一个动画处于活动状态；它由currentAnimation()返回。空组没有当前动画。顺序动画组可以被视为任何其他动画，即可以启动、停止和添加到其他组。您还可以调用addPause()或insertPause()来为顺序动画组添加暂停。
+
+```c++
+QSequentialAnimationGroup *group = new QSequentialAnimationGroup;
+group->addAnimation(anim1);
+group->addAnimation(anim2);
+group->start();
+```
+
+公共函数。
+
+```c++
+QPauseAnimation *addPause(int msecs);
+QAbstractAnimation *currentAnimation() const;
+QPauseAnimation *insertPause(int index, int msecs);
+```
+
+
+
+### 21.4 QEasingCurve
+
+QEasingCurve 类提供用于控制动画的缓动曲线。
+缓动曲线描述了一个函数，该函数控制 0 和 1 之间的插值速度应该如何。缓动曲线允许从一个值到另一个值的过渡看起来比简单的恒定速度所允许的更自然。 QEasingCurve 类通常与 QVariantAnimation 和 QPropertyAnimation 类一起使用，但也可以单独使用。它通常用于将插值从零速度加速（缓入）或减速到零速度（缓出）。缓入和缓出也可以组合在同一个缓动曲线中。
+为了计算插值的速度，缓动曲线提供了函数 valueForProgress()，其中的 progress 参数指定了插值的进度：0 是插值的开始值，1 是插值的结束值。返回值为插值的有效进度。如果返回值与所有输入值的输入值相同，则缓动曲线为线性曲线。这是默认行为。
+
+```c++
+QEasingCurve easing(QEasingCurve::InOutQuad);
+for(qreal t = 0.0; t < 1.0; t+=0.1)
+    qWarning() << "Effective progress" << t << " is "<< easing.valueForProgress(t);
+```
+
+将打印 0 到 1 之间插值的有效进度。
+当使用 QPropertyAnimation 时，关联的缓动曲线将用于控制 startValue 和 endValue 之间插值的进度：
+
+```c++
+QPropertyAnimation animation;
+animation.setStartValue(0);
+animation.setEndValue(1000);
+animation.setDuration(1000);
+animation.setEasingCurve(QEasingCurve::InOutQuad);
+```
+
+设置幅度、过冲或周期的能力取决于 QEasingCurve 类型。振幅访问可用于作为弹簧的曲线，例如弹性曲线和反弹曲线。改变幅度会改变曲线的高度。周期访问仅适用于弹性曲线，设置更高的周期会减慢反弹速度。只有具有“回旋镖”行为的曲线（例如 InBack、OutBack、InOutBack 和 OutInBack）才具有过冲设置。这些曲线将插值超出端点并返回到端点，其作用类似于回旋镖。
+
+```c++
+enum QEasingCurve::Type{ 
+    Linear,//线性 (t) 函数的缓动曲线：速度是恒定的
+    InQuad,//二次 (t^2) 函数的缓动曲线：从零速度加速
+    OutQuad,//二次 (t^2) 函数的缓动曲线：减速到零速度
+    InOutQuad,//二次 (t^2) 函数的缓动曲线：加速到一半，然后减速
+    OutInOuad,//二次 (t^2) 函数的缓动曲线：减速到一半，然后加速
+    InCubic,//三次 (t^3) 函数的缓动曲线：从零速度加速
+    OutCubic,//三次 (t^3) 函数的缓动曲线：减速到零速度
+    InOutCubic,//三次 (t^3) 函数的缓动曲线：加速到一半，然后减速
+    OutInCubic,//三次 (t^3) 函数的缓动曲线：减速到一半，然后加速
+    InQuart,//四次 (t^4) 函数的缓动曲线：从零速度加速
+    OutQuart,//四次 (t^4) 函数的缓动曲线：从零速度加速
+    InOutQuart,//四次 (t^4) 函数的缓动曲线：加速到一半，然后减速
+    OutInQuart,//四次 (t^4) 函数的缓动曲线：减速到一半，然后加速
+    InQuint,//五次 (t^5) 缓动的缓动曲线：从零速度加速
+    OutQuint,//五次 (t^5) 函数的缓动曲线：减速到零速度
+    InOutQuint,//五次 (t^5) 函数的缓动曲线：加速到一半，然后减速
+    OutInQuint,//五次 (t^5) 函数的缓动曲线：减速到一半，然后加速
+    InSine,//正弦 (sin(t)) 函数的缓动曲线：从零速度加速
+    OutSine,//正弦 (sin(t)) 函数的缓动曲线：减速到零速度
+    InOutSine,//正弦 (sin(t)) 函数的缓动曲线：加速到一半，然后减速
+    OutInSine,//正弦 (sin(t)) 函数的缓动曲线：减速到一半，然后加速
+    InExpo,//指数 (2^t) 函数的缓动曲线：从零速度加速
+    OutExpo,//指数 (2^t) 函数的缓动曲线：减速到零速度
+    InOutExpo,//指数 (2^t) 函数的缓动曲线：加速到一半，然后减速
+    OutInExpo,//指数 (2^t) 函数的缓动曲线：减速到一半，然后加速
+    InCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：从零速度加速。
+    OutCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：减速到零速度。
+    InOutCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：加速到一半，然后减速。
+    OutInCirc,//圆形 (sqrt(1-t^2)) 函数的缓动曲线：减速到一半，然后加速。
+    InElastic,//弹性（指数衰减正弦波）函数的缓动曲线：从零速度加速。峰值幅度可以通过幅度参数设置，衰减周期可以通过周期参数设置
+    OutElastic,//弹性（指数衰减正弦波）函数的缓动曲线：减速到零速度。峰值幅度可以通过幅度参数设置，衰减周期可以通过周期参数设置
+    InOutElastic,//弹性（指数衰减正弦波）函数的缓动曲线：加速到一半，然后减速
+    OutInElastic,//弹性（指数衰减正弦波）函数的缓动曲线：减速到一半，然后加速
+    InBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓动：从零速度加速
+    OutBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓动：减速到零速度
+    InOutBack,//背部缓动曲线（超调三次函数：(s+1)*t^3 - s*t^2）缓入/缓出：加速到中途，然后减速
+    OutInBack,//背部缓动曲线（超过三次缓动：(s+1)*t^3 - s*t^2）缓出/入：减速到一半，然后加速
+    InBounce,//反弹（指数衰减抛物线反弹）函数的缓动曲线：从零速度加速
+    OutBounce,//反弹（指数衰减抛物线反弹）函数的缓动曲线：从零速度减速
+    InOutBounce,//反弹的缓动曲线（指数衰减抛物线反弹）函数缓入/缓出：加速到一半，然后减速
+    OutInBounce,//弹跳缓动曲线（指数衰减抛物线弹跳）函数缓动/缓动：减速到一半，然后加速
+    BezierSpline,//允许使用三次贝塞尔样条定义自定义缓动曲线
+    TCBSpline,//允许使用TCB 样条定义自定义缓动曲线
+    Custom//使用setCustomType()指定自定义曲线
+}
+```
+
+成员函数。
+
+```c++
+QEasingCurve(Type type = Linear);
+
+QVector<QPointF> toCubicSpline() const;//返回定义自定义缓动曲线的cubicBezierSpline
+qreal valueForProgress(qreal progress) const;//返回进度处缓动曲线的有效进度
+
+//添加三次贝塞尔样条曲线定义自定义缓动曲线,仅BezierSpline适用
+void addCubicBezierSegment(const QPointF &c1, const QPointF &c2, const QPointF &endPoint);
+//添加TCB贝塞尔样条曲线定义自定义缓动曲线,仅当TCBSpline时才适用
+void addTCBSegment(const QPointF &nextPoint, qreal t, qreal c, qreal b);
+
+void setAmplitude(qreal amplitude);//设置幅度
+qreal amplitude() const;
+
+void setCustomType(EasingFunction func);//设置用户在函数 func 中定义的自定义缓动曲线
+EasingFunction customType() const;
+
+void setOvershoot(qreal overshoot);//设置过冲,0不会产生过冲，默认1.70158产生10%过冲
+qreal overshoot() const；
+
+void setPeriod(qreal period);//设置周期
+qreal period() const;
+
+void setType(Type type);//将缓动曲线的类型设置为 type
+Type type() const;
+```
+
+### 21.5 QTimeLine
+
+QTimeLine类提供了控制动画的时间线。
+它最常用于通过周期性调用槽来动画化GUI控件。您可以通过将时间线的持续时间（以毫秒为单位）传递给QTimeLine的构造函数来构造时间线。时间线的持续时间描述动画将运行多长时间。然后通过调用setFrameRange()设置合适的帧范围。最后，将frameChanged()信号连接到要设置动画的小部件中的适当插槽(例如，QProgressBar中的setValue())。当您继续调用start()时，QTimeLine将进入运行状态，并开始定期发出frameChange()，从而使小部件的连接属性值以稳定的速度从下端增长到帧范围的上端。您可以通过调用setUpdateInterval()来指定更新间隔。完成后，QTimeLine进入NotRunning状态，并发出finished()。
+
+```c++
+progressBar = new QProgressBar(this);
+progressBar->setRange(0, 100);
+
+// 1s有100帧,每帧占据0.01s,线性的话;如果是非线性的每帧不一定占据0.01s,按照函数来划分每帧时间
+QTimeLine *timeLine = new QTimeLine(1000, this);
+timeLine->setFrameRange(0, 100);
+connect(timeLine, SIGNAL(frameChanged(int)), progressBar, SLOT(setValue(int)));
+
+// Clicking the push button will start the progress bar animation
+pushButton = new QPushButton(tr("Start animation"), this);
+connect(pushButton, SIGNAL(clicked()), timeLine, SLOT(start()));
+```
+
+默认情况下，时间线从开始到结束运行一次，在此基础上，必须再次调用start()才能从头开始。要使时间线循环，可以调用setLoopCount()，传递完成前时间线应运行的次数。也可以通过调用setDirection()更改方向，使时间线向后运行。您还可以通过调用setPaused()在时间线运行时暂停和取消暂停时间线。对于交互式控制，提供了setCurrentTime()函数，它直接设置时间线的时间位置。虽然在NotRunning状态下最有用（例如，连接到QSlider中的valueChanged()信号），但可以随时调用此函数。
+框架界面对于标准小部件很有用，但QTimeLine可用于控制任何类型的动画。QTimeLine的核心在于valueForTime()函数，该函数在给定时间内生成一个介于0和1之间的值。该值通常用于描述动画的步骤，其中0是动画的第一步，1是最后一步。运行时，QTimeLine通过调用valueForTime()并发出valueChanged()生成介于0和1之间的值。默认情况下，valueForTime()应用插值算法来生成这些值。您可以通过调用setCurveShape()从一组预定义的时间线算法中进行选择。
+请注意，默认情况下，QTimeLine使用EaseInOut曲线形状，该形状提供一个缓慢增长，然后稳定增长，最后缓慢增长的值。对于自定义时间线，可以重新实现valueForTime()，在这种情况下，QTimeLine的curveShape属性将被忽略。
+
+枚举值。
+
+```c++
+enum CurveShape { EaseInCurve, EaseOutCurve, EaseInOutCurve, LinearCurve, SineCurve, CosineCurve }
+enum Direction { Forward, Backward }
+enum State { NotRunning, Paused, Running }
+```
+
+公共函数。
+
+```c++
+QTimeLine(int duration = 1000, QObject *parent = Q_NULLPTR);
+virtual ~QTimeLine();
+
+void setCurrentTime(int msec);
+int currentTime() const;
+
+void setCurveShape(CurveShape shape);
+CurveShape curveShape() const;
+
+void setDirection(Direction direction);
+Direction direction() const;
+
+void setDuration(int duration);
+int duration() const;
+
+void setEasingCurve(const QEasingCurve &curve);
+QEasingCurve easingCurve() const;
+
+void setLoopCount(int count);
+int loopCount() const;
+
+void setFrameRange(int startFrame, int endFrame);
+void setEndFrame(int frame);
+int endFrame() const;//值1的帧
+void setStartFrame(int frame);
+int startFrame() const;//值0的帧
+
+void setUpdateInterval(int interval);//隔1隔周期将发出valueChanged;如果同时帧发生变化,则发出frameChanged.默认周期40ms,1个时间单位是40ms,但是不同的帧可能占不同大小的时间单位,所以帧可能变化也可能不变化
+int updateInterval() const;
+
+State state() const;
+virtual qreal valueForTime(int msec) const;//返回msec对应的时间线值。返回的值取决于曲线形状始终介于0和1之间。如果msec为0，则默认实现始终返回0
+qreal currentValue() const;//返回与当前msec相对应的值
+int currentFrame() const;//返回与当前msec相对应的帧
+int frameForTime(int msec) const;//返回与指定msec相对应的帧。根据valueForTime()返回的时间线值，使用开始帧和结束帧的线性插值计算该值
+
+void resume();
+void setPaused(bool paused);
+void start();
+void stop();
+void toggleDirection();//切换时间线的方向。如果方向是向前，则变为向后，反之亦然
+```
+
+信号函数。
+
+```c++
+void finished();
+void frameChanged(int frame);//在运行状态下以规则间隔发出此信号，frame是当前帧号
+void stateChanged(QTimeLine::State newState);
+void valueChanged(qreal value);//value是当前时间的百分比值,介于0.0和1.0
+```
+
+### 21.6 QAbstractTransition
+
+QAbstractTransition类是QAbstract State对象之间转换的基类。
+QAbstractTransition类是QStateMachine的状态(QAbstract State对象)之间转换的抽象基类。QAbstractTransition是状态机框架的一部分。sourceState()函数的作用是返回转换的源，targetStates()是返回转换的目标。machine()函数返回转换所属的状态机。
+触发转换后，会发出triggered()信号，转换可以导致播放动画，使用addAnimation()函数向过渡添加动画。
+
+子类中状态机调用eventTest()函数以确定事件是否应触发转换。在重新实现中，您通常检查事件类型并将事件对象转换为正确的类型，并检查事件的一个或多个属性是否符合您的标准。触发转换时调用onTransition()函数；重新实现此函数以执行转换的自定义处理。
+
+此枚举指定转换的类型。默认情况下，类型为外部转换。
+
+```c++
+enum TransitionType { ExternalTransition, InternalTransition }
+```
+
+公共函数。
+
+```c++
+QAbstractTransition(QState *sourceState = Q_NULLPTR)
+virtual ~QAbstractTransition()
+void addAnimation(QAbstractAnimation *animation);
+void removeAnimation(QAbstractAnimation *animation);
+QList<QAbstractAnimation *> animations() const;
+void setTransitionType(TransitionType type);
+TransitionType transitionType() const;
+void setTargetState(QAbstractState *target);
+QAbstractState *targetState() const;
+void setTargetStates(const QList<QAbstractState *> &targets);
+QList<QAbstractState *> targetStates() const;
+QState *sourceState() const;
+QStateMachine *machine() const;
+
+virtual bool eventTest(QEvent *event) = 0;
+virtual void onTransition(QEvent *event) = 0;
+```
+
+信号函数。
+
+```c++
+void targetStateChanged();
+void targetStatesChanged();
+void triggered();
+```
+
+#### 21.6.1 QEventTransition
+
+QEventTransition类为Qt事件提供特定于QObject的转换。
+QEventTransition对象将事件绑定到特定的QObject。QEventTransition是状态机框架的一部分。
+
+```c++
+QPushButton *button = ...;
+QState *s1 = ...;
+QState *s2 = ...;
+// 如果在s1中，按钮接收到Enter事件，则转换到s2
+QEventTransition *enterTransition = new QEventTransition(button, QEvent::Enter);
+enterTransition->setTargetState(s2);//Enter事件目标s2
+s1->addTransition(enterTransition);// s1添加Enter事件
+// 如果在s2中，按钮接收到Leave事件，则转换回s1
+QEventTransition *leaveTransition = new QEventTransition(button, QEvent::Leave);
+leaveTransition->setTargetState(s1); // Leave事件目标s1
+s2->addTransition(leaveTransition);// s2添加Leave事件
+```
+
+子类在重新实现eventTest()函数时，应首先调用基本实现，以验证该事件是否是用于正确对象和事件类型的QStateMachine::WrappedEvent。然后可以将事件强制转换为QStateMachine::WrappedEvent，并通过调用QStateMachine::Wrapped event::event()获取原始事件，然后对该对象执行其他检查。
+
+```c++
+QEventTransition(QState *sourceState = Q_NULLPTR);
+QEventTransition(QObject *object, QEvent::Type type, QState *sourceState = Q_NULLPTR);
+~QEventTransition();
+void setEventSource(QObject *object);
+QObject *eventSource() const;
+void setEventType(QEvent::Type type);
+QEvent::Type eventType() const;
+```
+
+#### 21.6.2 QSignalTransition
+
+QSignalTransition类提供基于Qt信号的转换。
+通常，您将使用QState::addTransition()的重载，该重载将发送方和信号作为参数，而不是直接创建QSignalTransition对象。QSignalTransition是状态机框架的一部分。
+您可以子类QSignalTransition和重新实现eventTest()以使信号转换有条件；传递给eventTest()的事件对象将是QStateMachine::SignalEvent对象。
+
+```c++
+class CheckedTransition : public QSignalTransition
+  {
+  public:
+      CheckedTransition(QCheckBox *check)
+          : QSignalTransition(check, SIGNAL(stateChanged(int))) {}
+  protected:
+      bool eventTest(QEvent *e) {
+          if (!QSignalTransition::eventTest(e))
+              return false;
+          QStateMachine::SignalEvent *se = static_cast<QStateMachine::SignalEvent*>(e);
+          return (se->arguments().at(0).toInt() == Qt::Checked);
+      }
+  };
+
+...
+
+QCheckBox *check = new QCheckBox();
+check->setTristate(true);
+
+QState *s1 = new QState();
+QState *s2 = new QState();
+CheckedTransition *t1 = new CheckedTransition(check);
+t1->setTargetState(s2);
+s1->addTransition(t1);
+```
+
+```c++
+// 公共函数
+QSignalTransition(QState *sourceState = Q_NULLPTR);
+QSignalTransition(const QObject *sender, const char *signal, QState *sourceState = Q_NULLPTR);
+QSignalTransition(const QObject *sender, PointerToMemberFunction signal, QState *sourceState = Q_NULLPTR);
+~QSignalTransition();
+void setSenderObject(const QObject *sender);
+QObject *senderObject() const;
+void setSignal(const QByteArray &signal);
+QByteArray signal() const;
+```
+
+```c++
+// 信号函数
+void senderObjectChanged();
+void signalChanged();
+```
+
+### 21.7 QAbstractState
+
+QAbstractState类是QStateMachine的状态基类。
+QAbstractState类是QStateMachine的一部分状态的抽象基类。它定义了所有状态对象的公共接口。QAbstractState是状态机框架的一部分。进入状态后，将发出entered()信号。退出状态后，将发出exited()信号。函数的作用是返回状态的父状态。machine()函数返回状态所属的状态机。
+
+继承子类，进入状态时调用onEntry()函数；重新实现此函数以在进入状态时执行自定义处理。
+当状态退出时调用onExit()函数；重新实现此函数以在退出状态时执行自定义处理。
+
+```c++
+~QAbstractState();
+bool active() const;//返回此状态是否处于活动状态
+QStateMachine *machine() const;//返回此状态所属的状态机，如果状态不是状态机的一部分，则返回0
+QState *parentState() const;//返回此状态的父状态，如果该状态没有父状态，则返回0
+
+//保护函数
+QAbstractState(QState *parent = Q_NULLPTR);
+virtual void onEntry(QEvent *event) = 0;
+virtual void onExit(QEvent *event) = 0;
+
+// 信号函数
+void activeChanged(bool active);
+void entered();
+void exited();
+```
+
+#### 21.7.1 QState
+
+QState类为QStateMachine提供通用状态。
+QState对象可以有子状态，也可以有到其他状态的转换。QState是状态机框架的一部分。
+addTransition()函数用于添加转换。函数的作用是删除转换。transitions()函数返回状态的传出转换。
+assignProperty()函数用于定义在进入状态时应执行的属性赋值。顶级状态必须作为其父状态传递给QStateMachine对象，或使用QStateMachine:：addState()添加到状态机。
+
+childMode属性确定如何处理子状态。对于非并行状态组，必须调用setInitialState()函数来设置初始状态。子状态是互斥状态，当父状态是转换的目标时，状态机需要知道要进入哪个子状态。当进入最终子状态（QFinalState）时，该状态发出QState::finished()信号。setErrorState()设置状态的错误状态。错误状态是当试图进入状态时（例如，因为没有设置初始状态），如果检测到错误，状态机将转换到的状态。
+
+```c++
+enum ChildMode { ExclusiveStates, ParallelStates }//此枚举指定如何处理状态的子状态(互斥,并行)
+enum RestorePolicy { DontRestoreProperties, RestoreProperties }//指定是否储存属性值
+```
+
+```c++
+QState(QState *parent = Q_NULLPTR);
+QState(ChildMode childMode, QState *parent = Q_NULLPTR);
+~QState();
+
+void removeTransition(QAbstractTransition *transition);
+void addTransition(QAbstractTransition *transition);
+QSignalTransition *addTransition(const QObject *sender, const char *signal, QAbstractState *target);
+QSignalTransition *addTransition(const QObject *sender, PointerToMemberFunction signal, QAbstractState *target);
+QAbstractTransition *addTransition(QAbstractState *target);
+QList<QAbstractTransition *> transitions() const;
+
+//指示此状态在输入状态时将具有给定对象的给定名称的属性设置为给定值
+void assignProperty(QObject *object, const char *name, const QVariant &value);
+
+ChildMode childMode() const;
+QAbstractState *errorState() const;
+QAbstractState *initialState() const;
+void setChildMode(ChildMode mode);
+void setErrorState(QAbstractState *state);
+void setInitialState(QAbstractState *state);
+
+// 保护函数
+virtual bool event(QEvent *e);
+virtual void onEntry(QEvent *event);
+virtual void onExit(QEvent *event);
+
+// 信号函数
+void childModeChanged();
+void errorStateChanged();
+void finished();
+void initialStateChanged();
+void propertiesAssigned();
+```
+
+##### QStateMachine
+
+QStateMachine类提供了一个分层的有限状态机。
+QStateMachine基于Statecharts的概念和符号。QStateMachine是状态机框架的一部分。
+状态机管理一组状态（继承自QAbstractState的类）和这些状态之间的转换（QAbstract Transition的后代）；这些状态和转换定义了状态图。一旦建立了状态图，状态机就可以执行它。QStateMachine的执行算法基于状态图XML（SCXML）算法。框架的概述给出了几个状态图以及构建它们的代码。
+使用addState()函数向状态机添加顶级状态。使用removeState()函数删除状态。不鼓励在机器运行时删除状态。机器启动前，必须设置初始状态。初始状态是机器启动时进入的状态。然后可以statrt()状态机。当进入初始状态时，会发出started()信号。机器是事件驱动的，并保持自己的事件循环。事件通过postEvent()发布到计算机。请注意，这意味着它异步执行，如果没有运行的事件循环，它将无法继续。当Qt的转换（例如QEventTransition及其子类）处理这一点时，您通常不必将事件直接发布到计算机。但对于由事件触发的自定义转换，postEvent()非常有用。状态机处理事件并进行转换，直到进入顶级最终状态；然后状态机发出finished()信号。您还可以显式stop()状态机。在这种情况下会发出stopped()信号。
+以下代码段显示了单击按钮时将完成的状态机：
+
+```c++
+QPushButton button;
+
+QStateMachine machine;
+QState *s1 = new QState();
+s1->assignProperty(&button, "text", "Click me");
+
+QFinalState *s2 = new QFinalState();
+s1->addTransition(&button, SIGNAL(clicked()), s2);
+
+machine.addState(s1);
+machine.addState(s2);
+machine.setInitialState(s1);
+machine.start();
+```
+
+此代码示例使用QState，它继承了QAbstractState。QState类提供了一种状态，当进入或退出状态时，可以使用该状态来设置QObjects的属性和调用方法。它还包含用于添加转换的便利函数，例如本例中的QSignalTransitions。有关详细信息，请参阅QState类描述。
+如果遇到错误，计算机将查找错误状态，如果有可用状态，则将进入此状态。错误枚举描述了可能的错误类型。进入错误状态后，可以使用error()检索错误类型。进入错误状态时，状态图的执行不会停止。如果没有错误状态适用于错误状态，机器将停止执行，并将错误消息打印到控制台。
+
+```c++
+class SignalEvent;//SignalEvent类表示Qt信号事件。QStateMachine响应于Qt信号生成信号事件。QSignalTransition类提供与信号事件相关的转换。QStateMachine:：SignalEvent是状态机框架的一部分。sender（）函数返回生成信号的对象。函数的作用是返回信号的索引。arguments（）函数返回信号的参数。
+class WrappedEvent;//WrappedEvent类继承QEvent并保存与QObject关联的事件的克隆。QStateMachine响应Qt事件生成包装事件。QEventTransition类提供与此类事件关联的转换。QStateMachine:：WrappedEvent是状态机框架的一部分。函数的作用是返回生成事件的对象。event（）函数返回原始事件的克隆
+enum Error { NoError, NoInitialStateError, NoDefaultStateInHistoryStateError, NoCommonAncestorForTransitionError }
+enum EventPriority { NormalPriority, HighPriority }
+```
+
+```c++
+QStateMachine(QObject *parent = Q_NULLPTR);
+QStateMachine(QState::ChildMode childMode, QObject *parent = Q_NULLPTR);
+~QStateMachine();
+
+void addDefaultAnimation(QAbstractAnimation *animation);
+void removeDefaultAnimation(QAbstractAnimation *animation);
+QList<QAbstractAnimation *> defaultAnimations() const;//返回任何转换都将考虑的默认动画列表
+
+void addState(QAbstractState *state);
+void removeState(QAbstractState *state);
+
+void clearError();
+Error error() const;
+QString errorString() const;
+
+QSet<QAbstractState *> configuration() const;//返回此状态机当前所处的最大一致状态集（包括并行状态和最终状态）。如果状态s在配置中，则始终是s的父级也在c中
+
+void start();
+void stop();
+void setRunning(bool running);
+bool isRunning() const;
+
+bool cancelDelayedEvent(int id);//取消由给定id标识的延迟事件。id应该是调用postDelayedEvent（）返回的值。如果事件成功取消，则返回true，否则返回false
+int postDelayedEvent(QEvent *event, int delay);//发布此状态机处理的给定事件，以毫秒为单位的给定延迟。如果无法发布事件，则返回-1。此函数立即返回。延迟到期后，事件将被添加到状态机的事件队列中进行处理。状态机获取事件的所有权，并在事件处理完毕后将其删除。只能在状态机运行时发布事件。
+void postEvent(QEvent *event, EventPriority priority = NormalPriority);//发布此状态机处理的给定优先级的给定事件。此函数立即返回。该事件将添加到状态机的事件队列中。事件按照发布的订单进行处理。状态机获取事件的所有权，并在事件处理完毕后将其删除。只能在状态机正在运行或正在启动时发布事件。
+
+void setAnimated(bool enabled);//设置是否为此状态机启用动画
+bool isAnimated() const;
+
+void setGlobalRestorePolicy(QState::RestorePolicy restorePolicy);
+QState::RestorePolicy globalRestorePolicy() const;
+
+// 信号函数
+void runningChanged(bool running);
+void started();
+void stopped();
+```
+
+#### 21.7.2 QFinalState
+
+QFinalState类提供最终状态。
+最终状态用于通知QStateMachine（的一部分）已完成其工作。当进入最终的顶级状态时，将发出状态机的finished()信号。通常，当进入最终子状态（QState的子状态）时，会发出父状态的finished()信号。QFinalState是状态机框架的一部分。要使用最终状态，请创建一个QFinalState对象，并从另一个状态向其添加转换。
+
+```c++
+// 状态机开始s1,结束s2,点击按钮转换成s2并发送finished信号就会关闭应用
+QPushButton button4("Final State");
+button4.resize(800,200);
+button4.show();
+QStateMachine machine4;
+QState *s1 = new QState();
+QFinalState *s2 = new QFinalState();
+s1->addTransition(&button4, SIGNAL(clicked()), s2);
+machine4.addState(s1);
+machine4.addState(s2);
+QObject::connect(&machine4, SIGNAL(finished()), QApplication::instance(), SLOT(quit()));
+machine4.setInitialState(s1);
+machine4.start();
+```
+
+#### 21.7.3 QHistoryState
+
+QHistoryState类提供了一种返回到先前活动子状态的方法。
+历史状态是一种伪状态，表示上次退出父状态时父状态所处的子状态。以历史状态为目标的转换实际上是向父状态的一个或多个其他子状态的转换。QHistoryState是状态机框架的一部分。使用setDefaultState()函数设置在从未输入父状态时应输入的状态。
+
+```c++
+QStateMachine machine;
+
+QState *s1 = new QState();
+QState *s11 = new QState(s1);
+QState *s12 = new QState(s1);
+
+QHistoryState *s1h = new QHistoryState(s1);
+s1h->setDefaultState(s11);//以s1构建但是默认s11
+
+machine.addState(s1);
+
+QState *s2 = new QState();
+machine.addState(s2);
+
+QPushButton *button = new QPushButton();
+s1->addTransition(button, SIGNAL(clicked()), s1h);//单击按钮将进入s1上次退出之前的状态,如果从未进入s1则默认s11
+```
+
+此枚举指定QHistoryState记录的历史类型。
+
+```c++
+enum HistoryType { ShallowHistory, DeepHistory }//默认仅记录父状态的直接子状态,记录嵌套状态
+```
+
+公共函数。
+
+```c++
+QHistoryState(QState *parent = Q_NULLPTR);
+QHistoryState(HistoryType type, QState *parent = Q_NULLPTR);
+~QHistoryState();
+QAbstractState *defaultState() const;//返回此历史状态的默认状态。默认状态表示如果以前从未进入父状态，则要转换到的状态。
+QAbstractTransition *defaultTransition() const;//返回此历史状态的默认转换。当以前从未进入过历史状态时，将进行默认转换。因此，默认转换的目标状态构成默认状态
+HistoryType historyType() const;
+void setDefaultState(QAbstractState *state);
+void setDefaultTransition(QAbstractTransition *transition);
+void setHistoryType(HistoryType type);
+
+// 信号函数
+void defaultStateChanged();
+void defaultTransitionChanged();
+void historyTypeChanged();
 ```
 
