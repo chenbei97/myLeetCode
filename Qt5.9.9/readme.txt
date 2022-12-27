@@ -145,6 +145,20 @@
 48. MyWeChat 关于UDP的综合示例，创建一个仿微信的应用
 
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
+26. QPlainTextEdit/QTextEdit的单行文字颜色改变
+    1) 方法1: 使用QTextCharFormat和QTextCursor实现
+    void QueryPanel::setTextLineColor(const QColor &color)
+    {// 参考https://blog.csdn.net/iamtoful/article/details/6182445
+        QTextCharFormat fmt;
+        fmt.setForeground(color);//文字是前景色
+        QTextCursor cursor = mDisplayPanel->textCursor();
+        cursor.mergeCharFormat(fmt);//光标处合并格式
+        mDisplayPanel->mergeCurrentCharFormat(fmt);// 然后文本编辑框合并格式
+    }
+    2) 方法2: 使用CSS3语法实现,只限于QTextEdit使用
+    参考https://blog.csdn.net/chenyijun/article/details/51226133
+    textEdit->append(QString("<font color = blue>%1</font> <br>").arg(q));
+
 25. 常见正则表达式
     1) QRegExp("\\s+")
     \f   匹配一个换页符  \n  匹配一个换行符  \r  匹配一个回车符  \t  匹配一个制表符 \v 匹配一个垂直制表符
