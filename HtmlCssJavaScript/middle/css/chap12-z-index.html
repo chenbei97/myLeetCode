@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>绝对定位层叠顺序</title>
+    <style>
+      #sub_1,#sub_2 {/*定义子元素绝对定位，并设置宽和高*/
+        position: absolute;
+        width:200px;
+        height:200px;
+      }
+      #sub_1 {/*定义第1个子元素的属性*/
+        z-index:10; /*设置层叠等级为10*/
+        left:50px;
+        top:50px;
+        background:red;
+      }
+      #sub_2 {/*定义第2个子元素的属性*/
+        z-index:1; /*设置层叠等级为1*/
+        left:20px;
+        top:20px;
+        background:blue;
+      }
+    </style>
+</head>
+<body>
+<div id="contain">
+  <div id="sub_1">元素1</div>
+  <div id="sub_2">元素2</div>
+</div>
+</body>
+</html>
