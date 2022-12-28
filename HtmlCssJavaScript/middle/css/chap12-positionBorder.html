@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>定位框的概念</title>
+    <style>
+      #a,#b { /*父元素a,b的布局*/
+        width:200px;
+        height:200px;
+        float:left;
+        margin-top:50px;
+        border:solid 1px red;
+      }
+      #c,#d { /*子元素c,d的布局*/
+        width:50%;
+        height:50%;
+        position:absolute;
+        left:50%;
+        top:50%;
+      }
+      #b { /*b是相对定位和a不同,这就导致a的子元素c参考位置是窗口body左上角原点,而d是以b的左上角为原点*/
+        position:relative;
+        margin-left:50px;
+      }
+      #c {
+        background:#FBE8D0;
+        z-index:100;
+      }
+      #d {
+        background:#C2F6B2;
+      }
+    </style>
+</head>
+<body>
+<div id="a"> <!--a包含c,b包含d-->
+  <div id="c"></div>
+</div>
+
+<div id="b">
+  <div id="d"></div>
+</div>
+</body>
+</html>
