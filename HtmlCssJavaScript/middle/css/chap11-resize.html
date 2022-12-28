@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>调整元素尺寸大小</title>
+    <style>
+      #resize {
+        /*以背景方式显示图像，这样可以更轻松的控制缩放操作*/
+        background:url(images/bg71.jpg) no-repeat center;
+        /*设计背景图像仅在内容区域显示，留出补白区域*/
+        -webkit-background-clip:content;
+        /*设计元素最小和最大显示尺寸，用户也只能够在该范围内自由调整*/
+        width:400px;
+        height:220px;
+        max-width:800px;
+        max-height:600px;
+        padding:6px;
+        border: 1px solid red;
+        /*必须同时定义overflow和resize，否则resize属性声明无效，元素默认溢出显示为visible*/
+        resize: both;
+        overflow: auto;
+      }
+  </style>
+</head>
+<body>
+<div id="resize"></div>
+</body>
+</html>
