@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>父相子绝布局定位法</title>
+    <style>
+      body {/*定义窗体属性*/
+        margin: 0; /*清除IE默认边距*/
+        padding: 0; /*清除非IE默认边距*/
+        text-align: center; /*设置在IE浏览器中居中对齐*/
+      }
+      #header, #footer {/*定义头部和脚部区域属性，以默认的流动模型布局*/
+        width: 100%;
+        height: 50px;
+        background: #C0FE3E;
+        margin: 0 auto; /*非IE浏览器中居中显示*/
+      }
+      #contain {/*定义中间部分相对定位，实现定位包含框*/
+        width: 100%;/*定义宽度*/
+        height: 310px; /*必须定义父元素的高度，该高度应大于绝对布局的最大高度，否则父元素背景色就无法显示，且后面的布局区域也会无法正确显示*/
+        position: relative; /*定义为相对定位*/
+        background: #E0EEEE;
+        margin: 0 auto; /*非IE浏览器中居中显示*/
+      }
+      #sub_contain1 {  /*定义左侧子元素为绝对定位*/
+        width: 30%; /*根据定位包含框定义左侧栏目的宽度*/
+        position: absolute; /*定义子栏目为绝对定位*/
+        top: 0; /*在定位包含框顶边对齐*/
+        left: 0; /*在定位包含框左边对齐*/
+        height: 300px; /*定义高度*/
+        background: #E066FE;
+      }
+      #sub_contain2 { /*定义右侧子元素为绝对定位*/
+        width: 70%; /*根据定位包含框定义右侧栏目的宽度*/
+        position: absolute; /*定义子栏目为绝对定位*/
+        top: 0; /*在定位包含框顶边对齐*/
+        right: 0; 	/*在定位包含框右边对齐*/
+        height: 200px; /*定义高度*/
+        background: #CDCD00;
+      }
+    </style>
+</head>
+<body>
+<div id="header">标题栏</div>
+<div id="contain"> <!--contain父元素要使用相对定位布局-->
+  <div id="sub_contain1">左栏</div> <!--2个子元素使用绝对定位-->
+  <div id="sub_contain2">右栏</div>
+</div>
+<div id="footer">页脚</div>
+</body>
+</html>
