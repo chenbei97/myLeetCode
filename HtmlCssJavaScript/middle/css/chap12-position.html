@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>元素定位显示</title>
+    <style>
+        #contain1, #contain2, #contain3 {/*定义三个一级div元素对象的共同属性*/
+            width: 380px;
+            height: 120px;
+            border: solid 1px #666;
+        }
+
+        #contain2 {/*定义第2个一级div元素对象为绝对定位，并设置其距离窗口左边和上边的距离*/
+            position: absolute; /*此时浮动元素会往上靠*/
+            left: 120px;
+            top: 60px;
+            background: #F08080;
+        }
+        #contain2 div {/*定义绝对定位对象内所有子元素对象的共同属性*/
+            color: #993399;
+            border: solid 1px #FF0000;
+        }
+        #sub_div1 {/*定义绝对定位定位包含框内第1个对象为绝对定位*/
+            width: 80px;
+            height: 80px;
+            position: absolute;
+            right: 10px; /*定义该绝对元素右边距离父级定位包含框的右边距离*/
+            bottom: 10px; /*定义该绝对元素底边距离父级定位包含框的底边距离*/
+            background: #FEF68F;
+        }
+        #sub_div2 {/*定义绝对定位定位包含框内第2个元素为浮动布局*/
+            width: 80px; /*会自动在绝对定位元素的左上角*/
+            height: 80px;
+            float: left;
+            background: #DDA0DD;
+        }
+        #sub_div3 {/*定义绝对定位定位包含框内第3个元素的背景色、宽和高*/
+            width: 100px;
+            height: 90px;
+            background: #CCFF66;
+        }
+
+        #contain3 {/*定义第3个一级div元素对象为浮动布局*/
+            float: left;
+            background: #D2B48C;
+        }
+    </style>
+</head>
+<body>
+<div id="contain1">流动元素</div>
+
+<div id="contain2">绝对定位元素
+    <div id="sub_div1">子元素1－绝对定位</div>
+    <div id="sub_div2">子元素2－浮动</div>
+    <div id="sub_div3">子元素3－流动</div>
+</div>
+<div id="contain3">浮动元素</div>
+</body>
+</html>
