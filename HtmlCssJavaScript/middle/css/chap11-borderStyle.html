@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>边框样式</title>
+    <style>
+      #box {/*<定义信纸的外框>*/
+        width: 500px;
+        height: 400px;
+        padding: 8px 24px;
+        margin: 6px;
+        border-style: outset;/* 定义信纸边框为3D凸边效果 */
+        border-width: 4px;/* 定义信纸边框宽度 */
+        border-color: #aaa;/* 定义信纸边框颜色 */
+        font-size: 14px;
+        color: #D02090;
+        list-style-position: inside; /* 定义列表符号在内部显示 */
+      }
+      #box h2 {/*<定义标题格式>*/
+          padding-bottom: 12px;
+          border-bottom-style: double; /* 定义标题底边框为双线显示 */
+          border-bottom-width: 6px; /* 定义标题底边框宽度 */
+          border-bottom-color: #999; /* 定义标题底边框颜色 */
+          text-align: center;
+          color: #000000;
+      }
+      #box li {
+          padding: 6px 0; /* 增加列表项之间的间距 */
+          border-bottom-style: dotted;/* 定义列表项底边框为点线显示 */
+          border-bottom-width: 1px;/* 定义列表项底边框宽度 */
+          border-bottom-color: #66CC66;/* 定义列表项底边框颜色 */
+      }
+    </style>
+</head>
+<body>
+  <ol id="box">
+    <h2>边框样式应用</h2>
+    <li>none：默认值，无边框，不受任何指定的border-width值影响。</li>
+    <li>hidden：隐藏边框，IE不支持。</li>
+    <li>dotted：定义点线。</li>
+    <li>dashed：定义虚线。</li>
+    <li>solid：定义实线。</li>
+    <li>double：定义双线边框，两条线及其间隔宽等于指定的border-width值。</li>
+    <li>groove：根据border-color值定义D凹槽。</li>
+    <li>ridge：根据border-color值定义D凸槽。</li>
+    <li>inset：根据border-color值定义D凹边。</li>
+    <li>outset：根据border-color值定义D凸边。</li>
+  </ol>
+</body>
+</html>
