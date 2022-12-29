@@ -2228,7 +2228,7 @@ stretch：伸展占用剩余空间并堆叠
 
 **align-self：**auto | flex-start | flex-end | center | baseline | stretch 默认对齐方式
 
-## chap13 -使用CSS3动画
+## chap14 -使用CSS3动画
 
 ### 2D变换
 
