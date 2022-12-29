@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>旋转的3D正方体</title>
+    <style>
+        .side {
+            font-size: 20px;
+            font-weight: bold;
+            height: 100px;
+            line-height: 100px;
+            color: #fff;
+            position: absolute;
+            text-align: center;
+            text-shadow: 0 -1px 0 rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            width: 100px;
+        }
+        .top {
+            background: red;
+            transform: rotate(-45deg) skew(15deg, 15deg);
+        }
+        .left {
+            background: blue;
+            transform: rotate(15deg) skew(15deg, 15deg) translate(-50%, 100%);
+        }
+        .right {
+            background: green;
+            transform: rotate(-15deg) skew(-15deg, -15deg) translate(50%, 100%);
+        }
+
+        @keyframes spin{
+            0%{transform:rotateY(0deg)}
+            100%{transform:rotateY(360deg)}
+        }
+        .stage {
+            width: 300px;
+            height: 300px;
+            float: left;
+            margin: 15px;
+            position: relative;
+            perspective: 1200px;
+        }
+        .container {
+            position: relative;
+            height: 230px;
+            width: 100px;
+            top: 50%;
+            left: 50%;
+            margin: -100px 0 0 -50px;
+            transform-style: preserve-3d;
+        }
+        .container:hover{
+            animation:spin 5s linear infinite;
+        }
+    </style>
+</head>
+<body>
+<div class="stage s1">
+    <div class="container">
+        <div class="side top">Top</div>
+        <div class="side left">Left</div>
+        <div class="side right">Right</div>
+    </div>
+</div>
+</body>
+</html>
