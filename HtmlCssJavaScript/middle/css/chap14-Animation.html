@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>过渡动画</title>
+    <style>
+        .A {
+        margin: 10px auto;
+        height: 80px;
+        background: red;
+        border-radius: 12px;
+        box-shadow: 2px 2px 2px #999;
+      }
+      .A:hover {
+        background-color: blue;
+        transition-property: background-color; /*过渡属性*/
+        transition-duration:5s; /*过渡时间*/
+        transition-delay: 5s;/*延迟时间*/
+        transition-timing-function: linear; /*过渡动画类型*/
+        animation: ball 2s linear infinite; /*关键帧动画*/
+      }
+      @keyframes ball {
+          0% {left:0;top:0;}
+          25% {left:200px;top:0;}
+          50% {left:200px;top:200px;}
+          75% {left:0;top:200px;}
+          100% {left:0;top:0;}
+      }
+
+        /*定义小球水平运动关键帧*/
+        @-webkit-keyframes ball{
+            0%{transform:translate(0,0);}
+            100%{transform:translate(400px);}
+        }
+        .ball{
+            width: 50px;
+            height: 50px;
+            background: #93FB40;
+            border-radius: 100%;
+            box-shadow:2px 2px 2px #999;
+            animation:ball 1s ease backwards;
+        }
+    </style>
+</head>
+<body>
+<div class="A"></div>
+<div class="ball"></div>
+</body>
+</html>
