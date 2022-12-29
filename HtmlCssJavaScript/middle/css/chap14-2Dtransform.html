@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2D变换</title>
+    <style>
+      .A {
+        margin: 100px auto;
+        width: 200px;
+        height: 50px;
+        background: #93FB40;
+        border-radius: 12px;
+      }
+      .A:hover{
+        transform-origin: 0 0;
+        transform: scale(1.5) rotate(-90deg) translate(4px, 4px) skew(30deg, -10deg);
+      }
+
+      .B ul {
+        list-style: none;
+      }
+      .B li {
+        float: left;
+        width: 100px;
+        background: #CCC;
+        margin-left: 3px;
+        line-height: 30px;
+      }
+      .B a {
+        display: block;
+        text-align: center;
+        height: 30px;
+      }
+      .B a:link {
+        color: #666;
+        text-decoration: none;
+      }
+      .B a:visited {
+        color: #666;
+        text-decoration: underline;
+      }
+      .B a:hover {
+        color: #FFF;
+        font-weight: bold;
+        text-decoration: none;
+        transform: matrix(1, 0.4, 0, 1, 0, 0);
+      }
+    </style>
+</head>
+<body>
+<div class="A"></div>
+<div class="B">
+  <ul>
+    <li><a href="1">首页</a></li>
+    <li><a href="2">新闻</a></li>
+    <li><a href="3">论坛</a></li>
+    <li><a href="4">博客</a></li>
+    <li><a href="5">团购</a></li>
+    <li><a href="6">微博</a></li>
+  </ul>
+</div>
+</body>
+</html>
