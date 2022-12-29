@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D正方体</title>
+    <style>
+      body{padding:20px 0 0 100px;}
+
+      .side { /*统一样式*/
+        font-size: 20px;
+        font-weight: bold;
+        height: 100px;
+        line-height: 100px;
+        color: #fff;
+        position: absolute;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2);
+        text-transform: uppercase;
+        width: 100px;
+      }
+      .top {
+        background: red;
+        transform: rotate(-45deg) skew(15deg, 15deg);
+      }
+      .left {
+        background: blue;
+        transform: rotate(15deg) skew(15deg, 15deg) translate(-50%, 100%);
+      }
+      .right {
+        background: green;
+        transform: rotate(-15deg) skew(-15deg, -15deg) translate(50%, 100%);
+      }
+    </style>
+</head>
+<body>
+<div class="side top">Top</div>
+<div class="side left">Left</div>
+<div class="side right">Right</div>
+</body>
+</html>
