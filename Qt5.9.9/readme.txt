@@ -755,7 +755,28 @@ if (file.open(QFile::ReadOnly)) {
         }
         return QDialog::mouseMoveEvent(e);
     }
+    void ChartView::mouseMoveEvent(QMouseEvent *event)
+    {
+        bool isLeftButton = event->buttons() & Qt::LeftButton; // 是左键按下
+        bool isDrag = (event->globalPos() - mMouseLastPos).manhattanLength()
+                > QApplication::startDragDistance();//且确实在拖动
+
+        if (mMouseMove && isLeftButton && isDrag)
+        {
+            chart()->setAnimationOptions(QChart::NoAnimation); // 拖动时候的动画效果会导致拖动手感不好先禁用
+            QPoint newpos = event->globalPos()-mMouseLastPos;
+            chart()->scroll(-newpos.x(),newpos.y()); // x是反方向,用户向右拖动实际是表相对视图向左移动
+            mMouseLastPos = event->globalPos()-pos();//新的相对位置
+        }
+        return QChartView::mouseMoveEvent(event);
+    }
     5.6 mouseReleaseEvent():鼠标键释放事件
+    void ChartView::mouseReleaseEvent(QMouseEvent *event)
+    {
+        mMouseMove = false;
+        chart()->setAnimationOptions(QChart::SeriesAnimations);
+        QChartView::mouseReleaseEvent(event);
+    }
     5.7 mousePressEvent():鼠标键单击事件(左键或者右键)
     void Window::mousePressEvent(QMouseEvent * e)
     {
@@ -788,7 +809,12 @@ if (file.open(QFile::ReadOnly)) {
                                                                 *                                 *
                                                                 *                                 *
                                                                 * * * * * * * * * * * * * * * * * *
-    5.8 mouseDoubleClickEvent():鼠标双击事件                     
+    5.8 mouseDoubleClickEvent():鼠标双击事件  
+    void ChartView::mouseDoubleClickEvent(QMouseEvent *event)
+    {
+        chart()->zoom(1.2);
+        QChartView::mouseDoubleClickEvent(event);
+    }                   
     5.9 keyPressEvent():键盘按键按下事件                         
     void MainWindow::keyReleaseEvent(QKeyEvent * e)             
     {
@@ -796,6 +822,19 @@ if (file.open(QFile::ReadOnly)) {
         {
             if (e->key() == Qt::Key_Left) 
                 // dosomething
+        }
+    }
+    void ChartView::keyPressEvent(QKeyEvent *event)
+    {
+        switch (event->key()) 
+        {
+            case Qt::Key_Plus: chart()->zoomIn();break;
+            case Qt::Key_Minus: chart()->zoomOut();break;
+            case Qt::Key_Left: chart()->scroll(-10, 0);break;
+            case Qt::Key_Right:chart()->scroll(10, 0);break;
+            case Qt::Key_Up:chart()->scroll(0, 10);break;
+            case Qt::Key_Down:chart()->scroll(0, -10);break;
+            default:QGraphicsView::keyPressEvent(event);break;
         }
     }
     5.10 keyReleaseEvent():键盘按键释放事件
@@ -808,7 +847,13 @@ if (file.open(QFile::ReadOnly)) {
     5.13 hoverEvent():悬停事件
     5.14 timerEvent():定时器事件
     5.15 contextMenuEvent():上下文菜单事件
-
+    5.16 wheelEvent():滚轮事件
+    void ChartView::wheelEvent(QWheelEvent *event)
+    {
+        if (event->angleDelta().y() > 0) chart()->zoom(1.2);//y>0是向前滚对应放大
+        else chart()->zoom(0.8);
+        QChartView::wheelEvent(event);
+    }
 3. 获取子窗口的父类指针（前提是子窗口在创建时传入了this指针否则它是独立窗口没有父窗口）
 一般是在子窗口的关闭事件函数中，需要传递给主窗口一些信息，就必须要获得主窗口的指针
 /******************************************************************************/
