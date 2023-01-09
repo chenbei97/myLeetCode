@@ -469,17 +469,41 @@ ui->actLeft->setChecked(true);
     QLabel使用setPalette不能控制颜色,setFont不能控制字体大小：label->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
     QGroupBox去除边框, groupbox->setStyleSheet("QGroupBox{border:none;}");
     
-12. 实现下拉项选择颜色
+12. 实现下拉项选择颜色和图片显示
     QStringList colorList = QColor::colorNames();
     qDebug()<<colorList.size(); // 148个
     ui->comboBox->resize(100,30);
     foreach(const QString &color, colorList)
-    {6
+    {
         QPixmap pix(ui->comboBox->size()); // 这个大小要设置
         pix.fill(QColor(color));// pix是个纯色图标
         ui->comboBox->addItem(QIcon(pix),nullptr); // 添加图标
         ui->comboBox->setIconSize(ui->comboBox->size()); // 这个大小也要设置,因为图标默认方形,这里设置为矩形长度
         ui->comboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);//设置这个最好,其它的略短,符合内容大小的调整策略
+    }
+    void ChartBackgroundBox::initBrushStyleComboBox(QComboBox *brushstyle)
+    {
+        QListWidget * listwidget = new QListWidget;
+        brushstyle->setModel(listwidget->model());
+        brushstyle->setView(listwidget);
+        brushstyle->resize(100,30);
+        QStringList iconnames;
+        iconnames <<"NoBrush"<<"SolidPattern"<<"Dense1Pattern"<<"Dense2Pattern"<<"Dense3Pattern"
+                <<"Dense4Pattern"<<"Dense5Pattern"<<"Dense6Pattern"<<"Dense7Pattern"<<"HorPattern"
+                <<"VerPattern"<<"CrossPattern"<<"BDiagPattern"<<"FDiagPattern"<<"DiagCrossPattern"
+            <<"LinearGradientPattern"<<"RadialGradientPattern"<<"ConicalGradientPattern"<<"TexturePattern";
+        QString filename; // images.qrc,注意win+shift+s的截图并不是jpg格式读不出来
+        foreach(const QString &style, iconnames)
+        {
+            filename = QStringLiteral(":/images/")+style+QStringLiteral(".jpg");
+            QPixmap pix(filename);
+            QPixmap p = pix.scaled(brushstyle->size(),Qt::IgnoreAspectRatio); // p.size()全部是(100,30)
+            if (style == "NoBrush") p.fill(Qt::white); // NoBrush改用白色填充
+            brushstyle->addItem(QIcon(p),style); // 添加图标-文字
+        }
+            brushstyle->setIconSize(brushstyle->size()); // 要设置,图标默认方形,这里设置为矩形长度
+            brushstyle->setSizeAdjustPolicy(QComboBox::AdjustToContents);//设置这个最好,其它的略短,符合内容大小的调整策略
+            brushstyle->setCurrentIndex(mChart->backgroundPen().brush().style());//chart.cpp默认SolidPattern
     }
 
 11. 串口通信的使用方法
