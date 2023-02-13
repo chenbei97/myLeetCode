@@ -3076,6 +3076,30 @@ C:\Qt\Qt5.9.9\Tools\mingw530_32\bin
 
 参考链接：[微软商店的App都装在哪？](https://www.pconline.com.cn/win11/1482/14828648.html)
 
+### VS字符集问题
+
+项目属性-C/C++-命令行，添加额外描述，**"%(AdditionalOptions)utf-8"**。
+
+![](%(AdditionalOptions)utf-8.jpg)
+
+在高级中，输入4819忽略特定警告信息。
+
+![](4819.jpg)
+
+同时在**工具**菜单中找到**自定义**，然后出现下图，在**命令**页找到**添加命令**。
+
+![](saveOptions.jpg)
+
+然后在文件中找到高级保存选项，点击添加，文件菜单栏就可以找到这条命令了。
+
+![](saveOptions.png)
+
+所有的文件都保存为UTF8格式。
+
+![](utf8-chartset.jpg)
+
+
+
 ### 加速Github
 
 第1个方法：[Watt Toolkit - 瓦特工具箱(Steam++官网) (steampp.net)](https://steampp.net/)在微软商店可下载此工具箱，选择GitHub加速，网页版Github就可以进去了，但是Vscode的Github同步还是不行。
