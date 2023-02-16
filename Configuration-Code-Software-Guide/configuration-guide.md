@@ -1485,6 +1485,34 @@ if __name__ == '__main__':
     main()
 ```
 
+### qt打包程序
+
+（1）对于VS
+
+首先安装拓展。
+
+![](qtzip1.png)
+
+然后新建一个启动项目。
+
+![](qtzip3.png)
+
+之后添加要打包的项目进来，在application folder添加主输出是30kW-SourceLoad，然后再添加生成的二进制目录下的obj文件。
+
+**添加文件之前，**30kw-SourceLoad点击重新生成，debug/release都重新生成，这样项目不会生成exe和pdb文件了，而是转移到SetUp/x64下的debug和release文件夹下，这里可以看到exe。
+
+然后再把Qt5的依赖以及qwindows.dll文件放在30kw-SourceLoad的二进制目录下，再把这些文件都添加进application folder。总之要注意检查依赖，不然打包程序会出现问题无法运行。
+
+![](qtzip2.png)
+
+之后找到debug或者release均可，双击exe即可安装运行。
+
+![](qtzip.jpg)
+
+（2）对于QtCreator也是相同的，没有VS那么麻烦。
+
+把输出的二进制目录单独拷贝到1个文件夹下，然后终端输入windeployqt xxx.exe即可，注意事先把Qt5的依赖放好，如果是mingw还需要额外的3个依赖，注意环境变量的bin移除后进行测试，双击exe能否运行。
+
 ## 安装Visio
 
 下载地址：[Visio 2021中文版32/64位下载](http://www.zhanshaoyi.com/17197.html)。
