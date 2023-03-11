@@ -931,7 +931,7 @@ C:\Users\Lenovo\AppData\Local\Microsoft\WindowsApps\python.exe
 ```powershell
 程序：C:\Users\Lenovo\AppData\Local\Programs\Python\Python37-32\python.exe
 实参：-m PyQt5.uic.pyuic  $FileName$ -o $FileNameWithoutExtension$.py
-工作目录：工作目录：$FileDir$
+工作目录：$ProjectFileDir$
 ```
 
 ![pycharm-pyuic](pycharm-pyuic.png)
@@ -2345,7 +2345,7 @@ git config --global user.name "chenbei97"
 git config --global user.email chenbei_electric@163.com
 ```
 
-然后输入命令，先配置.ssh文件夹，这个文件是用于和Github账户通信的关键，默认会在用户文件夹创建.ssh文件，笔者是c/Users/Lenovo/.ssh/id_rsa，创建了id_rsa文件。
+然后输入命令，先配置.ssh文件夹，这个文件是用于和Github账户通信的关键，默认会在用户文件夹创建.ssh文件夹，笔者是c/Users/Lenovo/.ssh，密匙的名称默认是id_rsa，也可以自定义名称如chenbei。
 
 ```powershell
 ssh-keygen -t rsa -C chenbei_electric@163.com
@@ -2355,7 +2355,7 @@ ssh-keygen -t rsa -C chenbei_electric@163.com
 
 ![git-ssh-config](git-ssh-config.png)
 
-然后右击id_rsa文件，以txt方式打开，复制里边的文本，文本格式就像这样。
+然后右击id_rsa(或自定义名称chenbei)文件，以txt方式打开，复制里边的文本，文本格式就像这样。
 
 ```powershell
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC++FdVZvhv5aDq21wB+cXmTsnrCwJ99Upm5pAjvAZU6PhLMh7GuEQ4t1XUkG3KmTPu259pd57/0ozylOCycqhS2vX0aAlicZ6CTO0l9TOdaob3UbGY7SmtLM7D5PzEDRaUgA13t2I4sQ7335u8GEyoN8P4XIDzaAgKBsWH8oIN4FUnVH53lpcUno7Dgo72/n00883quN9eDP9OiDk9w8bgBcJzY2+g/Mal06KFVFhitHjLJl7jfphuiE8i8A8JAkHbKJw/nHGyqtlUXZ4oVo4fXS2UZBHJxqUwP1novkVOpXNDNjzdwrQJelwvdb19gP+PmLZUP56azYsy8bA433kFlfabrGzhObUtHgTHIptYpp4XjccQp7S4mNQBwvIUG5HwAYPje9G4XYyE1zNUSti+NeJqAU5hCzZKOk5Xdiw1SxMgvuTFPXjZZkHCZpWN8PLyoPs25rTnzlM+0WF2lDtAc63WtroVNuGMEOWXIwCoaX6SsSsCuOG9clB76uWYwCs= chenbei_electric@163.com
@@ -2392,9 +2392,9 @@ git@github.com: Permission denied (publickey)
 输入以下命令解决，记得是反斜杠，如果是苹果电脑\斜杠可能识别不了。
 
 ```powershell
-cd C:/Users/Lenovo/.ssh // cd到你的.ssh文件夹
+cd C:/Users/Lenovo/.ssh // cd到你的.ssh文件夹的上级或者.ssh内，取决于id_rsa放在了哪里
 ssh-agent -s
-ssh-add id_rsa // 把密匙加入
+ssh-add id_rsa/chenbei // 把密匙加入,这个密匙名称就是之前设置的
 ssh -T git@github.com // 再次验证
 ```
 
@@ -3233,6 +3233,8 @@ Get-ExecutionPolicy -List // 查看所有状态
 具体的安装过程，只要下载好系统后，使用U盘启动。
 
 对于联想电脑应该是按Fn+F10或者Fn+F11就可以选择启动模式，选择U盘启动即可。
+
+如果电脑是可以开机的，重装可以选择**系统-恢复**进行重装。
 
 ### Git配置局域网服务器
 
