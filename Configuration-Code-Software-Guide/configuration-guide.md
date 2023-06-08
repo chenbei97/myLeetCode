@@ -2338,6 +2338,12 @@ Git的安装会要求基于某个文本编辑器，如sublime、vscode、notepad
 
 ![git-console-window](git-console-window.png)
 
+安装完毕，一定要先配置以下命令，否则后面无法识别ssh的命令。
+
+```powershell
+winget install --id Git.Git -e --source winget
+```
+
 安装完毕，打开Git Bash终端，输入以下命令配置自己的邮箱和Github账户名称。
 
 ```powershell
@@ -2345,7 +2351,7 @@ git config --global user.name "chenbei97"
 git config --global user.email chenbei_electric@163.com
 ```
 
-然后输入命令，先配置.ssh文件夹，这个文件是用于和Github账户通信的关键，默认会在用户文件夹创建.ssh文件夹，笔者是c/Users/Lenovo/.ssh，密匙的名称默认是id_rsa，也可以自定义名称如chenbei。
+然后输入命令，先配置.ssh文件夹，这个文件是用于和Github账户通信的关键，默认会在用户文件夹创建.ssh文件夹，笔者是c/Users/Lenovo/.ssh，密码文件和.ssh是同级的，密匙的名称设置为199791.pub。
 
 ```powershell
 ssh-keygen -t rsa -C chenbei_electric@163.com
@@ -2355,7 +2361,7 @@ ssh-keygen -t rsa -C chenbei_electric@163.com
 
 ![git-ssh-config](git-ssh-config.png)
 
-然后右击id_rsa(或自定义名称chenbei)文件，以txt方式打开，复制里边的文本，文本格式就像这样。
+然后右击199791.pub文件，以txt方式打开，复制里边的文本，文本格式就像这样。
 
 ```powershell
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC++FdVZvhv5aDq21wB+cXmTsnrCwJ99Upm5pAjvAZU6PhLMh7GuEQ4t1XUkG3KmTPu259pd57/0ozylOCycqhS2vX0aAlicZ6CTO0l9TOdaob3UbGY7SmtLM7D5PzEDRaUgA13t2I4sQ7335u8GEyoN8P4XIDzaAgKBsWH8oIN4FUnVH53lpcUno7Dgo72/n00883quN9eDP9OiDk9w8bgBcJzY2+g/Mal06KFVFhitHjLJl7jfphuiE8i8A8JAkHbKJw/nHGyqtlUXZ4oVo4fXS2UZBHJxqUwP1novkVOpXNDNjzdwrQJelwvdb19gP+PmLZUP56azYsy8bA433kFlfabrGzhObUtHgTHIptYpp4XjccQp7S4mNQBwvIUG5HwAYPje9G4XYyE1zNUSti+NeJqAU5hCzZKOk5Xdiw1SxMgvuTFPXjZZkHCZpWN8PLyoPs25rTnzlM+0WF2lDtAc63WtroVNuGMEOWXIwCoaX6SsSsCuOG9clB76uWYwCs= chenbei_electric@163.com
@@ -2373,7 +2379,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC++FdVZvhv5aDq21wB+cXmTsnrCwJ99Upm5pAjvAZU
 
 ![github_add_ssh_key](github_add_ssh_key.png)
 
-接下来测试，密匙是否起作用的命令，会提示你是否连接，输入yes确定，然后输入刚才创建.ssh文件夹时你输入的密码，笔者是cb199791，就可以显示通过连接了。
+接下来测试，密匙是否起作用的命令，会提示你是否连接，输入yes确定，然后输入刚才创建.ssh文件夹时你输入的密码，就可以显示通过连接了。
 
 ```powershell
 ssh -T git@github.com
@@ -2394,7 +2400,7 @@ git@github.com: Permission denied (publickey)
 ```powershell
 cd C:/Users/Lenovo/.ssh // cd到你的.ssh文件夹的上级或者.ssh内，取决于id_rsa放在了哪里
 ssh-agent -s
-ssh-add id_rsa/chenbei // 把密匙加入,这个密匙名称就是之前设置的
+ssh-add 199791 // 把密匙加入,这个密匙名称就是之前设置的
 ssh -T git@github.com // 再次验证
 ```
 
@@ -2416,7 +2422,7 @@ Could not open a connection to your authentication agent
 
 ```powershell
 ssh-agent bash
-ssh-add id_rsa // 再次输入,提示输入密码即可
+ssh-add 199791 // 再次输入,提示输入密码即可
 ssh -T git@github.com // 再次测试
 ```
 
