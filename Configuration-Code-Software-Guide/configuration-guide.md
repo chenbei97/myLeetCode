@@ -2426,6 +2426,18 @@ ssh-add 199791 // 再次输入,提示输入密码即可
 ssh -T git@github.com // 再次测试
 ```
 
+如果出现了以下问题，参考[解决：git SSL certificate problem: unable to get local issuer certificate](https://blog.csdn.net/weixin_44014995/article/details/109900149)
+
+```
+git SSL certificate problem: unable to get local issuer certificate
+```
+
+cmd输入以下命令即可。
+
+```
+git config --global http.sslVerify false
+```
+
 此时重启VSCode，如果你有Github账户登录后，就可以使用Git的推送、提交，克隆等功能了。
 
 VSCode在菜单栏上新建1个终端，输入以下命令就可以下载1个项目了，然后文件-打开文件夹即可，这就是你的工作目录，其他具体的可见[VSCode配置](#VSCode配置)。
