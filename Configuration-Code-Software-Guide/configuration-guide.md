@@ -1,4 +1,4 @@
-安装Python
+## 安装Python
 
 下载地址：[Download Python | Python.org](https://www.python.org/downloads/)
 
