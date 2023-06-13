@@ -25,7 +25,124 @@
    }
    ```
 
-   
+
+## QML文档
+
+### 文件创建
+
+文件创建是指以<TypeName>大写的qml文档，或者C++中通过QQmlComponent进行创建。
+
+qml文档内根元素的属性都可以被外部qml文档引用和访问，但是二级元素不可访问，需要借助别名或者property额外声明到根元素才能访问。例如下方定义了一个SquareButton组件，在SquareButton.qml内定义。
+
+```css
+/*SquareButton.qml*/
+import QtQuick
+Rectangle {
+    id: root
+    property bool pressed mouseArea.pressed
+    signal buttonClicked(real posX,real posY)
+    width: 100; height: 100; color: "red"
+    function randomColor() {
+            root.color = Qt.rgba(Math.random(),Math.random(),Math.random(),1)
+    }
+    MouseArea {
+         	id: mouseArea
+            anchors.fill : parent
+            onClicked: (mouse)=> root.buttonClicked(mouse.x,mouse.y)
+    }
+}
+```
+
+然后其他文档可以访问的属性是pressed、buttonClicked和randomColor，但是不能通过mouseArea访问MouseArea对象，只能借助别名或者property去声明使用。
+
+### Component创建
+
+除了使用QML文档直接创建QML对象，也可以使用Component类型在qml文档内定义组件。
+
+```css
+Item {
+	width:100; height: 100;
+	Component {
+		id : c
+		Rectangle {
+			color: "red"; width: 10; height: 10
+		}
+	}
+	Loader {sourceComponent: c}
+	Loader {sourceComponent: c; x: 20}
+}
+```
+
+关于Loader可以看[QMLDoc.md](QMLDoc.md)的内容。这里Rectangle不能自己渲染和显示，因为定义在了Component的内部，同时Component不继承Item，所以不能对其进行布局和锚定其他对象。Component内部只能有一个根对象，也就是Rectangle。
+
+### JasvaScript创建
+
+有2种方法，第一种是调用Qt.createComponent()函数动态创建Component对象，适合已经有一个QML文档定义的组件；一种是使用Qt.createQmlObject()函数从一个Qml字符串创建一个对象，QML是运行时才产生的。
+
+第一种方法的示例：
+
+```javascript
+// Button.qml
+import QtQuick
+Rectangle {width: 80; height: 50; color: "red"}
+
+// App.qml
+import QtQuick
+import "createButton.js" as MyButton 
+Rectangle {
+ 	id : app
+ 	width: 300; height: 300
+ 	
+ 	Component.onCompleted: MyButton.createButton(); // 调用js文件的函数创建函数
+}
+
+// createButton.js
+var comp;
+var button;
+
+function createComp() {
+	comp = Qt.createComponent("Button.qml");//动态创建组件对象
+	if (comp.status === Component.Ready) // Button.qml如果不是本地的不会立即可用需要判断
+	{
+		createObject();
+	}
+	else 
+		comp.statusChanged.connect(createObject);// 绑定好信号和槽函数
+}
+
+function createObject() {
+	if (comp.status === Component.Ready) {
+		button = comp.createObejct(app,{"x":100,"y":100}); // 指定父对象是App.qml的Rect并直接指定参数
+        if (button == null)
+        	console.log("error creating object button");
+        else {
+            button.x = 100;
+            button.y = 100;
+            //...
+        }
+	}
+	else if (comp.status === Component.Error)
+	{
+		// 错误处理
+		console.log("error loading component: ",component.errorString());
+	}
+}
+
+// 如果可以确保Button.qml是本地加载的就无需借助槽函数直接执行即可
+function createCompOther() {
+	comp = Qt.createComponent("Button.qml");//动态创建组件对象
+    button = comp.createObejct(app); // 创建组件实例
+    if (button == null)
+    	console.log("error creating object button");
+    else {
+        button.x = 100;
+        button.y = 100;
+        //...
+    }
+}
+```
+
+
 
 ## 基本元素
 
@@ -444,6 +561,8 @@ Rectangle {
 
 请注意，使用Qt.lighter（颜色）可以在填充颜色的基础上生成较浅的边框颜色。我们将在接下来的示例中使用这些帮助程序，使源代码更加紧凑，并有望具有可读性。请记住，每个矩形的初始值为48x48像素。
 
+### Column
+
 ```css
 // column.qml
 
@@ -466,6 +585,8 @@ DarkSquare {
 ```
 
 ![](qml_column.jpg)
+
+### Row
 
 Row元素根据layoutDirection属性从左到右或从右到左将其子项放置在相邻的位置。同样，间距用于分隔子项。
 
@@ -490,6 +611,8 @@ BrightSquare {
 ```
 
 ![](Row.jpg)
+
+### Grid
 
 Grid元素将其子元素排列在网格中，通过设置rows和columns属性，可以约束行或列的数量。通过不设置其中任何一个，另一个是根据子项目的数量计算的。例如，将行设置为3并添加6个子项将导致2列。属性flow和layoutDirection用于控制将项目添加到栅格的顺序，而间距控制分隔子项目的空间量。
 
@@ -520,6 +643,8 @@ BrightSquare {
 
 ![](grid_qml.jpg)
 
+### Flow
+
 最终的定位器是Flow。它在流中添加其子项。使用流和布局方向控制流的方向。它可以侧向运行，也可以从顶部到底部运行。它也可以从左向右或以相反的方向运行。当项目被添加到流中时，它们被包装以根据需要形成新行或列。为了使流工作，它必须具有宽度或高度。这可以直接设置，也可以通过锚点布局设置。
 
 ```css
@@ -544,6 +669,55 @@ BrightSquare {
 ```
 
 ![](flow_qml.jpg)
+
+### Transition
+
+定位器添加和删除一个子项目时可以使用过渡动画效果，上边的定位器都具备3个属性，add、move和populate。他们需要一个额外的Transition对象，add应用于定位器添加1个项目，move用于删除1个子项目或者通过更换父对象的方式从定位器移除子项时，populate应用于定位器第1次被创建，只会执行1次。
+
+```css
+    Column {
+        spacing: 2
+        Rectangle {color:"red"; width: 50;height: 50}
+        Rectangle {color:"green"; width: 50;height: 50; id:greenRect}
+        Rectangle {color:"blue"; width: 50;height: 50}
+
+        move: Transition {
+            NumberAnimation {duration:1000;properties: "x,y"; to:100}
+        }
+        focus: true
+        Keys.onSpacePressed: {greenRect.visible = !greenRect.visible;
+            greenRect.x = greenRect.visible?50:100;
+        }
+
+    }
+```
+
+### Positioner
+
+4个定位器会附加一个Positioner类型的对象作为顶层子项目，可以为子项目提供index等信息。
+
+```css
+    Grid {
+        padding: 5
+        spacing: 10
+        y: 150
+        Repeater {
+            model:16
+            Rectangle {
+                id: rect
+                width: 40; height: 40
+                border.width: 1
+                color: Positioner.isFirstItem? "yellow": "skyblue"
+                Text {
+                    text: rect.Positioner.index;//这里可以用到
+                    anchors.centerIn: parent
+                }
+            }
+        }
+    }
+```
+
+### Repeator
 
 一个经常与定位器一起使用的元件是中继器Repeator。它的工作方式类似于for循环，并在模型上进行迭代。在最简单的情况下，模型只是提供循环数量的值。另外，Repeator提供了索引 index 和 数据modelData可用于访问。
 
