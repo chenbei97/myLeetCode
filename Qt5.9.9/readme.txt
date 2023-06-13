@@ -144,6 +144,8 @@
 
 48. MyWeChat 关于UDP的综合示例，创建一个仿微信的应用
 
+49. StorageInfo 关于U盘升级使用的类, https://blog.csdn.net/weixin_41882459/article/details/111368662
+
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
 26. QPlainTextEdit/QTextEdit的单行文字颜色改变
     1) 方法1: 使用QTextCharFormat和QTextCursor实现
