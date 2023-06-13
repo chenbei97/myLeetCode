@@ -469,6 +469,9 @@ ui->actLeft->setChecked(true);
     QToolButton禁止右下角下拉菜单: toolbutton->setStyleSheet("QToolButton::menu-indicator{image:none;}");
     QLabel使用setPalette不能控制颜色,setFont不能控制字体大小：label->setStyleSheet("QLabel{font:bold 64px;background-color: red;color: blue;}");
     QGroupBox去除边框, groupbox->setStyleSheet("QGroupBox{border:none;}");
+         QPushButton设置圆形, mStartTableBtn->setFixedSize(QSize(100,100));
+		            mStartTableBtn->setStyleSheet("border:2px solid black;border-radius:50px;background-color:#0776a9");
+         
     
 12. 实现下拉项选择颜色和图片显示
     QStringList colorList = QColor::colorNames();
