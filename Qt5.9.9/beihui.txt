@@ -1,0 +1,73 @@
+（1）解决QTableView图片居中的问题，代理使用QLabel，在painter()函数重载
+void PictureDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+            QStyleOptionViewItem viewOption(option);
+            if (option.state.testFlag(QStyle::State_HasFocus))
+                viewOption.state = viewOption.state ^ QStyle::State_HasFocus;
+
+            QImage img =  index.model()->data(index,Qt::DecorationRole).value<QImage>();
+            // 图像的宽度和高度是固定值
+            int center_x = 0, center_y = 0;
+            QRect cell=option.rect; // （x,y,w,h）单元格的位置和大小
+
+            if (cell.width() > img.width())
+            {
+                if (cell.height() > img.height()) {  // 图像尺寸都小于单元格
+               }
+                else { // 只有图像高度超出单元格高度
+                        img = img.scaledToHeight(cell.height()); // 让图像高度适应单元格
+                }
+            }
+            else {
+                if (cell.height() > img.height()) { // 只有图像宽度超出单元格宽度
+                    img = img.scaledToWidth(cell.width()); // 让图像宽度适应单元格
+               }
+                else { // 图像尺寸都大于单元格
+                    img = img.scaled(cell.width(),cell.height(),Qt::KeepAspectRatio); //那就让图像变成单元格尺寸
+                }
+            }
+
+            // 单元格的范围必须比图像大,这样图像居中时水平坐标等于单元格坐标+单元格宽度/2-图像宽度/2
+            center_x = cell.x()+cell.width()/2-img.width()/2;
+            center_y = cell.y()+cell.height()/2-img.height()/2;
+
+        //qDebug()<<QString("w = %1, h = %2, x = %3, y = %4").arg(width).arg(height).arg(x).arg(y);
+            painter->drawPixmap(center_x,center_y,QPixmap::fromImage(img));
+}
+
+或者不使用QTableView，改用QTableWidget也可以，然后使用setCellWidget来代理，不过这种方法缺点是无法利用QAbstractTableModel
+
+mView = new QTableWidget;
+mView->setEditTriggers(QTableWidget::EditTrigger::NoEditTriggers);
+mView->setRowCount(3);
+mView->setColumnCount(3);
+
+QTableWidgetItem * item;
+QLabel * label ;
+int tem = 1;
+for (int i = 0; i < 3; ++i)
+{
+    for (int j = 0; j < 3; ++j)
+    {
+        item = new QTableWidgetItem;
+        mView->setItem(i,j,item);
+        label = new QLabel;
+        label->setAlignment(Qt::AlignCenter);
+        label->setPixmap(QPixmap(QString("../50-TableShowPictures/%1.jpg")
+                                      .arg(tem)).scaled(300,(int)300*0.618));
+        mView->setCellWidget(i,j,label);
+        tem++;
+    }
+}
+
+以上代码均可参考例子myLeetCode\Qt5.9.9\50-TableShowPictures
+
+
+
+
+
+
+
+
+
+

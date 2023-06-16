@@ -999,3 +999,390 @@ DarkSquare {
 }
 ```
 
+## 视图
+
+### Flickable
+
+Flickable项目将其子项目放在可以拖动和轻弹的表面上，从而使子项目上的视图滚动。这种行为构成了用于显示大量子项的Items的基础，例如ListView和GridView。
+在传统的用户界面中，可以使用滚动条和箭头按钮等标准控件滚动视图。在某些情况下，还可以通过在移动光标的同时按住鼠标按钮直接拖动视图。在基于触摸的用户界面中，这种拖动操作通常与轻弹操作相辅相成，在用户停止触摸视图后继续滚动。
+Flickable不会自动剪辑其内容。如果它不作为全屏项目使用，则应考虑将clip属性设置为true
+
+下面的示例显示了一个大图像上的小视图，用户可以在其中拖动或滑动图像以查看它的不同部分
+
+```c++
+  import QtQuick 2.0
+
+  Flickable {
+      width: 200; height: 200
+      contentWidth: image.width; contentHeight: image.height
+
+      Image { id: image; source: "bigImage.png" }
+  }
+```
+
+声明为Flickable的子元素的项会自动成为Flickable的contentItem的父元素。在操作Flickable的子元素时，应该考虑到这一点;通常是contentItem的子元素是相关的。例如，添加到Flickable的Items的绑定将通过contentItem.childrenRect提供
+
+注意：由于实现细节的原因，放置在Flickable中的项不能锚定到Flickable。相反，使用parent，它指的是Flickable的contentItem。内容项的大小由contentWidth和contentHeight决定。
+
+### ListView
+
+ListView显示从内置QML类型（如ListModel和XmlListModel）创建的模型中的数据，或在C++中定义的从**QAbstractItemModel或QAbstract ListModel**继承的自定义模型类中的数据。
+ListView有一个模型和一个委托，前者定义要显示的数据，后者定义应如何显示数据。ListView中的项目是水平或垂直排列的。列表视图本质上是可弹的，因为ListView继承自flickable
+
+```c++
+  import QtQuick 2.0
+
+  ListModel {
+      ListElement {
+          name: "Bill Smith"
+          number: "555 3264"
+      }
+      ListElement {
+          name: "John Brown"
+          number: "555 8426"
+      }
+      ListElement {
+          name: "Sam Wise"
+          number: "555 0473"
+      }
+  }
+  // 使用模型
+    ListView {
+      width: 180; height: 200
+
+      model: ContactModel {}
+      delegate: Text {
+          text: name + ": " + number
+      }
+  }
+```
+
+在这里，ListView为其模型创建一个ContactModel组件，为其委托创建一个Text项。该视图将为模型中的每个项目创建一个新的“文本”组件。请注意，代理可以直接访问模型的名称和编号数据。
+下面显示了一个改进的列表视图。该委派在视觉上得到了改进，并被移动到一个单独的contactDelegate组件中。
+
+```c++
+Rectangle {
+      width: 180; height: 200
+
+      Component {
+          id: contactDelegate
+          Item { // 用Text也可以，不能用Rectangle否则highlight这没效果
+              width: 180; height: 40
+              Column {
+                  Text { text: '<b>Name:</b> ' + name }
+                  Text { text: '<b>Number:</b> ' + number }
+              }
+          }
+      }
+
+      ListView {
+          anchors.fill: parent
+          model: ContactModel {}
+          delegate: contactDelegate
+          highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+          focus: true
+      }
+  }
+```
+
+当前选定的项目使用高亮显示属性用蓝色矩形高亮显示，焦点设置为true以启用列表视图的键盘导航。列表视图本身就是一个焦点范围（有关更多详细信息，请参阅Qt Quick中的Keyboard focus）。
+委托会根据需要实例化，并且可能随时被销毁。它们是ListView的contentItem的父级，而不是视图本身的父级。状态永远不应存储在委托中。
+ListView将许多属性附加到委托的根项，例如ListView.isCurrentItem。在以下示例中，根委托项可以作为ListView.ieCurrentItem直接访问此附加的属性，而子contactInfo对象必须作为wrapper.ListView.itCurrentItem引用此属性。
+
+```c++
+  ListView {
+      width: 180; height: 200
+
+      Component {
+          id: contactsDelegate
+          Rectangle {
+              id: wrapper
+              width: 180
+              height: contactInfo.height //矩形高度是文本高度
+              color: ListView.isCurrentItem ? "black" : "red"
+              Text {
+                  id: contactInfo
+                  text: name + ": " + number
+                  color: wrapper.ListView.isCurrentItem ? "red" : "black"
+                      // 文本颜色和矩形颜色反过来
+              }
+          }
+      }
+
+      model: ContactModel {}
+      delegate: contactsDelegate
+      focus: true
+  }
+```
+
+ListView中项目的布局可以由以下属性控制：orientation-控制项目是水平流动还是垂直流动。该值可以是Qt.Horizontal或Qt.Vertical。
+layoutDirection-控制水平方向视图的水平布局方向：即项目是从视图的左侧布置到右侧，还是从视图的右侧布置。该值可以是Q.LeftToRight或Q.RightToLeft。
+verticalLayoutDirection-控制垂直方向视图的垂直布局方向：也就是说，项目是从视图顶部向下朝视图底部布局，还是从视图底部向下。此值可以是ListView.TopToBottom或ListView.BottomToTop。
+默认情况下，ListView具有垂直方向，并且项目是从上到下排列的。下表显示了ListView可以具有的不同布局，具体取决于上面列出的属性值。
+
+默认情况下，垂直ListView将flickableDirection设置为Flickable.Volutical，水平ListView将其设置为Flckable.Hhorizontal。此外，垂直ListView仅计算（估计）contentHeight，而水平ListView仅计算contentWidth。另一个尺寸设定为-1。
+由于Qt 5.9（Qt Quick 2.9），因此可以制作一个可以向两个方向轻弹的ListView。为此，可以将flickableDirection设置为Flickable.AutoFlickDirection或Flickable_AutoFlickIfNeeded，并且必须提供所需的contentWidth或contentHeight。
+
+### GridView
+
+GridView显示从内置QML类型（如ListModel和XmlListModel）创建的模型中的数据，或在C++中定义的从QAbstractListModel继承的自定义模型类中的数据。
+GridView有一个模型和一个委托，前者定义要显示的数据，后者定义应如何显示数据。GridView中的项目是水平或垂直排列的。网格视图本质上是可弹的，因为GridView继承自flickable。
+
+ContactModel.qml
+
+```c++
+  import QtQuick 2.0
+
+  ListModel {
+
+      ListElement {
+          name: "Jim Williams"
+          portrait: "pics/portrait.png"
+      }
+      ListElement {
+          name: "John Brown"
+          portrait: "pics/portrait.png"
+      }
+      ListElement {
+          name: "Bill Smyth"
+          portrait: "pics/portrait.png"
+      }
+      ListElement {
+          name: "Sam Wise"
+          portrait: "pics/portrait.png"
+      }
+  }
+```
+
+该模型可以在其他QML文件中作为ContactModel引用。有关创建这样的可重用组件的更多信息，请参阅QML模块。另一个组件可以在GridView中显示此模型数据，如以下示例所示，该示例为其模型创建一个ContactModel组件，为其代理创建一个列（包含图像和文本项）。
+
+```c++
+  import QtQuick 2.0
+
+  GridView {
+      width: 300; height: 200
+
+      model: ContactModel {}
+      delegate: Column {
+          Image { source: portrait; anchors.horizontalCenter: parent.horizontalCenter }
+          Text { text: name; anchors.horizontalCenter: parent.horizontalCenter }
+      }
+  }
+```
+
+该视图将为模型中的每个项目创建一个新的委托。请注意，**代理可以直接访问模型的名称和肖像数据(Text.name,Image.portrait)**。
+下面显示了一个改进的网格视图。该委派在视觉上得到了改进，并被移动到一个单独的contactDelegate组件中。
+
+```c++
+  Rectangle {
+      width: 300; height: 200
+
+      Component { // 代理组件
+          id: contactDelegate
+          Item {
+              width: grid.cellWidth; height: grid.cellHeight // 代理项的宽度高度和视图一致
+              Column {
+                  anchors.fill: parent
+                  Image { source: portrait; anchors.horizontalCenter: parent.horizontalCenter }
+                  Text { text: name; anchors.horizontalCenter: parent.horizontalCenter }
+              }
+          }
+      }
+
+      GridView {
+          id: grid
+          anchors.fill: parent // 和矩形一致
+          cellWidth: 80; cellHeight: 80
+
+          model: ContactModel {}
+          delegate: contactDelegate
+          highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+          focus: true
+      }
+  }
+
+```
+
+当前选定的项目使用**高亮显示属性用蓝色矩形高亮显示，focus设置为true以启用网格视图的键盘导航**。网格视图本身就是一个焦点范围（有关更多详细信息，请参阅Qt Quick中的Keyboard focus）。
+委托会根据需要实例化，并且可能随时被销毁。状态永远不应存储在委托中。
+GridView**将许多属性附加到委托的根项**，例如GridView.isCurrentItem。在以下示例中，根委托项可以直接作为GridView.ieCurrentItem访问此附加属性，而子contactInfo对象必须作为wrapper.GridView.itCurrentItem引用此属性。
+
+```c++
+  GridView {
+      width: 300; height: 200
+      cellWidth: 80; cellHeight: 80
+
+      Component { // 代理组件在视图里,所以视图的一些属性可以在委托的根项也就是矩形这里访问
+          id: contactsDelegate
+          Rectangle { // 矩形又在代理里
+              id: wrapper
+              width: 80
+              height: 80
+              color: GridView.isCurrentItem ? "black" : "red" // 访问视图属性
+              Text {
+                  id: contactInfo
+                  text: name + ": " + number
+                  color: wrapper.GridView.isCurrentItem ? "red" : "black" // 委托的子项想访问视图必须借助父类也就是矩形来访问
+              }
+          }
+      }
+
+      model: ContactModel {}
+      delegate: contactsDelegate
+      focus: true
+  }
+```
+
+
+
+### TableView
+
+TableView具有一个定义要显示的数据的模型，以及一个定义应如何显示数据的委托。
+TableView继承了Flickable。这意味着，**虽然模型可以有任意数量的行和列，但通常只有表的一个子部分在视口中可见**。轻弹后，新的行和列就会进入视口，而旧的行和列则会退出并从视口中删除。移出的行和列将重新用于构建移入视口的行和柱。因此，**TableView支持任何大小的模型，而不会影响性能**。
+TableView显示根据内置QML类型（如ListModel和XmlListModel）创建的模型中的数据，后者仅填充TableView中的第一列。要创建具有多列的模型，请使用**TableModel或继承QAbstractItemModel的C++模型**。
+
+以下示例显示了如何从C++创建具有多列的模型：
+
+```c++
+
+  #include <QGuiApplication>
+  #include <QQmlApplicationEngine>
+  #include <QAbstractTableModel>
+
+  class TableModel : public QAbstractTableModel
+  {
+      Q_OBJECT
+
+  public:
+
+      int rowCount(const QModelIndex & = QModelIndex()) const override
+      {
+          return 200;
+      }
+
+      int columnCount(const QModelIndex & = QModelIndex()) const override
+      {
+          return 200;
+      }
+
+      QVariant data(const QModelIndex &index, int role) const override
+      {
+          switch (role) {
+              case Qt::DisplayRole:
+                  return QString("%1, %2").arg(index.column()).arg(index.row());
+              default:
+                  break;
+          }
+
+          return QVariant();
+      }
+
+      QHash<int, QByteArray> roleNames() const override
+      {
+          return { {Qt::DisplayRole, "display"} };
+      }
+  };
+
+  int main(int argc, char *argv[])
+  {
+      QGuiApplication app(argc, argv);
+
+      qmlRegisterType<TableModel>("TableModel", 0, 1, "TableModel");
+
+      QQmlApplicationEngine engine;
+      engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+
+      return app.exec();
+  }
+```
+
+之后在qml中使用方式如下。
+
+```c++
+
+  import QtQuick 2.12
+  import TableModel 0.1
+
+  TableView {
+      anchors.fill: parent
+      columnSpacing: 1
+      rowSpacing: 1
+      clip: true
+
+      model: TableModel {}
+
+      delegate: Rectangle {
+          implicitWidth: 100
+          implicitHeight: 50
+          Text {
+              text: display // 文本显示dispaly代表的内容
+          }
+      }
+  }
+```
+
+对于原型制作和显示非常简单的数据（例如，来自web API），可以使用TableModel：
+
+```c++
+  import QtQuick 2.14
+  import Qt.labs.qmlmodels 1.0
+
+  TableView {
+      anchors.fill: parent
+      columnSpacing: 1
+      rowSpacing: 1
+      clip: true
+
+      model: TableModel {
+          TableModelColumn { display: "name" }
+          TableModelColumn { display: "color" }
+
+          rows: [
+              {
+                  "name": "cat",
+                  "color": "black"
+              },
+              {
+                  "name": "dog",
+                  "color": "brown"
+              },
+              {
+                  "name": "bird",
+                  "color": "white"
+              }
+          ]
+      }
+
+      delegate: Rectangle {
+          implicitWidth: 100
+          implicitHeight: 50
+          border.width: 1
+
+          Text {
+              text: display
+              anchors.centerIn: parent
+          }
+      }
+  }
+```
+
+
+
+## 视图项
+
+### ListElement
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
