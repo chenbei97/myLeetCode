@@ -58,7 +58,7 @@ QVariant PictureModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags PictureModel::flags(const QModelIndex &index) const
 {
     //return  QAbstractItemModel::flags(index) | Qt::ItemIsEditable ;
-    return QAbstractItemModel::flags(index);
+    return QAbstractItemModel::flags(index); // 只显示图片的话无需可编辑,源码中默认只有使能和选择2种
 }
 
 int PictureModel::columnCount(const QModelIndex &parent) const
