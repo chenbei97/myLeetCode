@@ -1401,7 +1401,7 @@ TableView显示根据内置QML类型（如ListModel和XmlListModel）创建的�
 
 委托通过简单地引用名称和成本来获得每个元素的名称和成本：
 
-```
+```c++
  ListView {
       anchors.fill: parent
       model: fruitModel
@@ -1412,9 +1412,75 @@ TableView显示根据内置QML类型（如ListModel和XmlListModel）创建的�
   }
 ```
 
+## 模型
 
+### ListModel
 
+ListModel是ListElement定义的一个简单容器，每个定义都包含数据角色。内容可以动态定义，也可以在QML中显式定义。
+模型中元素的数量可以从其count属性中获得。还提供了许多熟悉的方法来操作模型的内容，包括append（）、insert（）、move（）、remove（）和set（）。这些方法接受字典作为它们的论据；这些被模型转换为ListElement对象。
+元素可以使用setProperty（）方法通过模型进行操作，该方法允许设置和更改指定元素的角色。
 
+### XmlListModel
+
+要使用此元素，您需要使用以下行导入模块：
+
+```
+import QtQuick.XmlListModel 2.0
+```
+
+XmlListModel数据是异步加载的，加载完成时状态设置为XmlListModel.Ready。请注意，这意味着当XmlListModel用于视图时，在加载模型之前不会填充视图。
+
+您可以将某些角色定义为“键”，这样当调用reload（）时，模型将只添加和刷新包含这些键的新值的数据。
+例如，如果“pubDate”的上述角色是这样定义的：
+
+```c++
+ XmlRole { name: "pubDate"; query: "pubDate/string()"; isKey: true }
+```
+
+然后，当调用reload（）时，模型将仅添加和重新加载模型中尚未存在的具有“pubDate”值的项。
+当显示增量更新的XML文档（如RSS提要）的内容以避免在视图中重新绘制模型的整个内容时，这很有用。
+如果指定了多个关键角色，则模型仅添加和重新加载具有模型中尚未存在的所有关键角色的组合值的项目。
+
+示例。
+
+```c++
+import QtQuick 2.14
+import QtQuick.XmlListModel 2.0
+import QtQuick.Controls 2.5
+
+Rectangle {
+    width: 300; height: 400
+
+    XmlListModel {
+        id: xmlModel
+        source: "http://www.people.com.cn/rss/edu.xml"
+        query: "/rss/channel/item" // 查找这个xml子路径下
+
+        XmlRole{ name: "title"; query: "title/string()" }
+        XmlRole { name: "pubDate"; query: "pubDate/string()" }
+    }
+
+    ListView {
+        id: view
+        anchors.fill: parent
+        model: xmlModel
+        focus: true // 不为真的话键盘上下按键不能导航
+        spacing: 8
+        delegate: Label { // 使用label代理
+            id: label
+            width: view.width; height: 50 // 高度指定，宽度和ListView相同
+            verticalAlignment: Text.AlignVCenter // 文本垂直居中
+            text: title + ": " + pubDate // 文本内容
+            font.pixelSize: 15; elide: Text.ElideRight // 15号字 靠右侧的话隐藏文本,也就是窗口宽度比较小
+            color: label.ListView.isCurrentItem ? "blue" : "green" // 随着光标移动当前项是蓝色否则绿色
+            background: Image {
+                visible: label.ListView.isCurrentItem //
+                source: "bg.png" // 委托的ListView是不是当前项,是就展示
+            }
+        }
+    }
+}
+```
 
 
 
