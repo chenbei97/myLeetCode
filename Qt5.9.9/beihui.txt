@@ -1,4 +1,5 @@
 （1）解决QTableView图片居中的问题，代理使用QLabel，在painter()函数重载
+参考网址：https://blog.csdn.net/weixin_44399394/article/details/119033697?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-119033697-blog-108342494.235%5Ev38%5Epc_relevant_default_base&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-119033697-blog-108342494.235%5Ev38%5Epc_relevant_default_base&utm_relevant_index=2
 void PictureDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
             QStyleOptionViewItem viewOption(option);
