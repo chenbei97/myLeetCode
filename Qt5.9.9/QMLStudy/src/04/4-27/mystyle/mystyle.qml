@@ -26,8 +26,8 @@
 //}
 
 
-import QtQuick
-import QtQuick.Controls.Basic as Basic
+import QtQuick 2.0
+import QtQuick.Controls 2.0 as Basic
 
 Basic.SpinBox {
     background: Rectangle { color: "lightblue" }

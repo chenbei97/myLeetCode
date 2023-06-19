@@ -1,8 +1,8 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Dialogs
-import QtQuick.Layouts
-import QtCore
+import QtQuick 2.9
+import QtQuick.Controls 2.5
+import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.3
+import Qt.labs.platform 1.1
 
 ApplicationWindow {
     width: 640; height: 480
@@ -15,7 +15,7 @@ ApplicationWindow {
                 text: qsTr("目录对话框")
                 onClicked: folderDialog.open()
             }
-            Label { id: label; text: folderDialog.selectedFolder}
+            Label { id: label; text: folderDialog.currentFolder}
         }
     }
 

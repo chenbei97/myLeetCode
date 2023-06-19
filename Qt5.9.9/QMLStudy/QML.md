@@ -1561,6 +1561,12 @@ Window {
 
 弹出类控件：菜单栏MenuBar，菜单Menu(继承自Popup)，菜单项MenuItem，MenuBarItem是MenuBar默认委托类型，侧面板控件Drawer、ToolTip等
 
+分隔类控件：MenuSeparator、ToolSeparator
+
+日期类控件：DayOfWeekRow(第一排显示周日到周六)、WeekNumberColumn(左侧显示第n周)、MonthGrid(1-31的月历)
+
+对话框控件：colorDialog、FileDialog、FolderDialog、FontDialog、MessageDialog
+
 ```mermaid
 graph LR
 Window --> ApplicationWindow

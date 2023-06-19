@@ -1,7 +1,9 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Dialogs
-import QtCore
+import QtQuick 2.9
+import QtQuick.Controls 2.5
+import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.3
+import Qt.labs.platform 1.1
+
 
 ApplicationWindow {
     width: 640; height: 480
@@ -23,9 +25,9 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         nameFilters: ["Image files (*.png *.jpg)"]
-        currentFolder: StandardPaths.writableLocation
+        folder: StandardPaths.writableLocation
                        (StandardPaths.PicturesLocation)
         acceptLabel: qsTr("选择图片")
-        onAccepted: image.source = selectedFile
+        onAccepted: image.source = currentFile
     }
 }

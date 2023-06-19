@@ -1,7 +1,8 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Dialogs
-import QtQuick.Layouts
+import QtQuick 2.9
+import QtQuick.Controls 2.5
+import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.3
+import Qt.labs.platform 1.1
 
 ApplicationWindow {
     width: 640; height: 550
@@ -21,8 +22,8 @@ ApplicationWindow {
 
     ColorDialog {
         id: colorDialog
-        selectedColor: label.color
+
         options: ColorDialog.ShowAlphaChannel
-        onAccepted: label.color = selectedColor
+        onAccepted: label.color = currentColor
     }
 }
