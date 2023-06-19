@@ -1,5 +1,6 @@
-import QtQuick
-import QtCharts
+import QtQuick 2.9
+import QtCharts 2.3
+import QtQuick.Window 2.3
 
 Window {
     visible: true
@@ -14,9 +15,9 @@ Window {
         DateTimeAxis {
             id: xAxis
             format: "MM-dd"
-            tickCount: 5
-            min: new Date(2019, 0, 15) // 2019-1-15
-            max: new Date(2019, 2, 1)  // 2019-3-1
+            tickCount: 12
+            min: new Date(2023, 0, 15)
+            max: new Date(2023, 11, 1)
 
             color: "blue"
             gridLineColor: "lightgreen"
@@ -33,9 +34,16 @@ Window {
             name: "LineSeries"
             axisX: xAxis
 
-            XYPoint { x: toMsecsSinceEpoch(new Date(2019, 0, 20)); y: 12 }
-            XYPoint { x: toMsecsSinceEpoch(new Date(2019, 1, 13)); y: 18 }
-            XYPoint { x: toMsecsSinceEpoch(new Date(2019, 1, 20)); y: 30 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 0, 2)); y: -5 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 1, 10)); y: 45 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 2, 23)); y: 5 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 3, 21)); y: 12 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 4, 12)); y: 12 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 5, 13)); y: 18 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 6, 19)); y: 30 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 7, 29)); y: 40 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 8, 30)); y: 30 }
+            XYPoint { x: toMsecsSinceEpoch(new Date(2023, 9, 14)); y: 30 }
         }
     }
 

@@ -1,6 +1,7 @@
-import QtQuick
-import QtCharts
-import QtQml.Models
+import QtQuick 2.9
+import QtCharts 2.3
+import QtQuick.Window 2.3
+import QtQml.Models 2.3
 
 Window {
     visible: true
@@ -31,7 +32,7 @@ Window {
         interval: 1500; repeat: true
         triggeredOnStart: true; running: true
         onTriggered: {
-            currentIndex++;
+            currentIndex++; // 首次变为0
             if (currentIndex < listModel.count) {
                 var lineSeries = chartView.series("2018");
                 // 第一次运行时创建曲线

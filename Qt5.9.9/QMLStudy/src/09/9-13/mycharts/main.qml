@@ -1,5 +1,7 @@
-import QtQuick
-import QtCharts
+import QtQuick 2.9
+import QtCharts 2.3
+import QtQuick.Window 2.3
+import QtQml.Models 2.3
 
 Window {
     visible: true
