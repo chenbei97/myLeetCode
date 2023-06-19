@@ -6,10 +6,11 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-//    QQuickStyle::setStyle("Fusion");
+    //QQuickStyle::setStyle("Imagine"); // 必须在engine.load之前调用
+    // Default,Material,Imagine,Universal,Fusion
 
     QQmlApplicationEngine engine;
-    const QUrl url(u"qrc:/mystyle/main.qml"_qs);
+    const QUrl url("qrc:/mystyle/main.qml");
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
         if (!obj && url == objUrl)

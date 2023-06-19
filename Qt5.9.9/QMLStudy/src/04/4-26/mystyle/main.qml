@@ -1,6 +1,7 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
+import QtQuick 2.12
+import QtQuick.Layouts 1.3
+import QtQuick.Controls 2.5
+import QtQuick.Window 2.3
 
 Window {
     width: 640; height: 480
