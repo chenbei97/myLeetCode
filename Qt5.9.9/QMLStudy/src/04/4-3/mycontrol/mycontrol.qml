@@ -1,30 +1,36 @@
-import QtQuick
-import QtQuick.Controls
+import QtQuick 2.0
+import QtQuick.Controls 2.0
+import QtQuick.Window 2.0
 
 Window {
-    width: 300; height: 200
+    width: 600; height: 800
     visible: true
 
     Rectangle {
         x:100; y:100
-        width: 50; height: 40
+        width: 200; height: 180
         color:"red"
 
         Control {
-            width: 40; height: 30
 
-            topInset: -2
+            width: 150; height: 120
+
+            topInset: -2 // 背景区域大于超过内容项目
             leftInset: -2
             rightInset: -6
             bottomInset: -6
 
-            background: Rectangle {
+            background: Rectangle { // 背景项目
                 color: "green"
             }
-            contentItem: Rectangle {
+            contentItem: Rectangle { // 内容项目
                 color: "yellow"
             }
             topPadding: 5; leftPadding: 2
         }
+
+//        Button {
+//            icon: "document-open.png"
+//        }
     }
 }

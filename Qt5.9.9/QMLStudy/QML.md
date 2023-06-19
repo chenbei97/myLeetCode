@@ -1484,6 +1484,304 @@ Rectangle {
 
 
 
+## 控件类
+
+### Control
+
+控件是用户界面控件的基本类型。它接收来自窗口系统的输入事件，并在屏幕上绘制自己的表示。控件的implicitWidth和implicitHeight通常基于背景和contentItem内容项的隐式大小加上任何填充。这些属性决定在未指定显式宽度或高度时控件的大小。背景项填充控件的整个宽度和高度，除非为其指定了明确的大小。contentItem的几何图形由填充决定。
+
+布局图片如下所示。
+
+![](control_qml.jpg)
+
+事件处理这里：除非交互式指示器外，所有控件都不允许单击和触摸其下方的项目。例如，如果Pane用作ApplicationWindow的页眉或页脚，则它下面的项目将不会得到鼠标或触摸事件。例如，当单击窗格时，将永远不会执行下面示例中的console.log（）调用，因为MouseArea在场景中位于它的下面：
+
+```c++
+MouseArea {
+      anchors.fill: parent
+      onClicked: console.log("MouseArea was clicked")
+
+      Pane {
+          anchors.fill: parent
+      }
+  }
+```
+
+对于5.14的版本是这样的。
+
+![](control_qml_5.14.jpg)
+
+负镶嵌可以用于使背景大于控件。以下示例使用负插入将阴影放置在控件边界之外：
+
+```c++
+import QtQuick 2.0
+import QtQuick.Controls 2.0
+import QtQuick.Window 2.0
+
+Window {
+    width: 600; height: 800
+    visible: true
+
+    Rectangle {
+        x:100; y:100
+        width: 200; height: 180
+        color:"red"
+
+        Control {
+            width: 150; height: 120
+
+            topInset: -2 // 背景区域大于超过内容项目
+            leftInset: -2
+            rightInset: -6
+            bottomInset: -6
+
+            background: Rectangle { // 背景项目
+                color: "green"
+            }
+            contentItem: Rectangle { // 内容项目
+                color: "yellow"
+            }
+            topPadding: 5; leftPadding: 2
+        }
+    }
+}
+```
+
+关于控件的大体分类如下。
+
+按钮类：AbstractButton、Button、RoundButton、ToolButton、RadioButton、DelayButton、TabButton、CheckBox、Switch，关联的ButtonGroup
+
+容器类：Window(ApplicationWindow)、Container(SwipeView)、FocusScope(StackView,**ToolBar)**、SplitView、Pane(Frame(GroupBox)、Page、**ToolBar**、ScrollView)、
+
+```mermaid
+graph LR
+Window --> ApplicationWindow
+
+Control --> AbstractButton
+AbstractButton --> Button
+Button --> RoundButton
+Button --> ToolButton
+AbstractButton --> RadioButton
+AbstractButton --> DelayButton
+AbstractButton --> TabButton
+AbstractButton --> CheckBox
+AbstractButton --> Switch
+
+Control --> Containter
+Containter --> MenuBar
+Containter --> TabBar
+Containter --> DialogButtonBox
+Container --> SwipeView
+Control --> Pane
+Pane --> Frame
+Frame --> GroupBox
+Pane --> Page
+Pane --> ToolBar
+Pane --> ScrollView
+Control --> FocusScope
+FocusScope --> StackView
+FocusScope --> ToolBar
+Control --> SplitView
+
+Control --> ComboBox
+Control --> Progressbar
+Control --> SpinBox
+```
+
+
+
+### Pane
+
+窗格提供了与应用程序样式和主题相匹配的背景色。窗格不提供自己的布局，但要求您定位其内容，例如通过创建RowLayout或ColumnLayout。
+声明为窗格的子项的项自动成为窗格的contentItem的父项。动态创建的项需要显式地作为contentItem的父项。
+
+如果窗格中仅使用单个项目，则它将调整大小以适应其包含项目的隐含大小。这使得它特别适合与布局一起使用
+
+```c++
+  Pane {
+      ColumnLayout {
+          anchors.fill: parent
+          CheckBox { text: qsTr("E-mail") }
+          CheckBox { text: qsTr("Calendar") }
+          CheckBox { text: qsTr("Contacts") }
+      }
+  }
+```
+
+有时窗格中可能有两个项目：在这种情况下，Pane无法计算合理的隐式大小。由于我们将PageIndicator锚定在SwipeView上，因此我们可以简单地将内容大小设置为视图的隐含大小：
+
+```c++
+
+  Pane {
+      contentWidth: view.implicitWidth
+      contentHeight: view.implicitHeight
+      SwipeView {
+          id: view
+          // ...
+      }
+      PageIndicator {
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.bottom: parent.bottom
+      }
+  }
+```
+
+如果contentItem没有隐式大小，只有一个子级，则Pane将使用该子级的隐式大小。例如，在以下代码中，窗格将采用矩形的大小：
+
+```c++
+  Pane {
+      Item {
+          Rectangle {
+              implicitWidth: 200
+              implicitHeight: 200
+              color: "salmon"
+          }
+      }
+  }
+```
+
+一个例子。
+
+```c++
+Window {
+    width: 900; height: 300
+    visible: true
+
+    RowLayout {
+        x: 50; y: 50; spacing: 20
+
+        Pane { // 窗格控件，只有一个列布局放了3个checkbox
+            contentWidth: 150; contentHeight: 80
+
+            ColumnLayout {
+                   anchors.fill: parent
+                   CheckBox { text: qsTr("E-mail") }
+                   CheckBox { text: qsTr("Calendar") }
+                   CheckBox { text: qsTr("Contacts") }
+               }
+         }
+
+        Frame { // 带有边框的Pane
+            contentWidth: 150; contentHeight: 80 // 高度80正好只框2个checkbox，150就都框进去了
+
+            ColumnLayout {
+                   anchors.fill: parent; anchors.leftMargin: 5 // 让3个checkbox和边框有些距离
+                   CheckBox { text: qsTr("E-mail") }
+                   CheckBox { text: qsTr("Calendar") }
+                   CheckBox { text: qsTr("Contacts") }
+               }
+        }
+
+        GroupBox { // 分组 带有标题的Frame
+            contentWidth: 150; contentHeight:80 // 这个高度也是控制边框的高度，因为GroupBox继承Frame
+             title: qsTr("Synchronize")
+
+            ColumnLayout {
+                anchors.fill: parent
+                CheckBox { text: qsTr("E-mail") }
+                CheckBox { text: qsTr("Calendar") }
+                CheckBox { text: qsTr("Contacts") }
+            }
+        }
+
+
+        GroupBox {
+            contentWidth: 150; contentHeight: 90
+
+            label: CheckBox { // label的附加属性
+                id: checkBox
+                checked: true;
+                text: qsTr("Synchronize1")
+            }
+
+            ColumnLayout {
+                anchors.fill: parent; anchors.topMargin: 10
+                enabled: checkBox.checked // 金庸取决于label是否选中 没选中就禁用
+                CheckBox { text: qsTr("E-mail") }
+                CheckBox { text: qsTr("Calendar") }
+                CheckBox { text: qsTr("Contacts") }
+            }
+        }
+    }
+}
+```
+
+### Page
+
+页面是一个容器控件，可以方便地将页眉和页脚项添加到页面中。一般Page和ApplicationWindow结合使用，显示不同的多个界面。
+
+![](page_qml.jpg)
+
+下面的示例片段演示了如何使用页面特定的工具栏标题和应用程序范围的选项卡页脚。
+
+```c++
+  import QtQuick.Controls 2.12
+
+  ApplicationWindow {
+      visible: true
+
+      StackView {
+          anchors.fill: parent
+
+          initialItem: Page {
+              header: ToolBar {
+                  // ...
+              }
+          }
+      }
+
+      footer: TabBar {
+          // ...
+      }
+  }
+```
+
+
+
+### SplitView
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
