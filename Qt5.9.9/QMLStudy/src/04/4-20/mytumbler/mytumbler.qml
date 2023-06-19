@@ -1,5 +1,7 @@
-import QtQuick
-import QtQuick.Controls
+import QtQuick 2.0
+import QtQuick.Controls 2.12
+import QtQuick.Window 2.0
+import QtQuick.Layouts 1.3
 
 Window {
     visible: true
@@ -7,8 +9,8 @@ Window {
     height: frame.implicitHeight + 10
 
     function formatText(count, modelData) {
-        var data = count === 12 ? modelData + 1 : modelData;
-        return data.toString().length < 2 ? "0" + data : data;
+        var data = count === 12 ? modelData + 1 : modelData; // 是12就为modelData + 1 也就是下一个
+        return data.toString().length < 2 ? "0" + data : data; // 显示带个0
     }
 
     Component {

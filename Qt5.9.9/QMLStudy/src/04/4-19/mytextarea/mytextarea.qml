@@ -1,6 +1,7 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import QtQuick 2.0
+import QtQuick.Controls 2.12
+import QtQuick.Window 2.0
+import QtQuick.Layouts 1.3
 
 ApplicationWindow {
     width: 200; height: 300
@@ -22,7 +23,7 @@ ApplicationWindow {
             background: Rectangle { color: "lightgrey" }
         }
 
-        TextField {
+        TextField { // 单行文本编辑器
             placeholderText: qsTr("Enter name")
             onAccepted: console.log(text)
         }

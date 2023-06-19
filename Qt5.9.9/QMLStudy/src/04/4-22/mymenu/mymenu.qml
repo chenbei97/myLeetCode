@@ -1,5 +1,7 @@
-import QtQuick
-import QtQuick.Controls
+import QtQuick 2.14
+import QtQuick.Controls 2.12
+import QtQuick.Window 2.0
+import QtQuick.Layouts 1.3
 
 ApplicationWindow {
     width: 320; height: 260
@@ -9,7 +11,7 @@ ApplicationWindow {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
-            if (mouse.button === Qt.RightButton)
+            if (mouse.button === Qt.RightButton) //右键菜单
                 contextMenu.popup()
         }
 

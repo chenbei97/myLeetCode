@@ -1,6 +1,7 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import QtQuick 2.14
+import QtQuick.Controls 2.12
+import QtQuick.Window 2.0
+import QtQuick.Layouts 1.3
 
 Window {
     width: 640
@@ -16,7 +17,7 @@ Window {
             value: 1 // "Medium"
 
             property var items: ["Small", "Medium", "Large"]
-
+ // validator、textFromValue和valueFromText可以让spinbox接受任意输入值
             validator: RegularExpressionValidator {
                 regularExpression: new RegExp("(Small|Medium|Large)", "i")
             }

@@ -42,7 +42,7 @@ ApplicationWindow {
         }
     }
 
-    PageIndicator {
+    PageIndicator { // 就是下方的小圆点...指示哪页
         currentIndex: view.currentIndex
         count: view.count
         anchors.bottom: view.bottom; anchors.bottomMargin: 30

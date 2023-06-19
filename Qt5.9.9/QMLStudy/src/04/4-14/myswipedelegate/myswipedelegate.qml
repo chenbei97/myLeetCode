@@ -1,6 +1,7 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import QtQuick 2.0
+import QtQuick.Controls 2.12
+import QtQuick.Window 2.0
+import QtQuick.Layouts 1.3
 
 Window {
     width: 200; height: 240
@@ -36,7 +37,7 @@ Window {
                     id: animation
                     PropertyAction {
                         target: swipeDelegate
-                        property: "ListView.delayRemove"
+                        property: "ListView.delayRemove"// 延时删除
                         value: true
                     }
                     NumberAnimation {
@@ -47,12 +48,12 @@ Window {
                     }
                     PropertyAction {
                         target: swipeDelegate
-                        property: "ListView.delayRemove"
+                        property: "ListView.delayRemove" // 延时删除作为动画对象
                         value: false
                     }
                 }
 
-                swipe.right: Label {
+                swipe.right: Label { // 这里swipe右边定义的文本用于删除
                     id: deleteLabel
                     text: qsTr("Delete")
                     color: "white"; padding: 12
@@ -60,7 +61,7 @@ Window {
                     height: parent.height
                     anchors.right: parent.right
 
-                    SwipeDelegate.onClicked: listView.model.remove(index)
+                    SwipeDelegate.onClicked: listView.model.remove(index) // 删除对象
 
                     background: Rectangle {
                         color: deleteLabel.SwipeDelegate.pressed ?

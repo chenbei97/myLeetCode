@@ -1553,6 +1553,14 @@ Window {
 
 容器类：Window(ApplicationWindow)、Container(SwipeView)、FocusScope(StackView,**ToolBar)**、SplitView、Pane(Frame(GroupBox)、Page、**ToolBar**、ScrollView)、
 
+委托类控件：ItemDelegate、CheckDelegate、RadioDelegate、SwipeDelegate、SwitchDelegate、TreeViewDelegate，一般都是和ListView结合使用的
+
+指示器类控件：BusyIndicator、PageIndicator、ScrollBar、ProgressBar和ScrollIndicator等
+
+输入类控件：ComboBox、Dial、RangeSlider、Slider、TextArea、TextField、Tumbler、SpinBox
+
+弹出类控件：菜单栏MenuBar，菜单Menu(继承自Popup)，菜单项MenuItem，MenuBarItem是MenuBar默认委托类型，侧面板控件Drawer、ToolTip等
+
 ```mermaid
 graph LR
 Window --> ApplicationWindow
@@ -1736,13 +1744,197 @@ Window {
   }
 ```
 
+#### PageIndicator 
 
+PageIndicator用于指示包含多个页面的容器中的当前活动页面。PageIndicator由呈现页面的委托项组成。
+
+```c++
+    PageIndicator { // 就是下方的小圆点...指示哪页
+        currentIndex: view.currentIndex
+        count: view.count
+        anchors.bottom: view.bottom; anchors.bottomMargin: 30
+        anchors.horizontalCenter: view.horizontalCenter
+    }
+```
+
+### ScrollView
+
+ScrollView既可以用来替换Flickable，也可以用来装饰现有的Flickable。根据平台的不同，它将添加滚动条和内容框架。只有一个Item可以是ScrollView的直接子项，并且该子项被隐式锚定以填充滚动视图
+
+```c++
+  ScrollView {
+      Image { source: "largeImage.png" }
+  }
+```
+
+在前面的示例中，Image项目将隐式地获得滚动行为，就好像它在Flickable中使用一样。子项的宽度和高度将用于定义内容区域的大小。在这种情况下，ScrollView的内容大小将简单地反映其包含的flickableItem的内容大小。
+可以通过指定ScrollViewStyle为ScrollView创建自定义外观。
+
+```c++
+ScrollView {
+      ListView {
+          ...
+      }
+  }
+```
+
+可以通过Flickable被嵌套在ScrollView内，也可以让Flickable直接添加ScrollBar都可以获取滚动条。
+
+### Container
+
+允许动态插入和移除项的容器类控件的基本类型。通常，项被静态地声明为Container的子项，但也可以动态地添加、插入、移动和移除项。可以使用itemAt（）或contentChildren访问容器中的项。
+大多数容器都有“当前”项目的概念。当前项是通过currentIndex属性指定的，并且可以使用只读的currentItem属性进行访问。下面的示例演示了向TabBar动态插入项，这是Container的具体实现之一。
+
+```c++
+
+  Row {
+      TabBar {
+          id: tabBar
+
+          currentIndex: 0
+          width: parent.width - addButton.width
+
+          TabButton { text: "TabButton" }
+      }
+
+      Component {
+          id: tabButton // 可以调用.createObject(tabBar)
+          TabButton { text: "TabButton" }
+      }
+
+      Button {
+          id: addButton
+          text: "+"
+          flat: true
+          onClicked: {
+              tabBar.addItem(tabButton.createObject(tabBar)) // 点击+动态添加对象
+              console.log("added:", tabBar.itemAt(tabBar.count - 1))
+          }
+      }
+  }
+```
+
+当同时使用多个容器（如TabBar和SwipeView）时，它们的currentIndex属性可以相互绑定以保持同步。当用户与任一容器交互时，其当前索引更改会自动传播到另一个容器。
+但是，请注意，在JavaScript中分配currentIndex值会删除相应的绑定。为了保留绑定，请使用以下方法更改当前索引：
+
+```c++
+incrementCurrentIndex()
+decrementCurrentIndex()
+setCurrentIndex()
+```
+
+```c++
+ TabBar {
+      id: tabBar
+      currentIndex: swipeView.currentIndex // 和SwipeView相互绑定
+  }
+
+  SwipeView {
+      id: swipeView
+      currentIndex: tabBar.currentIndex
+  }
+
+  Button {
+      text: qsTr("Home")
+      onClicked: swipeView.setCurrentIndex(0)
+      enabled: swipeView.currentIndex != 0
+  }
+
+  Button {
+      text: qsTr("Previous")
+      onClicked: swipeView.decrementCurrentIndex()
+      enabled: swipeView.currentIndex > 0
+  }
+
+  Button {
+      text: qsTr("Next")
+      onClicked: swipeView.incrementCurrentIndex()
+      enabled: swipeView.currentIndex < swipeView.count - 1
+  }
+```
 
 ### SplitView
 
+SplitView是一个控件，用于水平或垂直排列项目，每个项目之间有一个可拖动的拆分器。
+SplitView**中始终有一个（并且只有一个）项目的Layout.fillWidth设置为true**（或者Layout.fillHeight，如果方向为Qt.Vertical）。这意味着当其他项目已布局时，该项目将获得所有剩余空间。默认情况下，SplitView的最后一个可见子项将具有此设置，但可以通过在另一个项上将fillWidth显式设置为true来更改此设置。
+由于fillWidth项目将自动调整大小以适应额外的空间，因此将忽略对其宽度和高度属性的显式指定（但仍将遵循Layout.miminimumWidth和Layout.maxiumWidth）。其他项目的初始尺寸应通过其宽度和高度属性进行设置。一旦用户拖动项目的拆分器句柄，对该项目的宽度或高度的任何绑定分配都将被打断。
+句柄可以属于左侧或上侧的项，也可以属于右侧或下侧的项：如果fillWidth项在右侧：句柄属于左侧项。
+如果fillWidth项在左侧：句柄属于右侧项。
+这将再次控制当用户拖动控制柄时哪个项目会被调整大小，以及当项目被告知隐藏时哪个控制柄会被隐藏。
+SplitView支持在子项上设置附加的布局属性，这意味着您可以为每个子项设置以下附加属性：
 
+```
+Layout.minimumWidth
+Layout.minimumHeight
+Layout.maximumWidth
+Layout.maximumHeight
+Layout.fillWidth (true for only one child)
+Layout.fillHeight (true for only one child)
+```
 
+要创建一个包含三个项目的SplitView，并让中心项目获得多余的空间，可以执行以下操作：
 
+```c++
+
+  SplitView {
+      anchors.fill: parent
+      orientation: Qt.Horizontal
+
+      Rectangle {
+          width: 200
+          Layout.maximumWidth: 400
+          color: "lightblue"
+          Text {
+              text: "View 1"
+              anchors.centerIn: parent
+          }
+      }
+      Rectangle {
+          id: centerItem
+          Layout.minimumWidth: 50
+          Layout.fillWidth: true
+          color: "lightgray"
+          Text {
+              text: "View 2"
+              anchors.centerIn: parent
+          }
+      }
+      Rectangle {
+          width: 200
+          color: "lightgreen"
+          Text {
+              text: "View 3"
+              anchors.centerIn: parent
+          }
+      }
+  }
+```
+
+### StackView
+
+StackView实现了一个基于堆栈的导航模型，该模型可以与一组互连的信息页面一起使用。当用户更深地导航到材料中时，项目被推到堆栈上，当他选择返回时，项目再次弹出。
+触摸图库示例是理解StackView如何工作的一个很好的起点。示例中的以下片段显示了如何使用它
+
+```c++
+  StackView {
+      id: stack
+      initialItem: view
+
+      Component {
+          id: view
+
+          MouseArea {
+              Text {
+                  text: stack.depth
+                  anchors.centerIn: parent
+              }
+              onClicked: stack.push(view)
+          }
+      }
+  }
+```
+
+在应用程序中使**用StackView通常只需将StackView添加为窗口的子级即可**。堆栈通常固定在窗口的边缘，但顶部或底部可能固定在状态栏或其他类似的UI组件上。然后可以通过调用其导航方法来使用堆栈。StackView中显示的第一个项目是分配给initialItem的项目。
 
 
 
