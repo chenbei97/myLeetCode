@@ -1,7 +1,7 @@
 import QtQuick 2.12
 
 Grid {
-    width: 100; height: 100
+    width: 300; height: 300
     columns: 2
 
     Rectangle {
@@ -39,5 +39,11 @@ Grid {
 
         KeyNavigation.left: bottomLeft //允许的键盘事件，焦点来的时候显示红色
         KeyNavigation.up: topRight
+
+        Text {
+            text: activeFocus? "focus":"no focus"
+        }
     }
+
+
 }

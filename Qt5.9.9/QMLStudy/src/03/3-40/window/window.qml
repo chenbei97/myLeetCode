@@ -24,12 +24,5 @@ Rectangle {
             Component.onCompleted: console.log("3")
         }
     }
-
-    MouseArea {
-        anchors.fill: parent
-//        onClicked:  {console.log("focus: ",w1.activeFocus,w2.activeFocus,w3.activeFocus)
-
-//        }
-    }
 }
 

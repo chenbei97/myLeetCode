@@ -5,8 +5,7 @@ Item {
         focus: true
         Keys.onPressed: (event)=> {
             console.log("Loaded item captured:", event.text);
-                            event.accepted = true;
-           // event.accepted = false; // 这是被加载的项目设为true防止传播给Loader
+                            event.accepted = true; //  //KeyReader会接收键盘事件，但不会传播到矩形
         }
     }
 }

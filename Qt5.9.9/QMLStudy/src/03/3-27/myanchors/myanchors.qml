@@ -2,7 +2,7 @@ import QtQuick 2.12
 
 Rectangle {
     id: window
-    width: 160; height: 200
+    width: 300; height: 300
     color: "lightgrey"
 
     Rectangle { id: myRect; width: 100; height: 100; color: "black" }
@@ -10,14 +10,15 @@ Rectangle {
     states: State {
         name: "reanchored"
 
-        AnchorChanges { // 状态的锚改变
+        AnchorChanges { //运行时修改项目的锚.必须在State内使用
             target: myRect
-            anchors.top: window.top // 让小矩形依然锚定大矩形顶部
-            anchors.bottom: window.bottom // 底部锚定大矩形底部
+            anchors.top: window.top // 让myRect顶部和window顶部保持对齐
+            anchors.bottom: window.bottom // 以及底部也要对齐
+            anchors.horizontalCenter: window.horizontalCenter // 让myRect到中央位置
         }
-        PropertyChanges {
+        PropertyChanges { // AnchorChanges不能修改项目边距，这里可以定义
             target: myRect
-            anchors.topMargin: 10 // 边缘部分可以留出10距离
+            anchors.topMargin: 10 // 锚定时myRect和window之间的锚线留出距离10
             anchors.bottomMargin: 10
         }
     }

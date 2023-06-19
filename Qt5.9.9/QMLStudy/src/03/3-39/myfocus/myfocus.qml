@@ -1,7 +1,7 @@
 import QtQuick 2.12
 
 Rectangle {
-    color: "lightsteelblue"; width: 240; height: 25
+    color: "lightsteelblue"; width: 400; height: 250
     Text { id: myText }
     Item {
         id: keyHandler

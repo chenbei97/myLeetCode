@@ -5,7 +5,7 @@ Rectangle {
 
     Loader {
         id: loader
-        focus: true // 是个焦点作用域必须设置焦点
+        focus: true // 是一个焦点作用域，如果希望子项目都可以获得焦点，这里必须设置true
     }
 
     MouseArea {
@@ -14,6 +14,6 @@ Rectangle {
     }
 
     Keys.onPressed: (event)=> {
-        console.log("Captured:", event.text); //不会传播到矩形
+        console.log("Captured:", event.text); //KeyReader会接收键盘事件，但不会传播到矩形
     }
 }

@@ -1,8 +1,8 @@
 import QtQuick 2.12
 
-FocusScope {
-    id: scope
-    property alias color: rectangle.color
+FocusScope { // 如果只使用Rectangle焦点无法传递
+    id: scope // 使用FocusScope绑定下方Rectangle的可视属性,因为FocusScope不是可视类型
+    property alias color: rectangle.color // 这样外部来使用MyWidget时才能使用Column正确显示
     x: rectangle.x; y: rectangle.y
     width: rectangle.width; height: rectangle.height
 
