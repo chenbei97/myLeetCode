@@ -1,10 +1,10 @@
-import QtQuick
+import QtQuick 2.9
 
 Flickable {
     width: 150; height: 150
     contentWidth: 300; contentHeight: 300
 
-    rebound: Transition {
+    rebound: Transition { // 当捕捉回可弹内容的边界时应用于内容视图的转换
         NumberAnimation {
             properties: "x,y"
             duration: 1000
@@ -17,7 +17,7 @@ Flickable {
         color: "steelblue"
     }
 
-    flickableDirection: Flickable.HorizontalFlick
+    flickableDirection: Flickable.HorizontalFlick // 水平反转
 }
 
 

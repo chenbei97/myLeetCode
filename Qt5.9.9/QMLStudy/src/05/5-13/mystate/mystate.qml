@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 2.9
 
 Item {
     width: 150; height: 100

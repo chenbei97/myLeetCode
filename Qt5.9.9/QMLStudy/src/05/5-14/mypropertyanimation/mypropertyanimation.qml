@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 2.9
 
 Image {
     id: fengche
@@ -6,7 +6,7 @@ Image {
     source: "fengche.png"
     opacity: 0.1
 
-    MouseArea {
+    MouseArea { // 点击就开始
         anchors.fill: parent
         onClicked: {
             animateRotation.start()
@@ -14,13 +14,13 @@ Image {
         }
     }
 
-    PropertyAnimation {
+    PropertyAnimation { // 控制图片的透明度,属于属性
         id: animateOpacity
         target: fengche; properties: "opacity"
         to: 1.0; duration: 2000
     }
 
-    NumberAnimation {
+    NumberAnimation {// 控制图片旋转的角度 一直循环
         id: animateRotation
         target: fengche; properties: "rotation"
         from: 0; to: 360; duration: 3000

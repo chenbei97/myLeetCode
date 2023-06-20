@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 2.9
 
 Item {
     width: 800; height: 800
@@ -10,7 +10,7 @@ Item {
         onClicked: {
             ball.color = Qt.rgba(Math.random(256),
                                  Math.random(256), Math.random(256), 1)
-            ball.x += 100
+            ball.x += 50
             ball.y += 50
         }
     }

@@ -1,4 +1,5 @@
-import QtQuick
+import QtQuick 2.9
+import QtQuick.Window 2.3
 
 Window {
     visible: true
@@ -17,7 +18,7 @@ Window {
             ScaleAnimator {
                 target: mixBox
                 from: 2; to: 1
-                duration: 1000
+                duration: 5000
             }
             running: true
         }

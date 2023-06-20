@@ -1024,6 +1024,80 @@ Flickable不会自动剪辑其内容。如果它不作为全屏项目使用，�
 
 注意：由于实现细节的原因，放置在Flickable中的项不能锚定到Flickable。相反，使用parent，它指的是Flickable的contentItem。内容项的大小由contentWidth和contentHeight决定。
 
+滚动条的实现。
+
+```c++
+Rectangle {
+    width: 800; height: 800
+
+    Flickable {
+        id: flickable
+        width: 800; height: 800
+        contentWidth: image.width; contentHeight: image.height
+        clip: true
+
+        Image { id: image; source: "bigImage.jpg" }
+
+
+//        ScrollIndicator.vertical: ScrollIndicator { } // 两种方法都可以加滚动条
+//        ScrollIndicator.horizontal: ScrollIndicator { }
+
+        ScrollBar.vertical: ScrollBar { }
+        //ScrollBar.horizontal: ScrollBar { }
+    }
+
+    Rectangle { // 使用矩形实现滑动条效果，visibleArea描述了当前可视区域的位置和大小
+        id: scrollbar
+        anchors.right: flickable.right
+        y: flickable.visibleArea.yPosition * flickable.height
+        width: 10
+        height: flickable.visibleArea.heightRatio * flickable.height
+        color: "black"
+    }
+
+}
+```
+
+### Flipable
+
+翻转效果，结合Rotation、State和Transition使用，有个属性flipped是bool值，点击切换时会更改。
+
+```c++
+Flipable {
+    id: flipable
+    width: 240
+    height: 240
+
+    property bool flipped: false
+// 2种状态
+    front: Image { source: "front.png"; anchors.centerIn: parent }
+    back: Image { source: "back.png"; anchors.centerIn: parent }
+
+    transform: Rotation {
+        id: rotation
+        origin.x: flipable.width/2 // 中心反转 y轴
+        origin.y: flipable.height/2
+        axis.x: 0; axis.y: 1; axis.z: 0
+        angle: 0
+    }
+
+    states: State {
+        name: "back"
+        PropertyChanges { target: rotation; angle: 180 }
+        when: flipable.flipped // 状态back,当属性反转时动作
+    }
+
+    transitions: Transition { // 反转有个过度效果
+        NumberAnimation { target: rotation; property: "angle"; duration: 4000 }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: flipable.flipped = !flipable.flipped // 点击时反转
+    }
+}
+```
+
 ### ListView
 
 ListView显示从内置QML类型（如ListModel和XmlListModel）创建的模型中的数据，或在C++中定义的从**QAbstractItemModel或QAbstract ListModel**继承的自定义模型类中的数据。
@@ -1419,6 +1493,33 @@ TableView显示根据内置QML类型（如ListModel和XmlListModel）创建的�
 ListModel是ListElement定义的一个简单容器，每个定义都包含数据角色。内容可以动态定义，也可以在QML中显式定义。
 模型中元素的数量可以从其count属性中获得。还提供了许多熟悉的方法来操作模型的内容，包括append（）、insert（）、move（）、remove（）和set（）。这些方法接受字典作为它们的论据；这些被模型转换为ListElement对象。
 元素可以使用setProperty（）方法通过模型进行操作，该方法允许设置和更改指定元素的角色。
+
+### ListElement
+
+列表元素在ListModel定义中定义，表示将使用ListView或Repeater项显示的列表中的项。
+列表元素的定义与其他QML元素类似，只是它们包含角色定义的集合而不是属性。角色使用与属性定义相同的语法，既定义如何访问数据，又包括数据本身。
+用于**角色的名称必须以小写字母开头**，并且对于给定模型中的所有元素都是通用的。值必须是简单的常量；字符串（带引号，可选地在对QT_TR_NOOP的调用中）、布尔值（true、false）、数字或枚举值（如AlignText.AligneHCenter）。
+
+```c++
+  ListModel {
+      id: fruitModel
+
+      ListElement {
+          name: "Apple"
+          cost: 2.45
+      }
+      ListElement {
+          name: "Orange"
+          cost: 3.25
+      }
+      ListElement {
+          name: "Banana"
+          cost: 1.95
+      }
+  }
+```
+
+
 
 ### XmlListModel
 
@@ -1941,6 +2042,338 @@ StackView实现了一个基于堆栈的导航模型，该模型可以与一组�
 ```
 
 在应用程序中使**用StackView通常只需将StackView添加为窗口的子级即可**。堆栈通常固定在窗口的边缘，但顶部或底部可能固定在状态栏或其他类似的UI组件上。然后可以通过调用其导航方法来使用堆栈。StackView中显示的第一个项目是分配给initialItem的项目。
+
+## 动画
+
+框架：
+
+Animation：AnchorAnimation、ParallelAnimation、PathAnimation、**PropertyAnimation**、ParentAnimation、**PauseAnimation**、ScriptAnimation、**SequentialAnimation**、PropertyAction、**Animator**
+
+PropertyAnimation：ColorAnimation、RotationAnimation、**NumberAnimation**、Vector3dAnimation
+
+NumberAnimation：SmootherAnimation、SpringAnimation
+
+Animator：OpacityAnimator、RotationAnimator、ScaleAnimator、UniformAnimator、XAnimator、YAnimator
+
+Item：Image(AnimatedImage)、BorderImage、AnimatedSprite、SpriteSequence、Flickable、Flipable
+
+```mermaid
+graph LR
+Animation --> AnchorAnimation
+Animation --> AnchorAnimation
+Animation --> ParallelAnimation
+Animation --> PathAnimation
+Animation --> ParentAnimation
+Animation --> PauseAnimation
+Animation --> ScriptAnimation
+Animation --> SequentialAnimation
+Animation --> PropertyAction
+Animation --> PropertyAnimation
+Animation --> Animator
+
+PropertyAnimation --> ColorAnimation
+PropertyAnimation --> RotationAnimation
+PropertyAnimation --> NumberAnimation
+PropertyAnimation --> Vector3dAnimation
+
+NumberAnimation --> SmootherAnimation
+NumberAnimation --> SpringAnimation
+
+Animator --> OpacityAnimator
+Animator --> RotationAnimator
+Animator --> ScaleAnimator
+Animator --> UniformAnimator
+Animator --> XAnimator
+Animator --> YAnimator
+```
+
+### BorderImage
+
+BorderImage类型用于通过缩放或平铺每个图像的部分来创建图像的边框。
+BorderImage将使用source属性指定的源图像分割为9个区域，如下所示：
+
+![](borderimage_qml.jpg)
+
+缩放图像时，源图像的区域会按以下方式缩放或平铺以创建显示的边界图像：角点（区域1、3、7和9）根本不会缩放。
+区域2和8根据水平平铺模式进行缩放。
+区域4和6根据垂直TileMode进行缩放。
+中间（区域5）根据水平TileMode和垂直TileMode进行缩放。
+图像的区域是使用边界特性组定义的，该特性组描述了要用作边界的源图像的每个边缘之间的距离。
+
+```c++
+BorderImage {
+    width: 180; height: 180
+    border { left: 30; top: 30; right: 30; bottom: 30 }
+    horizontalTileMode: BorderImage.Repeat
+    verticalTileMode: BorderImage.Repeat
+    source: "colors.png"
+}
+```
+
+### AnimatedImage
+
+动图。当前帧和总长度信息可以通过currentFrame和frameCount来获取。playing和paused开始暂停和停止动画
+
+```c++
+Rectangle {
+    property int frames
+    width: animation.width; height: animation.height + 8
+
+    AnimatedImage { id: animation; source: "animation.gif"}
+
+    Component.onCompleted: {
+        frames = animation.frameCount
+    }
+
+    Rectangle {
+        width: 4; height: 8
+        x: (animation.width - width) * animation.currentFrame / frames
+        y: animation.height // 实现小矩形移动的效果,随着帧的移动最终x移动到animation.width - width位置
+        color: "red" // 这个位置就是动图的宽度减去自身小矩形的宽度
+        onXChanged: console.log(x);
+    }
+}
+```
+
+### Transform
+
+可以设置旋转Rotation、平移Translate和缩放Scale，需要指定原点，及origin.x和origin..y，对于3D还需要指定旋转轴axis，角度使用angle，默认顺时针。
+
+```c++
+Row {
+    width: 300
+    height: 300
+    x: 10; y: 10
+    spacing: 10
+
+    Image { source: "qtlogo.png" }
+
+    Image {
+        source: "qtlogo.png"
+        transform: Rotation { origin.x: 30; origin.y: 30;
+            axis { x: 0; y: 1; z: 0 } angle: 150 }
+            Scale{origin.x:25; origin.y:25; xScale: 4}
+            Translate{x:500;y : 50}
+    }
+}
+```
+
+### State
+
+所有基于Item的对象都有state属性，默认空字符串，不是Item派生的对象可以使用StateGroup切换状态，状态切换时可以使用过渡Transitions实现动画效果。
+
+使用PropertyChanges对属性值修改；
+
+使用StateChangeScript运行脚本；
+
+使用ParentChange重定义一个项目的父项目；
+
+使用AnchorChanges修改锚的值；
+
+使用when属性，表达式为真时做某件事，例如当**状态满足条件或者直接使用mouseArea.pressed**就可以。
+
+```c++
+Item {
+    width: 150; height: 100
+
+    Rectangle {
+        id: signal; anchors.fill: parent; color: "lightgrey"
+        state: "WARNING"
+
+        Image {id: img; anchors.centerIn: parent;
+                source: "warning.png"}
+
+        states: [
+            State {
+                name: "WARNING"
+                PropertyChanges { target: signal; color: "lightgrey"}
+                PropertyChanges { target: img; source: "warning.png"}
+            },
+            State {
+                name: "CRITICAL"
+                PropertyChanges { target: signal; color: "red"}
+                PropertyChanges { target: img; source: "critical.png"}
+            }
+        ]
+    }
+
+    Image {
+        id: signalswitch
+        width: 22; height: 22
+        source: "switch.png"
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (signal.state === "WARNING")
+                    signal.state = "CRITICAL"
+                else
+                    signal.state = "WARNING"
+            }
+        }
+    }
+}
+```
+
+### PropertyAnimation
+
+属性动画是最常用的，包含4个子类，ColorAnimation、RotationAnimation、NumberAnimation、Vector3dAnimation，前3个比较常用。可以在2个属性值之间插值，利用easing curve进行不同的插值，并提供时间控制提供平滑的效果。
+
+```c++
+import QtQuick 2.9
+
+Image {
+    id: fengche
+    width: 300; height: 300
+    source: "fengche.png"
+    opacity: 0.1
+
+    MouseArea { // 点击就开始
+        anchors.fill: parent
+        onClicked: {
+            animateRotation.start()
+            animateOpacity.start()
+        }
+    }
+
+    PropertyAnimation { // 控制图片的透明度,属于属性
+        id: animateOpacity
+        target: fengche; properties: "opacity"
+        to: 1.0; duration: 2000
+    }
+
+    NumberAnimation {// 控制图片旋转的角度 一直循环
+        id: animateRotation
+        target: fengche; properties: "rotation" 
+        from: 0; to: 360; duration: 3000
+        loops: Animation.Infinite
+        easing {type: Easing.OutBack}
+    }
+}
+
+```
+
+还可使用预定义语法，也就是PropertyAnimation on x {to:100}，省去对target和properties的设置，target默认就是父类。
+
+```c++
+Item {
+    width: 300; height: 300
+
+    Rectangle {
+        id: rect
+        width: 100; height: 100
+        color: "red"
+
+        PropertyAnimation on x { to: 100 ;duration:5000 }
+        PropertyAnimation on y { to: 100 ;duration:5000}
+    }
+}
+```
+
+### SequentialAnimation
+
+组合的顺序动画。
+
+```c++
+Rectangle {
+    width: 100; height: 100
+    color: "red"
+
+    SequentialAnimation on color {
+        ColorAnimation { to: "yellow"; duration: 1000 }
+        ColorAnimation { to: "blue"; duration: 1000 }
+    }
+}
+```
+
+### ParallelAnimation
+
+组合的并行动画。
+
+### Behavior
+
+为组件设置默认的属性动画，使用enabled属性是否启用。
+
+Behavior定义了在特定特性值更改时要应用的默认动画。
+例如，以下Behavior定义了每当矩形的宽度值更改时要运行的NumberAnimation。单击鼠标区域时，宽度会发生更改，从而触发行为的动画：
+
+```c++
+ Rectangle {
+      id: rect
+      width: 100; height: 100
+      color: "red"
+
+      Behavior on width {
+          NumberAnimation { duration: 1000 }
+      }
+
+      MouseArea {
+          anchors.fill: parent
+          onClicked: rect.width = 50
+      }
+  }
+```
+
+### Animator
+
+Animator类型是一种特殊类型的动画，它直接在Qt Quick的场景图上操作，而不是像常规动画类型那样在QML对象及其属性上操作。这有一个好处，即即使UI线程被阻止，基于Animator的动画也可以在场景图的渲染线程上设置动画。
+QML属性的值将在动画完成后更新。动画运行时不会更新该属性。
+“动画师”类型可以像使用任何其他“动画”类型一样使用。
+
+```c++
+
+  Rectangle {
+      id: mixBox
+      width: 50
+      height: 50
+      ParallelAnimation {
+          ColorAnimation {
+              target: mixBox
+              property: "color"
+              from: "forestgreen"
+              to: "lightsteelblue";
+              duration: 1000
+          }
+          ScaleAnimator {
+              target: mixBox
+              from: 2
+              to: 1
+              duration: 1000
+          }
+          running: true
+      }
+  }
+```
+
+如果ParallelAnimation和SequentialAnimation的所有子动画都是Animator类型，则Parallel动画和SequedentialAnimation也将被视为Animator，并在可能的情况下在场景图的渲染线程上运行。
+“Animator”类型可以用于过渡期间的动画，但它们不支持可逆特性。
+“动画制作者”类型不能直接在QML文件中使用。它的存在是为了提供一组通用属性和方法，可用于继承自它的所有其他动画师类型。试图直接使用“动画师”类型将导致错误。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

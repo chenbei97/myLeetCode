@@ -1,5 +1,4 @@
-import QtQuick
-
+import QtQuick 2.9
 Item {
     width: 100; height: 100
 
@@ -21,7 +20,7 @@ Item {
             },
             State {
                 name: "RELEASED"
-                PropertyChanges { target: button; color: "lightsteelblue"}
+                PropertyChanges { target: button; color: "green"}
             }
         ]
 
@@ -29,12 +28,12 @@ Item {
             Transition {
                 from: "PRESSED"
                 to: "RELEASED"
-                ColorAnimation { target: button; duration: 100}
+                ColorAnimation { target: button; duration: 1000}
             },
             Transition {
                 from: "RELEASED"
                 to: "PRESSED"
-                ColorAnimation { target: button; duration: 100}
+                ColorAnimation { target: button; duration: 1000}
             }
         ]
     }
