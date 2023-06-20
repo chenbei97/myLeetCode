@@ -12,12 +12,6 @@
 
 #include "dataobject.h"
 
-/*
-   This example illustrates exposing a QList<QObject*> as a
-   model in QML
-*/
-
-//![0]
 int main(int argc, char ** argv)
 {
     QGuiApplication app(argc, argv);
@@ -38,13 +32,13 @@ int main(int argc, char ** argv)
                                     "XML Patterns", "Charts", "Network Authorization",
                                     "Virtual Keyboard", "Quick 3D", "Quick WebGL"};
 
-    QList<QObject *> dataList;
+    QList<QObject *> dataList; // 创建这么多对象，颜色随机的，名称是moduleList
     for (const QString &module : moduleList)
         dataList.append(new DataObject("Qt " + module, colorList.at(rand() % colorList.length())));
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }});
+    view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }}); // 设置初始性质，模型名称"model"
 //![0]
 
     view.setSource(QUrl("qrc:/objectlistmodel/view.qml"));

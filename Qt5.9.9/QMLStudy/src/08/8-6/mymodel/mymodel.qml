@@ -1,4 +1,7 @@
-import QtQuick
+import QtQuick 2.9
+import QtQuick.Controls 2.5
+import QtQuick.Layouts 1.3
+import QtQml.Models 2.1
 
 Rectangle {
     width: 200; height: 100

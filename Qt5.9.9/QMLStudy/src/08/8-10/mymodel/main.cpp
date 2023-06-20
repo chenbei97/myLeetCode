@@ -14,10 +14,10 @@ int main(int argc, char *argv[])
     dataList.append("Item 3");
     dataList.append("Item 4");
     QQmlContext *context = engine.rootContext();
-    context->setContextProperty("stringListModel",
-                                QVariant::fromValue(dataList));
+    context->setContextProperty("stringListModel", // 基于QStringList的数据模型
+                                QVariant::fromValue(dataList)); // qml使用时名称是stringListModel
 
-    const QUrl url(u"qrc:/mymodel/main.qml"_qs);
+    const QUrl url("qrc:/mymodel/main.qml");
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
         if (!obj && url == objUrl)

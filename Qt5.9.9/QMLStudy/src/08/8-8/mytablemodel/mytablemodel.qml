@@ -1,5 +1,5 @@
 import QtQuick
-import Qt.labs.qmlmodels
+import Qt.labs.qmlmodels 1
 
 Window {
     width: 400; height: 400

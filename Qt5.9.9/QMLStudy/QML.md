@@ -1583,7 +1583,154 @@ Rectangle {
 }
 ```
 
+### ObjectModel
 
+ObjectModel包含要在视图中使用的视觉项。在视图中**使用ObjectModel时，视图不需要委托**，因为ObjectModel已包含可视委托（项）。项可以通过附加索引的属性来确定其在模型中的索引。
+下面的示例将三个彩色矩形放置在ListView中。
+
+```c++
+  import QtQuick 2.0
+  import QtQml.Models 2.1
+
+  Rectangle {
+      ObjectModel {
+          id: itemModel
+          Rectangle { height: 30; width: 80; color: "red" }
+          Rectangle { height: 30; width: 80; color: "green" }
+          Rectangle { height: 30; width: 80; color: "blue" }
+      }
+
+      ListView {
+          anchors.fill: parent
+          model: itemModel // 无需委托
+      }
+  }
+```
+
+### DelegateModel
+
+DelegateModel类型封装了一个模型和将为模型中的项实例化的委托。
+通常不需要创建DelegateModel。但是，当使用QAbstractItemModel子类作为模型时，它可以用于操作和访问modelIndex。此外，DelegateModel与Package一起用于向多个视图提供委托，并与DelegateModelGroup一起用于对委托项进行排序和筛选。
+下面的示例演示了将DelegateModel与ListView一起使用。
+
+```c++
+
+  import QtQuick 2.0
+  import QtQml.Models 2.2
+
+  Rectangle {
+      width: 200; height: 100
+
+      DelegateModel {
+          id: visualModel
+          model: ListModel {
+              ListElement { name: "Apple" }
+              ListElement { name: "Orange" }
+          }
+          delegate: Rectangle {
+              height: 25
+              width: 100
+              Text { text: "Name: " + name}
+          }
+      }
+
+      ListView {
+          anchors.fill: parent
+          model: visualModel
+      }
+  }
+```
+
+### 使用C++拓展模型
+
+#### QStringList
+
+```c++
+import QtQuick 2.9
+import QtQuick.Window 2.3
+
+Window {
+    width: 640; height: 480
+    visible: true
+
+    ListView {
+        anchors.fill: parent
+        model: stringListModel
+        delegate: Rectangle {
+            height: 25; width: 100
+            Text { text: modelData ;color: "red"}
+        }
+    }
+}
+
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
+
+    QQmlApplicationEngine engine;
+
+    QStringList dataList;
+    dataList.append("Item 1");
+    dataList.append("Item 2");
+    dataList.append("Item 3");
+    dataList.append("Item 4");
+    QQmlContext *context = engine.rootContext();
+    context->setContextProperty("stringListModel", // 基于QStringList的数据模型
+                                QVariant::fromValue(dataList)); // qml使用时名称是stringListModel
+
+    const QUrl url("qrc:/mymodel/main.qml");
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+                     &app, [url](QObject *obj, const QUrl &objUrl) {
+        if (!obj && url == objUrl)
+            QCoreApplication::exit(-1);
+    }, Qt::QueuedConnection);
+    engine.load(url);
+
+    return app.exec();
+}
+```
+
+#### QVariantList
+
+和QStringList用法类似
+
+#### QObjectList
+
+例如可以定义一个继承QObject的类如下，有2个string数据name和color。
+
+```c++
+class DataObject : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QString color READ color WRITE setColor NOTIFY colorChanged)
+
+public:
+    DataObject(QObject *parent=0);
+    DataObject(const QString &name, const QString &color, QObject *parent=0);
+
+    QString name() const;
+    void setName(const QString &name);
+
+    QString color() const;
+    void setColor(const QString &color);
+
+signals:
+    void nameChanged();
+    void colorChanged();
+
+private:
+    QString m_name;
+    QString m_color;
+};
+```
+
+之后的代码可见src/8-11，（目前运行不了，2023/6/20）
 
 ## 控件类
 

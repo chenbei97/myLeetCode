@@ -1,9 +1,10 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import QtQuick 2.9
+import QtQuick.Controls 2.5
+import QtQuick.Layouts 1.3
+import QtQml.Models 2.1
 
 Rectangle {
-    width: 220; height: 340
+    width: 420; height: 600
 
     ObjectModel {
         id: itemModel
@@ -17,7 +18,7 @@ Rectangle {
         Switch { checked: true }
 
         Rectangle {
-            height: 30; width: 60; border.width: 3; color: "yellow"
+            height: 30; width: 100; border.width: 3; color: "yellow"
             Text { text: qsTr("文本项目"); anchors.centerIn: parent }
         }
 
