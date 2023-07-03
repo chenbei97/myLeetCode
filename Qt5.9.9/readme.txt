@@ -146,6 +146,10 @@
 
 49. StorageInfo 关于U盘升级使用的类, https://blog.csdn.net/weixin_41882459/article/details/111368662
 
+50. TableShowPictures 使用2种方式表格居中显示图片
+
+51. DataBase 关于数据库的示例
+
 【至今遇见的有价值的问题、技巧等（序号从大到小倒序）：】
 26. QPlainTextEdit/QTextEdit的单行文字颜色改变
     1) 方法1: 使用QTextCharFormat和QTextCursor实现
