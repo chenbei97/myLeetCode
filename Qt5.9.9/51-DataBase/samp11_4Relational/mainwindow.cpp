@@ -1,6 +1,6 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#pragma execution_character_set("utf-8")
 #include    <QFileDialog>
 #include    <QMessageBox>
 
@@ -19,6 +19,8 @@ void MainWindow::openTable()
     tabModel->setHeaderData(4,Qt::Horizontal,"专业");
 
     //设置代码字段的查询关系数据表
+    // stuInfo的第3列是departID,第4列是majorID
+    // 设置QSqlRelation时，要指定表名、索引列和展示列
     tabModel->setRelation(3,QSqlRelation("departments","departID","department")); //学院
     tabModel->setRelation(4,QSqlRelation("majors","majorID","major"));//专业
 
@@ -51,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectItems);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setAlternatingRowColors(true);
+
+    resize(1000,800);
 }
 
 MainWindow::~MainWindow()
@@ -96,6 +100,7 @@ void MainWindow::on_actRecAppend_triggered()
     QModelIndex curIndex=tabModel->index(tabModel->rowCount()-1,1);//创建最后一行的ModelIndex
     theSelection->clearSelection();//清空选择项
     theSelection->setCurrentIndex(curIndex,QItemSelectionModel::Select);//设置刚插入的行为当前选择行
+
 }
 
 void MainWindow::on_actRecInsert_triggered()
@@ -105,6 +110,7 @@ void MainWindow::on_actRecInsert_triggered()
 
     theSelection->clearSelection();//清除已有选择
     theSelection->setCurrentIndex(curIndex,QItemSelectionModel::Select);
+
 }
 
 void MainWindow::on_actRevert_triggered()
@@ -124,13 +130,16 @@ void MainWindow::on_actSubmit_triggered()
     {
         ui->actSubmit->setEnabled(false);
         ui->actRevert->setEnabled(false);
+        //tabModel->select();
     }
+
 }
 
 void MainWindow::on_actRecDelete_triggered()
 {//删除当前记录
     tabModel->removeRow(theSelection->currentIndex().row());
     tabModel->submitAll(); //立即更新
+     tabModel->select();
 }
 
 

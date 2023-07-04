@@ -1,9 +1,9 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#pragma execution_character_set("utf-8")
 #include    <QFileDialog>
 #include    <QMessageBox>
-
+#include <QDebug>
 
 void MainWindow::openTable()
 {//打开数据表
@@ -60,18 +60,22 @@ void MainWindow::openTable()
     dataMapper->addMapping(ui->dbComboEdu,9);//"Education";
     dataMapper->addMapping(ui->dbSpinSalary,10);//"Salary";
 
-    dataMapper->toFirst();
+    //dataMapper->toFirst();
+    dataMapper->toLast();
+    theSelection->clearSelection();
+    theSelection->setCurrentIndex(qryModel->index(dataMapper->currentIndex(),1),
+                                  QItemSelectionModel::Rows|QItemSelectionModel::Select); //按行
 
     ui->actOpenDB->setEnabled(false);
 }
 
 
 void MainWindow::refreshTableView()
-{//刷新tableView的当前选择行
+{//刷新tableView的当前选择行让鼠标选中的和数据映射的保持一致
     int index=dataMapper->currentIndex();
-    QModelIndex curIndex=qryModel->index(index,1);//
+    QModelIndex curIndex=qryModel->index(index,0);//
     theSelection->clearSelection();//清空选择项
-    theSelection->setCurrentIndex(curIndex,QItemSelectionModel::Select);//设置刚插入的行为当前选择行
+    theSelection->setCurrentIndex(curIndex,QItemSelectionModel::Rows|QItemSelectionModel::Select);//设置刚插入的行为当前选择行
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -89,6 +93,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setAlternatingRowColors(true);
+
+    resize(1800,800);
 }
 
 MainWindow::~MainWindow()
@@ -107,23 +113,24 @@ void MainWindow::on_currentRowChanged(const QModelIndex &current, const QModelIn
 
     dataMapper->setCurrentModelIndex(current);
 
-    bool first=(current.row()==0); //是否首记录
-    bool last=(current.row()==qryModel->rowCount()-1);//是否尾记录
+    bool first=(current.row()==0); //是否是首记录
+    bool last=(current.row()==qryModel->rowCount()-1);//是否是尾记录
 
     ui->actRecFirst->setEnabled(!first); //更新使能状态
     ui->actRecPrevious->setEnabled(!first);
-    ui->actRecNext->setEnabled(!last);
+    ui->actRecNext->setEnabled(!last); // 是首记录不能再上一条，尾记录同理
     ui->actRecLast->setEnabled(!last);
 
     int curRecNo=theSelection->currentIndex().row();
     QSqlRecord  curRec=qryModel->record(curRecNo); //获取当前记录
-    int empNo=curRec.value("EmpNo").toInt();
+    int empNo=curRec.value("EmpNo").toInt(); // 选择的行号=>主键的列号
+    qDebug()<<"emoNo = "<<empNo;
 
     QSqlQuery query; //查询当前empNo的Memo和Photo字段的数据
-    query.prepare("select EmpNo, Memo, Photo from employee where EmpNo = :ID");
-    query.bindValue(":ID",empNo);
+    query.prepare("select  Memo, Photo from employee where EmpNo = :ID");
+    query.bindValue(":ID",empNo); // 查询列号对应的图片和备忘录信息
     query.exec();
-    query.first();
+    query.first(); // 检索结果中的第一条记录（如果可用），并将查询定位在检索到的记录上
 
     QVariant    va=query.value("Photo");//
     if (!va.isValid())  //图片字段内容为空
@@ -138,6 +145,7 @@ void MainWindow::on_currentRowChanged(const QModelIndex &current, const QModelIn
 
     QVariant    va2=query.value("Memo");//显示备注
     ui->dbEditMemo->setPlainText(va2.toString());
+    qDebug()<<"memo = "<<va2.toString();
 }
 
 void MainWindow::on_actOpenDB_triggered()

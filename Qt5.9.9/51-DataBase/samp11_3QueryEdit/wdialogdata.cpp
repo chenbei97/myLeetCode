@@ -1,6 +1,6 @@
-#include "wdialogdata.h"
+﻿#include "wdialogdata.h"
 #include "ui_wdialogdata.h"
-
+#pragma execution_character_set("utf-8")
 #include    <QFileDialog>
 
 WDialogData::WDialogData(QWidget *parent) :
@@ -8,6 +8,7 @@ WDialogData::WDialogData(QWidget *parent) :
     ui(new Ui::WDialogData)
 {
     ui->setupUi(this);
+    //resize(1400,1000);
 }
 
 WDialogData::~WDialogData()
@@ -18,7 +19,7 @@ WDialogData::~WDialogData()
 void WDialogData::setUpdateRecord(QSqlRecord &recData)
 { //编辑记录，更新记录数据到界面
     mRecord=recData;
-    ui->spinEmpNo->setEnabled(false); //员工编号不允许编辑
+    ui->spinEmpNo->setEnabled(false); //员工编号不允许编辑，因为只是更新
     setWindowTitle("更新记录");
 
 //根据recData的数据更新界面显示
@@ -52,11 +53,11 @@ void WDialogData::setInsertRecord(QSqlRecord &recData)
     mRecord=recData; //保存recData到内部变量
     ui->spinEmpNo->setEnabled(true); //插入的记录，员工编号允许编辑
     setWindowTitle("插入新记录");
-    ui->spinEmpNo->setValue(recData.value("empNo").toInt());
+    ui->spinEmpNo->setValue(recData.value("empNo").toInt()); // 员工编号插入时是非空必须的主键
 }
 
 QSqlRecord WDialogData::getRecordData()
-{ //"确定"按钮后，界面数据保存到记录mRecord
+{ //"确定"按钮后，调用此函数将界面数据保存到记录mRecord
     mRecord.setValue("empNo",ui->spinEmpNo->value());
     mRecord.setValue("Name",ui->editName->text());
     mRecord.setValue("Gender",ui->comboSex->currentText());

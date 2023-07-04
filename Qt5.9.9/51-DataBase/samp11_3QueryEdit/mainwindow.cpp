@@ -1,15 +1,17 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#pragma execution_character_set("utf-8")
 #include    <QFileDialog>
 #include    <QMessageBox>
 #include    "wdialogdata.h"
+#include <QDebug>
 
 void MainWindow::openTable()
 {//打开数据表
     qryModel=new QSqlQueryModel(this);
     theSelection=new QItemSelectionModel(qryModel);
 
+    //qrModel.query()只有1次在opentable(),上次的查询总是可以被拿去使用
     qryModel->setQuery("SELECT empNo, Name, Gender, Height, Birthday, Mobile, Province, City, Department, "
                        " Education, Salary FROM employee order by empNo");
     if (qryModel->lastError().isValid())
@@ -18,7 +20,6 @@ void MainWindow::openTable()
                                  QMessageBox::Ok,QMessageBox::NoButton);
         return;
     }
-
 
     qryModel->setHeaderData(0,Qt::Horizontal,"工号");
     qryModel->setHeaderData(1,Qt::Horizontal,"姓名");
@@ -96,8 +97,10 @@ void MainWindow::updateRecord(int recNo)
         if (!query.exec())
             QMessageBox::critical(this, "错误", "记录更新错误\n"+query.lastError().text(),
                                      QMessageBox::Ok,QMessageBox::NoButton);
-        else
-            qryModel->query().exec();//数据模型重新查询数据，更新tableView显示
+        else{
+            qDebug()<<"update = "<<qryModel->query().lastQuery();
+            qryModel->query().exec();//数据模型重新查询数据，更新tableView显示 qrModel.query()只有1次在opentable()
+        }
     }
     delete dataDialog;
 }
@@ -115,6 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->setAlternatingRowColors(true);
     //    ui->tableView->resizeColumnsToContents();
     //    ui->tableView->horizontalHeader()->setStretchLastSection(true);
+    resize(2000,800);
 }
 
 MainWindow::~MainWindow()
@@ -146,14 +150,13 @@ void MainWindow::on_actOpenDB_triggered()
     openTable();
 }
 
-
 void MainWindow::on_actRecInsert_triggered()
 {//插入记录
     QSqlQuery query;
     query.exec("select * from employee where EmpNo =-1"); //实际不查询出记录，只查询字段信息
 
-    QSqlRecord curRec=query.record();//获取当前记录,实际为空记录
-    curRec.setValue("EmpNo",qryModel->rowCount()+3000);
+    QSqlRecord curRec=query.record();//获取当前记录,实际为空记录（说白了就是创建1个带有字段的记录信息）
+    curRec.setValue("EmpNo",qryModel->rowCount()+3000); // 3006给EmpNo字段加个初始值，在setInsertRecord被调用
 
     WDialogData    *dataDialog=new WDialogData(this);
     Qt::WindowFlags    flags=dataDialog->windowFlags();
@@ -163,7 +166,7 @@ void MainWindow::on_actRecInsert_triggered()
     int ret=dataDialog->exec();// 以模态方式显示对话框
     if (ret==QDialog::Accepted) //OK键被按下
     {
-        QSqlRecord  recData=dataDialog->getRecordData();
+        QSqlRecord  recData=dataDialog->getRecordData(); // 已经拿到界面输入的数据
 
         query.prepare("INSERT INTO employee (EmpNo,Name,Gender,Height,Birthday,Mobile,Province,"
                       " City,Department,Education,Salary,Memo,Photo) "
@@ -191,7 +194,10 @@ void MainWindow::on_actRecInsert_triggered()
                                      QMessageBox::Ok,QMessageBox::NoButton);
         else //插入，删除记录后需要重新设置SQL语句查询
         {
+            /*SELECT empNo, Name, Gender, Height, Birthday, Mobile, Province, City, Department,  Education, Salary FROM employee order by empNo*/
             QString sqlStr=qryModel->query().executedQuery();//  执行过的SELECT语句
+            qDebug()<<"insert1 = "<<qryModel->query().lastQuery();
+            qDebug()<<"insert2 = "<<qryModel->query().executedQuery();
             qryModel->setQuery(sqlStr);         //重新查询数据
         }
     }
@@ -258,8 +264,8 @@ void MainWindow::on_actScan_triggered()
         if (!qryEmpList.next()) //移动到下一条记录，并判断是否到末尾了
             break;
     }
-
-    qryModel->query().exec();//数据模型重新查询数据，更新tableView的显示
+/*"SELECT empNo, Name, Gender, Height, Birthday, Mobile, Province, City, Department,  Education, Salary FROM employee order by empNo"*/
+    qryModel->query().exec();//数据模型重新查询数据，更新tableView的显示 ,qrModel.query()只有1次
     QMessageBox::information(this, "提示", "涨工资计算完毕",
                              QMessageBox::Ok,QMessageBox::NoButton);
 }
