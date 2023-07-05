@@ -1693,6 +1693,224 @@ net stop mysql80
 
 ![sql_start_command.jpg](sql_start_command.jpg)
 
+## 安装MYSQLODBC
+
+参考网址：[QT连接Mysql数据库-详细成功版](https://blog.csdn.net/qwpo135790/article/details/124106176)
+
+下载地址：[MySQL :: Download Connector/ODBC](https://dev.mysql.com/downloads/connector/odbc/)
+
+注意QtCreator是32bit的，所以下载32bit。
+
+安装完毕之后搜索ODBC，点击出现下方界面。
+
+![](odbc_1.jpg)
+
+选择第1个dBASE Files，出现右方对话框，然后选择MySQL ODBC 8.0 ANSI Driver然后添加。
+
+![](odbc-3.jpg)
+
+注意数据库这里自动检索的，就是show databases会出现的数据库，可以事先在datagrip或者命令行创建好，这里创建了cell的数据库;
+
+TCP/IP Server就填127.0.0.1，端口号默认3306，用户名root，密码已经设置过。点击Test可以连接成功。
+
+```mysql
+SHOW DATABASES;
+
+SELECT DATABASE();
+
+use cell;
+SHOW TABLES;
+
+create table emp(
+	id int primary key comment '编号,纯数字',
+    number varchar(10) comment '员工工号,字符串类型长度不超过10位',
+    name varchar(10) comment '员工姓名,字符串类型长度不超过10位',
+    gender char(1) comment '男/女,存储1个汉字',
+    age tinyint unsigned comment '年龄,不能是负数',
+    idcard char(18) comment '身份证号18位',
+    entrydate date comment '入职时间'
+) comment '员工表';
+alter table emp add nickname varchar(20) comment '昵称'; # 增加1列
+alter table emp change nickname username varchar(10) comment '昵称'; # 列改名
+alter table emp rename to employee; # 表改名
+
+insert into employee (id,number,name,gender,age,entrydate)
+values (1,'202301','A','w',18,date('2023-01-01'));
+```
+
+![](odbc-2.jpg)
+
+创建好表之后，Qt测试程序如下，注意db.setDatabaseName的名称不是cell，而是MySql。
+
+```c++
+#include <QCoreApplication>
+#include <QtSql>
+#include <QDebug>
+#define sqlite 0
+//#define mysql 1
+//#define odbc 2
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+    qDebug()<<QSqlDatabase ::drivers();
+    QSqlDatabase db;
+
+#ifdef mysql
+    qDebug()<<"mysql is running";
+    db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("127.0.0.1");  //连接本地主机
+    db.setPort(3306);
+    db.setUserName("root");
+    db.setPassword("199791");
+    db.setDatabaseName(QString::fromLocal8Bit("cell"));
+#elif odbc
+    qDebug()<<"0dbc is running";
+    db = QSqlDatabase::addDatabase("QODBC3");
+    //db.setHostName("127.0.0.1");  //连接本地主机
+    //db.setPort(3306);
+    db.setUserName("root");
+    db.setPassword("199791");
+    db.setDatabaseName(QString::fromLocal8Bit("MySql")); // 这个名称是数据源名称，自己定义的
+    /*
+        * 如果采用的odbc数据源模式连接数据库，
+        * 只需要设置数据库名称为对应新建的数据源名字，
+        * 然后设置用户名和密码就行，
+        * 不需要设置主机名称和端口，因为数据源那边已经设置过的，
+        * 这里只需要再次验证用户信息就行
+    */
+#else
+    qDebug()<<"sqlite is running";
+    db = QSqlDatabase::addDatabase("QSQLITE");//
+    db.setDatabaseName("mdb"); // 会自动创建
+#endif
+
+    if (!db.open())
+    {
+        qDebug()<<db.lastError().text();
+    }else {qDebug()<<"successful!";}
+
+    QSqlQuery query;
+    query.exec("select  *  from employee "); //where id = 1 name = 'A' 限制条件会影响下边的rec
+    qDebug()<<query.isActive(); // true
+    qDebug()<<query.isValid(); // false 没有指向有效的行只会返回空记录
+    qDebug()<<query.record(); // 8列字段
+    qDebug()<<query.record().field("age"); // QSqlField对象
+    qDebug()<<query.record().field("idcard").value(); // QVariant(QString, "")
+    qDebug()<<query.record().value(2); // QVariant(QString, "")
+    qDebug()<<query.record().value("idcard");// QVariant(QString, "")
+
+    auto k = query.record();
+    k.setValue(1,"abc");
+    qDebug()<<k.value(1);
+    qDebug()<<"----------------------------------------------";
+    auto rec = query.record();
+    //qDebug()<<rec.count();
+    int nameCol = rec.indexOf("name"); // 姓名列
+    qDebug()<<"namecol == "<<nameCol; // 2
+
+    while (query.next()) // 访问具体的数据只能通过query.value不能通过record.value
+          qDebug() << query.value(nameCol).toString(); // 遍历这列输出
+    // 除非是QSqlTableModel.record(row)返回的对象可以去访问某一行的记录
+    query.first();
+    qDebug()<<query.value("entrydate").toString();
+
+    return a.exec();
+}
+```
+
+## 编译QMySql
+
+参考网址：
+
+[Qt 编译MySQL数据库驱动——MSVC版本](https://blog.csdn.net/LclLsh/article/details/122305347)
+
+[安装mysql驱动详细流程](https://blog.csdn.net/sazass/article/details/113553323)
+
+安装Qt选择了Sources安装，然后找到安装目录下的路径，加入2个环境变量，一个是qt的一个是mysql的。
+
+**注意：mysql是64bit的只能用64bit的进行编译**。
+
+**注意：编译时候，debug目录必须和项目路径也就是sqldrivers同级别，否则出错。**
+
+**注意：编译生成的dll文件在C:/plugins/sqldrivers下**
+
+**注意：msvc生成的放在Qt的msvc版本的bin目录，mingw放在mingw下的bin，要对应**
+
+如果找不到mysql的，可以win+r输入services.msc，找到mysql就能知道运行路径。
+
+```
+C:\Program Files\MySQL\MySQL Server 8.0\bin
+```
+
+然后找到项目路径。
+
+```
+C:\Qt\Qt5.14.2\5.14.2\Src\qtbase\src\plugins\sqldrivers
+```
+
+在Pro文件下修改如下。
+
+```protobuf
+TARGET = qsqlmysql
+
+HEADERS += $$PWD/qsql_mysql_p.h
+SOURCES += $$PWD/qsql_mysql.cpp $$PWD/main.cpp
+
+# QMAKE_USE += mysql # 这句注释掉
+
+OTHER_FILES += mysql.json
+
+PLUGIN_CLASS_NAME = QMYSQLDriverPlugin
+
+# 以下是新增代码
+# mysql是64bit的,只能使用64bit编译
+# (1) 安装的mysql的lib路径
+#LIBS += -L $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib) -llibmysql // mingw 2个写法均可
+LIBS += "C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib\\libmysql.lib" # 编译msvc版本必须指定这个.lib文件名否则失败
+# (2) include路径
+INCLUDEPATH += $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\include)
+#INCLUDEPATH += "C:\\Program Files\\MySQL\\MySQL Server 8.0\\include"
+# (3) 依赖路径和包含路径相同
+DEPENDPATH += $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\include)
+#DEPENDPATH += "C:\\Program Files\\MySQL\\MySQL Server 8.0\\include"
+# 是为了把mysql的动态库包含进来编译
+
+include(../qsqldriverbase.pri)
+```
+
+编译生成的动态库默认在这个文件夹下。
+
+```
+C:\plugins\sqldrivers
+```
+
+把msvc版本的文件复制到对应版本的路径下。
+
+```
+C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\plugins\sqldrivers
+```
+
+mingw版本的复制到下边路径。
+
+```
+C:\Qt\Qt5.14.2\5.14.2\mingw73_64\plugins\sqldrivers
+```
+
+然后依然是上边的测试工程，会发现msvc2017-64编译器构建是成功运行的，但是**mingw-64**会出现以下问题。
+
+```
+("QSQLITE", "QMYSQL", "QMYSQL3", "QODBC", "QODBC3", "QPSQL", "QPSQL7")
+QSqlDatabase: QMYSQL driver not loaded
+QSqlDatabase: available drivers: QSQLITE QMYSQL QMYSQL3 QODBC QODBC3 QPSQL QPSQL7
+"Driver not loaded Driver not loaded"
+QSqlQuery::exec: database not open
+```
+
+其问题可能是这个网址所说MySQL数据库版本高，但是没尝试过，因为再下个低版本SQL有点麻烦：[(QMYSQL driver not loaded“ 但有驱动模块_qmysql driver not loaded有驱动](https://blog.csdn.net/qq_51340322/article/details/124262626)
+
+偶然发现解决方案是，**把C:\Program Files\MySQL\MySQL Server 8.0\lib下的2个文件，也就是libmysql.dll和libmysql.lib放在C:\Qt\Qt5.14.2\5.14.2\mingw73_64\bin下就可以运行**。
+
 ## 安装DataGrip
 
 下载地址：[Thank you for downloading DataGrip! (jetbrains.com)](https://www.jetbrains.com/datagrip/download/download-thanks.html?platform=windows)。
