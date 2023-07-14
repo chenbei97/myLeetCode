@@ -8,6 +8,8 @@ QT       += core gui
 
 QT       += sql
 
+CONFIG += utf8-source
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = samp11_3

@@ -114,8 +114,13 @@ void MainWindow::openTable()
     dataMapper->setModel(tabModel);//设置数据模型
     dataMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);//自动提交
 
-//    dataMapper->setItemDelegate(new QSqlRelationalDelegate(this)); //含有外键的
-//界面组件与tabModel的具体字段之间的联系
+//    connect(theSelection,SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
+//            dataMapper,SLOT(setCurrentModelIndex(QModelIndex)));
+//    connect(theSelection, &QItemSelectionModel::currentRowChanged,
+//            dataMapper, &QDataWidgetMapper::setCurrentModelIndex); // 如果没有图片，直接绑定此信号就可以自动更新映射小部件的内容
+
+//    dataMapper->setItemDelegate(new QSqlRelationalDelegate(this)); //含有外键的可以继续设置这个代理
+    //界面组件与tabModel的具体字段之间的联系
     // 把每列和小部件联系起来,小部件去显示这列的任何行数据
     dataMapper->addMapping(ui->dbSpinEmpNo,tabModel->fieldIndex("empNo"));
     dataMapper->addMapping(ui->dbEditName,tabModel->fieldIndex("Name"));
@@ -136,7 +141,7 @@ void MainWindow::openTable()
 
 //    dataMapper->addMapping(ui->dbPhoto,tabModel->fieldIndex("Photo")); //图片无法直接映射
 
-    dataMapper->toFirst();//移动到首记录
+    dataMapper->toFirst();//移动到首记录，就是用表格的第1行来更新部件
 
     getFieldNames();//获取字段名称列表，填充ui->groupBoxSort组件
 
@@ -182,6 +187,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// 选择模型的信号
 void MainWindow::on_currentChanged(const QModelIndex &current, const QModelIndex &previous)
 {//更新actPost和actCancel 的状态
     Q_UNUSED(current);
@@ -190,13 +196,14 @@ void MainWindow::on_currentChanged(const QModelIndex &current, const QModelIndex
     ui->actRevert->setEnabled(tabModel->isDirty());
 }
 
+// 选择模型的信号
 void MainWindow::on_currentRowChanged(const QModelIndex &current, const QModelIndex &previous)
 {
     Q_UNUSED(previous);
 // 行切换时的状态控制
-    ui->actRecDelete->setEnabled(current.isValid());
-    ui->actPhoto->setEnabled(current.isValid());
-    ui->actPhotoClear->setEnabled(current.isValid());
+    ui->actRecDelete->setEnabled(current.isValid());// 删除记录
+    ui->actPhoto->setEnabled(current.isValid()); // 设置照片
+    ui->actPhotoClear->setEnabled(current.isValid()); // 清除照片
 
     if (!current.isValid())
     {
@@ -233,12 +240,12 @@ void MainWindow::on_actRecAppend_triggered()
     int currow=curIndex.row(); //获得当前行
     tabModel->setData(tabModel->index(currow,0),2000+tabModel->rowCount()); //自动生成编号
     //tabModel->setData(tabModel->index(currow,2),"男"); // 默认值中primeInsert信号已经处理
-// 插入行时设置缺省值，需要在primeInsert()信号里去处理
+    // 插入行时设置缺省值，需要在primeInsert()信号里去处理
     /*
         当在当前活动数据库表的给定行中启动插入时，insertRows（）会发出此信号。
-记录参数可以被写入（因为它是一个引用），例如用默认值填充一些字段，并设置字段的生成标志。
-在处理此信号时，不要试图通过其他方式编辑记录，如setData（）或setRecord（）
-*/
+        记录参数可以被写入（因为它是一个引用），例如用默认值填充一些字段，并设置字段的生成标志。
+        在处理此信号时，不要试图通过其他方式编辑记录，如setData（）或setRecord（）
+    */
 }
 
 void MainWindow::on_actRecInsert_triggered()
@@ -327,7 +334,7 @@ void MainWindow::on_radioBtnDescend_clicked()
 void MainWindow::on_radioBtnMan_clicked()
 {
     tabModel->setFilter(" Gender='男' ");
-//    tabModel->select();
+//    tabModel->select(); // 设置过滤不需重新select
 }
 
 void MainWindow::on_radioBtnWoman_clicked()
@@ -341,6 +348,7 @@ void MainWindow::on_radioBtnBoth_clicked()
     tabModel->setFilter("");
 }
 
+// QCombobox排序字段的信号
 void MainWindow::on_comboFields_currentIndexChanged(int index)
 {//选择字段进行排序
     if (ui->radioBtnAscend->isChecked()) // 如果是降序..
@@ -365,7 +373,7 @@ void MainWindow::on_actScan_triggered()
         tabModel->setRecord(i,aRec); // 赋值回去
     }
 
-// 索引方式刷新记录,速度一样
+// 索引方式刷新记录,速度一样 setData需要制定行和列,setRecord只需要知道行更方便
 //    float   salary;
 //    for (int i=0;i<tabModel->rowCount();i++)
 //    {

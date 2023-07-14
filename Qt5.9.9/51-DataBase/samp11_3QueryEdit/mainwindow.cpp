@@ -49,9 +49,9 @@ void MainWindow::openTable()
 void MainWindow::updateRecord(int recNo)
 { //更新一条记录
     QSqlRecord  curRec=qryModel->record(recNo); //获取当前记录
-    int empNo=curRec.value("EmpNo").toInt();//获取EmpNo
+    int empNo=curRec.value("EmpNo").toInt();//取EmpNo员工编号
 
-    QSqlQuery query; //查询出当前记录的所有字段
+    QSqlQuery query; //查询出当前记录的所有字段 使用比较底层的API
     query.prepare("select * from employee where EmpNo = :ID");
     query.bindValue(":ID",empNo);
     query.exec();
@@ -61,7 +61,8 @@ void MainWindow::updateRecord(int recNo)
         return;
 
     curRec=query.record();//获取当前记录的数据
-    WDialogData    *dataDialog=new WDialogData(this); //创建对话框
+    WDialogData    *dataDialog=new WDialogData(this); //创建对话框 这里不是返回空记录，和QSqlTableModel的record()不同
+    // 因为按照id的查询保证只会存在1条，所以query.first即可然后再用value访问
     Qt::WindowFlags    flags=dataDialog->windowFlags();
     dataDialog->setWindowFlags(flags | Qt::MSWindowsFixedSizeDialogHint); //设置对话框固定大小
 
@@ -150,12 +151,13 @@ void MainWindow::on_actOpenDB_triggered()
     openTable();
 }
 
+//插入记录 不需要拿到当前记录，只需要给一些默认值，然后覆盖对话框即可
 void MainWindow::on_actRecInsert_triggered()
-{//插入记录
+{
     QSqlQuery query;
     query.exec("select * from employee where EmpNo =-1"); //实际不查询出记录，只查询字段信息
 
-    QSqlRecord curRec=query.record();//获取当前记录,实际为空记录（说白了就是创建1个带有字段的记录信息）
+    QSqlRecord curRec=query.record();//获取当前记录,实际为空记录（说白了就是创建1个带有字段的记录信息） 因为不同于QSqlTableModel提供了空记录方法record()
     curRec.setValue("EmpNo",qryModel->rowCount()+3000); // 3006给EmpNo字段加个初始值，在setInsertRecord被调用
 
     WDialogData    *dataDialog=new WDialogData(this);
@@ -205,8 +207,9 @@ void MainWindow::on_actRecInsert_triggered()
     delete dataDialog;
 }
 
+//删除当前记录
 void MainWindow::on_actRecDelete_triggered()
-{//删除当前记录
+{
     int curRecNo=theSelection->currentIndex().row();
     QSqlRecord  curRec=qryModel->record(curRecNo); //获取当前记录
     if (curRec.isEmpty()) //当前为空记录
@@ -227,15 +230,16 @@ void MainWindow::on_actRecDelete_triggered()
     }
 }
 
-
+// 点击编辑记录 拿到当前记录更新对话框再把对话框参数返还设置
 void MainWindow::on_actRecEdit_triggered()
-{//编辑当前记录
+{
     int curRecNo=theSelection->currentIndex().row();
     updateRecord(curRecNo);
 }
 
+//tableView上双击,也可以编辑当前记录
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
-{ //tableView上双击,编辑当前记录
+{ 
     int curRecNo=index.row();
     updateRecord(curRecNo);
 }
@@ -246,10 +250,10 @@ void MainWindow::on_actScan_triggered()
     QSqlQuery qryEmpList; //员工工资信息列表
 //    qryEmpList.setForwardOnly(true);
     qryEmpList.exec("SELECT empNo,Salary FROM employee ORDER BY empNo");
-    qryEmpList.first();
+    qryEmpList.first(); // 拿到工资和员工编号2列信息，因为更新信息也需要2个字段
 
     QSqlQuery qryUpdate; //临时 QSqlQuery
-    qryUpdate.prepare("UPDATE employee SET Salary=:Salary WHERE EmpNo = :ID");
+    qryUpdate.prepare("UPDATE employee SET Salary=:Salary WHERE EmpNo = :ID"); // 更新的时候指定编号来设定值
 
     while (qryEmpList.isValid()) //当前记录有效
     {
@@ -259,13 +263,13 @@ void MainWindow::on_actScan_triggered()
 
         qryUpdate.bindValue(":ID",empID);
         qryUpdate.bindValue(":Salary",salary); //设置SQL语句参数
-        qryUpdate.exec(); //执行update
+        qryUpdate.exec(); //执行update 可以在遍历每行信息时顺带把这行信息更新了
 
         if (!qryEmpList.next()) //移动到下一条记录，并判断是否到末尾了
             break;
     }
 /*"SELECT empNo, Name, Gender, Height, Birthday, Mobile, Province, City, Department,  Education, Salary FROM employee order by empNo"*/
-    qryModel->query().exec();//数据模型重新查询数据，更新tableView的显示 ,qrModel.query()只有1次
+    qryModel->query().exec();//数据模型重新查询数据，更新tableView的显示 ,qrModel.query()只有1次，也就是openTable()里的setQuery那次,其他QSqlQuery的查询无关
     QMessageBox::information(this, "提示", "涨工资计算完毕",
                              QMessageBox::Ok,QMessageBox::NoButton);
 }

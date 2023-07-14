@@ -70,6 +70,8 @@ void MainWindow::openTable()
 }
 
 
+// 用于跳转首行，尾行，下一行，前一行记录使用的
+// 显示选择模型选中的行
 void MainWindow::refreshTableView()
 {//刷新tableView的当前选择行让鼠标选中的和数据映射的保持一致
     int index=dataMapper->currentIndex();
