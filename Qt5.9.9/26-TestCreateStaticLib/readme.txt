@@ -1,7 +1,0 @@
-这里使用了MSVC-2017-64下的编译器进行编译，使用debug-release版本都进行了编译
-
-但是2个模式编译的名字是相同的，所以debug模式下需要手动改名26-TestCreateStaticLibd.lib
-
-使用库的项目新建include文件，把26-TestCreateStaticLib.libd、26-TestCreateStaticLib.lib和setPenDialog.h都放进去
-
-一方面新建外部库，使用windows-static，添加d作为尾缀区分，此外还需要把include文件包含进来作为项目一部分，不然可能识别不出来

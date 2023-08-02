@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>TestTRTranslation_cn.qm</file>
-        <file>TestTRTranslation_en.qm</file>
-    </qresource>
-</RCC>

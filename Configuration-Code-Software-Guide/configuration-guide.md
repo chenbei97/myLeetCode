@@ -1911,6 +1911,8 @@ QSqlQuery::exec: database not open
 
 偶然发现解决方案是，**把C:\Program Files\MySQL\MySQL Server 8.0\lib下的2个文件，也就是libmysql.dll和libmysql.lib放在C:\Qt\Qt5.14.2\5.14.2\mingw73_64\bin下就可以运行**。
 
+经过家里的电脑测试，发现mingw版本倒是没问题，msvc版本也是不能加载，也是把2个文件放在bin目录即可。另外，**Qt5.9是不能编译sql的**，实际测试得到结论。
+
 ## 安装DataGrip
 
 下载地址：[Thank you for downloading DataGrip! (jetbrains.com)](https://www.jetbrains.com/datagrip/download/download-thanks.html?platform=windows)。

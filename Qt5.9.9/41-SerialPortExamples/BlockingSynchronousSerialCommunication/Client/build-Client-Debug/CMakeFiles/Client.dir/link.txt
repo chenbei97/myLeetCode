@@ -1,3 +1,0 @@
-C:\cmake-3.23.2-windows-x86_64\bin\cmake.exe -E rm -f CMakeFiles\Client.dir/objects.a
-C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\ar.exe qc CMakeFiles\Client.dir/objects.a @CMakeFiles\Client.dir\objects1.rsp
-C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\Client.dir/objects.a -Wl,--no-whole-archive -o Client.exe -Wl,--out-implib,libClient.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Client.dir\linklibs.rsp

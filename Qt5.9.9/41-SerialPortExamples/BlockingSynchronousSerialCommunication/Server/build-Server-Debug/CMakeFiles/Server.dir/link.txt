@@ -1,3 +1,0 @@
-C:\cmake-3.23.2-windows-x86_64\bin\cmake.exe -E rm -f CMakeFiles\Server.dir/objects.a
-C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\ar.exe qc CMakeFiles\Server.dir/objects.a @CMakeFiles\Server.dir\objects1.rsp
-C:\Qt\Qt5.9.9\Tools\mingw530_32\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\Server.dir/objects.a -Wl,--no-whole-archive -o Server.exe -Wl,--out-implib,libServer.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Server.dir\linklibs.rsp

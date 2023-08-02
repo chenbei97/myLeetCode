@@ -1,4 +1,0 @@
-C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Client/build-Client-Debug/CMakeFiles/Client.dir
-C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Client/build-Client-Debug/CMakeFiles/edit_cache.dir
-C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Client/build-Client-Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/chenb/Documents/qt/BlockingSynchronousSerialCommunication/Client/build-Client-Debug/CMakeFiles/Client_autogen.dir
