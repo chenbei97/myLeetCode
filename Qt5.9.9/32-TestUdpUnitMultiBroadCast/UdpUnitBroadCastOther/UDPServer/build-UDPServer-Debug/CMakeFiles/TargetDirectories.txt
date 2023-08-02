@@ -1,4 +1,0 @@
-C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPServer/build-UDPServer-Debug/CMakeFiles/UDPServer.dir
-C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPServer/build-UDPServer-Debug/CMakeFiles/edit_cache.dir
-C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPServer/build-UDPServer-Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/chenb/Documents/qt/UdpUnitBroadCastOther/UDPServer/build-UDPServer-Debug/CMakeFiles/UDPServer_autogen.dir

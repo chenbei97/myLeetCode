@@ -1,4 +1,0 @@
-C:/Users/chenb/Documents/qt/TestLocationFunction/build-TestLocationFunction-Debug/CMakeFiles/TestLocationFunction.dir
-C:/Users/chenb/Documents/qt/TestLocationFunction/build-TestLocationFunction-Debug/CMakeFiles/edit_cache.dir
-C:/Users/chenb/Documents/qt/TestLocationFunction/build-TestLocationFunction-Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/chenb/Documents/qt/TestLocationFunction/build-TestLocationFunction-Debug/CMakeFiles/TestLocationFunction_autogen.dir
