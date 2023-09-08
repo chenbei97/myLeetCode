@@ -1913,6 +1913,64 @@ QSqlQuery::exec: database not open
 
 经过家里的电脑测试，发现mingw版本倒是没问题，msvc版本也是不能加载，也是把2个文件放在bin目录即可。另外，**Qt5.9是不能编译sql的**，实际测试得到结论。
 
+## 编译QSqliteCipher
+
+下载：[devbean/QtCipherSqlitePlugin: A Qt plugin for cipher SQLite. (github.com)](https://github.com/devbean/QtCipherSqlitePlugin)
+
+编译后把sqlitecipher.dll和sqlitecipherd.dll放在安装目录下的对应路径,使用msvc64编译的放在对应目录
+
+```
+C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\plugins\sqldrivers
+```
+
+之后测试工程代码如下：
+
+```c++
+#include <QCoreApplication>
+#include <QtSql>
+#include <QDebug>
+#include <QSqlQuery>
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+    qDebug()<<QSqlDatabase::drivers();
+    auto path = "C:\\Users\\22987\\Desktop\\untitled\\abc.db3";
+    auto mTrialDb = QSqlDatabase::addDatabase("SQLITECIPHER", "sqlcipher");
+    mTrialDb.setDatabaseName(path);
+    mTrialDb.setPassword("199791");
+//    mTrialDb.setUserName("chenbei");
+    mTrialDb.setConnectOptions("QSQLITE_USE_CIPHER=sqlcipher; "
+                               "SQLCIPHER_LEGACY=1; "
+                               "SQLCIPHER_LEGACY_PAGE_SIZE=4096;"
+                               "QSQLITE_CREATE_KEY");//连接配置 "QSQLITE_CREATE_KEY"
+    if (!mTrialDb.open()) {
+        qDebug()<<"here => "<<mTrialDb.lastError();
+        mTrialDb.setConnectOptions("QSQLITE_USE_CIPHER=sqlcipher; "
+                                   "SQLCIPHER_LEGACY=1; "
+                                   "SQLCIPHER_LEGACY_PAGE_SIZE=4096;");
+        mTrialDb.open();
+    }
+    qDebug()<<"isOpen? "<<mTrialDb.isOpen();
+
+
+    static const char * CreateLoginInfoConfigTable =
+            "create table if not exists logininfo ("
+            "user varchar(100) not null default '', "
+            "pwd varchar(100) not null default '',"
+            "last_login datetime not null default '1899/12/30 00:00:00' ); ";
+
+    QSqlQuery query(mTrialDb);
+    qDebug()<<query.exec(CreateLoginInfoConfigTable);
+    qDebug()<<query.lastError().text();
+    qDebug()<<query.exec("select * from logininfo");
+    qDebug()<<query.record();
+
+    QSqlDatabase::removeDatabase("sqlcipher");
+    return a.exec();
+}
+```
+
 ## 安装DataGrip
 
 下载地址：[Thank you for downloading DataGrip! (jetbrains.com)](https://www.jetbrains.com/datagrip/download/download-thanks.html?platform=windows)。
