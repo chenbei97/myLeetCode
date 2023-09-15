@@ -1846,7 +1846,8 @@ C:\Program Files\MySQL\MySQL Server 8.0\bin
 然后找到项目路径。
 
 ```
-C:\Qt\Qt5.14.2\5.14.2\Src\qtbase\src\plugins\sqldrivers
+C:\Qt\Qt5.14.2\5.14.2\Src\qtbase\src\plugins\sqldrivers // 公司电脑
+E:\Qt5.14.2\5.14.2\Src\qtbase\src\plugins\sqldrivers // 家里电脑
 ```
 
 在Pro文件下修改如下。
@@ -1866,8 +1867,14 @@ PLUGIN_CLASS_NAME = QMYSQLDriverPlugin
 # 以下是新增代码
 # mysql是64bit的,只能使用64bit编译
 # (1) 安装的mysql的lib路径
-#LIBS += -L $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib) -llibmysql // mingw 2个写法均可
-LIBS += "C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib\\libmysql.lib" # 编译msvc版本必须指定这个.lib文件名否则失败
+#win32-g++ {
+#    LIBS += -L $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib) -lmysql # mingw 2个写法均可
+#}
+#win32-msvc {
+#LIBS += "C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib\\libmysql.lib" # 编译msvc版本必须指定这个.lib文件名否则失败
+#}
+
+ LIBS += -L $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\lib) -lmysql
 # (2) include路径
 INCLUDEPATH += $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\include)
 #INCLUDEPATH += "C:\\Program Files\\MySQL\\MySQL Server 8.0\\include"
@@ -1877,24 +1884,39 @@ DEPENDPATH += $$quote(C:\\Program Files\\MySQL\\MySQL Server 8.0\\include)
 # 是为了把mysql的动态库包含进来编译
 
 include(../qsqldriverbase.pri)
+
+# 生成的动态库在C:\plugins\sqldrivers这里
+
 ```
 
 编译生成的动态库默认在这个文件夹下。
 
 ```
 C:\plugins\sqldrivers
+E:\plugins\sqldrivers
 ```
+
+![](sqldrivers_plugin.jpg)
 
 把msvc版本的文件复制到对应版本的路径下。
 
 ```
 C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\plugins\sqldrivers
+E:\Qt5.14.2\5.14.2\msvc2017_64\plugins\sqldrivers
+
+qsqlmysql.dll
+qsqlmysqld.dll
+lib文件好像不需要放
 ```
 
 mingw版本的复制到下边路径。
 
 ```
 C:\Qt\Qt5.14.2\5.14.2\mingw73_64\plugins\sqldrivers
+
+libqsqlmysql.a
+libqsqlmysql.dll
+qsqlmysql.dll.debug
 ```
 
 然后依然是上边的测试工程，会发现msvc2017-64编译器构建是成功运行的，但是**mingw-64**会出现以下问题。
