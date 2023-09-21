@@ -53,6 +53,7 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple selenium # 清华源下�
 [5] 华中科技大学http://pypi.hustunique.com/
 
 pip3 install --index-url https://pypi.douban.com/simple pandas // 给定pypi链接下载
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 **官方下载包链接**：
@@ -2020,6 +2021,8 @@ int main(int argc, char *argv[])
 
 激活软件同[安装DataGrip](#安装DataGrip)。
 
+### MINGW配置
+
 Clion配置Qt的第一步是，选择好前缀。
 
 ![clion-qt-cmake-prefix.jpg](clion-qt-cmake-prefix.jpg)
@@ -2033,6 +2036,18 @@ Clion配置Qt的第一步是，选择好前缀。
 至于cmake可以使用clion捆绑的也可以使用自己下载的。
 
 ![clion-cmake.jpg](clion-cmake.jpg)
+
+### MSVC编译器
+
+要注意的是2022/2019版本都是可以的，VS2017不能通过编译。
+
+![](clion_msvc.jpg)
+
+cmakelist文件要记得切换前缀路径，运行之前也要先清理，不然包含的头文件路径还是mingw32的：
+
+```cmake
+set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.14.2/5.14.2/msvc2017_64")
+```
 
 之后就是配置外部工具的事。
 
