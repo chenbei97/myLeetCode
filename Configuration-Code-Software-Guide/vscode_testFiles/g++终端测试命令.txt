@@ -22,6 +22,6 @@ g++.exe -g *.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/li
 .\test_opencv_for_vscode.exe
 发现是可以执行的，所以真的就是版本问题！
 现在之所以这么麻烦，是因为有2台电脑，家里和公司的，公司的在6月还重装了一次系统，路径发生变化
-同时我自己重新编译了opencv4.5.5的，所以拿过来用
+同时我自己重新编译了opencv4.6.0的，所以拿过来用
 g++.exe -g *.cpp -std=c++20 -I C:/msys64/mingw64/include -I C:/msys64/mingw64/lib -l libopencv_world460 -l libopencv_img_hash460 -o test_opencv_for_vscode.exe
 .\test_opencv_for_vscode.exe
