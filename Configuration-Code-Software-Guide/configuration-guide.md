@@ -2089,6 +2089,16 @@ $FileName$ -o ui_$FileNameWithoutExtension$.h
 $FileDir$
 ```
 
+配置rcc的命令如下：
+
+![](clion_qt_rcc.jpg)
+
+```powershell
+C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\bin\rcc.exe
+--binary $FileName$ -o $FileNameWithoutExtension$.rcc
+$FileDir$
+```
+
 最后一步，记得把下方的路径添加到环境变量，否则编译成功但是运行不成功。
 
 ```powershell

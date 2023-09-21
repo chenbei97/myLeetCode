@@ -218,6 +218,91 @@ add_subdirectory(source_dir [binary_dir] [EXCLUDE_FROM_ALL] [SYSTEM])
 
 注意：在子目录的CMakeLists.txt文件中，必须显式添加自己的project命令调用，以便在子目录中生成完整的构建系统。
 
+## add_definitions
+
+添加宏定义，常用于声明某些类导出或者导入使用。
+
+```cmake
+add_definitions(-DCOMPONENT_LIBRARY=0) # 添加预定义宏,=号不能有空格,用于指定类导出或导入
+```
+
+```c++
+#if defined(COMPONENT_LIBRARY) // 这个宏在component的cmakelist定义过,不能直接使用Q_DECL_EXPORT,因为main.cpp需要导入符号才能使用
+# define COMPONENT_IMEXPORT Q_DECL_EXPORT
+#else
+# define COMPONENT_IMEXPORT Q_DECL_IMPORT
+#endif
+```
+
+## utf-8
+
+这2行命令只需要在主工程设置一次即可，也就是顶层的CMakeList.txt，要在add_executable之前
+
+```cmake
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+```
+
+如果是clion还有一个方法，就是在cmake 编译选项这里添加
+
+```cmake
+-D CMAKE_CXX_FLAGS="/utf-8" CMAKE_C_FLAGS="/utf-8"
+```
+
+参考：[解决 CLion + MSVC 下的字符编码问题](https://www.cnblogs.com/Chary/p/13608011.html#:~:text=解决办法也简单，加上命令行开关就行了： utf-8 或者 source-charset%3Autf-8 %2Fexecution-charset%3Autf-8,参见MSVC文档>> 默认创建的项目是 CMake 的，在 CMakeList.txt 中加入如下内容即可)
+
+以下不起作用：
+
+```cmake
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /source-charset:utf-8")
+
+set(CMAKE_CXX_STANDARD_ENCODED_FILES ON)
+
+add_compile_options(-fexec-charset=UTF-8 -finput-charset=UTF-8)
+
+if(MSVC)
+    set(CMAKE_RC_CHARSET utf8)
+    set(CMAKE_RC_SOURCE_CHARSET utf8)
+    set(CMAKE_RC_STRING_CHARSET utf8)
+endif()
+```
+
+
+
+## file
+
+第一种用来递归取到指定目录的所有文件，支持通配符。
+
+```cmake
+file(GLOB_RECURSE COMPONENT_HEADERS "inc/*.h")
+file(GLOB_RECURSE COMPONENT_SOURCES "src/*.cpp")
+```
+
+第二种可以用来复制文件。
+
+```cmake
+file(GLOB public_headers "inc/*.h")
+file(COPY ${flow_headers} DESTINATION ${PROJECT_SOURCE_DIR}/Interface/inc)
+
+file(GLOB flow_headers "inc/tables/*.h")
+file(COPY ${flow_headers} DESTINATION ${PROJECT_SOURCE_DIR}/Interface/inc/tables)
+```
+
+第三种删除文件：
+
+```cmake
+file(GLOB files_to_remove "${CMAKE_CURRENT_SOURCE_DIR}/dir_to_remove/*")  
+foreach(file ${files_to_remove})  
+    file(REMOVE ${file})  
+endforeach()
+#这段代码首先使用file(GLOB ...)命令获取dir_to_remove文件夹中的所有文件，然后使用foreach循环遍历这些文件，并使用file(REMOVE ...)命令删除每个文件。
+
+#请注意，这种方法只能删除文件，而不能删除文件夹本身。如果你需要删除整个文件夹，包括其中的所有文件和子文件夹，可以使用file(REMOVE_RECURSE ...)命令
+file(REMOVE_RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/dir_to_remove")
+```
+
+
+
 ## 预定义变量
 
 ```cmake
@@ -267,13 +352,53 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 ### CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS
 
+解决windows下动态库不生成lib的方法
+
 ```cmake
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # windows下生成.lib文件
 ```
 
 ### LIBRARY_OUTPUT_PATH
 
+动态库的输出目录
+
 ```cmake
 SET(LIBRARY_OUTPUT_PATH  ${CMAKE_CURRENT_LIST_DIR}/../bin)
 ```
+
+### CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+
+动态库的输出目录，可以在库的cmakelist也可以顶层cmakelist来设置，和LIBRARY_OUTPUT_PATH功能一样
+
+```cmake
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+```
+
+### CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS
+
+```cmake
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # windows下生成.lib文件
+```
+
+### CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG、CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE
+
+指定debug/release的输出目录
+
+```cmake
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG  ${CMAKE_CURRENT_SOURCE_DIR}/bin/debug)
+```
+
+```cmake
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  ${CMAKE_CURRENT_SOURCE_DIR}/bin/release)
+```
+
+### CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+
+用于设置生成静态库后，库文件的默认存放文件夹的位置
+
+```cmake
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../../lib)
+```
+
+
 
