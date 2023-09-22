@@ -873,6 +873,8 @@ set(CMAKE_CXX_STANDARD_ENCODED_FILES ON)
 
 add_compile_options(-fexec-charset=UTF-8 -finput-charset=UTF-8)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8") # 用于mingw
+
 if(MSVC)
     set(CMAKE_RC_CHARSET utf8)
     set(CMAKE_RC_SOURCE_CHARSET utf8)
