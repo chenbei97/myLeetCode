@@ -1,0 +1,30 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/backward.png</file>
+        <file>images/balboa.jpg</file>
+        <file>images/cell.png</file>
+        <file>images/forward.png</file>
+        <file>images/login_back.jpg</file>
+        <file>images/login_notok.png</file>
+        <file>images/login_notok_16x16.png</file>
+        <file>images/login_notok_24x24.png</file>
+        <file>images/login_ok.png</file>
+        <file>images/login_ok_16x16.png</file>
+        <file>images/login_ok_24x24.png</file>
+        <file>images/logo.png</file>
+        <file>images/solarpanels.jpg</file>
+        <file>images/sun.png</file>
+        <file>images/table_img_eg.jpg</file>
+        <file>images/test/1.jpg</file>
+        <file>images/test/2.jpg</file>
+        <file>images/test/3.jpg</file>
+        <file>images/test/4.jpg</file>
+        <file>images/test/5.jpg</file>
+        <file>images/test/6.jpg</file>
+        <file>images/test/7.jpg</file>
+        <file>images/test/8.jpg</file>
+        <file>images/test/9.jpg</file>
+        <file>images/test/10.jpg</file>
+        <file>images/cell.ico</file>
+    </qresource>
+</RCC>

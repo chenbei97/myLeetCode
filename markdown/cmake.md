@@ -1,3 +1,469 @@
+## cmake命令总结
+
+### cmake --help
+
+```cmake
+  --help-full [<file>]         = Print all help manuals and exit.
+  --help-manual <man> [<file>] = Print one help manual and exit.
+  --help-manual-list [<file>]  = List help manuals available and exit.
+  --help-command <cmd> [<file>]= Print help for one command and exit.
+  --help-command-list [<file>] = List commands with help available and exit.
+  --help-commands [<file>]     = Print cmake-commands manual and exit.
+  --help-module <mod> [<file>] = Print help for one module and exit.
+  --help-module-list [<file>]  = List modules with help available and exit.
+  --help-modules [<file>]      = Print cmake-modules manual and exit.
+  --help-policy <cmp> [<file>] = Print help for one policy and exit.
+  --help-policy-list [<file>]  = List policies with help available and exit.
+  --help-policies [<file>]     = Print cmake-policies manual and exit.
+  --help-property <prop> [<file>]
+```
+
+### cmake --help-module-list
+
+```
+AddFileDependencies
+AndroidTestUtilities
+BundleUtilities
+CMakeAddFortranSubdirectory
+CMakeBackwardCompatibilityCXX
+CMakeDependentOption
+CMakeDetermineVSServicePack
+CMakeExpandImportedTargets
+CMakeFindDependencyMacro
+CMakeFindFrameworks
+CMakeFindPackageMode
+CMakeForceCompiler
+CMakeGraphVizOptions
+CMakePackageConfigHelpers
+CMakeParseArguments
+CMakePrintHelpers
+CMakePrintSystemInformation
+CMakePushCheckState
+CMakeVerifyManifest
+CPack
+CPackArchive
+CPackBundle
+CPackComponent
+CPackCygwin
+CPackDMG
+CPackDeb
+CPackFreeBSD
+CPackIFW
+CPackIFWConfigureFile
+CPackNSIS
+CPackNuGet
+CPackProductBuild
+CPackRPM
+CPackWIX
+CSharpUtilities
+CTest
+CTestCoverageCollectGCOV
+CTestScriptMode
+CTestUseLaunchers
+CheckCCompilerFlag
+CheckCSourceCompiles
+CheckCSourceRuns
+CheckCXXCompilerFlag
+CheckCXXSourceCompiles
+CheckCXXSourceRuns
+CheckCXXSymbolExists
+CheckCompilerFlag
+CheckFortranCompilerFlag
+CheckFortranFunctionExists
+CheckFortranSourceCompiles
+CheckFortranSourceRuns
+CheckFunctionExists
+CheckIPOSupported
+CheckIncludeFile
+CheckIncludeFileCXX
+CheckIncludeFiles
+CheckLanguage
+CheckLibraryExists
+CheckLinkerFlag
+CheckOBJCCompilerFlag
+CheckOBJCSourceCompiles
+CheckOBJCSourceRuns
+CheckOBJCXXCompilerFlag
+CheckOBJCXXSourceCompiles
+CheckOBJCXXSourceRuns
+CheckPIESupported
+CheckPrototypeDefinition
+CheckSourceCompiles
+CheckSourceRuns
+CheckStructHasMember
+CheckSymbolExists
+CheckTypeSize
+CheckVariableExists
+Dart
+DeployQt4
+Documentation
+ExternalData
+ExternalProject
+FeatureSummary
+FetchContent
+FindALSA
+FindASPELL
+FindAVIFile
+FindArmadillo
+FindBISON
+FindBLAS
+FindBZip2
+FindBacktrace
+FindBoost
+FindBullet
+FindCABLE
+FindCUDA
+FindCUDAToolkit
+FindCURL
+FindCVS
+FindCoin3D
+FindCups
+FindCurses
+FindCxxTest
+FindCygwin
+FindDCMTK
+FindDart
+FindDevIL
+FindDoxygen
+FindEXPAT
+FindEnvModules
+FindFLEX
+FindFLTK
+FindFLTK2
+FindFontconfig
+FindFreetype
+FindGCCXML
+FindGDAL
+FindGIF
+FindGLEW
+FindGLUT
+FindGSL
+FindGTK
+FindGTK2
+FindGTest
+FindGettext
+FindGit
+FindGnuTLS
+FindGnuplot
+FindHDF5
+FindHSPELL
+FindHTMLHelp
+FindHg
+FindICU
+FindITK
+FindIce
+FindIconv
+FindIcotool
+FindImageMagick
+FindIntl
+FindJNI
+FindJPEG
+FindJasper
+FindJava
+FindKDE3
+FindKDE4
+FindLAPACK
+FindLATEX
+FindLTTngUST
+FindLibArchive
+FindLibLZMA
+FindLibXml2
+FindLibXslt
+FindLibinput
+FindLua
+FindLua50
+FindLua51
+FindMFC
+FindMPEG
+FindMPEG2
+FindMPI
+FindMatlab
+FindMotif
+FindMsys
+FindODBC
+FindOpenACC
+FindOpenAL
+FindOpenCL
+FindOpenGL
+FindOpenMP
+FindOpenSP
+FindOpenSSL
+FindOpenSceneGraph
+FindOpenThreads
+FindPHP4
+FindPNG
+FindPackageHandleStandardArgs
+FindPackageMessage
+FindPatch
+FindPerl
+FindPerlLibs
+FindPhysFS
+FindPike
+FindPkgConfig
+FindPostgreSQL
+FindProducer
+FindProtobuf
+FindPython
+FindPython2
+FindPython3
+FindPythonInterp
+FindPythonLibs
+FindQt
+FindQt3
+FindQt4
+FindQuickTime
+FindRTI
+FindRuby
+FindSDL
+FindSDL_gfx
+FindSDL_image
+FindSDL_mixer
+FindSDL_net
+FindSDL_sound
+FindSDL_ttf
+FindSQLite3
+FindSWIG
+FindSelfPackers
+FindSquish
+FindSubversion
+FindTCL
+FindTIFF
+FindTclStub
+FindTclsh
+FindThreads
+FindUnixCommands
+FindVTK
+FindVulkan
+FindWget
+FindWish
+FindX11
+FindXCTest
+FindXMLRPC
+FindXalanC
+FindXercesC
+FindZLIB
+Findosg
+FindosgAnimation
+FindosgDB
+FindosgFX
+FindosgGA
+FindosgIntrospection
+FindosgManipulator
+FindosgParticle
+FindosgPresentation
+FindosgProducer
+FindosgQt
+FindosgShadow
+FindosgSim
+FindosgTerrain
+FindosgText
+FindosgUtil
+FindosgViewer
+FindosgVolume
+FindosgWidget
+Findosg_functions
+FindwxWidgets
+FindwxWindows
+FortranCInterface
+GNUInstallDirs
+GenerateExportHeader
+GetPrerequisites
+GoogleTest
+InstallRequiredSystemLibraries
+MacroAddFileDependencies
+ProcessorCount
+SelectLibraryConfigurations
+SquishTestScript
+TestBigEndian
+TestCXXAcceptsFlag
+TestForANSIForScope
+TestForANSIStreamHeaders
+TestForSSTREAM
+TestForSTDNamespace
+UseEcos
+UseJava
+UseJavaClassFilelist
+UseJavaSymlinks
+UsePkgConfig
+UseSWIG
+Use_wxWindows
+UsewxWidgets
+WriteBasicConfigVersionFile
+WriteCompilerDetectionHeader
+```
+
+
+
+### cmake --help-manual-list
+
+```
+ccmake(1)
+cmake(1)
+cmake-buildsystem(7)
+cmake-commands(7)
+cmake-compile-features(7)
+cmake-developer(7)
+cmake-env-variables(7)
+cmake-file-api(7)
+cmake-generator-expressions(7)
+cmake-generators(7)
+cmake-gui(1)
+cmake-language(7)
+cmake-modules(7)
+cmake-packages(7)
+cmake-policies(7)
+cmake-presets(7)
+cmake-properties(7)
+cmake-qt(7)
+cmake-server(7)
+cmake-toolchains(7)
+cmake-variables(7)
+cpack(1)
+cpack-generators(7)
+```
+
+
+
+### cmake --help-command-list
+
+单个命令的帮助
+
+```cmake
+cmake --help-command include_directories
+```
+
+```cmake
+add_compile_definitions
+add_compile_options
+add_custom_command
+add_custom_target
+add_definitions
+add_dependencies
+add_executable
+add_library
+add_link_options
+add_subdirectory
+add_test
+aux_source_directory
+block
+break
+build_command
+build_name
+cmake_host_system_information
+cmake_language
+cmake_minimum_required
+cmake_parse_arguments
+cmake_path
+cmake_policy
+configure_file
+continue
+create_test_sourcelist
+ctest_build
+ctest_configure
+ctest_coverage
+ctest_empty_binary_directory
+ctest_memcheck
+ctest_read_custom_files
+ctest_run_script
+ctest_sleep
+ctest_start
+ctest_submit
+ctest_test
+ctest_update
+ctest_upload
+define_property
+else
+elseif
+enable_language
+enable_testing
+endblock
+endforeach
+endfunction
+endif
+endmacro
+endwhile
+exec_program
+execute_process
+export
+export_library_dependencies
+file
+find_file
+find_library
+find_package
+find_path
+find_program
+fltk_wrap_ui
+foreach
+function
+get_cmake_property
+get_directory_property
+get_filename_component
+get_property
+get_source_file_property
+get_target_property
+get_test_property
+if
+include
+include_directories
+include_external_msproject
+include_guard
+include_regular_expression
+install
+install_files
+install_programs
+install_targets
+link_directories
+link_libraries
+list
+load_cache
+load_command
+macro
+make_directory
+mark_as_advanced
+math
+message
+option
+output_required_files
+project
+qt_wrap_cpp
+qt_wrap_ui
+remove
+remove_definitions
+return
+separate_arguments
+set
+set_directory_properties
+set_property
+set_source_files_properties
+set_target_properties
+set_tests_properties
+site_name
+source_group
+string
+subdir_depends
+subdirs
+target_compile_definitions
+target_compile_features
+target_compile_options
+target_include_directories
+target_link_directories
+target_link_libraries
+target_link_options
+target_precompile_headers
+target_sources
+try_compile
+try_run
+unset
+use_mangled_mesa
+utility_source
+variable_requires
+variable_watch
+while
+write_file
+```
+
+
+
 ## find_package
 
 ```cmake
@@ -54,6 +520,10 @@ find_package(Qt5 COMPONENTS
       # C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\lib\cmake这个路径可以看到都是Config.cmake构成的
 ```
 
+## find_dependency
+
+
+
 ## set
 
 `set()` 命令用于设置变量的值。它可以将值赋给一个或多个变量，并可以选择性地设置变量的属性。
@@ -109,11 +579,40 @@ target_include_directories(<target> [SYSTEM] [AFTER|BEFORE]
 - `<directory>`：指定一个或多个包含目录的路径。可以使用相对路径或绝对路径。
 
 ```cmake
-add_executable(my_program main.cpp)  
-target_include_directories(my_program PRIVATE include)
+add_library(${DLLNAME} SHARED
+        ${INTERFACE_SOURCES}
+        ${INTERFACE_HEADERS}
+        )
+
+target_include_directories(${DLLNAME}
+        PUBLIC
+        ${PROJECT_SOURCE_DIR}/Component/inc
+        )
+        
+add_executable(${PROJECT_NAME}  main.cpp initapp.h initapp.cpp
+        ${QRC_SOURCE_FILE}
+        ${PROJECT_SOURCE_DIR}/bin/theme/dark/darkstyle.qrc)
+
+target_include_directories(${PROJECT_NAME}
+        PUBLIC
+        ${PROJECT_SOURCE_DIR}/Component/inc
+        ${PROJECT_SOURCE_DIR}/Interface/inc
+        )
 ```
 
-`add_executable` 命令创建了一个名为 `my_program` 的可执行文件，源文件为 `main.cpp`。然后，`target_include_directories` 命令指定了 `my_program` 的私有包含目录为 `include` 目录。这意味着，在编译 `my_program` 时，编译器将在 `include` 目录中搜索头文件。
+interface可以引用component的头文件，这样interface的头文件在使用的时候，不需要这样
+
+```c++
+#include "../../../include/widgets/gradienthiddenwidget.h"
+```
+
+可以改用
+
+```c++
+#include "widgets/gradienthiddenwidget.h"
+```
+
+不再需要通过复制头文件目录来实现引用，比较方便。
 
 ## include_directories
 
@@ -234,6 +733,120 @@ add_definitions(-DCOMPONENT_LIBRARY=0) # 添加预定义宏,=号不能有空格,
 #endif
 ```
 
+## qt5_add_resources、QT5_ADD_RESOURCES
+
+必须带前缀5，这3行命令都可以，然后在add_executable进行引用，或者直接引用也是可以的
+
+这个设置只需要在顶层设置过就行，无需在子目录继续设置
+
+```cmake
+qt5_add_resources(QRC_SOURCE_FILE ${PROJECT_SOURCE_DIR}/images.qrc)
+QT5_ADD_RESOURCES(QRC_SOURCE_FILE ${PROJECT_SOURCE_DIR}/images.qrc)
+set(QRC_SOURCE_FILE ${PROJECT_SOURCE_DIR}/images.qrc)
+
+add_executable(${PROJECT_NAME}  main.cpp initapp.h initapp.cpp
+        ${QRC_SOURCE_FILE}
+        app.rc
+        ${PROJECT_SOURCE_DIR}/bin/theme/dark/darkstyle.qrc) # 直接引用
+```
+
+## add_custom_command
+
+用于向目标添加自定义规则，并通过执行命令生成输出。
+
+```cmake
+add_custom_command(  
+  OUTPUT output_file [MAIN_DEPENDENCY input_file]  
+  COMMAND command [COMMAND_EXPAND_LISTS] [COMMAND1 [COMMAND2 ...]]  
+  [COMMAND_OUTPUT cmd_output]  # 命令输出，可能是要拷贝的文件
+  [COMMAND_INPUT cmd_input]  # 命令输入，要拷贝的目标地址
+  [BYPRODUCTS byproducts]  
+  [WORKING_DIRECTORY dir]  
+  [DEPENDENCIES dep1 dep2 ...]  
+  [IMPLICIT_DEPENDENCIES dep1 dep2 ...]  
+  [VARIABLES var1 var2 ...]  
+  [CMAKE_COMMAND_LINE_ADVANCED]  
+  [USES_TERMINAL]  
+)
+```
+
+- `OUTPUT`指定命令预期生成的输出文件。 如果输出名是相对路径，它将相对于当前源目录相对应的构建树目录进行解释。
+
+- `COMMAND` 是一个可选项，表示要执行的命令行。 如果指定了多个 `COMMAND`，它们将按顺序执行，但不一定组成有状态的shell或batch脚本。
+
+- `MAIN_DEPENDENCY` 指定命令的主输入源文件。 每个源文件最多可以有一个命令将其指定为其主要依赖项。 编译命令(即用于库或可执行文件)算作隐式主要依赖项，它会被自定义命令规范悄悄覆盖。
+
+  ```cmake
+  add_custom_command(  
+    OUTPUT hello-world.o  
+    COMMAND echo "Hello, World!" > ${CMAKE_CURRENT_BINARY_DIR}/hello-world.c  
+    DEPENDENCIES world.c  
+  )
+  ```
+
+  这个例子中，我们添加了一个自定义命令，该命令生成一个名为`hello-world.o`的输出文件。 命令行是`echo "Hello, World!" > ${CMAKE_CURRENT_BINARY_DIR}/hello-world.c`，它将一个字符串写入到一个文件中。 该命令依赖于`world.c`文件。
+
+  ```cmake
+  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD # 目标建立后执行
+      COMMAND ${CMAKE_COMMAND} -E make_directory # 创建目录的命令
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/")
+      # $<TARGET_FILE_DIR:Test01>/plugins/platforms/ => bin/plugins/platforms/
+  ```
+
+  - `TARGET ${PROJECT_NAME} POST_BUILD`：表示这个命令是在构建目标`${PROJECT_NAME}`之后执行的。
+  - `COMMAND ${CMAKE_COMMAND} -E make_directory`：这表示执行的命令是使用CMake的命令行工具**创建一个目录**。${CMAKE_COMMAND} =  D:/CLion 2023.1.3/bin/cmake/win/x64/bin/cmake.exe
+  - `\"$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/\"`：这是要创建的目录的路径。`$<TARGET_FILE_DIR:${PROJECT_NAME}>`是一个CMake变量，它会被替换为`${PROJECT_NAME}`的构建输出目录，也就是**bin目录**。所以这个命令会在构建输出目录下创建一个`plugins/platforms/`的目录。
+
+  
+
+```cmake
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy # 执行拷贝操作
+    "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll"
+    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/"
+)  # 有了目录把这个文件拷贝
+```
+
+```cmake
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy # bin/Qt5Cored.dll拷贝进来
+    "${QT_INSTALL_PATH}/bin/Qt5${QT_LIB}${DEBUG_SUFFIX}.dll"
+    "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+) # 拷贝到bin目录
+```
+
+**这里给出将sql和image插件文件夹复制的命令**，这个要放在最后边执行。
+
+```cmake
+set(CMAKE_SQLDRIVERS_PATH "${CMAKE_PREFIX_PATH}/plugins/sqldrivers")
+set(CMAKE_IMAGEFORMATS_PATH "${CMAKE_PREFIX_PATH}/plugins/imageformats")
+message(${CMAKE_SQLDRIVERS_PATH})
+message(${CMAKE_IMAGEFORMATS_PATH})
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory # 执行拷贝操作
+        "${CMAKE_SQLDRIVERS_PATH}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/sqldrivers"
+        )
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory # 执行拷贝操作
+        "${CMAKE_IMAGEFORMATS_PATH}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/imageformats"
+        )
+```
+
+这个命令有效的替代了直接使用file命令的写法。
+
+```cmake
+set(CMAKE_SQLDRIVERS_PATH "C:/Qt/Qt5.14.2/5.14.2/msvc2017_64/plugins/sqldrivers")
+file(REMOVE_RECURSE "${EXECUTABLE_OUTPUT_PATH}/sqldrivers")
+file(COPY ${CMAKE_SQLDRIVERS_PATH} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # 整个文件夹要复制过来否则找不到驱动
+set(CMAKE_IMAGEFORMATS_PATH "C:/Qt/Qt5.14.2/5.14.2/msvc2017_64/plugins/imageformats")
+file(REMOVE_RECURSE "${EXECUTABLE_OUTPUT_PATH}/imageformats")
+file(COPY ${CMAKE_IMAGEFORMATS_PATH} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # qpixmap加载jpg会失败
+```
+
+
+
 ## utf-8
 
 这2行命令只需要在主工程设置一次即可，也就是顶层的CMakeList.txt，要在add_executable之前
@@ -286,6 +899,13 @@ file(COPY ${flow_headers} DESTINATION ${PROJECT_SOURCE_DIR}/Interface/inc)
 
 file(GLOB flow_headers "inc/tables/*.h")
 file(COPY ${flow_headers} DESTINATION ${PROJECT_SOURCE_DIR}/Interface/inc/tables)
+
+set(CMAKE_SQLDRIVERS_PATH "C:/Qt/Qt5.14.2/5.14.2/msvc2017_64/plugins/sqldrivers")
+file(REMOVE_RECURSE "${EXECUTABLE_OUTPUT_PATH}/sqldrivers")
+file(COPY ${CMAKE_SQLDRIVERS_PATH} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # 整个文件夹要复制过来否则找不到驱动
+set(CMAKE_IMAGEFORMATS_PATH "C:/Qt/Qt5.14.2/5.14.2/msvc2017_64/plugins/imageformats")
+file(REMOVE_RECURSE "${EXECUTABLE_OUTPUT_PATH}/imageformats")
+file(COPY ${CMAKE_IMAGEFORMATS_PATH} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # qpixmap加载jpg会失败
 ```
 
 第三种删除文件：
@@ -299,6 +919,38 @@ endforeach()
 
 #请注意，这种方法只能删除文件，而不能删除文件夹本身。如果你需要删除整个文件夹，包括其中的所有文件和子文件夹，可以使用file(REMOVE_RECURSE ...)命令
 file(REMOVE_RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/dir_to_remove")
+```
+
+## EXISTS
+
+判断某个文件或者路径是否存在
+
+```cmake
+if (NOT EXISTS "${QT_INSTALL_PATH}/bin")
+    set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..") # ${CMAKE_PREFIX_PATH}/..
+        if (NOT EXISTS "${QT_INSTALL_PATH}/bin") # 相当于${CMAKE_PREFIX_PATH}/../bin
+        set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..") # ${CMAKE_PREFIX_PATH}/../..
+    endif ()
+endif () # 对于qt这里不会进入if判断 C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\bin
+```
+
+```cmake
+if (EXISTS "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll")
+	...
+endif ()
+```
+
+## foreach
+
+循环操作
+
+```cmake
+    foreach (QT_LIB Core Gui Widgets Sql Network) # QR_LIB是遍历元素
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy # bin/Qt5Cored.dll拷贝进来
+                "${QT_INSTALL_PATH}/bin/Qt5${QT_LIB}${DEBUG_SUFFIX}.dll"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>") # 拷贝到bin目录
+    endforeach (QT_LIB)
 ```
 
 
@@ -339,7 +991,110 @@ message(${CMAKE_CURRENT_BINARY_DIR})# D:/ClionProjects/Test/test5/cmake-build-de
 
 工程名
 
+### CMAKE_C_COMPILER、CMAKE_CXX_COMPILER
+
+编译器路径
+
+```cmake
+message(${CMAKE_C_COMPILER})
+message(${CMAKE_CXX_COMPILER})
+```
+
+### CMAKE_C_COMPILER_ID、CMAKE_CXX_COMPILER_ID
+
+编译器的类型，例如 "GNU"、"Clang"、"MSVC" 等。
+
+```cmake
+message(${CMAKE_C_COMPILER_ID})
+message(${CMAKE_CXX_COMPILER_ID})
+```
+
+### CMAKE_C_COMPILER_VERSION、CMAKE_CXX_COMPILER_VERSION
+
+编译器版本号
+
+```cmake
+message(${CMAKE_C_COMPILER_VERSION})
+message(${CMAKE_CXX_COMPILER_VERSION})
+```
+
+### POST_BUILD
+
+POST_BUILD是CMake中的一个指令，表示在构建后执行特定的命令。
+
+```cmake
+TARGET ${PROJECT_NAME} POST_BUILD
+```
+
+### CMAKE_BUILD_TYPE
+
+编译类型Debug或Release，这里含义是如果是MSVC编译器且是Debug类型，让这个变量等于"d"
+
+```cmake
+set(DEBUG_SUFFIX)
+if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
+	set(DEBUG_SUFFIX "d")
+endif ()
+```
+
+### CMAKE_COMMAND
+
+**CMAKE_COMMAND是CMake的路径**。它指向的是CMake的安装位置或者在命令行中可以执行CMake命令的位置。在构建过程中，可以通过该路径执行CMake命令，例如进行构建参数的指定等。
+
+```cmake
+message(${CMAKE_COMMAND}) # D:/CLion 2023.1.3/bin/cmake/win/x64/bin/cmake.exe
+```
+
+其支持的命令如下。
+
+```cmake
+chdir <dir>: 更改当前工作目录到 <dir>。
+compare_files <file1> <file2>: 比较两个文件 <file1> 和 <file2>，如果不同则返回非零退出状态。
+【copy <source> <destination>: 将 <source> 复制到 <destination>。】
+【copy_directory <source_dir> <destination_dir>: 将 <source_dir> 目录及其内容复制到 <destination_dir>。】
+【copy_if_different <source> <destination>: 如果 <source> 和 <destination> 不同，则将 <source> 复制到 <destination>。】
+echo [<string>]: 打印 <string> 到标准输出。
+env: 设置环境变量。
+execute_process: 执行一个外部进程。
+extract_dir <path>: 从 <path> 中提取目录部分。
+extract_filename <path>: 从 <path> 中提取文件名部分。
+extract_first_argument <command>: 从 <command> 中提取第一个参数。
+glob <globbing_expression>: 执行文件路径的通配符匹配。
+glob_directory <directory> <globbing_expression>: 在 <directory> 中执行文件路径的通配符匹配。
+【list_directories <directory>: 列出 <directory> 中的子目录。】
+【list_files <directory>: 列出 <directory> 中的文件。】
+load_cache <cache_file> <entry1> <entry2> ...: 从 <cache_file> 中加载缓存条目。
+【make_directory <dir>: 创建目录 <dir>。】
+md5sum <file>: 计算文件的 MD5 哈希值。
+【remove [-f] <file1> <file2> ...: 删除指定的文件或目录。】
+【remove_directory <dir>: 删除目录及其内容。】
+rename <oldname> <newname>: 将文件或目录 <oldname> 重命名为 <newname>。
+shorten_path <path> [<output_variable>]: 缩短路径 <path>，并可选地将结果存储在 <output_variable> 中。
+tar [cxtzhv] <archive_name> [<file1> <file2> ...]: 创建或提取 tar 归档文件。
+time [<command>]: 测量指定命令的执行时间。
+touch_nocreate <file1> <file2> ...: 如果文件不存在，则创建指定的文件，但不修改现有文件的时间戳。
+【touch <file1> <file2> ...: 创建指定的文件，或更新现有文件的时间戳。】
+write_regv <data_type> <key_path> <value>: 将注册表项写入 JSON 文件。
+write_regv_list <data_type> <key_path> <value1> <value2> ...: 将注册表项列表写入 JSON 文件。
+write_regv_keys <data_type> <key_path> <key1> <key2> ...: 将注册表键写入 JSON 文件。
+write_regv_keyset <data_type> <key_path> <keyset1> <keyset2> ...: 将注册表键集写入 JSON 文件。
+write_regv_values <data_type> <key_path> <value1> <value2> ...: 将注册表值写入 JSON 文件。
+```
+
+
+
 ## 定义变量
+
+### CMAKE_TOOLCHAIN_FILE
+
+定义工具链
+
+```cmake
+set(TOOLCHAIN_PATH /opt/sdk/android-aarch64)
+set(CMAKE_C_COMPILER ${TOOLCHAIN_PATH}/bin/aarch64-linux-android-gcc)
+```
+
+一般不需要手动配置，clion中已经配置好。
 
 ### EXECUTABLE_OUTPUT_PATH，CMAKE_RUNTIME_OUTPUT_DIRECTORY
 
