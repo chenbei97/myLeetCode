@@ -1901,18 +1901,19 @@ E:\plugins\sqldrivers
 
 把msvc版本的文件复制到对应版本的路径下。
 
-```
+```powershell
 C:\Qt\Qt5.14.2\5.14.2\msvc2017_64\plugins\sqldrivers
 E:\Qt5.14.2\5.14.2\msvc2017_64\plugins\sqldrivers
 
 qsqlmysql.dll
 qsqlmysqld.dll
 lib文件好像不需要放
+# 2023/9/23 需要放，不然还是找不到驱动
 ```
 
 mingw版本的复制到下边路径。
 
-```
+```powershell
 C:\Qt\Qt5.14.2\5.14.2\mingw73_64\plugins\sqldrivers
 
 libqsqlmysql.a
